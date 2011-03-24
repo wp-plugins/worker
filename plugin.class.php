@@ -37,9 +37,9 @@ class MMB_Plugin extends MMB_Core
                 foreach ($result as $plugin_slug => $plugin_info) {
 					$data    = get_plugin_data(WP_PLUGIN_DIR . '/' . $plugin_slug);
 					if(!$plugin_info || is_wp_error($plugin_info)){
-						$return .= '<code title="Please upgarde manualy">' . $data['Name'] . '</code>  was not upgraded.';
+						$return .= '<code title="Please upgrade manually">' . $data['Name'] . '</code>  was not upgraded.<br />';
 					}else{
-						$return .= '<code>' . $data['Name'] . '</code> successfully upgraded.';
+						$return .= '<code>' . $data['Name'] . '</code> successfully upgraded.<br />';
 					}
                 }
 				ob_end_clean();

@@ -58,10 +58,10 @@ class MMB_Theme extends MMB_Core
 			if(!empty($result)){
 				foreach($result as $theme_tmp => $info){
 					if(is_wp_error($info) || !$info){
-						$results[$theme_tmp] = '<code title="Please upgarde manualy">'.$theme_tmp.'</code> was not upgraded.';
+						$results[$theme_tmp] = '<code title="Please upgrade manually">'.$theme_tmp.'</code> was not upgraded.<br />';
 					}
 					else {
-						$results[$theme_tmp] = '<code>'.$theme_tmp.'</code> succesfully upgraded.';
+						$results[$theme_tmp] = '<code>'.$theme_tmp.'</code> succesfully upgraded.<br />';
 					}
 				}
 				return array('upgraded' => implode('', $results));
