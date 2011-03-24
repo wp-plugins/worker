@@ -1,356 +1,262 @@
 <?php
-/*
+/* 
 Plugin Name: ManageWP - Worker
 Plugin URI: http://managewp.com/
-Description: Manage all your blogs from one dashboard.
+Description: Manage all your blogs from one dashboard
 Author: Prelovac Media
-Version: 3.6.3
-Author URI: http://prelovac.com/
+Version: 3.8.0
+Author URI: http://www.prelovac.com
 */
 
 // PHP warnings can break our XML stuffs
-
-if ($_SERVER['REMOTE_ADDR'] != '127.0.0.1')
-{
+if ($_SERVER['REMOTE_ADDR'] != '127.0.0.1') {
     error_reporting(E_ERROR);
 }
 
-define('MMB_WORKER_VERSION', '3.6.3');
+define('MMB_WORKER_VERSION', '3.8.0');
 
 global $wpdb, $mmb_plugin_dir, $mmb_plugin_url;
 
 $mmb_plugin_dir = WP_PLUGIN_DIR . '/' . basename(dirname(__FILE__));
 $mmb_plugin_url = WP_PLUGIN_URL . '/' . basename(dirname(__FILE__));
-//$mmb_plugin_dir = WP_PLUGIN_DIR . '/manage-multiple-blogs-worker';
-//$mmb_plugin_url = WP_PLUGIN_URL . '/manage-multiple-blogs-worker';
 
 require_once(ABSPATH . 'wp-includes/class-IXR.php');
 require_once("$mmb_plugin_dir/helper.class.php");
-require_once("$mmb_plugin_dir/ende.class.php");
 require_once("$mmb_plugin_dir/core.class.php");
-require_once("$mmb_plugin_dir/comment.class.php");
 require_once("$mmb_plugin_dir/plugin.class.php");
 require_once("$mmb_plugin_dir/theme.class.php");
-require_once("$mmb_plugin_dir/category.class.php");
 require_once("$mmb_plugin_dir/wp.class.php");
-require_once("$mmb_plugin_dir/page.class.php");
 require_once("$mmb_plugin_dir/post.class.php");
 require_once("$mmb_plugin_dir/stats.class.php");
 require_once("$mmb_plugin_dir/user.class.php");
-require_once("$mmb_plugin_dir/tags.class.php");
 require_once("$mmb_plugin_dir/backup.class.php");
-require_once("$mmb_plugin_dir/clone.class.php");
-require_once("$mmb_plugin_dir/mmb.wp.upgrader.php");
 
-//class Mmb_IXR extends IXR_Server{
-//
-//}
+$mmb_core = new MMB_Core();
+add_action('init', '_mmb_parse_request');
 
-$mmb_core = new Mmb_Core();
-register_activation_hook(__FILE__, array($mmb_core, 'install'));
+if (function_exists('register_activation_hook'))
+    register_activation_hook(__FILE__, array($mmb_core, 'install'));
 
-function mmb_worker_upgrade($args) {
-    global $mmb_core;
-    return $mmb_core->update_this_plugin($args);
-}
+if (function_exists('register_deactivation_hook'))
+    register_deactivation_hook(__FILE__, array($mmb_core, 'uninstall'));
 
-function mmb_stats_get($args)
+function _mmb_parse_request()
 {
+    if (!isset($HTTP_RAW_POST_DATA)) {
+        $HTTP_RAW_POST_DATA = file_get_contents('php://input');
+    }
+    ob_start();
+		
     global $mmb_core;
-    return $mmb_core->get_stats_instance()->get($args);
-}
-
-function mmb_stats_server_get($args) {
-    global $mmb_core;
-    return $mmb_core->get_stats_instance()->get_server_stats($args);
-}
-
-function mmb_stats_hit_count_get($args) {
-    global $mmb_core;
-    return $mmb_core->get_stats_instance()->get_hit_count($args);
-}
-
-function mmb_plugin_get_list($args)
-{
-    global $mmb_core;
-    return $mmb_core->get_plugin_instance()->get_list($args);
-}
+    $data = base64_decode($HTTP_RAW_POST_DATA);
+    $num  = extract(unserialize($data));
+    
+    if ($action) {
+        if (!$mmb_core->_check_if_user_exists($params['username']))
+	      mmb_response('Username <b>'.$params['username'].'</b> does not have administrator capabilities. Enter the correct username in the site options.', false);
         
-function mmb_plugin_activate($args)
-{
-    global $mmb_core;
-    return $mmb_core->get_plugin_instance()->activate($args);
-}
+		if ($action == 'add_site') {
+			mmb_add_site($params);
+			mmb_response('You should never see this.', false);
+        }
         
-function mmb_plugin_deactivate($args)
-{
-    global $mmb_core;
-    return $mmb_core->get_plugin_instance()->deactivate($args);
+        $auth = $mmb_core->_authenticate_message($action . $id, $signature, $id);
+		if ($auth === true) {
+            $mmb_actions = array(
+                'remove_site' => 'mmb_remove_site',
+                'get_stats' => 'mmb_stats_get',
+                'backup' => 'mmb_backup_now',
+                'restore' => 'mmb_restore_now',
+                'optimize_tables' => 'mmb_optimize_tables',
+                'check_wp_version' => 'mmb_wp_checkversion',
+                'create_post' => 'mmb_post_create',
+                'upgrade_plugins' => 'mmb_upgrade_plugins',
+                'wp_upgrade' => 'mmb_upgrade_wp',
+                'upgrade_themes' => 'mmb_themes_upgrade',
+                'upload_plugin_by_url' => 'mmb_plugin_upload_by_url',
+                'upload_theme_by_url' => 'mmb_theme_upload_by_url',
+                'update_worker' => 'mmb_update_worker_plugin'
+            );
+            if (array_key_exists($action, $mmb_actions) && function_exists($mmb_actions[$action]))
+                call_user_func($mmb_actions[$action], $params);
+            else
+                mmb_response('Action "' . $action . '" does not exist.', false);
+        } else if(array_key_exists('openssl_activated', $auth)){
+			mmb_response($auth, true);
+		} else {
+            mmb_response($auth['error'], false);
+        }
+    }
+  
+      
+    ob_end_clean();
 }
 
-function mmb_plugin_upgrade($args)
+/* Main response function */
+
+function mmb_response($response = false, $success = true)
 {
-    global $mmb_core;
-    return $mmb_core->get_plugin_instance()->upgrade($args);
+    $return = array();
+    
+    if (empty($response))
+        $return['error'] = 'Empty response';
+    else if ($success)
+        $return['success'] = $response;
+    else
+        $return['error'] = $response;
+    
+    header('Content-Type: text/plain');
+    exit(PHP_EOL.base64_encode(serialize($return)));
 }
 
-function mmb_plugin_upgrade_multiple($args)
+function mmb_add_site($params)
 {
     global $mmb_core;
-    return $mmb_core->get_plugin_instance()->upgrade_multiple($args);
+    
+    $num = extract($params);
+	
+    if ($num) {
+		if ( !get_option('_action_message_id') && !get_option('_worker_public_key')) {
+			$public_key =  base64_decode($public_key) ;
+
+				if ( function_exists('openssl_verify') ) {
+					$verify = openssl_verify($action . $id, base64_decode($signature), $public_key);
+					if ($verify == 1) {
+						$mmb_core->_set_master_public_key($public_key);                       
+						$mmb_core->_set_worker_message_id($id);
+
+						mmb_response($mmb_core->get_stats_instance()->get_initial_stats(), true);
+					} else if ($verify == 0) {
+						mmb_response('Invalid message signature (site is probably managed by another account?)', false);
+					} else {
+						mmb_response('Command not successful. Please try again.', false);
+					}
+				} else{
+					if ( !get_option('_worker_nossl_key')) {
+						$random_key = md5(base64_encode($public_key) . rand(0, getrandmax()));
+						
+						$mmb_core->_set_random_signature($random_key);
+						$mmb_core->_set_worker_message_id($id);
+						$mmb_core->_set_master_public_key($public_key);
+						
+						mmb_response($mmb_core->get_stats_instance()->get_initial_stats(), true);
+					}
+					else  mmb_response('Site seems to be already managed by another ManageWP account. Either remove the site from that account, or deactivate & activate the ManageWP Worker plugin to reset.', false);
+			}
+        } else {
+            mmb_response('Site seems to be already managed by another ManageWP account. Either remove the site from that account, or deactivate & activate the ManageWP Worker plugin to reset.', false);
+        }
+    } else {
+        mmb_response('Invalid parameters received. Please try again.', false);
+    }
 }
 
-function mmb_plugin_upgrade_all($args)
+function mmb_remove_site()
 {
     global $mmb_core;
-    return $mmb_core->get_plugin_instance()->upgrade_all($args);
-}
-
-function mmb_plugin_delete($args)
-{
-    global $mmb_core;
-    return $mmb_core->get_plugin_instance()->delete($args);
-}
-
-function mmb_plugin_install($args)
-{
-    global $mmb_core;
-    return $mmb_core->get_plugin_instance()->install($args);
-}
-
-function mmb_plugin_upload_by_url($args)
-{
-    global $mmb_core;
-    return $mmb_core->get_plugin_instance()->upload_by_url($args);
+    $mmb_core->uninstall();
+    mmb_response('ManageWP Worker data successfully removed.', true);
 }
 
 
-        
-function mmb_theme_get_list($args)
-{
-    global $mmb_core;
-    return $mmb_core->get_theme_instance()->get_list($args);
-}
-
-function mmb_theme_activate($args)
-{
-    global $mmb_core;
-    return $mmb_core->get_theme_instance()->activate($args);
-}
-
-function mmb_theme_delete($args)
-{
-    global $mmb_core;
-    return $mmb_core->get_theme_instance()->delete($args);
-}
-
-function mmb_theme_install($args)
-{
-    global $mmb_core;
-    return $mmb_core->get_theme_instance()->install($args);
-}
-
-function mmb_theme_upgrade($args)
-{
-    global $mmb_core;
-    return $mmb_core->get_theme_instance()->upgrade($args);
-}
-
-function mmb_themes_upgrade($args)
-{
+function mmb_stats_get($params)
+{	
 	global $mmb_core;
-    return $mmb_core->get_theme_instance()->upgrade_all($args);
+	mmb_response($mmb_core->get_stats_instance()->get($params), true);
 }
 
-function mmb_theme_upload_by_url($args)
+
+//Plugins
+
+function mmb_upgrade_plugins($params)
 {
     global $mmb_core;
-    return $mmb_core->get_theme_instance()->upload_theme_by_url($args);
+    mmb_response($mmb_core->get_plugin_instance()->upgrade_all($params), true);
 }
 
-
-
-        
-function mmb_wp_checkversion($args)
+function mmb_plugin_upload_by_url($params)
 {
     global $mmb_core;
-	return $mmb_core->get_wp_instance()->check_version($args);
+    $return = $mmb_core->get_plugin_instance()->upload_by_url($params);
+   
+    
+    mmb_response($return['message'],$return['bool'] );
+    
 }
 
-function mmb_wp_upgrade($args)
+//Themes
+function mmb_theme_upload_by_url($params)
 {
     global $mmb_core;
-    return $mmb_core->get_wp_instance()->upgrade($args);
+    $return = $mmb_core->get_theme_instance()->upload_theme_by_url($params);
+    mmb_response($return['message'],$return['bool'] );
 }
 
-function mmb_wp_get_updates($args)
+function mmb_themes_upgrade($params)
 {
     global $mmb_core;
-    return $mmb_core->get_wp_instance()->get_updates($args);
+    mmb_response($mmb_core->get_theme_instance()->upgrade_all($params), true);
 }
 
 
+//wp
 
-
-
-
-function mmb_cat_get_list($args)
+function mmb_upgrade_wp($params)
 {
     global $mmb_core;
-    return $mmb_core->get_category_instance()->get_list($args);
+	mmb_response($mmb_core->get_wp_instance()->upgrade());
 }
 
-function mmb_cat_update($args)
+//post
+function mmb_post_create($params)
 {
     global $mmb_core;
-    return $mmb_core->get_category_instance()->update($args);
+    $return = $mmb_core->get_post_instance()->create($params);
+    if (is_int($return))
+        mmb_response($return, true);
+    else
+        mmb_response($return, false);
 }
 
-function mmb_cat_add($args)
+//backup
+function mmb_backup_now($params)
 {
     global $mmb_core;
-    return $mmb_core->get_category_instance()->add($args);
+    $return = $mmb_core->get_backup_instance()->backup($params);
+    
+    if (is_array($return) && array_key_exists('error', $return))
+        mmb_response($return['error'], false);
+    else {
+        $mmb_core->_log($return);
+        mmb_response($return, true);
+    }
+    
 }
 
-
-//Tag start
-
-
-function mmb_tag_get_list($args)
+function mmb_optimize_tables($params)
 {
     global $mmb_core;
-    return $mmb_core->get_tag_instance()->get_list($args);
+    $return = $mmb_core->get_backup_instance()->optimize_tables();
+    if ($return)
+        mmb_response($return, true);
+    else
+        mmb_response(false, false);
 }
 
-function mmb_tag_update($args)
+function mmb_restore_now($params)
 {
     global $mmb_core;
-    return $mmb_core->get_tag_instance()->update($args);
+    $return = $mmb_core->get_backup_instance()->restore($params);
+    if (is_array($return) && array_key_exists('error', $return))
+        mmb_response($return['error'], false);
+    else
+        mmb_response($return, true);
+    
 }
 
-function mmb_tag_add($args)
-{  
-    global $mmb_core;
-    return $mmb_core->get_tag_instance()->add($args);
-}
-
-function mmb_tag_delete($args)
+function mmb_update_worker_plugin($params)
 {
     global $mmb_core;
-    return $mmb_core->get_tag_instance()->delete($args);
-}
-////End of tag
-
-function mmb_page_get_edit_data($args)
-{
-    global $mmb_core;
-    return $mmb_core->get_page_instance()->get_edit_data($args);
-}
-
-function mmb_page_get_new_data($args)
-{
-    global $mmb_core;
-    return $mmb_core->get_page_instance()->get_new_data($args);
-}
-
-function mmb_page_update($args)
-{
-    global $mmb_core;
-    return $mmb_core->get_page_instance()->update($args);
-}
-
-function mmb_page_create($args)
-{
-    global $mmb_core;
-    return $mmb_core->get_page_instance()->create($args);
-}
-
-function mmb_post_get_list($args)
-{
-    global $mmb_core;
-    return $mmb_core->get_post_instance()->get_list($args);
-}
-
-function mmb_post_get_edit_data($args)
-{
-    global $mmb_core;
-    return $mmb_core->get_post_instance()->get_edit_data($args);
-}
-
-function mmb_post_update($args)
-{
-    global $mmb_core;
-    return $mmb_core->get_post_instance()->update($args);
-}
-
-function mmb_post_get_new_data($args)
-{
-    global $mmb_core;
-    return $mmb_core->get_post_instance()->get_new_data($args);
-}
-
-function mmb_post_create($args)
-{
-    global $mmb_core;
-    return $mmb_core->get_post_instance()->create($args);
-}
-
-function mmb_post_publish($args)
-{
-    global $mmb_core;
-    return $mmb_core->get_post_instance()->publish($args);
-}
-
-function mmb_post_checksum($args)
-{
-    global $mmb_core;
-    return $mmb_core->get_post_instance()->checksum($args);
-}
-
-function mmb_user_change_password($args)
-{
-    global $mmb_core;
-    return $mmb_core->get_user_instance()->change_password($args);
-}
-
-
-function mmb_bulk_edit_comment($args) {
-    global $mmb_core;
-    return $mmb_core->get_comment_instance()->bulk_edit_comments($args);
-}
-
-function mmb_get_comment_count($args) {
-    global $mmb_core;
-   return $mmb_core->get_comment_instance()->get_comment_count($args);
-}
-
-function mmb_restore_comment($args) {
-    global $mmb_core;
-    return $mmb_core->get_comment_instance()->restore_comment($args);
-}
-
-function mmb_backup_now($args) {
-    global $mmb_core;
-    return $mmb_core->get_backup_instance()->backup($args);
-}
-
-function mmb_restore_now($args) {
-    global $mmb_core;
-    return $mmb_core->get_backup_instance()->restore($args);
-}
-
-function mmb_get_backup_url($args) {
-        global $mmb_core;
-        return $mmb_core->get_backup_instance()->get_backup_details($args);
-}
-
-function mmb_weekly_backup($args) {
-        global $mmb_core;
-        return $mmb_core->get_backup_instance()->get_weekly_backup($args);
-}
-
-function mmb_geet_last_worker_message($args) {
-        global $mmb_core;
-        return $mmb_core->_get_last_worker_message();
+    mmb_response($mmb_core->update_worker_plugin($params), true);
 }
 ?>

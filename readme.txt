@@ -25,6 +25,12 @@ Check out [ManageWP.com](http://managewp.com/ "Manage Multiple Blogs")
 
 == Changelog ==  
 
+= 3.8.0 =
+* New interface
+* SSL security protocl
+* many more
+
+
 = 3.6.3 =  
 * Initial public release
 

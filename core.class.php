@@ -1,6 +1,6 @@
 <?php
 
-class Mmb_Core extends Mmb_Helper
+class MMB_Core extends MMB_Helper
 {
     var $name;
     var $slug;
@@ -9,46 +9,32 @@ class Mmb_Core extends Mmb_Helper
     var $comment_instance;
     var $plugin_instance;
     var $theme_instance;
-    var $category_instance;
     var $wp_instance;
-    var $page_instance;
     var $post_instance;
     var $stats_instance;
     var $user_instance;
-    var $tag_instance;
     var $backup_instance;
-//    var $ende_instance;
-//    protected $secret_key;
+
     
     function __construct(){
         global $mmb_plugin_dir;
-//        get_option();
-//        $this->secret_key = trim(get_option('siteurl'), ' /');
+
         $this->name = 'Manage Multiple Blogs';
         $this->slug = 'manage-multiple-blogs';
         $this->settings = get_option($this->slug);
-//        $this->ende_instance = new Mmb_EnDe($this->secret_key);
         if (!$this->settings)
         {
             $this->settings = array(
                 'blogs'         => array(),
-                'current_blog'  => array(
-                    'type'          => null,
-                ),
+                'current_blog'  => array('type' => null)
             );
         }
-        
         add_action('rightnow_end', array($this, 'add_right_now_info'));
-        add_action('wp_footer', array('Mmb_Stats', 'set_hit_count'));
-//        add_action('xmlrpc_call', array($this, 'extend_xmlrpc_methods'), 0, 1);
-        add_filter('xmlrpc_methods', array($this, 'add_xmlrpc_methods'));
+        add_action('wp_footer', array('MMB_Stats', 'set_hit_count'));
         register_activation_hook($mmb_plugin_dir.'/init.php', array($this, 'install'));
-        add_action('init', array($this, 'mmb_test_fix'));
-	}	
+        add_action('init', array($this, 'automatic_login'));
+		}	
 
-    function mmb_test_fix() {
-            
-    }
     
     /**
     * Add an item into the Right Now Dashboard widget 
@@ -63,93 +49,6 @@ class Mmb_Core extends Mmb_Helper
     }
     
     /**
-    * Add custom XMLRPC methods to fit our needs
-    * This function should only be called if the current blog is a Slave
-    * 
-    * @param mixed $methods
-    */
-    function add_xmlrpc_methods($methods)
-    {
-
-        $methods['mmbUpgradeWorker'] = 'mmb_worker_upgrade';
-        // stats
-        $methods['mmbGetStats'] = 'mmb_stats_get';
-        $methods['mmbGetServerStatus'] = 'mmb_stats_server_get';
-        $methods['mmbGetUserHitStats'] = 'mmb_stats_hit_count_get';
-        
-        // plugins
-        $methods['mmbGetPluginList'] = 'mmb_plugin_get_list';
-        $methods['mmbActivatePlugin'] = 'mmb_plugin_activate';
-        $methods['mmbDeactivatePlugin'] = 'mmb_plugin_deactivate';
-        $methods['mmbUpgradePlugin'] = 'mmb_plugin_upgrade';
-        $methods['mmbUpgradePlugins'] = 'mmb_plugin_upgrade_multiple';
-        $methods['mmbUpgradeAllPlugins'] = 'mmb_plugin_upgrade_all';
-        $methods['mmbDeletePlugin'] = 'mmb_plugin_delete';
-        $methods['mmbInstallPlugin'] = 'mmb_plugin_install';
-        $methods['mmbUploadPluginByURL'] = 'mmb_plugin_upload_by_url';
-        
-        //themes
-        $methods['mmbGetThemeList'] = 'mmb_theme_get_list';
-        $methods['mmbActivateTheme'] = 'mmb_theme_activate';
-        $methods['mmbDeleteTheme'] = 'mmb_theme_delete';
-        $methods['mmbInstallTheme'] = 'mmb_theme_install';
-        $methods['mmbUpgradeTheme'] = 'mmb_theme_upgrade';
-        $methods['mmbUpgradeThemes'] = 'mmb_themes_upgrade';
-        $methods['mmbUploadThemeByURL'] = 'mmb_theme_upload_by_url';
-        
-        // wordpress update
-        $methods['mmbWPCheckVersion'] = 'mmb_wp_checkversion';
-        $methods['mmbWPUpgrade'] = 'mmb_wp_upgrade';
-        $methods['mmbWPGetUpdates'] = 'mmb_wp_get_updates';
-        
-        // categories
-        // native XMLRPC method to get category list is not good enough
-        // so we make our own
-        $methods['mmbGetCategoryList'] = 'mmb_cat_get_list';
-        $methods['mmbUpdateCategory'] = 'mmb_cat_update';
-        $methods['mmbAddCategory'] = 'mmb_cat_add';
-        // (category deleting can be handled well by native XMLRPC method)
-
-        //tags by ashish
-        $methods['mmbGetTagList'] = 'mmb_tag_get_list';
-        $methods['mmbUpdateTag'] = 'mmb_tag_update';
-        $methods['mmbAddTag'] = 'mmb_tag_add'; 
-        $methods['mmbDeleteTag'] = 'mmb_tag_delete';
-
-
-        // pages
-        $methods['mmbGetPageEditData'] = 'mmb_page_get_edit_data';
-        $methods['mmbGetPageNewData'] = 'mmb_page_get_new_data';
-        $methods['mmbUpdatePage'] = 'mmb_page_update';
-        $methods['mmbCreatePage'] = 'mmb_page_create';
-        
-        // posts
-        $methods['mmbGetPostList'] = 'mmb_post_get_list';
-        $methods['mmbGetPostNewData'] = 'mmb_post_get_new_data';
-        $methods['mmbGetPostEditData'] = 'mmb_post_get_edit_data';
-        $methods['mmbUpdatePost'] = 'mmb_post_update';
-        $methods['mmbCreatePost'] = 'mmb_post_create';
-        $methods['mmbPublishPost'] = 'mmb_post_publish';
-		$methods['mmbPostChecksum'] = 'mmb_post_checksum';
-
-        //comments
-        $methods['mmbRestoreComment'] = 'mmb_restore_comment';
-        $methods['mmbGetCommentCount'] = 'mmb_get_comment_count';
-        $methods['mmbBulkEditComment'] = 'mmb_bulk_edit_comment';
-        
-        //users
-        $methods['mmbUserChangePassword'] = 'mmb_user_change_password';
-
-        //Backup/Restore
-        $methods['mmbBackupNow'] = 'mmb_backup_now';
-        $methods['mmbRestoreNow'] = 'mmb_restore_now';
-        $methods['mmbGetBackupUrl'] = 'mmb_get_backup_url';
-        $methods['mmbWeeklyBackup'] = 'mmb_weekly_backup';
-        $methods['mmbLastWorkerMessage'] = 'mmb_geet_last_worker_message';
-        return $methods;
-    }
-
-    /**
     * Gets an instance of the Comment class
     * 
     */
@@ -157,7 +56,7 @@ class Mmb_Core extends Mmb_Helper
     {
         if (!isset($this->comment_instance))
         {
-            $this->comment_instance = new Mmb_Comment();
+            $this->comment_instance = new MMB_Comment();
         }
         
         return $this->comment_instance;
@@ -171,7 +70,7 @@ class Mmb_Core extends Mmb_Helper
     {
         if (!isset($this->plugin_instance))
         {
-            $this->plugin_instance = new Mmb_Plugin();
+            $this->plugin_instance = new MMB_Plugin();
         }
         
         return $this->plugin_instance;
@@ -185,67 +84,42 @@ class Mmb_Core extends Mmb_Helper
     {
         if (!isset($this->theme_instance))
         {
-            $this->theme_instance = new Mmb_Theme();
+            $this->theme_instance = new MMB_Theme();
         }
         
         return $this->theme_instance;
     }
     
-    /**
-    * Gets an instance of Mmb_Page class
-    * 
-    */
-    function get_page_instance()
-    {
-        if (!isset($this->page_instance))
-        {
-            $this->page_instance = new Mmb_Page();
-        }
-        
-        return $this->page_instance;
-    }
     
     /**
-    * Gets an instance of Mmb_Post class
+    * Gets an instance of MMB_Post class
     * 
     */
     function get_post_instance()
     {
         if (!isset($this->post_instance))
         {
-            $this->post_instance = new Mmb_Post();
+            $this->post_instance = new MMB_Post();
         }
         
         return $this->post_instance;
     }
     
     /**
-    * Gets an instance of Category class
+    * Gets an instance of Blogroll class
     * 
     */
-    function get_category_instance()
+    function get_blogroll_instance()
     {
-        if (!isset($this->category_instance))
+        if (!isset($this->blogroll_instance))
         {
-            $this->category_instance = new Mmb_Category();
+            $this->blogroll_instance = new MMB_Blogroll();
         }
         
-        return $this->category_instance;
+        return $this->blogroll_instance;
     }
 
-     /**
-    * Gets an instance of Tag class
-    *
-    */
-    function get_tag_instance()
-    {
-        if (!isset($this->tag_instance))
-        {
-            $this->tag_instance = new Mmb_Tags();
-        }
-
-        return $this->tag_instance;
-    }
+   
     
     /**
     * Gets an instance of the WP class
@@ -255,7 +129,7 @@ class Mmb_Core extends Mmb_Helper
     {
         if (!isset($this->wp_instance))
         {
-            $this->wp_instance = new Mmb_WP();
+            $this->wp_instance = new MMB_WP();
         }
         
         return $this->wp_instance;
@@ -269,7 +143,7 @@ class Mmb_Core extends Mmb_Helper
     {
         if (!isset($this->user_instance))
         {
-            $this->user_instance = new Mmb_User();
+            $this->user_instance = new MMB_User();
         }
         
         return $this->user_instance;
@@ -283,9 +157,8 @@ class Mmb_Core extends Mmb_Helper
     {
         if (!isset($this->stats_instance))
         {
-            $this->stats_instance = new Mmb_Stats();
+            $this->stats_instance = new MMB_Stats();
         }
-        
         return $this->stats_instance;
     }
     
@@ -297,16 +170,23 @@ class Mmb_Core extends Mmb_Helper
     {
         if (!isset($this->backup_instance))
         {
-            $this->backup_instance = new Mmb_Backup();
+            $this->backup_instance = new MMB_Backup();
         }
 
         return $this->backup_instance;
     }
     
+    /**
+    * Plugin install callback function
+    * Check PHP version
+    */
     function install()
-    {
-        //no need to check just update the table will run only when plugin installs
-        update_option('enable_xmlrpc', 1);
+    {	
+		delete_option('_worker_nossl_key');
+		delete_option('_worker_public_key');
+		delete_option('_action_message_id');
+		if(PHP_VERSION < 5)
+			exit("<p>Plugin could not be activated. Your PHP version must be 5.0 or higher.</p>");
     }
     
     /**
@@ -326,6 +206,16 @@ class Mmb_Core extends Mmb_Helper
     }
     
     /**
+    * Deletes options for communication with master
+    * 
+    */
+		function uninstall(){
+			delete_option('_worker_nossl_key');
+			delete_option('_worker_public_key');
+			delete_option('_action_message_id');
+		}
+	
+    /**
     * Constructs a url (for ajax purpose)
     * 
     * @param mixed $base_page
@@ -341,71 +231,74 @@ class Mmb_Core extends Mmb_Helper
         return $url;
     }
 
-    function update_this_plugin($args) {
-        $this->_escape($args);
-
-        $username = $args[0];
-        $password = $args[1];
-        $url = $args[2];
-//        return array('test' => 'hello there');
-
-        if (!$user = $this->login($username, $password))
-        {
-            return $this->error;
-        }
-        if (!current_user_can('administrator'))
-        {
-            return new IXR_Error(401, 'Sorry, Only administrators can upgrade this plugin on the remote blog.');
-        }
-        
-		include_once ABSPATH . 'wp-admin/includes/class-wp-upgrader.php';
+		/**
+    * Worker update
+    * 
+    */
+		function update_worker_plugin($params) {
 		
-		ob_start();
-		@unlink(WP_PLUGIN_DIR.'/worker');
-		$upgrader = new Plugin_Upgrader();
-		//$deactivate = $upgrader->deactivate_plugin_before_upgrade(false, 'worker/init.php');
-		$result = $upgrader->run(array(
-						'package' => $url,
+		extract($params);
+		if($download_url){
+			
+			include_once(ABSPATH . 'wp-admin/includes/file.php');
+			include_once ABSPATH . 'wp-admin/includes/misc.php';
+			include_once ABSPATH . 'wp-admin/includes/template.php';
+			include_once ABSPATH . 'wp-admin/includes/class-wp-upgrader.php';
+			
+			ob_start();
+			@unlink(dirname(__FILE__));
+			$upgrader = new Plugin_Upgrader();
+			$result = $upgrader->run(array(
+						'package' => $download_url,
 						'destination' => WP_PLUGIN_DIR,
 						'clear_destination' => true,
 						'clear_working' => true,
 						'hook_extra' => array(
 								'plugin' => 'worker/init.php'
 						)));
-		ob_end_clean();
-		if(is_wp_error($result) || !$result){
-			$error = is_wp_error($result) ? $result->get_error_message() : 'Check your FTP details. <a href="http://managewp.com/user-guide#ftp" title="More Info" target="_blank">More Info</a>' ;
-			$this->_last_worker_message(array('error' => print_r($error, true)));
-		}else {
-			$data = get_plugin_data(WP_PLUGIN_DIR . '/' . $upgrader->plugin_info());
-			$this->_last_worker_message(array('success' => $upgrader->plugin_info(), 'name' => $data['Name'], 'activate' => print_r($activate, true)));
+			ob_end_clean();
+			if(is_wp_error($result) || !$result){
+				return array('error' => 'Manage WP Worker could not been upgraded.');
+			}
+			else{
+				return array('success' => 'Manage WP Worker plugin successfully upgraded.');
+			}
 		}
-
-    }
-
+		return array('error' => 'Bad download path for worker installation file.');
+	 }
+   
     /**
-    * Logs a user int
+    * Automatically logs in when called from Master
     * 
-    * @param mixed $username
-    * @param mixed $password
-    * @return WP_Error|WP_User
     */
-    function login($username, $password)
-    {
-        if (!get_option( 'enable_xmlrpc'))
-        {
-            update_option('enable_xmlrpc', 1);
-//            return new IXR_Error(405, 'XML-RPC services are disabled on this blog.');
-        }
-        
-        $user = wp_authenticate($username, $password);
+    function automatic_login(){
+			
+			
+				$where = ($_GET['mwp_goto']);
+				if (!is_user_logged_in() && $_GET['auto_login']) {
+					$signature = base64_decode($_GET['signature']);
+					$message_id = trim($_GET['message_id']);
+					$username = $_GET['username'];
+					
+					$auth = $this->_authenticate_message($where.$message_id, $signature, $message_id);
+					if($auth === true){
+						$user = get_user_by('login', $username);
+						$user_id = $user->ID;
+						wp_set_current_user($user_id, $username);
+						wp_set_auth_cookie( $user_id );
+						do_action('wp_login', $username);
+					}
+					else 
+					{
+						wp_die($auth['error']);
+					}
+				}
+			
+			if($_GET['auto_login']){
+					wp_redirect(get_bloginfo('url')."/wp-admin/".$where);
+					exit();
+				}
+	}
 
-        if (is_wp_error($user)) {
-            $this->error = new IXR_Error(403, __('Bad login/pass combination.'));
-            return false;
-        }
-
-        set_current_user( $user->ID );
-        return $user;
-    }
+		
 }
