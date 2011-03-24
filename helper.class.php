@@ -265,7 +265,6 @@ class MMB_Helper
 	}
 	
 	function _set_random_signature($random_key = false){
-		
 		if ($random_key && !get_option('_worker_nossl_key')){
 			add_option('_worker_nossl_key', base64_encode($random_key));
 			return true;
@@ -286,13 +285,13 @@ class MMB_Helper
         
         if ((int) $current_message > (int) $message_id)
             return array(
-                'error' => 'Invalid message recieved. Please try again.'
+                'error' => 'Invalid message recieved. You can try to reinstall worker plugin and re-add the site to your account.'
             );
         
         $pl_key = $this->_get_master_public_key();
         if (!$pl_key) {
             return array(
-                'error' => 'Authentication failed (public key).'
+                'error' => 'Authentication failed (public key). You can try to reinstall worker plugin and re-add the site to your account.'
             );
         }
 		
@@ -303,7 +302,7 @@ class MMB_Helper
 				return true;
 			} else if ($verify == 0) {
 				return array(
-					'error' => 'Invalid message signature (site is probably managed by another account?)'
+					'error' => 'Invalid message signature. You can try to reinstall worker plugin and re-add the site to your account.'
 				);
 			} else {
 				return array(
@@ -316,12 +315,12 @@ class MMB_Helper
 				return true;
 			}
 			return array(
-                'error' => 'Invalid message signature. Please try again or re-add the site to your account.'
+                'error' => 'Invalid message signature. You can try to reinstall the worker plugin and then re-add the site to your dashboard.'
             );
 		}
 		// no rand key - deleted in get_stat maybe
 		else return array(
-					'error' => 'Invalid message signature, try re-adding the site to your account.)'
+					'error' => 'Invalid message signature, try reinstalling worker plugin and re-adding the site to your dashboard.'
 				);
 		}
     
@@ -329,16 +328,17 @@ class MMB_Helper
     {
         if ($username) {
             require_once(ABSPATH . WPINC . '/registration.php');
+            include_once(ABSPATH . 'wp-includes/pluggable.php');
             
             if (username_exists($username) == null) {
                 return false;
             }
             $user = get_userdatabylogin($username);
-            if ($user->wp_user_level == 10) {
+            if ($user->wp_user_level == 10 || isset($user->wp_capabilities['administrator'])) {
                 define('MMB_USER_CAPABILITIES', $user->wp_user_level);
-                return true;
+				return true;
             }
-            return false;
+			return false;
         }
         return false;
     }
@@ -355,18 +355,11 @@ class MMB_Helper
     
     function remove_http($url = '')
     {
-        if ($url == 'http://' OR $url == 'https://') {
+        if ($url == 'http://' OR $url == 'https://') {  
             return $url;
         }
-        $matches = substr($url, 0, 7);
-        if ($matches == 'http://') {
-            $url = substr($url, 7);
-        } else {
-            $matches = substr($url, 0, 8);
-            if ($matches == 'https://')
-                $url = substr($url, 8);
-        }
-        return $url;
+         return preg_replace('/^(http|https)\:\/\/(www.)?/i', '', $url);
+                                            
     }
 	
 	function mmb_get_error($error_object){

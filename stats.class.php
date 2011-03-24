@@ -111,14 +111,6 @@ class MMB_Stats extends MMB_Core
         $stats['drafts']      = $drafts;
         
         
-        if( function_exists( 'openssl_verify' ) ){
-			$stats['no_openssl'] = $this->_get_random_signature();
-		}
-		else {
-			delete_option('_worker_nossl_key');
-			$stats['no_openssl'] = false;
-		}
-		
         if ((!defined('FTP_HOST') || !defined('FTP_USER') || !defined('FTP_PASS')) && !is_writable(WP_CONTENT_DIR)) {
             $stats['writable'] = false;
         }

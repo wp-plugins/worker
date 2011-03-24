@@ -258,10 +258,10 @@ class MMB_Core extends MMB_Helper
 						)));
 			ob_end_clean();
 			if(is_wp_error($result) || !$result){
-				return array('error' => 'Manage WP Worker could not been upgraded.');
+				return array('error' => 'ManageWP Worker could not been upgraded.');
 			}
 			else{
-				return array('success' => 'Manage WP Worker plugin successfully upgraded.');
+				return array('success' => 'ManageWP Worker plugin successfully upgraded.');
 			}
 		}
 		return array('error' => 'Bad download path for worker installation file.');

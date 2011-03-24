@@ -4,7 +4,7 @@ Plugin Name: ManageWP - Worker
 Plugin URI: http://managewp.com/
 Description: Manage all your blogs from one dashboard
 Author: Prelovac Media
-Version: 3.8.1
+Version: 3.8.2
 Author URI: http://www.prelovac.com
 */
 
@@ -13,7 +13,7 @@ if ($_SERVER['REMOTE_ADDR'] != '127.0.0.1') {
     error_reporting(E_ERROR);
 }
 
-define('MMB_WORKER_VERSION', '3.8.1');
+define('MMB_WORKER_VERSION', '3.8.2');
 
 global $wpdb, $mmb_plugin_dir, $mmb_plugin_url;
 
@@ -127,35 +127,48 @@ function mmb_add_site($params)
 
 						mmb_response($mmb_core->get_stats_instance()->get_initial_stats(), true);
 					} else if ($verify == 0) {
-						mmb_response('Invalid message signature (site is probably managed by another account?)', false);
+						mmb_response('Invalid message signature. Please contact us if you see this message often.', false);
 					} else {
 						mmb_response('Command not successful. Please try again.', false);
 					}
 				} else{
 					if ( !get_option('_worker_nossl_key')) {
+					        srand();
 						$random_key = md5(base64_encode($public_key) . rand(0, getrandmax()));
 						
 						$mmb_core->_set_random_signature($random_key);
 						$mmb_core->_set_worker_message_id($id);
 						$mmb_core->_set_master_public_key($public_key);
-						
 						mmb_response($mmb_core->get_stats_instance()->get_initial_stats(), true);
 					}
-					else  mmb_response('Site seems to be already managed by another ManageWP account. Either remove the site from that account, or deactivate & activate the ManageWP Worker plugin to reset.', false);
+					else  mmb_response('Please deactivate & activate ManageWP Worker plugin on your site, then re-add the site to your dashboard.', false);
 			}
         } else {
-            mmb_response('Site seems to be already managed by another ManageWP account. Either remove the site from that account, or deactivate & activate the ManageWP Worker plugin to reset.', false);
+            mmb_response('Please deactivate & activate ManageWP Worker plugin on your site and re-add the site to your dashboard.', false);
         }
     } else {
         mmb_response('Invalid parameters received. Please try again.', false);
     }
 }
 
-function mmb_remove_site()
-{
+function mmb_remove_site($params)
+{	
+	extract($params);
     global $mmb_core;
     $mmb_core->uninstall();
-    mmb_response('ManageWP Worker data successfully removed.', true);
+	
+	include_once(ABSPATH . 'wp-admin/includes/plugin.php');
+	$plugin_slug = basename(dirname(__FILE__)).'/'.basename(__FILE__);
+	
+	if($deactivate){
+		deactivate_plugins($plugin_slug, true);
+	}
+	
+	if(!is_plugin_active($plugin_slug))
+		mmb_response(array('deactivated' => 'Site removed successfully. <br /><br />ManageWP Worker plugin successfully deactivated.'), true);
+	else 
+		mmb_response(array('removed_data' => 'Site removed successfully. <br /><br /><b>ManageWP Worker plugin was not deactivated.</b>'), true);
+    
 }
 
 

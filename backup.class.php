@@ -556,7 +556,7 @@ class MMB_Backup extends MMB_Core
         }
         
         $stats_function_disabled = 0;
-        
+        // TODO: if none of these exists return with an appropriate error. else fallback passthru to whatever is available
         if (!function_exists('passthru')) {
             $stats_function_disabled++;
         }
