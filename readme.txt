@@ -15,9 +15,9 @@ ManageWP is a revolutionary plugin that allows you to manage multiple WordPress 
 Main features:
 
 *   One click upgrades of WordPress, plugin and themes across all your sites
-*   Access admin of any site from one dashboard
-*   Publish posts in bulk to multiple sites at once
-*   Upload themes and plugins in bulk to multiple sites at once
+*   One click to access administration dashboard for any site
+*   Bulk publish posts to multiple sites at once
+*   Bulk upload themes and plugins to multiple sites at once
 *   Automatic backups of your sites
 *   Clone one site to another
 *   Much, much more...
@@ -41,14 +41,18 @@ Check out [ManageWP.com](http://managewp.com/ "Manage Multiple Blogs")
 
 == Installation ==
 
-1. Upload the whole plugin folder to your /wp-content/plugins/ folder.
-2. Go to the Plugins page and activate the plugin.
-3. Visit [ManageWP.com](http://managewp.com/ "Manage Multiple Blogs"), sign up and add your blogs
+1. Upload the plugin folder to your /wp-content/plugins/ folder
+2. Go to the Plugins page and activate ManageWP Worker
+3. Visit [ManageWP.com](http://managewp.com/ "Manage Multiple Blogs"), sign up and add your site
 
+Alternately
+
+1. Visit [ManageWP.com](http://managewp.com/ "Manage Multiple Blogs"), sign up and add your site
+2. ManageWP willw arn you the worker plugin is not install and offer a link for quick installation
 
 == Screenshots ==
 
-1. ManageWP dashboard with uavailable pgrades, site statistics and management functions
+1. ManageWP dashboard with available upgrades, site statistics and management functions
 
 
 
@@ -65,8 +69,10 @@ You should have received a copy of the GNU General Public License along with Man
 
 == Frequently Asked Questions ==
 
-= I have problems installing new plugins =
+= I have problems adding my site =
 
-ManageWP Worker currently relies on file permissions set up correctly on your server, in order to write files to your plugin folder. Some servers require ftp login details to write the files and Plugin Central will support this option in the future.
+Make sure you use the latest version of the worker plugin on the site you are trying to add. If you do, sometimes deactivating and activating it again will help. If you still have problems, [contact us](http://managewp.com/contact "ManageWP Contact").
 
-See also the [user guide](http://managewp.com/user-guide "ManageWP user guide") for more tips.
+= I have problems installing new plugins or upgrading WordPress through ManageWP =
+
+ManageWP Worker relies on properly set file permissions on your server. See the [user guide](http://managewp.com/user-guide#ftp "ManageWP user guide") for more tips.
