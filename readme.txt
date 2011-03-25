@@ -1,7 +1,7 @@
 === ManageWP Worker ===
 Contributors: freediver
 Donate link: https://www.networkforgood.org/donation/MakeDonation.aspx?ORGID2=520781390
-Tags: managewp, managewp worker, admin, manage blogs, multi blog manager, manage multiple blogs
+Tags: managewp, managewp worker, admin, manage blogs, multi blog manager, manage multiple blogs, remote blog management
 Requires at least: 3.0
 Tested up to: 3.1
 Stable tag: trunk
@@ -12,14 +12,15 @@ ManageWP Worker plugin allows you to remotely manage your blogs from one dashboa
 
 ManageWP is a revolutionary plugin that allows you to manage multiple WordPress blogs from one dashboard.
 
-Features:
-* One click upgrades of WordPress, plugin and themes across all your sites
-* Access admin of any site from one dashboard
-* Publish posts in bulk to multiple sites at once
-* Upload themes and plugins in bulk to multiple sites at once
-* Automatic backups of your sites
-* Clone one site to another
-* Much, much more...
+Main features:
+
+*   One click upgrades of WordPress, plugin and themes across all your sites
+*   Access admin of any site from one dashboard
+*   Publish posts in bulk to multiple sites at once
+*   Upload themes and plugins in bulk to multiple sites at once
+*   Automatic backups of your sites
+*   Clone one site to another
+*   Much, much more...
 
 Check out [ManageWP.com](http://managewp.com/ "Manage Multiple Blogs")
 
