@@ -15,33 +15,7 @@ class MMB_WP extends MMB_Core
     {
         parent::__construct();
     }
-    
-    /*************************************************************
-     * FACADE functions
-     * (functions to be called after a remote call from Master)
-     **************************************************************/
-    function check_version()
-    {
-        require_once(ABSPATH . 'wp-includes/version.php');
-        require_once(ABSPATH . '/wp-admin/includes/update.php');
-        
-        $updates = get_core_updates();
-        $update  = $updates[0];
-        global $wp_version;
-        
-        if (!isset($update->response) || 'latest' == $update->response) {
-            return array(
-                'current_version' => $wp_version,
-                'latest_version' => false
-            );
-        } else {
-            return array(
-                'current_version' => $wp_version,
-                'latest_version' => $update
-            );
-        }
-    }
-    
+      
     /**
      * Upgrades WordPress locally
      *

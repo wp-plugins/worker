@@ -4,7 +4,7 @@ Plugin Name: ManageWP - Worker
 Plugin URI: http://managewp.com/
 Description: Manage all your blogs from one dashboard
 Author: Prelovac Media
-Version: 3.8.3
+Version: 3.8.4
 Author URI: http://www.prelovac.com
 */
 
@@ -19,12 +19,8 @@ Author URI: http://www.prelovac.com
  * www.prelovac.com
  **************************************************************/
 
-// PHP warnings can break our XML stuffs
-if ($_SERVER['REMOTE_ADDR'] != '127.0.0.1') {
-    error_reporting(E_ERROR);
-}
 
-define('MMB_WORKER_VERSION', '3.8.3');
+define('MMB_WORKER_VERSION', '3.8.4');
 
 global $wpdb, $mmb_plugin_dir, $mmb_plugin_url;
 
@@ -42,7 +38,7 @@ require_once("$mmb_plugin_dir/stats.class.php");
 require_once("$mmb_plugin_dir/backup.class.php");
 
 $mmb_core = new MMB_Core();
-add_action('init', '_mmb_parse_request');
+add_action('init', 'mmb_parse_request');
 
 if (function_exists('register_activation_hook'))
     register_activation_hook(__FILE__, array(
@@ -56,7 +52,7 @@ if (function_exists('register_deactivation_hook'))
         'uninstall'
     ));
 
-function _mmb_parse_request()
+function mmb_parse_request()
 {
     if (!isset($HTTP_RAW_POST_DATA)) {
         $HTTP_RAW_POST_DATA = file_get_contents('php://input');
@@ -68,7 +64,7 @@ function _mmb_parse_request()
     $num  = extract(unserialize($data));
     
     if ($action) {
-        if (!$mmb_core->_check_if_user_exists($params['username']))
+        if (!$mmb_core->check_if_user_exists($params['username']))
             mmb_response('Username <b>' . $params['username'] . '</b> does not have administrator capabilities. Enter the correct username in the site options.', false);
         
         if ($action == 'add_site') {
@@ -76,7 +72,7 @@ function _mmb_parse_request()
             mmb_response('You should never see this.', false);
         }
         
-        $auth = $mmb_core->_authenticate_message($action . $id, $signature, $id);
+        $auth = $mmb_core->authenticate_message($action . $id, $signature, $id);
         if ($auth === true) {
             $mmb_actions = array(
                 'remove_site' => 'mmb_remove_site',
@@ -136,8 +132,8 @@ function mmb_add_site($params)
             if (function_exists('openssl_verify')) {
                 $verify = openssl_verify($action . $id, base64_decode($signature), $public_key);
                 if ($verify == 1) {
-                    $mmb_core->_set_master_public_key($public_key);
-                    $mmb_core->_set_worker_message_id($id);
+                    $mmb_core->set_master_public_key($public_key);
+                    $mmb_core->set_worker_message_id( $id);
                     
                     mmb_response($mmb_core->get_stats_instance()->get_initial_stats(), true);
                 } else if ($verify == 0) {
@@ -150,9 +146,9 @@ function mmb_add_site($params)
                     srand();
                     $random_key = md5(base64_encode($public_key) . rand(0, getrandmax()));
                     
-                    $mmb_core->_set_random_signature($random_key);
-                    $mmb_core->_set_worker_message_id($id);
-                    $mmb_core->_set_master_public_key($public_key);
+                    $mmb_core->set_random_signature($random_key);
+                    $mmb_core->set_worker_message_id( $id);
+                    $mmb_core->set_master_public_key($public_key);
                     mmb_response($mmb_core->get_stats_instance()->get_initial_stats(), true);
                 } else
                     mmb_response('Please deactivate & activate ManageWP Worker plugin on your site, then re-add the site to your dashboard.', false);
@@ -253,15 +249,14 @@ function mmb_post_create($params)
 function mmb_backup_now($params)
 {
     global $mmb_core;
+
     $return = $mmb_core->get_backup_instance()->backup($params);
     
     if (is_array($return) && array_key_exists('error', $return))
         mmb_response($return['error'], false);
     else {
-        $mmb_core->_log($return);
         mmb_response($return, true);
-    }
-    
+    }  
 }
 
 function mmb_optimize_tables($params)

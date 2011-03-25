@@ -55,7 +55,7 @@ class MMB_Helper
      * Initializes the file system
      * 
      */
-    function _init_filesystem()
+    function init_filesystem()
     {
         global $wp_filesystem;
         
@@ -121,24 +121,12 @@ class MMB_Helper
                 delete_option('_site_transient_' . $option_name);
         }
     }
-    
-    function mmb_null_op_buffer($buffer)
-    {
-        //do nothing
-        if (!ob_get_level())
-            ob_start(array(
-                $this,
-                'mmb_null_op_buffer'
-            ));
-        return '';
-    }
-    
-    function _deleteTempDir($directory)
+      
+    function delete_temp_dir($directory)
     {
         if (substr($directory, -1) == "/") {
             $directory = substr($directory, 0, -1);
         }
-        //            $this->_log($directory);
         if (!file_exists($directory) || !is_dir($directory)) {
             return false;
         } elseif (!is_readable($directory)) {
@@ -151,7 +139,7 @@ class MMB_Helper
                     $path = $directory . "/" . $contents;
                     
                     if (is_dir($path)) {
-                        $this->_deleteTempDir($path);
+                        $this->delete_temp_dir($path);
                     } else {
                         unlink($path);
                     }
@@ -163,15 +151,7 @@ class MMB_Helper
         }
     }
     
-    function _is_ftp_writable_mmb()
-    {
-        if (defined('FTP_PASS')) {
-            return true;
-        } else
-            return false;
-    }
-    
-    function _set_worker_message_id($message_id = false)
+    function set_worker_message_id( $message_id = false)
     {
         if ($message_id) {
             add_option('_action_message_id', $message_id) or update_option('_action_message_id', $message_id);
@@ -180,12 +160,12 @@ class MMB_Helper
         return false;
     }
     
-    function _get_worker_message_id()
+    function get_worker_message_id()
     {
         return (int) get_option('_action_message_id');
     }
     
-    function _set_master_public_key($public_key = false)
+    function set_master_public_key($public_key = false)
     {
         if ($public_key && !get_option('_worker_public_key')) {
             add_option('_worker_public_key', base64_encode($public_key));
@@ -194,28 +174,22 @@ class MMB_Helper
         return false;
     }
     
-    function _get_master_public_key()
+    function get_master_public_key()
     {
         if (!get_option('_worker_public_key'))
             return false;
         return base64_decode(get_option('_worker_public_key'));
     }
     
-    function _get_master_referer()
-    {
-        if (!get_option('_master_referer'))
-            return false;
-        return base64_decode(get_option('_master_referer'));
-    }
-    
-    function _get_random_signature()
+       
+    function get_random_signature()
     {
         if (!get_option('_worker_nossl_key'))
             return false;
         return base64_decode(get_option('_worker_nossl_key'));
     }
     
-    function _set_random_signature($random_key = false)
+    function set_random_signature($random_key = false)
     {
         if ($random_key && !get_option('_worker_nossl_key')) {
             add_option('_worker_nossl_key', base64_encode($random_key));
@@ -225,7 +199,7 @@ class MMB_Helper
     }
     
     
-    function _authenticate_message($data = false, $signature = false, $message_id = false)
+    function authenticate_message($data = false, $signature = false, $message_id = false)
     {
         if (!$data && !$signature) {
             return array(
@@ -233,24 +207,24 @@ class MMB_Helper
             );
         }
         
-        $current_message = $this->_get_worker_message_id();
+        $current_message = $this->get_worker_message_id();
         
         if ((int) $current_message > (int) $message_id)
             return array(
                 'error' => 'Invalid message recieved. You can try to reinstall worker plugin and re-add the site to your account.'
             );
         
-        $pl_key = $this->_get_master_public_key();
+        $pl_key = $this->get_master_public_key();
         if (!$pl_key) {
             return array(
                 'error' => 'Authentication failed (public key). You can try to reinstall worker plugin and re-add the site to your account.'
             );
         }
         
-        if (function_exists('openssl_verify') && !$this->_get_random_signature()) {
+        if (function_exists('openssl_verify') && !$this->get_random_signature()) {
             $verify = openssl_verify($data, $signature, $pl_key);
             if ($verify == 1) {
-                $message_id = $this->_set_worker_message_id($message_id);
+                $message_id = $this->set_worker_message_id( $message_id);
                 return true;
             } else if ($verify == 0) {
                 return array(
@@ -261,9 +235,9 @@ class MMB_Helper
                     'error' => 'Command not successful! Please try again.'
                 );
             }
-        } else if ($this->_get_random_signature()) {
-            if (md5($data . $this->_get_random_signature()) == $signature) {
-                $message_id = $this->_set_worker_message_id($message_id);
+        } else if ($this->get_random_signature()) {
+            if (md5($data . $this->get_random_signature()) == $signature) {
+                $message_id = $this->set_worker_message_id( $message_id);
                 return true;
             }
             return array(
@@ -277,7 +251,7 @@ class MMB_Helper
             );
     }
     
-    function _check_if_user_exists($username = false)
+    function check_if_user_exists($username = false)
     {
 		global $wpdb;
         if ($username) {

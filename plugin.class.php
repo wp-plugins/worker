@@ -24,7 +24,7 @@ class MMB_Plugin extends MMB_Core
      */
     function upgrade_all($params)
     {
-        $upgradable_plugins = $this->_get_upgradable_plugins();
+        $upgradable_plugins = $this->get_upgradable_plugins();
         
         $ready_for_upgrade = array();
         if (!empty($upgradable_plugins)) {
@@ -137,7 +137,7 @@ class MMB_Plugin extends MMB_Core
         
     }
     
-    function _get_upgradable_plugins()
+    function get_upgradable_plugins()
     {
         $current            = $this->mmb_get_transient('update_plugins');
         $upgradable_plugins = array();

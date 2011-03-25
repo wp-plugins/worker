@@ -37,7 +37,8 @@ class MMB_Stats extends MMB_Core
         
         require_once(ABSPATH . '/wp-admin/includes/update.php');
         
-        
+        $stats['worker_version'] = MMB_WORKER_VERSION;
+		
         $updates = $this->mmb_get_transient('update_core');
         
         if ($updates->updates[0]->response == 'development' || version_compare($wp_version, $updates->updates[0]->current, '<')) {
@@ -56,8 +57,9 @@ class MMB_Stats extends MMB_Core
         }
         $stats['hit_counter'] = get_option('user_hit_count');
         
-        $stats['upgradable_themes']  = $this->get_theme_instance()->_get_upgradable_themes();
-        $stats['upgradable_plugins'] = $this->get_plugin_instance()->_get_upgradable_plugins();
+        
+        $stats['upgradable_themes']  = $this->get_theme_instance()->get_upgradable_themes();
+        $stats['upgradable_plugins'] = $this->get_plugin_instance()->get_upgradable_plugins();
         
         $pending_comments = get_comments('status=hold&number=' . $num_pending_comments);
         foreach ($pending_comments as &$comment) {
@@ -136,12 +138,13 @@ class MMB_Stats extends MMB_Core
         $stats = array();
         
         $stats['email']          = get_option('admin_email');
-        $stats['no_openssl']     = $this->_get_random_signature();
+        $stats['no_openssl']     = $this->get_random_signature();
         $stats['content_path']   = WP_CONTENT_DIR;
         $stats['worker_path']    = $mmb_plugin_dir;
         $stats['worker_version'] = MMB_WORKER_VERSION;
         $stats['site_title']     = get_bloginfo('name');
         $stats['site_tagline']   = get_bloginfo('description');
+        $stats['site_url']   = get_bloginfo('home');
         
         
         if ((!defined('FTP_HOST') || !defined('FTP_USER') || !defined('FTP_PASS')) && !is_writable(WP_CONTENT_DIR)) {

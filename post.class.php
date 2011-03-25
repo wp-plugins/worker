@@ -28,6 +28,7 @@ class MMB_Post extends MMB_Core
         
         include_once ABSPATH . 'wp-admin/includes/taxonomy.php';
         include_once ABSPATH . 'wp-admin/includes/image.php';
+        include_once ABSPATH . 'wp-admin/includes/file.php';
         
         $post_struct = $args['post_data'];
         
@@ -120,10 +121,7 @@ class MMB_Post extends MMB_Core
                     $no_thumb = $get_url[4];
                 }
                 $file_name = basename($no_thumb);
-                
-                //$tmp_file = $upload['path'].'/tempfile.tmp';
-                $tmp_file = $this->mmb_download_url($no_thumb, $upload['path'] . '/tempfile' . md5(time()) . '.tmp');
-                //$tmp_file = download_url($no_thumb);
+                $tmp_file = download_url($no_thumb);
                 
                 $attach_upload['url']  = $upload['url'] . '/' . $file_name;
                 $attach_upload['path'] = $upload['path'] . '/' . $file_name;
@@ -207,12 +205,7 @@ class MMB_Post extends MMB_Core
         if (count($post_atta_img)) {
             foreach ($post_atta_img as $img) {
                 $file_name = basename($img['src']);
-                
-                
-                $tmp_file = $this->mmb_download_url($img['src'], $upload['path'] . '/tempfile.tmp');
-                
-                //$tmp_file = download_url($img['src']);
-                
+                $tmp_file = download_url($img['src']);
                 $attach_upload['url']  = $upload['url'] . '/' . $file_name;
                 $attach_upload['path'] = $upload['path'] . '/' . $file_name;
                 $renamed               = @rename($tmp_file, $attach_upload['path']);
@@ -274,8 +267,7 @@ class MMB_Post extends MMB_Core
         // featured image
         if ($post_featured_img != '') {
             $file_name             = basename($post_featured_img);
-            //$tmp_file = download_url($post_featured_img);
-            $tmp_file              = $this->mmb_download_url($no_thumb, $upload['path'] . '/tempfile_feat.tmp');
+            $tmp_file = download_url($post_featured_img);
             $attach_upload['url']  = $upload['url'] . '/' . $file_name;
             $attach_upload['path'] = $upload['path'] . '/' . $file_name;
             $renamed               = @rename($tmp_file, $attach_upload['path']);
@@ -328,19 +320,5 @@ class MMB_Post extends MMB_Core
           return $post_id;  
     }
     
-    /**
-     * Aleternate function for WordPress download_url()
-     */
-    function mmb_download_url($url, $file_name)
-    {
-        $destination = fopen($file_name, 'wb');
-        $source      = @fopen($url, "r");
-        while ($a = fread($source, 1024)) {
-            $ret = fwrite($destination, $a);
-        }
-        fclose($source);
-        fclose($destination);
-        return $file_name;
-    }
 }
 ?>

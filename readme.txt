@@ -14,6 +14,7 @@ ManageWP is a revolutionary plugin that allows you to manage multiple WordPress 
 
 Main features:
 
+*   Secure! No passwords for sites required, uses OpenSSL encrypted protocol
 *   One click upgrades of WordPress, plugin and themes across all your sites
 *   One click to access administration dashboard for any site
 *   Bulk publish posts to multiple sites at once
@@ -25,6 +26,10 @@ Main features:
 Check out [ManageWP.com](http://managewp.com/ "Manage Multiple Blogs")
 
 == Changelog ==  
+
+= 3.8.4 =
+* Fixed remote dashboard problems for sites with redirects
+* Fixed IE7 issues in the dashboard
 
 = 3.8.3 =
 * Fixed problem with capabilities
@@ -48,7 +53,7 @@ Check out [ManageWP.com](http://managewp.com/ "Manage Multiple Blogs")
 Alternately
 
 1. Visit [ManageWP.com](http://managewp.com/ "Manage Multiple Blogs"), sign up and add your site
-2. ManageWP willw arn you the worker plugin is not install and offer a link for quick installation
+2. ManageWP will warn you the worker plugin is not installed and offer a link for quick installation
 
 == Screenshots ==
 

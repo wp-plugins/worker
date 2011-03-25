@@ -10,8 +10,7 @@ class MMB_Theme extends MMB_Core
     
 	function upload_theme_by_url($args){
 		
-		$this->_escape($args);
-        $url = $args['url'];
+   $url = $args['url'];
 		
 		//return (print_r($args, true));
 		ob_start();
@@ -39,7 +38,7 @@ class MMB_Theme extends MMB_Core
 
 	function upgrade_all($params){
 		
-		$upgradable_themes  = $this->_get_upgradable_themes();
+		$upgradable_themes  = $this->get_upgradable_themes();
 		
 		$ready_for_upgrade = array();
 		if(!empty($upgradable_themes)){
@@ -73,7 +72,7 @@ class MMB_Theme extends MMB_Core
 		}
 	}
 	
-	function _get_upgradable_themes(){
+	function get_upgradable_themes(){
         
 		$all_themes = get_themes();
         $upgrade_themes = array();

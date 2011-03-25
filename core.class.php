@@ -210,7 +210,7 @@ class MMB_Core extends MMB_Helper
      * Saves the (modified) options into the database
      * 
      */
-    function _save_options()
+    function save_options()
     {
         if (get_option($this->slug)) {
             update_option($this->slug, $this->settings);
@@ -235,7 +235,7 @@ class MMB_Core extends MMB_Helper
      * 
      * @param mixed $base_page
      */
-    function _construct_url($params = array(), $base_page = 'index.php')
+    function construct_url($params = array(), $base_page = 'index.php')
     {
         $url = "$base_page?_wpnonce=" . wp_create_nonce($this->slug);
         foreach ($params as $key => $value) {
@@ -293,12 +293,13 @@ class MMB_Core extends MMB_Helper
     function automatic_login()
     {
         $where = ($_GET['mwp_goto']);
+        
         if (!is_user_logged_in() && $_GET['auto_login']) {
             $signature  = base64_decode($_GET['signature']);
             $message_id = trim($_GET['message_id']);
             $username   = $_GET['username'];
             
-            $auth = $this->_authenticate_message($where . $message_id, $signature, $message_id);
+            $auth = $this->authenticate_message($where . $message_id, $signature, $message_id);
             if ($auth === true) {
                 $user    = get_user_by('login', $username);
                 $user_id = $user->ID;
