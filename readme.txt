@@ -47,9 +47,7 @@ Check out [ManageWP.com](http://managewp.com/ "Manage Multiple Blogs")
 
 == Screenshots ==
 
-1. Global dashboard with quick upgrades
-2. Manage every blog with statistics	
-3. ManageWP.com
+1. ManageWP dashboard with uavailable pgrades, site statistics and management functions
 
 
 
