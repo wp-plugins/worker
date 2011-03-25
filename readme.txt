@@ -25,10 +25,14 @@ Check out [ManageWP.com](http://managewp.com/ "Manage Multiple Blogs")
 
 == Changelog ==  
 
+= 3.8.3 =
+* Fixed problem with capabilities
+
 = 3.8.2 =
 * New interface
 * SSL security protocol
-* many more
+* No passwords required
+* Improved clone/backup
 
 
 = 3.6.3 =  

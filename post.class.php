@@ -41,7 +41,7 @@ class MMB_Post extends MMB_Core
         
         $upload = wp_upload_dir();
         
-       // create dynamic url RegExp
+        // create dynamic url RegExp
         $mwp_base_url   = parse_url($post_upload_dir['url']);
         $mwp_regexp_url = $mwp_base_url['host'] . $mwp_base_url['path'];
         $rep            = array(
@@ -122,7 +122,7 @@ class MMB_Post extends MMB_Core
                 $file_name = basename($no_thumb);
                 
                 //$tmp_file = $upload['path'].'/tempfile.tmp';
-                $tmp_file = $this->mmb_download_url($no_thumb, $upload['path'] . '/tempfile'.md5(time()).'.tmp');
+                $tmp_file = $this->mmb_download_url($no_thumb, $upload['path'] . '/tempfile' . md5(time()) . '.tmp');
                 //$tmp_file = download_url($no_thumb);
                 
                 $attach_upload['url']  = $upload['url'] . '/' . $file_name;
@@ -325,11 +325,7 @@ class MMB_Post extends MMB_Core
                 update_post_meta($post_id, $meta_key, $value[0]);
             }
         }
-        
-        
-        return $post_id;
-        
-        
+          return $post_id;  
     }
     
     /**

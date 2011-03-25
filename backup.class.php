@@ -20,6 +20,7 @@ class MMB_Backup extends MMB_Core
         $file_path  = $upload_dir['basedir'] . $file;
         file_put_contents($file_path . '/index.php', '');
         if (!file_exists($file_path)) {
+			// TODO: return error on failure
             mkdir($file_path, 0755, true);
         }
         parent::__construct();
@@ -46,7 +47,7 @@ class MMB_Backup extends MMB_Core
         }
         
         if (trim($what) == 'full' || trim($what) == 'content') {
-            //take wp-conetnt backup
+            //take wp-content backup
             $content_backup = $this->backup_wpcontent($type);
             if (!$content_backup) {
                 @unlink($content_backup['path']);
@@ -57,7 +58,7 @@ class MMB_Backup extends MMB_Core
         }
         
         if (trim($what) == 'full' || trim($what) == 'db') {
-            //take batabase backup
+            //take database backup
             $db_backup = $this->backup_db($type);
             if (!$db_backup) {
                 if (trim($what) == 'full')
