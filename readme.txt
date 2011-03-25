@@ -69,3 +69,4 @@ You should have received a copy of the GNU General Public License along with Man
 
 ManageWP Worker currently relies on file permissions set up correctly on your server, in order to write files to your plugin folder. Some servers require ftp login details to write the files and Plugin Central will support this option in the future.
 
+See also the [user guide](http://managewp.com/user-guide "ManageWP user guide") for more tips.
