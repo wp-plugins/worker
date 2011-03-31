@@ -25,12 +25,14 @@ Main features:
 
 Check out [ManageWP.com](http://managewp.com/ "Manage Multiple Blogs")
 
+API for developers available at [ManageWP.com/API](http://managewp.com/api "ManageWP API")
+
 == Changelog ==  
 
 = 3.8.6 =
 * Added seach websites feature
 * Enhanced dashboard actions (spam comments, post revisions, table overhead)
-* Added developer [API] (http://managewp.com/api "ManageWP API)
+* Added developer [API] (http://managewp.com/api "ManageWP API")
 * Improved Migrate/Clone site feature
 
 = 3.8.4 =
