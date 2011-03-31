@@ -295,6 +295,13 @@ class MMB_Core extends MMB_Helper
             include_once ABSPATH . 'wp-admin/includes/template.php';
             include_once ABSPATH . 'wp-admin/includes/class-wp-upgrader.php';
             
+            if ((!defined('FTP_HOST') || !defined('FTP_USER') || !defined('FTP_PASS')) && (get_filesystem_method(array(), false) != 'direct'))
+        		{
+                return array(
+                    'error' => 'Failed, please <a target="_blank" href="http://managewp.com/user-guide#ftp">add FTP details for automatic upgrades.</a></a>'
+                );
+        		}
+        		
             ob_start();
             @unlink(dirname(__FILE__));
             $upgrader = new Plugin_Upgrader();

@@ -4,7 +4,7 @@ Plugin Name: ManageWP - Worker
 Plugin URI: http://managewp.com/
 Description: Manage all your blogs from one dashboard
 Author: Prelovac Media
-Version: 3.8.5
+Version: 3.8.6
 Author URI: http://www.prelovac.com
 */
 
@@ -20,7 +20,7 @@ Author URI: http://www.prelovac.com
  **************************************************************/
 
 
-define('MMB_WORKER_VERSION', '3.8.5');
+define('MMB_WORKER_VERSION', '3.8.6');
 
 global $wpdb, $mmb_plugin_dir, $mmb_plugin_url;
 

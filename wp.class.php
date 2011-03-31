@@ -27,6 +27,14 @@ class MMB_WP extends MMB_Core
         require_once(ABSPATH . 'wp-admin/includes/misc.php');
         require_once(ABSPATH . 'wp-admin/includes/class-wp-upgrader.php');
         
+        if ((!defined('FTP_HOST') || !defined('FTP_USER') || !defined('FTP_PASS')) && (get_filesystem_method(array(), false) != 'direct'))
+        {
+                return array(
+                    'error' => 'Failed, please <a target="_blank" href="http://managewp.com/user-guide#ftp">add FTP details</a></a>'
+                );
+        }
+        
+        
         WP_Filesystem();
         global $wp_version, $wp_filesystem;
         $upgrader = new WP_Upgrader();

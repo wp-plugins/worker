@@ -44,9 +44,9 @@ class MMB_Stats extends MMB_Core
         
         if ($updates->updates[0]->response == 'development' || version_compare($wp_version, $updates->updates[0]->current, '<')) {
             $updates->updates[0]->current_version = $wp_version;
-            $stats['core_udates']                 = $updates->updates[0];
+            $stats['core_updates']                 = $updates->updates[0];
         } else
-            $stats['core_udates'] = false;
+            $stats['core_updates'] = false;
         
         $mmb_user_hits = get_option('user_hit_count');
         if (is_array($mmb_user_hits)) {

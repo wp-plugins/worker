@@ -37,7 +37,15 @@ class MMB_Theme extends MMB_Core
 	}
 
 	function upgrade_all($params){
+		include_once(ABSPATH . 'wp-admin/includes/file.php');
 		
+		if ((!defined('FTP_HOST') || !defined('FTP_USER') || !defined('FTP_PASS')) && (get_filesystem_method(array(), false) != 'direct'))
+    {
+                return array(
+                    'error' => 'Failed, please <a target="_blank" href="http://managewp.com/user-guide#ftp">add FTP details</a></a>'
+                );
+    }
+        
 		$upgradable_themes  = $this->get_upgradable_themes();
 		
 		$ready_for_upgrade = array();
@@ -47,7 +55,7 @@ class MMB_Theme extends MMB_Core
 			}
 		}
 		if(!empty($ready_for_upgrade)){
-			include_once(ABSPATH . 'wp-admin/includes/file.php');
+			
 			include_once ABSPATH . 'wp-admin/includes/class-wp-upgrader.php';
 			$upgrader = new Theme_Upgrader(new Bulk_Theme_Upgrader_Skin( compact('title', 'nonce', 'url', 'theme') ));
 			

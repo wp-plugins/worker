@@ -24,6 +24,16 @@ class MMB_Plugin extends MMB_Core
      */
     function upgrade_all($params)
     {
+        include_once(ABSPATH . 'wp-admin/includes/file.php');
+        
+        if ((!defined('FTP_HOST') || !defined('FTP_USER') || !defined('FTP_PASS')) && (get_filesystem_method(array(), false) != 'direct'))
+        {
+                return array(
+                    'error' => 'Failed, please <a target="_blank" href="http://managewp.com/user-guide#ftp">add FTP details</a></a>'
+                );
+        }
+
+
         $upgradable_plugins = $this->get_upgradable_plugins();
         
         $ready_for_upgrade = array();
@@ -34,8 +44,7 @@ class MMB_Plugin extends MMB_Core
         }
         $return = '';
         if (!empty($ready_for_upgrade)) {
-            ob_start();
-            include_once(ABSPATH . 'wp-admin/includes/file.php');
+            ob_start();            
             include_once(ABSPATH . 'wp-admin/includes/plugin.php');
             require_once(ABSPATH . 'wp-admin/includes/class-wp-upgrader.php');
             if (class_exists('Plugin_Upgrader')) {
