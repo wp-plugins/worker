@@ -38,6 +38,7 @@ class MMB_Stats extends MMB_Core
         require_once(ABSPATH . '/wp-admin/includes/update.php');
         
         $stats['worker_version'] = MMB_WORKER_VERSION;
+        $stats['wordpress_version'] = $wp_version;
 		
         $updates = $this->mmb_get_transient('update_core');
         
@@ -128,7 +129,10 @@ class MMB_Stats extends MMB_Core
             $stats['writable'] = false;
         } else
             $stats['writable'] = true;
-        return $stats;
+
+		$stats = apply_filters('mmb_stats_filter', $stats);
+		
+		return $stats;
     }
     
     function get_initial_stats()
@@ -194,7 +198,7 @@ class MMB_Stats extends MMB_Core
                 if (!$fix_count)
                     $user_hit_count[$date] += 1;
                 
-                if (count($user_hit_count) > 7) {
+                if (count($user_hit_count) > 14) {
                     $shifted = @array_shift($user_hit_count);
                 }
                 

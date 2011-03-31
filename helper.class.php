@@ -297,7 +297,7 @@ class MMB_Helper
         } else {
             $errors = array();
             foreach ($error_object->error_data as $error_key => $error_string) {
-                $errors[] = str_replace('_', ' ', ucfirst($error_key)) . ' - ' . $error_string;
+                $errors[] = str_replace('_', ' ', ucfirst($error_key)) . ': ' . $error_string;
             }
             return implode('<br />', $errors);
         }

@@ -27,6 +27,12 @@ Check out [ManageWP.com](http://managewp.com/ "Manage Multiple Blogs")
 
 == Changelog ==  
 
+= 3.8.5 =
+* Added seach websites feature
+* Added improved dashboard information
+* Added developer [API] (http://managewp.com/api "ManageWP API)
+* Improved Migrate/Clone site feature
+
 = 3.8.4 =
 * Fixed remote dashboard problems for sites with redirects
 * Fixed IE7 issues in the dashboard

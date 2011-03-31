@@ -21,8 +21,10 @@ class MMB_Core extends MMB_Helper
     var $wp_instance;
     var $post_instance;
     var $stats_instance;
+    var $search_instance;
     var $user_instance;
     var $backup_instance;
+    var $installer_instance;
     
     
     function __construct()
@@ -39,6 +41,7 @@ class MMB_Core extends MMB_Helper
                     'type' => null
                 )
             );
+            $this->save_options();
         }
         add_action('rightnow_end', array(
             $this,
@@ -56,9 +59,24 @@ class MMB_Core extends MMB_Helper
             $this,
             'automatic_login'
         ));
+          
+			if (!get_option('_worker_public_key'))
+		  		add_action('admin_notices', array(
+            $this,
+            'admin_notice'
+          ));		
+ 
     }
-    
-    
+     /**
+     * Add notice to admin dashboard for security reasons    
+     * 
+     */
+    function admin_notice() {		
+	  	echo '<div class="error" style="text-align: center;"><p style="color: red; font-size: 14px; font-weight: bold;">Attention !</p><p>
+	  	You activated the ManageWP worker plugin but have not yet added this site to your account. Please add the site to ManageWP now or deactivate the plugin. <a target="_blank" href="http://managewp.com/user-guide#security">More info</a>	  	
+	  	</p></div>';		
+		}   
+	
     /**
      * Add an item into the Right Now Dashboard widget 
      * to inform that the blog can be managed remotely
@@ -176,7 +194,18 @@ class MMB_Core extends MMB_Helper
         }
         return $this->stats_instance;
     }
-    
+    /**
+     * Gets an instance of search class
+     * 
+     */
+    function get_search_instance()
+    {
+        if (!isset($this->search_instance)) {
+            $this->search_instance = new MMB_Search();
+        }
+        //return $this->search_instance;
+        return $this->search_instance;
+    }
     /**
      * Gets an instance of stats class
      *
@@ -188,6 +217,14 @@ class MMB_Core extends MMB_Helper
         }
         
         return $this->backup_instance;
+    }
+	
+	function get_installer_instance()
+    {
+        if (!isset($this->installer_instance)) {
+            $this->installer_instance = new MMB_Installer();
+        }
+        return $this->installer_instance;
     }
     
     /**

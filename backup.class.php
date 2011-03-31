@@ -100,10 +100,9 @@ class MMB_Backup extends MMB_Core
         if (trim($what) == 'full') {
             $htaccess_path  = ABSPATH . ".htaccess";
             $wp_config_path = ABSPATH . "wp-config.php";
-            if ($this->check_zip() && $this->check_sys()) {
+            if ($this->check_zip() && ($func = $this->check_sys())) {
                 $command = "zip $backup_file -j $content_backup[path] -j $db_backup[path] -j $htaccess_path -j $wp_config_path";
-                ob_start();
-                $func = $this->check_sys();
+                ob_start();                
                 switch($func)
                 {
                 	case 'passthru': passthru($command, $err); break;
@@ -121,10 +120,9 @@ class MMB_Backup extends MMB_Core
             }
             
         } elseif (trim($what) == 'db') {
-            if ($this->check_zip() && $this->check_sys()) {
+            if ($this->check_zip() && ($func = $this->check_sys())) {
                 $command = "zip $backup_file -j $db_backup[path]";
-                ob_start();
-                $func = $this->check_sys();
+                ob_start();              
                 switch($func)
                 {
                 	case 'passthru': passthru($command, $err); break;
@@ -172,11 +170,10 @@ class MMB_Backup extends MMB_Core
         $sec_string = md5('mmb-worker');
         $file       = '/' . $sec_string . '/backups/wp-content_' . date('Y-m-d') . '.zip';
         $file_path  = $upload_dir['basedir'] . $file;
-        if ($this->check_zip() && $this->check_sys()) {
+        if ($this->check_zip() && ($func = $this->check_sys())) {
             chdir(WP_CONTENT_DIR);
             $command = "zip -r $file_path 'plugins/' 'themes/' 'uploads/' -x 'uploads/" . $sec_string . "/*'";
-            ob_start();
-            $func = $this->check_sys();
+            ob_start();          
                 switch($func)
                 {
                 	case 'passthru': passthru($command, $err); break;
@@ -219,8 +216,6 @@ class MMB_Backup extends MMB_Core
     function backup_db($type)
     {
         $mysqldump_exists = $this->check_mysqldump();
-        
-        
         if (is_array($mysqldump_exists) && $this->check_sys()) {
           
             $result = $this->backup_db_dump($type, $mysqldump_exists);
@@ -367,7 +362,7 @@ class MMB_Backup extends MMB_Core
         
         
         if ($backup_file) {
-            if ($this->check_unzip() && $this->check_sys()) {
+            if ($this->check_unzip() && ($func = $this->check_sys())) {
                 
                 if(!mkdir($file_path))
                 	return array('error' => 'Failed to create restore folder.');
@@ -375,7 +370,7 @@ class MMB_Backup extends MMB_Core
                 chdir($file_path);
                 $command = "unzip -o $backup_file";
                 ob_start();
-           			$func = $this->check_sys();
+           			
                 switch($func)
                 {
                 	case 'passthru': passthru($command, $err); break;
@@ -434,13 +429,12 @@ class MMB_Backup extends MMB_Core
         $content_file   = glob($file_path . "/*.zip");
         $wp_config_file = glob($file_path . "/wp-config.php");
         $htaccess_file  = glob($file_path . "/.htaccess");
-        if ($this->check_unzip() && $this->check_sys()) {
+        if ($this->check_unzip() && ($func = $this->check_sys())) {
         		
             chdir(WP_CONTENT_DIR);
             $con_file = $content_file[0];
             $command  = "unzip -o $con_file";
-            ob_start();
-           			$func = $this->check_sys();
+            ob_start();           		
                 switch($func)
                 {
                 	case 'passthru': passthru($command, $err); break;
@@ -472,13 +466,12 @@ class MMB_Backup extends MMB_Core
         
         $mysqldump = $this->check_mysqldump();
         
-        if (is_array($mysqldump) && $this->check_sys()) {
+        if (is_array($mysqldump) && ($func = $this->check_sys())) {
             $brace = (substr(PHP_OS, 0, 3) == 'WIN') ? '"' : '';
             
             foreach (glob($file_path . '/*.sql') as $filename) {
                 $command = $brace . $mysqldump['mysql'] . $brace . ' --host="' . DB_HOST . '" --user="' . DB_USER . '" --password="' . DB_PASSWORD . '" ' . DB_NAME . ' < ' . $brace . $filename . $brace;
-                ob_start();
-           			$func = $this->check_sys();
+                ob_start();           			
                 switch($func)
                 {
                 	case 'passthru': passthru($command, $error); break;
@@ -603,29 +596,18 @@ class MMB_Backup extends MMB_Core
     //Check if passthru, system or exec functions exist
     function check_sys()
     {
-    	$stats_function_disabled = 0;
-        if (!function_exists('passthru')) {
-            $stats_function_disabled++;
-        } else {
-        		return 'passthru';
-        }
-        
-        if (!function_exists('system')) {
-            $stats_function_disabled++;
-        } else {
+    
+        if (function_exists('passthru')) 
+          	return 'passthru';
+      
+        if (function_exists('system'))
         		return 'system';
-        }
-        
-        if (!function_exists('exec')) {
-            $stats_function_disabled++;
-        } else {
+              
+        if (function_exists('exec'))  
         		return 'exec';
-        }
-        
-        if ($stats_function_disabled == 3) {
+
             return false;
-        }
-        
+       
      }
     
     function check_zip()

@@ -4,7 +4,7 @@ Plugin Name: ManageWP - Worker
 Plugin URI: http://managewp.com/
 Description: Manage all your blogs from one dashboard
 Author: Prelovac Media
-Version: 3.8.4
+Version: 3.8.5
 Author URI: http://www.prelovac.com
 */
 
@@ -20,14 +20,30 @@ Author URI: http://www.prelovac.com
  **************************************************************/
 
 
-define('MMB_WORKER_VERSION', '3.8.4');
+define('MMB_WORKER_VERSION', '3.8.5');
 
 global $wpdb, $mmb_plugin_dir, $mmb_plugin_url;
 
 $mmb_plugin_dir = WP_PLUGIN_DIR . '/' . basename(dirname(__FILE__));
 $mmb_plugin_url = WP_PLUGIN_URL . '/' . basename(dirname(__FILE__));
 
-require_once(ABSPATH . 'wp-includes/class-IXR.php');
+$mmb_actions = array(
+	'remove_site' => 'mmb_remove_site',
+	'get_stats' => 'mmb_stats_get',
+	'backup' => 'mmb_backup_now',
+	'restore' => 'mmb_restore_now',
+	'optimize_tables' => 'mmb_optimize_tables',
+	'check_wp_version' => 'mmb_wp_checkversion',
+	'create_post' => 'mmb_post_create',
+	'upgrade_plugins' => 'mmb_upgrade_plugins',
+	'wp_upgrade' => 'mmb_upgrade_wp',
+	'upgrade_themes' => 'mmb_themes_upgrade',
+	'upload_plugin_by_url' => 'mmb_plugin_upload_by_url',
+	'upload_theme_by_url' => 'mmb_theme_upload_by_url',
+	'update_worker' => 'mmb_update_worker_plugin',
+	'install_addon' => 'mmb_install_addon'
+);
+
 require_once("$mmb_plugin_dir/helper.class.php");
 require_once("$mmb_plugin_dir/core.class.php");
 require_once("$mmb_plugin_dir/plugin.class.php");
@@ -36,6 +52,15 @@ require_once("$mmb_plugin_dir/wp.class.php");
 require_once("$mmb_plugin_dir/post.class.php");
 require_once("$mmb_plugin_dir/stats.class.php");
 require_once("$mmb_plugin_dir/backup.class.php");
+require_once("$mmb_plugin_dir/installer.class.php");
+require_once("$mmb_plugin_dir/api.php");
+
+
+require_once("$mmb_plugin_dir/plugins/search/search.php");
+require_once("$mmb_plugin_dir/plugins/cleanup/cleanup.php");
+
+//this is an exmaple plugin for extra_html element
+//require_once("$mmb_plugin_dir/plugins/extra_html_example/extra_html_example.php");
 
 $mmb_core = new MMB_Core();
 add_action('init', 'mmb_parse_request');
@@ -51,6 +76,8 @@ if (function_exists('register_deactivation_hook'))
         $mmb_core,
         'uninstall'
     ));
+    
+  
 
 function mmb_parse_request()
 {
@@ -59,12 +86,15 @@ function mmb_parse_request()
     }
     ob_start();
     
-    global $mmb_core;
-    $data = base64_decode($HTTP_RAW_POST_DATA);
-    $num  = extract(unserialize($data));
+    global $mmb_core, $mmb_actions, $new_actions;
+	
+    $data = base64_decode($HTTP_RAW_POST_DATA);    
+    if ($data)
+    	$num  = @extract(unserialize($data));
     
     if ($action) {
-        if (!$mmb_core->check_if_user_exists($params['username']))
+		// mmb_response($mmb_actions, false);
+		if (!$mmb_core->check_if_user_exists($params['username']))
             mmb_response('Username <b>' . $params['username'] . '</b> does not have administrator capabilities. Enter the correct username in the site options.', false);
         
         if ($action == 'add_site') {
@@ -74,21 +104,6 @@ function mmb_parse_request()
         
         $auth = $mmb_core->authenticate_message($action . $id, $signature, $id);
         if ($auth === true) {
-            $mmb_actions = array(
-                'remove_site' => 'mmb_remove_site',
-                'get_stats' => 'mmb_stats_get',
-                'backup' => 'mmb_backup_now',
-                'restore' => 'mmb_restore_now',
-                'optimize_tables' => 'mmb_optimize_tables',
-                'check_wp_version' => 'mmb_wp_checkversion',
-                'create_post' => 'mmb_post_create',
-                'upgrade_plugins' => 'mmb_upgrade_plugins',
-                'wp_upgrade' => 'mmb_upgrade_wp',
-                'upgrade_themes' => 'mmb_themes_upgrade',
-                'upload_plugin_by_url' => 'mmb_plugin_upload_by_url',
-                'upload_theme_by_url' => 'mmb_theme_upload_by_url',
-                'update_worker' => 'mmb_update_worker_plugin'
-            );
             if (array_key_exists($action, $mmb_actions) && function_exists($mmb_actions[$action]))
                 call_user_func($mmb_actions[$action], $params);
             else
@@ -109,7 +124,7 @@ function mmb_response($response = false, $success = true)
     $return = array();
     
     if (empty($response))
-        $return['error'] = 'Empty response';
+        $return['error'] = 'Empty response.';
     else if ($success)
         $return['success'] = $response;
     else
@@ -284,5 +299,33 @@ function mmb_update_worker_plugin($params)
 {
     global $mmb_core;
     mmb_response($mmb_core->update_worker_plugin($params), true);
+}
+
+function mmb_wp_checkversion($params)
+{
+	 include_once(ABSPATH . 'wp-includes/version.php');
+   global $wp_version,$mmb_core;
+	 mmb_response($wp_version,true);
+}
+
+function mmb_search_posts_by_term($params)
+{
+
+    global $mmb_core;
+    $return = $mmb_core->get_search_instance()->search_posts_by_term($params);
+
+    if($return){
+    	 mmb_response(serialize($return),true);
+    }else{
+    	 mmb_response('No posts for term',false);
+    }
+}
+
+function mmb_install_addon($params)
+{
+	global $mmb_core;
+    $return = $mmb_core->get_installer_instance()->install_remote_file($params);
+	mmb_response($return,true);
+   
 }
 ?>
