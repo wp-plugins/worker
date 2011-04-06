@@ -25,11 +25,11 @@ class MMB_Stats extends MMB_Core
     
     function get($params)
     {
-        global $wp_version, $mmb_plugin_dir;
+        global $mmb_wp_version, $mmb_plugin_dir;
         $stats = array();
         
         //define constants
-        $num_pending_comments  = 3;
+        $num_pending_comments  = 1000;
         $num_approved_comments = 3;
         $num_spam_comments     = 0;
         $num_draft_comments    = 0;
@@ -37,14 +37,14 @@ class MMB_Stats extends MMB_Core
         
         require_once(ABSPATH . '/wp-admin/includes/update.php');
         
-        $stats['worker_version'] = MMB_WORKER_VERSION;
-        $stats['wordpress_version'] = $wp_version;
-		
+        $stats['worker_version']    = MMB_WORKER_VERSION;
+        $stats['wordpress_version'] = $mmb_wp_version;
+        
         $updates = $this->mmb_get_transient('update_core');
         
-        if ($updates->updates[0]->response == 'development' || version_compare($wp_version, $updates->updates[0]->current, '<')) {
-            $updates->updates[0]->current_version = $wp_version;
-            $stats['core_updates']                 = $updates->updates[0];
+        if ($updates->updates[0]->response == 'development' || version_compare($mmb_wp_version, $updates->updates[0]->current, '<')) {
+            $updates->updates[0]->current_version = $mmb_wp_version;
+            $stats['core_updates']                = $updates->updates[0];
         } else
             $stats['core_updates'] = false;
         
@@ -59,17 +59,17 @@ class MMB_Stats extends MMB_Core
         $stats['hit_counter'] = get_option('user_hit_count');
         
         
-        $stats['upgradable_themes']  = $this->get_theme_instance()->get_upgradable_themes();
-        $stats['upgradable_plugins'] = $this->get_plugin_instance()->get_upgradable_plugins();
+        $stats['upgradable_themes']  = $this->get_installer_instance()->get_upgradable_themes();
+        $stats['upgradable_plugins'] = $this->get_installer_instance()->get_upgradable_plugins();
         
         $pending_comments = get_comments('status=hold&number=' . $num_pending_comments);
         foreach ($pending_comments as &$comment) {
             $commented_post      = get_post($comment->comment_post_ID);
             $comment->post_title = $commented_post->post_title;
         }
-		$stats['comments']['pending']  = $pending_comments;
-		 
-		 
+        $stats['comments']['pending'] = $pending_comments;
+        
+        
         $approved_comments = get_comments('status=approve&number=' . $num_approved_comments);
         foreach ($approved_comments as &$comment) {
             $commented_post      = get_post($comment->comment_post_ID);
@@ -82,29 +82,17 @@ class MMB_Stats extends MMB_Core
         $stats['publish_count'] = count($all_posts);
         $recent_posts           = array();
         
-        foreach ($all_posts as $id => $recent) {
-            $recent->post_permalink = get_permalink($recent->ID);
-            unset($recent->post_content);
-            unset($recent->post_author);
-            unset($recent->post_category);
-            unset($recent->post_date_gmt);
-            unset($recent->post_excerpt);
-            unset($recent->post_status);
-            unset($recent->comment_status);
-            unset($recent->ping_status);
-            unset($recent->post_password);
-            unset($recent->post_name);
-            unset($recent->to_ping);
-            unset($recent->pinged);
-            unset($recent->post_modified_gmt);
-            unset($recent->post_content_filtered);
-            unset($recent->post_parent);
-            unset($recent->guid);
-            unset($recent->menu_order);
-            unset($recent->post_type);
-            unset($recent->post_mime_type);
-            unset($recent->filter);
-            unset($recent->featured);
+        foreach ($all_posts as $id => $recent_post) {
+        	$recent = new stdClass();
+        	$recent->post_permalink = get_permalink($recent->ID);
+        	$recent->ID = $recent_post->ID;
+            $recent->post_date = $recent_post->post_date;
+            $recent->post_title = $recent_post->post_title;
+            $recent->post_modified = $recent_post->post_modified;
+            $recent->comment_count = $recent_post->comment_count;
+            $recent->post_permalink = $recent_post->post_permalink;
+
+
             $recent_posts[] = $recent;
         }
         $stats['posts'] = $recent_posts;
@@ -124,17 +112,38 @@ class MMB_Stats extends MMB_Core
         $stats['draft_count'] = count($drafts);
         $stats['drafts']      = $drafts;
         
-        
-        if ((!defined('FTP_HOST') || !defined('FTP_USER') || !defined('FTP_PASS')) && !is_writable(WP_CONTENT_DIR)) {
+        if (!function_exists('get_filesystem_method'))
+         include_once(ABSPATH . 'wp-admin/includes/file.php');
+         
+        if ((!defined('FTP_HOST') || !defined('FTP_USER') || !defined('FTP_PASS')) && (get_filesystem_method(array(), false) != 'direct')) {
             $stats['writable'] = false;
         } else
             $stats['writable'] = true;
-
-		$stats = apply_filters('mmb_stats_filter', $stats);
-		
-		return $stats;
+        
+        $stats = apply_filters('mmb_stats_filter', $stats);
+        
+        return $stats;
     }
-    
+    function get_comments_stats(){
+    	$num_pending_comments  = 3;
+        $num_approved_comments = 3;
+        $pending_comments = get_comments('status=hold&number=' . $num_pending_comments);
+        foreach ($pending_comments as &$comment) {
+            $commented_post      = get_post($comment->comment_post_ID);
+            $comment->post_title = $commented_post->post_title;
+        }
+        $stats['comments']['pending'] = $pending_comments;
+        
+        
+        $approved_comments = get_comments('status=approve&number=' . $num_approved_comments);
+        foreach ($approved_comments as &$comment) {
+            $commented_post      = get_post($comment->comment_post_ID);
+            $comment->post_title = $commented_post->post_title;
+        }
+        $stats['comments']['approved'] = $approved_comments;
+        
+        return $stats;
+    }
     function get_initial_stats()
     {
         global $mmb_plugin_dir;
@@ -148,10 +157,13 @@ class MMB_Stats extends MMB_Core
         $stats['worker_version'] = MMB_WORKER_VERSION;
         $stats['site_title']     = get_bloginfo('name');
         $stats['site_tagline']   = get_bloginfo('description');
-        $stats['site_url']   = get_bloginfo('home');
+        $stats['site_url']       = get_bloginfo('home');
         
         
-        if ((!defined('FTP_HOST') || !defined('FTP_USER') || !defined('FTP_PASS')) && !is_writable(WP_CONTENT_DIR)) {
+        if (!function_exists('get_filesystem_method'))
+         include_once(ABSPATH . 'wp-admin/includes/file.php');
+         
+        if ((!defined('FTP_HOST') || !defined('FTP_USER') || !defined('FTP_PASS')) && (get_filesystem_method(array(), false) != 'direct')) {
             $stats['writable'] = false;
         } else
             $stats['writable'] = true;

@@ -31,7 +31,7 @@ class MMB_Helper
         fwrite($handle, $mixed . PHP_EOL);
         fclose($handle);
     }
-        
+    
     function _escape(&$array)
     {
         global $wpdb;
@@ -82,11 +82,11 @@ class MMB_Helper
             return FALSE;
         }
         
-        global $wp_version, $_wp_using_ext_object_cache;
+        global $mmb_wp_version, $_wp_using_ext_object_cache;
         
-        if (version_compare($wp_version, '2.8.0', '<')) {
+        if (version_compare($mmb_wp_version, '2.8.0', '<')) {
             return get_option($option_name);
-        } else if (version_compare($wp_version, '3.0.0', '<')) {
+        } else if (version_compare($mmb_wp_version, '3.0.0', '<')) {
             if (get_transient($option_name))
                 return get_transient($option_name);
             else
@@ -105,11 +105,11 @@ class MMB_Helper
             return FALSE;
         }
         
-        global $wp_version;
+        global $mmb_wp_version;
         
-        if (version_compare($wp_version, '2.8.0', '<')) {
+        if (version_compare($mmb_wp_version, '2.8.0', '<')) {
             delete_option($option_name);
-        } else if (version_compare($wp_version, '3.0.0', '<')) {
+        } else if (version_compare($mmb_wp_version, '3.0.0', '<')) {
             if (delete_transient($option_name))
                 delete_transient($option_name);
             else
@@ -121,7 +121,7 @@ class MMB_Helper
                 delete_option('_site_transient_' . $option_name);
         }
     }
-      
+    
     function delete_temp_dir($directory)
     {
         if (substr($directory, -1) == "/") {
@@ -151,7 +151,7 @@ class MMB_Helper
         }
     }
     
-    function set_worker_message_id( $message_id = false)
+    function set_worker_message_id($message_id = false)
     {
         if ($message_id) {
             add_option('_action_message_id', $message_id) or update_option('_action_message_id', $message_id);
@@ -181,7 +181,7 @@ class MMB_Helper
         return base64_decode(get_option('_worker_public_key'));
     }
     
-       
+    
     function get_random_signature()
     {
         if (!get_option('_worker_nossl_key'))
@@ -224,7 +224,7 @@ class MMB_Helper
         if (function_exists('openssl_verify') && !$this->get_random_signature()) {
             $verify = openssl_verify($data, $signature, $pl_key);
             if ($verify == 1) {
-                $message_id = $this->set_worker_message_id( $message_id);
+                $message_id = $this->set_worker_message_id($message_id);
                 return true;
             } else if ($verify == 0) {
                 return array(
@@ -237,7 +237,7 @@ class MMB_Helper
             }
         } else if ($this->get_random_signature()) {
             if (md5($data . $this->get_random_signature()) == $signature) {
-                $message_id = $this->set_worker_message_id( $message_id);
+                $message_id = $this->set_worker_message_id($message_id);
                 return true;
             }
             return array(
@@ -253,7 +253,7 @@ class MMB_Helper
     
     function check_if_user_exists($username = false)
     {
-		global $wpdb;
+        global $wpdb;
         if ($username) {
             require_once(ABSPATH . WPINC . '/registration.php');
             include_once(ABSPATH . 'wp-includes/pluggable.php');
@@ -261,8 +261,8 @@ class MMB_Helper
             if (username_exists($username) == null) {
                 return false;
             }
-            $user = (array)get_userdatabylogin($username);
-            if ($user[$wpdb->prefix.'user_level'] == 10 || isset($user[$wpdb->prefix.'capabilities']['administrator'])) {
+            $user = (array) get_userdatabylogin($username);
+            if ($user[$wpdb->prefix . 'user_level'] == 10 || isset($user[$wpdb->prefix . 'capabilities']['administrator'])) {
                 define('MMB_USER_CAPABILITIES', $user->wp_user_level);
                 return true;
             }

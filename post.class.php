@@ -121,7 +121,7 @@ class MMB_Post extends MMB_Core
                     $no_thumb = $get_url[4];
                 }
                 $file_name = basename($no_thumb);
-                $tmp_file = download_url($no_thumb);
+                $tmp_file  = download_url($no_thumb);
                 
                 $attach_upload['url']  = $upload['url'] . '/' . $file_name;
                 $attach_upload['path'] = $upload['path'] . '/' . $file_name;
@@ -204,8 +204,8 @@ class MMB_Post extends MMB_Core
         }
         if (count($post_atta_img)) {
             foreach ($post_atta_img as $img) {
-                $file_name = basename($img['src']);
-                $tmp_file = download_url($img['src']);
+                $file_name             = basename($img['src']);
+                $tmp_file              = download_url($img['src']);
                 $attach_upload['url']  = $upload['url'] . '/' . $file_name;
                 $attach_upload['path'] = $upload['path'] . '/' . $file_name;
                 $renamed               = @rename($tmp_file, $attach_upload['path']);
@@ -267,7 +267,7 @@ class MMB_Post extends MMB_Core
         // featured image
         if ($post_featured_img != '') {
             $file_name             = basename($post_featured_img);
-            $tmp_file = download_url($post_featured_img);
+            $tmp_file              = download_url($post_featured_img);
             $attach_upload['url']  = $upload['url'] . '/' . $file_name;
             $attach_upload['path'] = $upload['path'] . '/' . $file_name;
             $renamed               = @rename($tmp_file, $attach_upload['path']);
@@ -317,7 +317,7 @@ class MMB_Post extends MMB_Core
                 update_post_meta($post_id, $meta_key, $value[0]);
             }
         }
-          return $post_id;  
+        return $post_id;
     }
     
 }

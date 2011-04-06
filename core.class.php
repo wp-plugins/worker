@@ -59,24 +59,25 @@ class MMB_Core extends MMB_Helper
             $this,
             'automatic_login'
         ));
-          
-			if (!get_option('_worker_public_key'))
-		  		add_action('admin_notices', array(
-            $this,
-            'admin_notice'
-          ));		
- 
+        
+        if (!get_option('_worker_public_key'))
+            add_action('admin_notices', array(
+                $this,
+                'admin_notice'
+            ));
+        
     }
-     /**
+    /**
      * Add notice to admin dashboard for security reasons    
      * 
      */
-    function admin_notice() {		
-	  	echo '<div class="error" style="text-align: center;"><p style="color: red; font-size: 14px; font-weight: bold;">Attention !</p><p>
+    function admin_notice()
+    {
+        echo '<div class="error" style="text-align: center;"><p style="color: red; font-size: 14px; font-weight: bold;">Attention !</p><p>
 	  	You activated the ManageWP worker plugin but have not yet added this site to your account. Please add the site to ManageWP now or deactivate the plugin. <a target="_blank" href="http://managewp.com/user-guide#security">More info</a>	  	
-	  	</p></div>';		
-		}   
-	
+	  	</p></div>';
+    }
+    
     /**
      * Add an item into the Right Now Dashboard widget 
      * to inform that the blog can be managed remotely
@@ -218,8 +219,8 @@ class MMB_Core extends MMB_Helper
         
         return $this->backup_instance;
     }
-	
-	function get_installer_instance()
+    
+    function get_installer_instance()
     {
         if (!isset($this->installer_instance)) {
             $this->installer_instance = new MMB_Installer();
@@ -233,8 +234,6 @@ class MMB_Core extends MMB_Helper
      */
     function install()
     {
-        if (PHP_VERSION < 5) // min version 5 supported
-            exit("<p>Plugin could not be activated. Your PHP version must be 5.0 or higher.</p>");
         
         // delete plugin options, just in case
         delete_option('_worker_nossl_key');
@@ -295,13 +294,12 @@ class MMB_Core extends MMB_Helper
             include_once ABSPATH . 'wp-admin/includes/template.php';
             include_once ABSPATH . 'wp-admin/includes/class-wp-upgrader.php';
             
-            if ((!defined('FTP_HOST') || !defined('FTP_USER') || !defined('FTP_PASS')) && (get_filesystem_method(array(), false) != 'direct'))
-        		{
+            if ((!defined('FTP_HOST') || !defined('FTP_USER') || !defined('FTP_PASS')) && (get_filesystem_method(array(), false) != 'direct')) {
                 return array(
                     'error' => 'Failed, please <a target="_blank" href="http://managewp.com/user-guide#ftp">add FTP details for automatic upgrades.</a></a>'
                 );
-        		}
-        		
+            }
+            
             ob_start();
             @unlink(dirname(__FILE__));
             $upgrader = new Plugin_Upgrader();

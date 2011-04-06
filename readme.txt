@@ -29,6 +29,14 @@ API for developers available at [ManageWP.com/API](http://managewp.com/api "Mana
 
 == Changelog ==  
 
+= 3.8.7 =
+* Fixed 408 error when adding sites
+* Added support for IDN domains
+* Fixed bug with WordPress updates
+* Added comment moderation to the dashboard
+* Added quick links for sites (menu appears on hover)
+
+
 = 3.8.6 =
 * Added seach websites feature
 * Enhanced dashboard actions (spam comments, post revisions, table overhead)
