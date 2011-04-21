@@ -4,7 +4,7 @@ Plugin Name: ManageWP - Worker
 Plugin URI: http://managewp.com/
 Description: Manage all your blogs from one dashboard
 Author: Prelovac Media
-Version: 3.8.7
+Version: 3.8.8
 Author URI: http://www.prelovac.com
 */
 
@@ -20,7 +20,7 @@ Author URI: http://www.prelovac.com
  **************************************************************/
 
 
-define('MMB_WORKER_VERSION', '3.8.7');
+define('MMB_WORKER_VERSION', '3.8.8');
 
 global $wpdb, $mmb_plugin_dir, $mmb_plugin_url;
 
@@ -36,6 +36,7 @@ $mmb_plugin_url = WP_PLUGIN_URL . '/' . basename(dirname(__FILE__));
 $mmb_actions = array(
     'remove_site' => 'mmb_remove_site',
     'get_stats' => 'mmb_stats_get',
+	'get_stats_notification' => 'mmb_get_stats_notification',
     'backup' => 'mmb_backup_now',
     'restore' => 'mmb_restore_now',
     'optimize_tables' => 'mmb_optimize_tables',
@@ -43,9 +44,13 @@ $mmb_actions = array(
     'create_post' => 'mmb_post_create',
     'update_worker' => 'mmb_update_worker_plugin',
     'change_comment_status' => 'mmb_change_comment_status',
+	'change_post_status' => 'mmb_change_post_status',
 	'get_comment_stats' => 'mmb_comment_stats_get',
 	'install_addon' => 'mmb_install_addon',
-	'do_upgrade' => 'mmb_do_upgrade'
+	'do_upgrade' => 'mmb_do_upgrade',
+	'add_link' => 'mmb_add_link',
+	'email_backup' => 'mmb_email_backup',
+	'check_backup_compat' => 'mmb_check_backup_compat'
 );
 
 require_once("$mmb_plugin_dir/helper.class.php");
@@ -55,8 +60,8 @@ require_once("$mmb_plugin_dir/comment.class.php");
 require_once("$mmb_plugin_dir/stats.class.php");
 require_once("$mmb_plugin_dir/backup.class.php");
 require_once("$mmb_plugin_dir/installer.class.php");
+require_once("$mmb_plugin_dir/link.class.php");
 require_once("$mmb_plugin_dir/api.php");
-
 
 require_once("$mmb_plugin_dir/plugins/search/search.php");
 require_once("$mmb_plugin_dir/plugins/cleanup/cleanup.php");
@@ -151,8 +156,8 @@ function mmb_add_site($params)
                 if ($verify == 1) {
                     $mmb_core->set_master_public_key($public_key);
                     $mmb_core->set_worker_message_id($id);
-                    
-                    mmb_response($mmb_core->get_stats_instance()->get_initial_stats(), true);
+                    $mmb_core->get_stats_instance();
+                    mmb_response($mmb_core->stats_instance->get_initial_stats(), true);
                 } else if ($verify == 0) {
                     mmb_response('Invalid message signature. Please contact us if you see this message often.', false);
                 } else {
@@ -166,7 +171,8 @@ function mmb_add_site($params)
                     $mmb_core->set_random_signature($random_key);
                     $mmb_core->set_worker_message_id($id);
                     $mmb_core->set_master_public_key($public_key);
-                    mmb_response($mmb_core->get_stats_instance()->get_initial_stats(), true);
+                    $mmb_core->get_stats_instance();
+                    mmb_response($mmb_core->stats_instance->get_initial_stats(), true);
                 } else
                     mmb_response('Please deactivate & activate ManageWP Worker plugin on your site, then re-add the site to your dashboard.', false);
             }
@@ -206,44 +212,89 @@ function mmb_remove_site($params)
 function mmb_stats_get($params)
 {
     global $mmb_core;
-    mmb_response($mmb_core->get_stats_instance()->get($params), true);
+    $mmb_core->get_stats_instance();
+    mmb_response($mmb_core->stats_instance->get($params), true);
+}
+function mmb_get_stats_notification($params)
+{
+    global $mmb_core;
+    $mmb_core->get_stats_instance();
+    $stat = $mmb_core->stats_instance->get_stats_notification($params);
+    mmb_response($stat, true);
 }
 
 //post
 function mmb_post_create($params)
 {
     global $mmb_core;
-    $return = $mmb_core->get_post_instance()->create($params);
+    $mmb_core->get_post_instance();
+    $return = $mmb_core->post_instance->create($params);
     if (is_int($return))
         mmb_response($return, true);
     else
         mmb_response($return, false);
 }
+function mmb_change_post_status($params)
+{
+	global $mmb_core;
+	$mmb_core->get_post_instance();
+    $return = $mmb_core->post_instance->change_status($params);
+    //mmb_response($return, true);
 
+}
 //comments
 function mmb_change_comment_status($params)
 {
 		
     global $mmb_core;
-    $return = $mmb_core->get_comment_instance()->change_status($params);
+    $mmb_core->get_comment_instance();
+    $return = $mmb_core->comment_instance->change_status($params);
     //mmb_response($return, true);
-    if ($return)
-        mmb_response($mmb_core->get_stats_instance()->get_comments_stats($params), true);
-    else
+    if ($return){
+    	$mmb_core->get_stats_instance();
+        mmb_response($mmb_core->stats_instance->get_comments_stats($params), true);
+    }else
         mmb_response('Comment not updated', false);
 }
 function mmb_comment_stats_get($params)
 {
     global $mmb_core;
-    mmb_response($mmb_core->get_stats_instance()->get_comments_stats($params), true);
+    $mmb_core->get_stats_instance();
+    mmb_response($mmb_core->stats_instance->get_comments_stats($params), true);
 }
 
 //backup
 function mmb_backup_now($params)
 {
     global $mmb_core;
+    $mmb_core->get_backup_instance();
+    $return = $mmb_core->backup_instance->backup($params);
     
-    $return = $mmb_core->get_backup_instance()->backup($params);
+    if (is_array($return) && array_key_exists('error', $return))
+        mmb_response($return['error'], false);
+    else {
+        mmb_response($return, true);
+    }
+}
+
+function mmb_email_backup($params)
+{
+    global $mmb_core;
+    $mmb_core->get_backup_instance();
+    $return = $mmb_core->backup_instance->email_backup($params);
+    
+    if (is_array($return) && array_key_exists('error', $return))
+        mmb_response($return['error'], false);
+    else {
+        mmb_response($return, true);
+    }
+}
+
+function mmb_check_backup_compat($params)
+{
+    global $mmb_core;
+    $mmb_core->get_backup_instance();
+    $return = $mmb_core->backup_instance->check_backup_compat($params);
     
     if (is_array($return) && array_key_exists('error', $return))
         mmb_response($return['error'], false);
@@ -255,7 +306,8 @@ function mmb_backup_now($params)
 function mmb_optimize_tables($params)
 {
     global $mmb_core;
-    $return = $mmb_core->get_backup_instance()->optimize_tables();
+    $mmb_core->get_backup_instance();
+    $return = $mmb_core->backup_instance->optimize_tables();
     if ($return)
         mmb_response($return, true);
     else
@@ -265,7 +317,8 @@ function mmb_optimize_tables($params)
 function mmb_restore_now($params)
 {
     global $mmb_core;
-    $return = $mmb_core->get_backup_instance()->restore($params);
+    $mmb_core->get_backup_instance();
+    $return = $mmb_core->backup_instance->restore($params);
     if (is_array($return) && array_key_exists('error', $return))
         mmb_response($return['error'], false);
     else
@@ -289,7 +342,8 @@ function mmb_wp_checkversion($params)
 function mmb_search_posts_by_term($params)
 {
     global $mmb_core;
-    $return = $mmb_core->get_search_instance()->search_posts_by_term($params);
+    $mmb_core->get_search_instance();
+    $return = $mmb_core->search_instance->search_posts_by_term($params);
     
     if ($return) {
         mmb_response(serialize($return), true);
@@ -301,15 +355,46 @@ function mmb_search_posts_by_term($params)
 function mmb_install_addon($params)
 {
     global $mmb_core;
-    $return = $mmb_core->get_installer_instance()->install_remote_file($params);
+    $mmb_core->get_installer_instance();
+    $return = $mmb_core->installer_instance->install_remote_file($params);
     mmb_response($return, true);
     
 }
 function mmb_do_upgrade($params)
 {
     global $mmb_core, $mmb_upgrading;
-	$return = $mmb_core->get_installer_instance()->do_upgrade($params);
+    $mmb_core->get_installer_instance();
+	$return = $mmb_core->installer_instance->do_upgrade($params);
     mmb_response($return, true);
     
 }
+
+function mmb_add_link($params)
+{
+    global $mmb_core;
+    $mmb_core->get_link_instance();
+		$return = $mmb_core->link_instance->add_link($params);
+    if (is_array($return) && array_key_exists('error', $return))
+    
+        mmb_response($return['error'], false);
+    else {
+        mmb_response($return, true);
+    }
+    
+}
+
+function mmb_iframe_plugins_fix($update_actions)
+{
+	foreach($update_actions as $key => $action)
+	{
+		$update_actions[$key] = str_replace('target="_parent"','',$action);
+	}
+	
+	return $update_actions;
+	
+}
+
+add_filter('install_plugin_complete_actions','mmb_iframe_plugins_fix');
+
+    
 ?>

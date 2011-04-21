@@ -29,13 +29,15 @@ class MMB_Stats extends MMB_Core
         $stats = array();
         
         //define constants
-        $num_pending_comments  = 1000;
+        $num_pending_comments  = 20;
         $num_approved_comments = 3;
         $num_spam_comments     = 0;
         $num_draft_comments    = 0;
         $num_trash_comments    = 0;
-        
+
         require_once(ABSPATH . '/wp-admin/includes/update.php');
+
+        
         
         $stats['worker_version']    = MMB_WORKER_VERSION;
         $stats['wordpress_version'] = $mmb_wp_version;
@@ -58,9 +60,9 @@ class MMB_Stats extends MMB_Core
         }
         $stats['hit_counter'] = get_option('user_hit_count');
         
-        
-        $stats['upgradable_themes']  = $this->get_installer_instance()->get_upgradable_themes();
-        $stats['upgradable_plugins'] = $this->get_installer_instance()->get_upgradable_plugins();
+        $this->get_installer_instance();
+        $stats['upgradable_themes']  = $this->installer_instance->get_upgradable_themes();
+        $stats['upgradable_plugins'] = $this->installer_instance->get_upgradable_plugins();
         
         $pending_comments = get_comments('status=hold&number=' . $num_pending_comments);
         foreach ($pending_comments as &$comment) {
@@ -84,46 +86,122 @@ class MMB_Stats extends MMB_Core
         
         foreach ($all_posts as $id => $recent_post) {
         	$recent = new stdClass();
-        	$recent->post_permalink = get_permalink($recent->ID);
+        	$recent->post_permalink = get_permalink($recent_post->ID);
         	$recent->ID = $recent_post->ID;
             $recent->post_date = $recent_post->post_date;
             $recent->post_title = $recent_post->post_title;
             $recent->post_modified = $recent_post->post_modified;
-            $recent->comment_count = $recent_post->comment_count;
-            $recent->post_permalink = $recent_post->post_permalink;
-
-
+            $recent->comment_count = $recent_post->comment_count;          
             $recent_posts[] = $recent;
         }
-        $stats['posts'] = $recent_posts;
         
-        $drafts = get_posts('post_status=draft&numberposts=3');
-        foreach ($drafts as $draft) {
-            $props = get_object_vars($draft);
-            foreach ($props as $name => $value) {
-                if ($name != 'post_title' && $name != 'ID' && $name != 'post_modified') {
-                    unset($draft->$name);
-                } else {
-                    $draft->post_title     = get_the_title($draft->ID);
-                    $draft->post_permalink = get_permalink($draft->ID);
-                }
-            }
+        
+        $all_drafts = get_posts('post_status=draft&numberposts=3&orderby=modified&order=desc');
+        $stats['draft_count'] = count($all_drafts);
+        $recent_drafts           = array();
+        foreach ($all_drafts as $id => $recent_draft) {
+        	$recent = new stdClass();
+        	$recent->post_permalink = get_permalink($recent_draft->ID);
+        	$recent->ID = $recent_draft->ID;
+            $recent->post_date = $recent_draft->post_date;
+            $recent->post_title = $recent_draft->post_title;
+            $recent->post_modified = $recent_draft->post_modified;
+         
+            $recent_drafts[] = $recent;
         }
-        $stats['draft_count'] = count($drafts);
-        $stats['drafts']      = $drafts;
+        
+        
+        $all_pages_published = get_pages('post_status=publish&numberposts=3&orderby=modified&order=desc');
+      	$stats['published_pages_count'] = count($all_pages_published);
+        $recent_pages_published           = array();
+        
+        foreach ((array)$all_pages_published as $id => $recent_page_published) {
+        	
+        	$recent = new stdClass();
+       		$recent->post_permalink = get_permalink($recent_page_published->ID);
+        	
+        	$recent->ID = $recent_page_published->ID;
+            $recent->post_date = $recent_page_published->post_date;
+            $recent->post_title = $recent_page_published->post_title;
+            $recent->post_modified = $recent_page_published->post_modified;
+         
+            $recent_posts[] = $recent;
+        }
+		usort($recent_posts, 'cmp_posts_worker');
+		$stats['posts'] = array_slice($recent_posts, 0, 3);
+		
+        $all_pages_drafts = get_pages('post_status=draft&numberposts=3&orderby=modified&order=desc');
+        $stats['draft_pages_count'] = count($all_pages_drafts);
+        $recent_pages_drafts           = array();
+        foreach ((array)$all_pages_drafts as $id => $recent_pages_draft) {
+        	$recent = new stdClass();
+        	$recent->post_permalink = get_permalink($recent_pages_draft->ID);
+        	$recent->ID = $recent_pages_draft->ID;
+            $recent->post_date = $recent_pages_draft->post_date;
+            $recent->post_title = $recent_pages_draft->post_title;
+            $recent->post_modified = $recent_pages_draft->post_modified;
+         
+            $recent_drafts[] = $recent;
+        }
+		$stats['drafts'] = array_slice($recent_drafts, 0, 3);
+		usort($recent_drafts, 'cmp_posts_worker');
+		
         
         if (!function_exists('get_filesystem_method'))
          include_once(ABSPATH . 'wp-admin/includes/file.php');
          
-        if ((!defined('FTP_HOST') || !defined('FTP_USER') || !defined('FTP_PASS')) && (get_filesystem_method(array(), false) != 'direct')) {
-            $stats['writable'] = false;
-        } else
-            $stats['writable'] = true;
+        $stats['writable'] = $this->is_server_writable();
         
-        $stats = apply_filters('mmb_stats_filter', $stats);
-        
+        $stats = apply_filters('mmb_stats_filter', $stats);        
         return $stats;
     }
+    
+    function get_stats_notification($params)
+    {	
+
+        global $mmb_wp_version, $mmb_plugin_dir;
+        $stats = array();
+        
+        //define constants
+        $num_pending_comments  = 1000;
+
+        
+        require_once(ABSPATH . '/wp-admin/includes/update.php');
+        
+        $stats['worker_version']    = MMB_WORKER_VERSION;
+        $stats['wordpress_version'] = $mmb_wp_version;
+        
+        $updates = $this->mmb_get_transient('update_core');
+        
+        if ($updates->updates[0]->response == 'development' || version_compare($mmb_wp_version, $updates->updates[0]->current, '<')) {
+            $updates->updates[0]->current_version = $mmb_wp_version;
+            $stats['core_updates']                = $updates->updates[0];
+        } else
+            $stats['core_updates'] = false;
+        
+        $mmb_user_hits = get_option('user_hit_count');
+        if (is_array($mmb_user_hits)) {
+            end($mmb_user_hits);
+            $last_key_date = key($mmb_user_hits);
+            $current_date  = date('Y-m-d');
+            if ($last_key_date != $curent_date)
+                $this->set_hit_count(true);
+        }
+
+        
+        $this->get_theme_instance();
+        $this->get_plugin_instance();
+        $stats['upgradable_themes']  = $this->theme_instance->get_upgradable_themes();
+        $stats['upgradable_plugins'] = $this->plugin_instance->get_upgradable_plugins();
+        
+        $pending_comments = get_comments('status=hold&number=' . $num_pending_comments);
+
+        $stats['comments_pending'] = count($pending_comments);
+
+        return $stats;
+    }
+    
+    
     function get_comments_stats(){
     	$num_pending_comments  = 3;
         $num_approved_comments = 3;
@@ -157,17 +235,14 @@ class MMB_Stats extends MMB_Core
         $stats['worker_version'] = MMB_WORKER_VERSION;
         $stats['site_title']     = get_bloginfo('name');
         $stats['site_tagline']   = get_bloginfo('description');
-        $stats['site_url']       = get_bloginfo('home');
+        $stats['site_home']      = get_option('home');
         
         
         if (!function_exists('get_filesystem_method'))
          include_once(ABSPATH . 'wp-admin/includes/file.php');
          
-        if ((!defined('FTP_HOST') || !defined('FTP_USER') || !defined('FTP_PASS')) && (get_filesystem_method(array(), false) != 'direct')) {
-            $stats['writable'] = false;
-        } else
-            $stats['writable'] = true;
-        
+        $stats['writable'] = $this->is_server_writable();
+       
         return $stats;
     }
     
@@ -176,7 +251,7 @@ class MMB_Stats extends MMB_Core
     {
         if ($fix_count || (!is_admin() && !MMB_Stats::detect_bots())) {
             $date           = date('Y-m-d');
-            $user_hit_count = get_option('user_hit_count');
+            $user_hit_count = (array) get_option('user_hit_count');
             if (!$user_hit_count) {
                 $user_hit_count[$date] = 1;
                 update_option('user_hit_count', $user_hit_count);
@@ -208,7 +283,7 @@ class MMB_Stats extends MMB_Core
                     $user_hit_count[$date] = 0;
                 }
                 if (!$fix_count)
-                    $user_hit_count[$date] += 1;
+                    $user_hit_count[$date] = ((int)$user_hit_count[$date] ) + 1;
                 
                 if (count($user_hit_count) > 14) {
                     $shifted = @array_shift($user_hit_count);
@@ -293,5 +368,10 @@ class MMB_Stats extends MMB_Core
             return false;
     }
     
+}
+
+function cmp_posts_worker($a, $b)
+{
+    return ($a->post_modified < $b->post_modified);
 }
 ?>

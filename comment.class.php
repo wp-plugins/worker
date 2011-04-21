@@ -32,7 +32,7 @@ class MMB_Comment extends MMB_Core
 			$status_sql =  'spam';
 		elseif ( 'trash' == $status )
 			$status_sql =  'trash';
-		$sql = "update ".$wpdb->prefix."comments set comment_approved = '$status_sql' where comment_id = '$comment_id'";
+		$sql = "update ".$wpdb->prefix."comments set comment_approved = '$status_sql' where comment_ID = '$comment_id'";
 		$success = $wpdb->query($sql);
 		
 				

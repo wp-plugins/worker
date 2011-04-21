@@ -21,7 +21,7 @@ class MMB_Installer extends MMB_Core
 		include_once(ABSPATH . 'wp-admin/includes/theme.php');
 		include_once(ABSPATH . 'wp-admin/includes/misc.php');
 		include_once(ABSPATH . 'wp-admin/includes/template.php');
-		include_once(ABSPATH . 'wp-admin/includes/class-wp-upgrader.php');
+		@include_once(ABSPATH . 'wp-admin/includes/class-wp-upgrader.php');
 
 		global $wp_filesystem;
         if (!$wp_filesystem)
@@ -90,6 +90,7 @@ class MMB_Installer extends MMB_Core
             }
         }
 		ob_clean();
+		$this->mmb_maintenance_mode(false);
         return $install_info;
     }
 	
@@ -98,7 +99,7 @@ class MMB_Installer extends MMB_Core
 		if($params == null || empty($params))
 			return array('failed' => 'No upgrades passed.');
 		
-		if ((!defined('FTP_HOST') || !defined('FTP_USER') || !defined('FTP_PASS')) && (get_filesystem_method(array(), false) != 'direct')) {
+		if (!$this->is_server_writable()) {
             return array(
                 'error' => 'Failed, please <a target="_blank" href="http://managewp.com/user-guide#ftp">add FTP details</a></a>'
             );
@@ -109,10 +110,12 @@ class MMB_Installer extends MMB_Core
 		$upgrade_plugins = isset($params['upgrade_plugins']) ? $params['upgrade_plugins'] : array();
 		$upgrade_themes = isset($params['upgrade_themes']) ? $params['upgrade_themes'] : array();
 		
+		
 		$upgrades = array();
 		if(!empty($core_upgrade)){
 			$upgrades['core'] = $this->upgrade_core($core_upgrade);
 		}
+		
 		if(!empty($upgrade_plugins)){
 			$plugin_files = array();
 			foreach($upgrade_plugins as $plugin){
@@ -120,7 +123,7 @@ class MMB_Installer extends MMB_Core
 			}
 			
 			$upgrades['plugins'] = $this->upgrade_plugins($plugin_files);
-			$this->mmb_maintenance_mode(false);
+			
 		}
 		
 		if(!empty($upgrade_themes)){
@@ -133,6 +136,7 @@ class MMB_Installer extends MMB_Core
 			$this->mmb_maintenance_mode(false);
 		}
 		ob_clean();
+		$this->mmb_maintenance_mode(false);
 		return $upgrades;
 	}
     
@@ -142,9 +146,26 @@ class MMB_Installer extends MMB_Core
      */
     function upgrade_core($current)
     {
-        ob_start();
+		ob_start();
         global $mmb_wp_version, $wp_filesystem;
-        $upgrader = new WP_Upgrader();
+        
+		if(!class_exists('WP_Upgrader')){
+			include_once(ABSPATH.'wp-admin/includes/update.php');
+				if(function_exists('wp_update_core')){
+					$update = wp_update_core($current);
+					if(is_wp_error($update)){
+						return array(
+							'error' => $this->mmb_get_error($update)
+						);
+					}
+					else 
+						return array(
+							'upgraded' => ' Upgraded successfully.'
+						);
+				}
+		}
+			
+		$upgrader = new WP_Upgrader();
         
         // Is an update available?
         if (!isset($current->response) || $current->response == 'latest')
@@ -196,7 +217,7 @@ class MMB_Installer extends MMB_Core
             );
         ob_end_flush();
         return array(
-            'upgraded' => ' Upgraded successfully.'
+            'upgraded' => 'Upgraded successfully.'
         );
     }
 	
@@ -206,20 +227,24 @@ class MMB_Installer extends MMB_Core
 			return array(
                 'error' => 'No plugin files for upgrade.'
             );
-		
+		$return = array();
 		if (class_exists('Plugin_Upgrader') && class_exists('Bulk_Plugin_Upgrader_Skin')) {
+			
+			$current_plugins = $this->mmb_get_transient('update_plugins');
+			
 			$upgrader = new Plugin_Upgrader(new Bulk_Plugin_Upgrader_Skin(compact('nonce', 'url')));
 			$result   = $upgrader->bulk_upgrade($plugins);
-			ob_end_clean();
+			
 			if (!empty($result)) {
 				foreach ($result as $plugin_slug => $plugin_info) {
-					$data = get_plugin_data(WP_PLUGIN_DIR . '/' . $plugin_slug);
 					if (!$plugin_info || is_wp_error($plugin_info)) {
-						$return .= '<code title="Please upgrade manually">' . $data['Name'] . '</code>  was not upgraded.<br />';
+						$return[$plugin_slug] = $this->mmb_get_error($plugin_info);
 					} else {
-						$return .= '<code>' . $data['Name'] . '</code> successfully upgraded.<br />';
+						unset($current_plugins->response[$plugin_slug]);
+						$return[$plugin_slug] = 1;
 					}
 				}
+				$this->mmb_set_transient('update_plugins', $current_plugins);
 				ob_end_clean();
 				return array(
 					'upgraded' => $return
@@ -232,7 +257,7 @@ class MMB_Installer extends MMB_Core
 		} else {
 			ob_end_clean();
 			return array(
-				'error' => 'WordPress update required first'
+				'error' => 'WordPress update required first.'
 			);
 		}
 	}
@@ -242,23 +267,27 @@ class MMB_Installer extends MMB_Core
 			return array(
                 'error' => 'No theme files for upgrade.'
             );
-			
+		
 		if (class_exists('Theme_Upgrader') && class_exists('Bulk_Theme_Upgrader_Skin')) {
-			$upgrader = new Theme_Upgrader(new Bulk_Theme_Upgrader_Skin(compact('title', 'nonce', 'url', 'theme')));
 			
+			$current_themes = $this->mmb_get_transient('update_themes');
+			
+			$upgrader = new Theme_Upgrader(new Bulk_Theme_Upgrader_Skin(compact('title', 'nonce', 'url', 'theme')));
 			$result = $upgrader->bulk_upgrade($themes);
 			
-			$results = array();
+			$return = array();
 			if (!empty($result)) {
-				foreach ($result as $theme_tmp => $info) {
-					if (is_wp_error($info) || !$info) {
-						$results[$theme_tmp] = '<code title="Please upgrade manually">' . $theme_tmp . '</code> was not upgraded.<br />';
+				foreach ($result as $theme_tmp => $theme_info) {
+					if (is_wp_error($theme_info) || !$theme_info) {
+						$return[$theme_tmp] = $this->mmb_get_error($theme_info);
 					} else {
-						$results[$theme_tmp] = '<code>' . $theme_tmp . '</code> succesfully upgraded.<br />';
+						unset($current_themes->response[$theme_tmp]);
+						$return[$theme_tmp] = 1;
 					}
 				}
+				$this->mmb_set_transient('update_themes', $current_themes);
 				return array(
-					'upgraded' => implode('', $results)
+					'upgraded' => $return
 				);
 			} else
 				return array(
@@ -278,8 +307,12 @@ class MMB_Installer extends MMB_Core
         $upgradable_plugins = array();
         if (!empty($current->response)) {
             foreach ($current->response as $plugin_path => $plugin_data) {
+				if($plugin_path == 'worker/init.php')
+					continue;
+				
                 if (!function_exists('get_plugin_data'))
                     include_once ABSPATH . 'wp-admin/includes/plugin.php';
+					
                 $data = get_plugin_data(WP_PLUGIN_DIR . '/' . $plugin_path);
                 
                 $current->response[$plugin_path]->name        = $data['Name'];

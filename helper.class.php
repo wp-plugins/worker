@@ -76,26 +76,37 @@ class MMB_Helper
      * @param string $option_name
      * @return mixed
      */
+	 
+	function mmb_set_transient($option_name = false, $data = false){
+		
+		if (!$option_name || !$data) {
+            return false;
+        }
+		global $mmb_wp_version;
+        
+        if (version_compare($mmb_wp_version, '2.8.0', '<')) {
+            update_option($option_name, $data);
+        } else if (version_compare($mmb_wp_version, '3.0.0', '<')) {
+            update_option('_transient_' . $option_name, $data);
+        } else {
+			update_option('_site_transient_' . $option_name, $data);
+        }
+		
+	}
     function mmb_get_transient($option_name)
     {
         if (trim($option_name) == '') {
             return FALSE;
         }
         
-        global $mmb_wp_version, $_wp_using_ext_object_cache;
+        global $mmb_wp_version;
         
         if (version_compare($mmb_wp_version, '2.8.0', '<')) {
             return get_option($option_name);
         } else if (version_compare($mmb_wp_version, '3.0.0', '<')) {
-            if (get_transient($option_name))
-                return get_transient($option_name);
-            else
-                return get_option('_transient_' . $option_name);
+            return get_option('_transient_' . $option_name);
         } else {
-            if (get_site_transient($option_name))
-                return get_site_transient($option_name);
-            else
-                return get_option('_site_transient_' . $option_name);
+            return get_option('_site_transient_' . $option_name);
         }
     }
     
@@ -110,15 +121,9 @@ class MMB_Helper
         if (version_compare($mmb_wp_version, '2.8.0', '<')) {
             delete_option($option_name);
         } else if (version_compare($mmb_wp_version, '3.0.0', '<')) {
-            if (delete_transient($option_name))
-                delete_transient($option_name);
-            else
-                delete_option('_transient_' . $option_name);
+            delete_option('_transient_' . $option_name);
         } else {
-            if (delete_site_transient($option_name))
-                delete_site_transient($option_name);
-            else
-                delete_option('_site_transient_' . $option_name);
+            delete_option('_site_transient_' . $option_name);
         }
     }
     
@@ -293,7 +298,7 @@ class MMB_Helper
     function mmb_get_error($error_object)
     {
         if (!is_wp_error($error_object)) {
-            return $error_object != '' ? $error_object : ' error occured.';
+            return $error_object != '' ? $error_object : '';
         } else {
             $errors = array();
             foreach ($error_object->error_data as $error_key => $error_string) {
@@ -303,6 +308,29 @@ class MMB_Helper
         }
     }
     
+	function is_server_writable(){
+		if((!defined('FTP_HOST') || !defined('FTP_USER') || !defined('FTP_PASS')) && (get_filesystem_method(array(), false) != 'direct'))
+			return false;
+		else
+			return true;
+	}
+	
+	function mmb_download_url($url, $file_name)
+	{
+    if (function_exists('fopen') && function_exists('ini_get') && ini_get('allow_url_fopen') == true && ($destination = @fopen($file_name, 'wb')) && ($source = @fopen($url, "r")) ) {
+    
+    
+    while ($a = @fread($source, 1024* 1024)) {
+    @fwrite($destination, $a);
+    }
+    
+    fclose($source);
+    fclose($destination);
+    } else 
+    if (!fsockopen_download($url, $file_name))
+        die('Error downloading file ' . $url);
+    return $file_name;
+		}
     
 }
 ?>

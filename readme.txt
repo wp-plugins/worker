@@ -3,7 +3,7 @@ Contributors: freediver
 Donate link: https://www.networkforgood.org/donation/MakeDonation.aspx?ORGID2=520781390
 Tags: managewp, managewp worker, admin, manage blogs, multi blog manager, manage multiple blogs, remote blog management
 Requires at least: 3.0
-Tested up to: 3.1
+Tested up to: 3.1.1
 Stable tag: trunk
 
 ManageWP Worker plugin allows you to remotely manage your blogs from one dashboard.
@@ -28,6 +28,20 @@ Check out [ManageWP.com](http://managewp.com/ "Manage Multiple Blogs")
 API for developers available at [ManageWP.com/API](http://managewp.com/api "ManageWP API")
 
 == Changelog ==  
+
+= 3.8.8 =
+* New feature: Bulk add links to blogroll
+* New feature: Manual backups to email address
+* New feature: Backup requirements check (under ‘Manage Backups’)
+* New feature: Popup menu for groups allowing to show dashboard for that group only
+* New feature: Favorite list for plugins and themes for later quick installation to multiple blogs
+* New feature: Invite friends
+* Fixed: problem with backups and write permissions when upload dir was wrongly set
+* Fixed: problem adding sites where WordPress is installed in a folder
+* Fixed: 408 error message problem when adding site
+* Fixed: site time out problems when adding site
+* Fixed: problems with some WP plugins (WP Sentinel)
+* Fixed: problems with upgrade notifications
 
 = 3.8.7 =
 * Fixed 408 error when adding sites

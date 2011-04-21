@@ -220,6 +220,19 @@ class MMB_Core extends MMB_Helper
         return $this->backup_instance;
     }
     
+    /**
+     * Gets an instance of links class
+     *
+     */
+    function get_link_instance()
+    {
+        if (!isset($this->link_instance)) {
+            $this->link_instance = new MMB_Link();
+        }
+        
+        return $this->link_instance;
+    }
+    
     function get_installer_instance()
     {
         if (!isset($this->installer_instance)) {
@@ -294,7 +307,7 @@ class MMB_Core extends MMB_Helper
             include_once ABSPATH . 'wp-admin/includes/template.php';
             include_once ABSPATH . 'wp-admin/includes/class-wp-upgrader.php';
             
-            if ((!defined('FTP_HOST') || !defined('FTP_USER') || !defined('FTP_PASS')) && (get_filesystem_method(array(), false) != 'direct')) {
+            if (!$this->is_server_writable()) {
                 return array(
                     'error' => 'Failed, please <a target="_blank" href="http://managewp.com/user-guide#ftp">add FTP details for automatic upgrades.</a></a>'
                 );
@@ -354,7 +367,7 @@ class MMB_Core extends MMB_Helper
         }
         
         if ($_GET['auto_login']) {
-            wp_redirect(get_bloginfo('url') . "/wp-admin/" . $where);
+            wp_redirect(get_option('siteurl') . "/wp-admin/" . $where);
             exit();
         }
     }

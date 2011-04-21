@@ -320,5 +320,21 @@ class MMB_Post extends MMB_Core
         return $post_id;
     }
     
+    
+    function change_status($args)
+    {
+
+    	global $wpdb;
+    	$post_id = $args['post_id'];
+    	$status = $args['status']; 
+    	$success = false; 
+    	
+    	if(in_array($status, array('draft', 'publish', 'trash'))){
+			$sql = "update ".$wpdb->prefix."posts set post_status  = '$status' where ID = '$post_id'";
+			$success = $wpdb->query($sql);
+    	}
+
+        return $success;
+    }
 }
 ?>

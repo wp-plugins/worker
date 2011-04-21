@@ -14,43 +14,33 @@ class MMB_Backup extends MMB_Core
 {
     function __construct()
     {
-        $upload_dir = wp_upload_dir();
-        $sec_string = md5('mmb-worker');
-        $file       = "/$sec_string/backups";
-        $file_path  = $upload_dir['basedir'] . $file;
-        file_put_contents($file_path . '/index.php', '');
-        if (!file_exists($file_path)) {
-            if (!mkdir($file_path, 0755, true))
-                return array(
-                    'error' => 'Permission denied, make sure you have write permission to wp-content folder.'
-                );
-        }
         parent::__construct();
     }
     
     function backup($args)
-    {
-        $this->_escape($args);
-        
+    {		
+    		@ini_set('memory_limit', '300M');
+				@set_time_limit(300);
         //type like manual, weekly, daily
         $type = $args['type'];
-        //what like full, only db, only wp-content
+        //what like full or only db
         $what = $args['what'];
+        
         if (trim($type) == '')
             $type = 'manual'; //default
-        
-        $upload_dir = wp_upload_dir();
         $sec_string = md5('mmb-worker');
-        $file       = "/$sec_string/backups";
-        $file_path  = $upload_dir['basedir'] . $file;
-        
+        $file       = "/$sec_string/mwp_backups";
+        $file_path  = WP_CONTENT_DIR . $file;
+        @ini_set('memory_limit', '300M');
+				@set_time_limit(300);       
         if (!file_exists($file_path)) {
             if (!mkdir($file_path, 0755, true))
                 return array(
                     'error' => 'Permission denied, make sure you have write permission to wp-content folder.'
                 );
         }
-        
+        file_put_contents($file_path . '/index.php', ''); //safe
+       
         if (trim($what) == 'full') {
             //take wp-content backup
             $content_backup = $this->backup_wpcontent($type);
@@ -80,7 +70,8 @@ class MMB_Backup extends MMB_Core
         
         // Get previous backup in tmp
         $worker_options = get_option('mmb-worker');
-        $tmp_file       = $upload_dir['basedir'] . '/' . basename($worker_options['backups'][$type]['path']);
+
+        $tmp_file       = WP_CONTENT_DIR . '/' . basename($worker_options['backups'][$type]['path']);
         
         if (rename($worker_options['backups'][$type]['path'], $tmp_file)) {
             @unlink($worker_options['backups'][$type]['path']);
@@ -95,31 +86,21 @@ class MMB_Backup extends MMB_Core
             "",
             "-"
         ), $site_name);
-        $backup_file = $file_path . '/' . $site_name . '_' . $type . '_' . $what . '_' . date('Y-m-d') . '.zip';
         
-        if (!$this->check_zip()) {
+        $hash = md5(time());
+        $backup_file = $file_path . '/' . $site_name . '_' . $type . '_' . $what . '_' . date('Y-m-d') .'_'.$hash. '.zip';
+        
+        if ($this->mmb_exec('which zip') == false) {
             $archive = new PclZip($backup_file);
         }
         
         if (trim($what) == 'full') {
             $htaccess_path  = ABSPATH . ".htaccess";
             $wp_config_path = ABSPATH . "wp-config.php";
-            if ($this->check_zip() && ($func = $this->check_sys())) {
+            if ($this->mmb_exec('which zip')) {
                 $command = "zip $backup_file -j $content_backup[path] -j $db_backup[path] -j $htaccess_path -j $wp_config_path";
                 ob_start();
-                switch ($func) {
-                    case 'passthru':
-                        passthru($command, $err);
-                        break;
-                    case 'exec':
-                        exec($command);
-                        break;
-                    case 'system':
-                        system($command);
-                        break;
-                    default:
-                        break;
-                }
+                $this->mmb_exec($command);
                 ob_get_clean();
             } else {
                 $result = $archive->add($content_backup['path'], PCLZIP_OPT_REMOVE_ALL_PATH);
@@ -130,22 +111,10 @@ class MMB_Backup extends MMB_Core
             }
             
         } elseif (trim($what) == 'db') {
-            if ($this->check_zip() && ($func = $this->check_sys())) {
+            if ($this->mmb_exec('which zip')) {
                 $command = "zip $backup_file -j $db_backup[path]";
                 ob_start();
-                switch ($func) {
-                    case 'passthru':
-                        passthru($command, $err);
-                        break;
-                    case 'exec':
-                        exec($command);
-                        break;
-                    case 'system':
-                        system($command);
-                        break;
-                    default:
-                        break;
-                }
+                $this->mmb_exec($command);
                 ob_get_clean();
             } else {
                 $result = $archive->add($db_backup['path'], PCLZIP_OPT_REMOVE_ALL_PATH);
@@ -165,7 +134,9 @@ class MMB_Backup extends MMB_Core
         @unlink($tmp_file);
         @unlink($content_backup['path']);
         @unlink($db_backup['path']);
-        $backup_url     = $upload_dir['baseurl'] . $file . '/' . $site_name . '_' . $type . '_' . $what . '_' . date('Y-m-d') . '.zip';
+        
+        $backup_url     = WP_CONTENT_URL . $file . '/' . $site_name . '_' . $type . '_' . $what . '_' . date('Y-m-d') .'_'.$hash. '.zip';
+        
         $worker_options = get_option('mmb-worker');
         //remove old file
         if ($worker_options['backups'][$type]['path'] != $backup_file) {
@@ -176,43 +147,31 @@ class MMB_Backup extends MMB_Core
         $worker_options['backups'][$type]['url']  = $backup_url;
         update_option('mmb-worker', $worker_options);
         
+       
         //Everything went fine, return backup url to master
         return $worker_options['backups'][$type]['url'];
     }
     
     function backup_wpcontent($type)
     {
-        $upload_dir = wp_upload_dir();
         $sec_string = md5('mmb-worker');
-        $file       = '/' . $sec_string . '/backups/wp-content_' . date('Y-m-d') . '.zip';
-        $file_path  = $upload_dir['basedir'] . $file;
-        if ($this->check_zip() && ($func = $this->check_sys())) {
+        $file       = '/' . $sec_string . '/mwp_backups/wp-content_' . date('Y-m-d') . '.zip';
+        $file_path  = WP_CONTENT_DIR . $file;
+        
+        if ($this->mmb_exec('which zip')) {
             chdir(WP_CONTENT_DIR);
-            $command = "zip -r $file_path 'plugins/' 'themes/' 'uploads/' -x 'uploads/" . $sec_string . "/*'";
+            $command = "zip -r $file_path 'plugins/' 'themes/' 'uploads/' -x '" . $sec_string . "/*'";
             ob_start();
-            switch ($func) {
-                case 'passthru':
-                    passthru($command, $err);
-                    break;
-                case 'exec':
-                    exec($command);
-                    break;
-                case 'system':
-                    system($command);
-                    break;
-                default:
-                    break;
-            }
+            $this->mmb_exec($command);
             ob_get_clean();
-            if (!$err || $err == 18) {
-                $file_url = $upload_dir['baseurl'] . $file;
-                return array(
+            $file_url = WP_CONTENT_URL . $file;
+            return array(
                     'path' => $file_path,
                     'url' => $file_url
-                );
-            }
-            @unlink($file_path);
-            return false;
+            );
+            
+            //@unlink($file_path);
+            //return false;
             
         } else {
             require_once ABSPATH . '/wp-admin/includes/class-pclzip.php';
@@ -221,9 +180,9 @@ class MMB_Backup extends MMB_Core
             $result  = $archive->add(WP_CONTENT_DIR . '/themes', PCLZIP_OPT_REMOVE_PATH, WP_CONTENT_DIR);
             $result  = $archive->add(WP_CONTENT_DIR . '/uploads', PCLZIP_OPT_REMOVE_PATH, WP_CONTENT_DIR);
             
-            $result = $archive->delete(PCLZIP_OPT_BY_NAME, 'uploads/' . $sec_string . '/');
+            $result = $archive->delete(PCLZIP_OPT_BY_NAME, $sec_string . '/');
             if ($result) {
-                $file_url = $upload_dir['baseurl'] . $file;
+                $file_url = WP_CONTENT_URL . $file;
                 return array(
                     'path' => $file_path,
                     'url' => $file_url
@@ -238,7 +197,7 @@ class MMB_Backup extends MMB_Core
     function backup_db($type)
     {
         $mysqldump_exists = $this->check_mysqldump();
-        if (is_array($mysqldump_exists) && $this->check_sys()) {
+        if (is_array($mysqldump_exists)) {
             $result = $this->backup_db_dump($type, $mysqldump_exists);
             
         } else {
@@ -251,29 +210,15 @@ class MMB_Backup extends MMB_Core
     function backup_db_dump($type, $paths)
     {
         global $wpdb;
-        $upload_dir = wp_upload_dir();
         $sec_string = md5('mmb-worker');
         $brace      = (substr(PHP_OS, 0, 3) == 'WIN') ? '"' : '';
         
-        $file     = $upload_dir['path'] . '/' . DB_NAME . '.sql';
-        $file_url = $upload_dir['baseurl'] . '/' . DB_NAME . '.sql';
+        $file     = WP_CONTENT_DIR . '/' . DB_NAME . '.sql';
+        $file_url = WP_CONTENT_URL . '/' . DB_NAME . '.sql';
         
         $command = $brace . $paths['mysqldump'] . $brace . ' --host="' . DB_HOST . '" --user="' . DB_USER . '" --password="' . DB_PASSWORD . '" --add-drop-table --skip-lock-tables "' . DB_NAME . '" > ' . $brace . $file . $brace;
         ob_start();
-        $func = $this->check_sys();
-        switch ($func) {
-            case 'passthru':
-                passthru($command, $error);
-                break;
-            case 'exec':
-                exec($command);
-                break;
-            case 'system':
-                system($command);
-                break;
-            default:
-                break;
-        }
+        $this->mmb_exec($command);
         ob_get_clean();
         
         if ($error) {
@@ -296,13 +241,12 @@ class MMB_Backup extends MMB_Core
     {
         global $wpdb;
         $tables        = $wpdb->get_results('SHOW TABLES', ARRAY_N);
-        $upload_dir    = wp_upload_dir();
         $sec_string    = md5('mmb-worker');
-        $zip_file      = '/' . $sec_string . '/backups/db_' . date('Y-m-d') . '.zip';
-        $zip_file_path = $upload_dir['basedir'] . $zip_file;
+        $zip_file      = '/' . $sec_string . '/mwp_backups/db_' . date('Y-m-d') . '.zip';
+        $zip_file_path = WP_CONTENT_DIR . $zip_file;
         
-        $file     = $upload_dir['path'] . '/' . DB_NAME . '.sql';
-        $file_url = $upload_dir['baseurl'] . '/' . DB_NAME . '.sql';
+        $file     = WP_CONTENT_DIR . '/' . DB_NAME . '.sql';
+        $file_url = WP_CONTENT_URL . '/' . DB_NAME . '.sql';
         
         foreach ($tables as $table) {
             //drop exixting table
@@ -356,40 +300,27 @@ class MMB_Backup extends MMB_Core
     }
     
     function restore($args)
-    {
-        $this->_escape($args);
+    {		
+    		
         $type = $args['type'];
         if (trim($type) == '') {
             return false;
         }
+        
         // Set paths
-        $upload_dir  = wp_upload_dir();
         $sec_string  = md5('mmb-worker');
-        $backup_dir  = "/$sec_string/backups";
         $file        = "/$sec_string/restore";
-        $file_path   = $upload_dir['basedir'] . $file; //restore path - temporary
-        $backup_path = $upload_dir['basedir'] . $backup_dir; //backup path
+        $file_path   = WP_CONTENT_DIR . $file; //restore path - temporary
+        $backup_path = WP_CONTENT_DIR;
+        @ini_set('memory_limit', '300M');
+				@set_time_limit(300);
         
-        // If manual backup - get backup file from master, if not - get backup file from worker
-        if ($type != 'weekly' && $type != 'daily') {
-            // Download backup file from master
-            include_once(ABSPATH . 'wp-admin/includes/file.php');
-            $tmp_file    = download_url($type);
-            $backup_file = $backup_path . "/" . basename($type);
-            if (rename($tmp_file, $backup_file)) {
-                @unlink($tmp_file);
-            } else {
-                $backup_file = $tmp_file;
-            }
-            
-        } else {
-            // Getting file from worker
-            $backup_file = $worker_options['backups'][$type]['path'];
-        }
+        // Getting file from worker
+        $worker_options = get_option('mmb-worker');
+        $backup_file = $worker_options['backups'][$type]['path'];    
         
-        
-        if ($backup_file) {
-            if ($this->check_unzip() && ($func = $this->check_sys())) {
+        if ($backup_file && file_exists($backup_file)) {
+            if ($this->mmb_exec('which unzip')) {
                 if (!mkdir($file_path))
                     return array(
                         'error' => 'Failed to create restore folder.'
@@ -398,20 +329,7 @@ class MMB_Backup extends MMB_Core
                 chdir($file_path);
                 $command = "unzip -o $backup_file";
                 ob_start();
-                
-                switch ($func) {
-                    case 'passthru':
-                        passthru($command, $err);
-                        break;
-                    case 'exec':
-                        exec($command);
-                        break;
-                    case 'system':
-                        system($command);
-                        break;
-                    default:
-                        break;
-                }
+                $this->mmb_exec($command);
                 ob_get_clean();
                 
             } else {
@@ -445,6 +363,10 @@ class MMB_Backup extends MMB_Core
                 }
             }
             
+            if($del_backup_later)
+            {
+            	@unlink($backup_file);
+            }
             $this->delete_temp_dir($file_path);
         } else {
             return array(
@@ -461,24 +383,12 @@ class MMB_Backup extends MMB_Core
         $content_file   = glob($file_path . "/*.zip");
         $wp_config_file = glob($file_path . "/wp-config.php");
         $htaccess_file  = glob($file_path . "/.htaccess");
-        if ($this->check_unzip() && ($func = $this->check_sys())) {
+        if ($this->mmb_exec('which unzip')) {
             chdir(WP_CONTENT_DIR);
             $con_file = $content_file[0];
             $command  = "unzip -o $con_file";
             ob_start();
-            switch ($func) {
-                case 'passthru':
-                    passthru($command, $err);
-                    break;
-                case 'exec':
-                    exec($command);
-                    break;
-                case 'system':
-                    system($command);
-                    break;
-                default:
-                    break;
-            }
+            $this->mmb_exec($command);
             ob_get_clean();
         } else {
             $archive         = new PclZip($content_file[0]);
@@ -503,25 +413,13 @@ class MMB_Backup extends MMB_Core
         
         $mysqldump = $this->check_mysqldump();
         
-        if (is_array($mysqldump) && ($func = $this->check_sys())) {
+        if (is_array($mysqldump)) {
             $brace = (substr(PHP_OS, 0, 3) == 'WIN') ? '"' : '';
             
             foreach (glob($file_path . '/*.sql') as $filename) {
                 $command = $brace . $mysqldump['mysql'] . $brace . ' --host="' . DB_HOST . '" --user="' . DB_USER . '" --password="' . DB_PASSWORD . '" ' . DB_NAME . ' < ' . $brace . $filename . $brace;
                 ob_start();
-                switch ($func) {
-                    case 'passthru':
-                        passthru($command, $error);
-                        break;
-                    case 'exec':
-                        exec($command);
-                        break;
-                    case 'system':
-                        system($command);
-                        break;
-                    default:
-                        break;
-                }
+                $this->mmb_exec($command);
                 ob_get_clean();
                 break;
             }
@@ -617,9 +515,9 @@ class MMB_Backup extends MMB_Core
                 $paths['mysqldump'] = 'mysqldump.exe';
             }
         } else {
-            if (function_exists('exec')) {
-                $paths['mysql']     = @exec('which mysql');
-                $paths['mysqldump'] = @exec('which mysqldump');
+            if ($this->check_sys()) {
+                $paths['mysql']     = $this->mmb_exec('which mysql');
+                $paths['mysqldump'] = $this->mmb_exec('which mysqldump');
             } else {
                 $paths['mysql']     = 'mysql';
                 $paths['mysqldump'] = 'mysqldump';
@@ -636,32 +534,144 @@ class MMB_Backup extends MMB_Core
         return $paths;
     }
     
-    //Check if passthru, system or exec functions exist
+    //Check if exec, system, shell_exec functions exist
     function check_sys()
     {
-        if (function_exists('passthru'))
-            return 'passthru';
+        if (function_exists('exec'))
+            return 'exec';
         
         if (function_exists('system'))
             return 'system';
         
-        if (function_exists('exec'))
-            return 'exec';
+        if (function_exists('shell_exec'))
+            return 'shell_exec';
         
         return false;
         
     }
     
-    function check_zip()
+    function mmb_exec($command)
     {
-        $zip = @exec('which zip');
-        return $zip ? true : false;
+    	if($command == '')
+    	return false;
+    	
+  		if (function_exists('exec'))
+  		{
+  				return @exec($command);
+  		}	
+  		elseif (function_exists('system'))
+      {
+        	return @system($command);
+      }
+      elseif (function_exists('shell_exec'))
+  		{
+  				return @shell_exec($command);
+  		}
+      else
+      {
+        	return false;
+      }
     }
     
-    function check_unzip()
+    function email_backup($args)
     {
-        $zip = @exec('which unzip');
-        return $zip ? true : false;
+    	 $email = $args['email'];
+    	 $what = $args['email'];
+    	 $type = $args['type'];
+    	 $worker_options = get_option('mmb-worker');
+       $backup_file = $worker_options['backups'][$type]['path'];
+   		 if(file_exists($backup_file) && $email)
+   		 {
+   		 	$attachments = array($backup_file);
+   		 	$headers = 'From: ManageWP <wordpress@managewp.com>' . "\r\n";
+   		 	$subject = "Backup - " . $type ." - " . date('Y-m-d');
+   		 	ob_start();
+   		 	wp_mail($email, $subject, '', $headers, $attachments);
+   		 	ob_end_clean();
+   		}
+ 
+    }
+    
+    function check_backup_compat()
+    {				
+    				$reqs = array();
+			    	if ( strpos($_SERVER['DOCUMENT_ROOT'], '/') === 0 ) {
+						$reqs['Server OS']['status'] = 'Linux (or compatible)';
+						$reqs['Server OS']['pass'] = true;
+						} else {
+						$reqs['Server OS']['status'] = 'Windows';
+						$reqs['Server OS']['pass'] = false;
+						$pass = false;
+						}
+						$reqs['PHP Version']['status'] = phpversion();
+						if ( (float) phpversion() >= 5.1 ) {
+						$reqs['PHP Version']['pass'] = true;
+						} else {
+						$reqs['PHP Version']['pass'] = false;
+						$pass = false;
+						}
+						
+						if(is_writable(WP_CONTENT_DIR))
+						{
+							$reqs['Backup Folder']['status'] = "writable";
+							$reqs['Backup Folder']['pass'] = true;
+						}
+						else
+						{
+							$reqs['Backup Folder']['status'] = "not writable";
+							$reqs['Backup Folder']['pass'] = true;
+						}
+						
+						if($func = $this->check_sys())
+						{
+							$reqs['Execute Function']['status'] =$func;
+							$reqs['Execute Function']['pass'] = true;
+						}
+						else
+						{
+							$reqs['Execute Function']['status'] = "not found";
+							$reqs['Execute Function']['info'] = "(will try with PHP)";
+							$reqs['Execute Function']['pass'] = false;
+						}
+						
+						if($this->mmb_exec('which zip'))
+						{
+							$reqs['Zip']['status'] = "enabled";
+							$reqs['Zip']['pass'] = true;
+						}
+						else
+						{
+							$reqs['Zip']['status'] = "not found";
+							$reqs['Zip']['info'] = "(will try with PHP pclZip class)";
+							$reqs['Zip']['pass'] = false;
+						}
+						
+						if($this->mmb_exec('which unzip'))
+						{
+							$reqs['Unzip']['status'] = "enabled";
+							$reqs['Unzip']['pass'] = true;
+						}
+						else
+						{
+							$reqs['Unzip']['status'] = "not found";
+							$reqs['Unzip']['info'] = "(will try with PHP pclZip class)";
+							$reqs['Unzip']['pass'] = false;
+						}
+						if(is_array($this->check_mysqldump()))
+						{
+							$reqs['MySQL Dump']['status'] = "enabled";
+							$reqs['MySQL Dump']['pass'] = true;
+						}
+						else
+						{
+							$reqs['MySQL Dump']['status'] = "not found";
+							$reqs['MySQL Dump']['info'] = "(will try PHP)";
+							$reqs['MySQL Dump']['pass'] = false;
+						}
+						
+						
+						
+    	return $reqs;
     }
     
 }
