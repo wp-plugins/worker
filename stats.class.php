@@ -36,8 +36,6 @@ class MMB_Stats extends MMB_Core
         $num_trash_comments    = 0;
 
         require_once(ABSPATH . '/wp-admin/includes/update.php');
-
-        
         
         $stats['worker_version']    = MMB_WORKER_VERSION;
         $stats['wordpress_version'] = $mmb_wp_version;
@@ -81,7 +79,6 @@ class MMB_Stats extends MMB_Core
         
         
         $all_posts              = get_posts('post_status=publish&numberposts=3&orderby=modified&order=desc');
-        $stats['publish_count'] = count($all_posts);
         $recent_posts           = array();
         
         foreach ($all_posts as $id => $recent_post) {
@@ -97,7 +94,6 @@ class MMB_Stats extends MMB_Core
         
         
         $all_drafts = get_posts('post_status=draft&numberposts=3&orderby=modified&order=desc');
-        $stats['draft_count'] = count($all_drafts);
         $recent_drafts           = array();
         foreach ($all_drafts as $id => $recent_draft) {
         	$recent = new stdClass();
@@ -108,15 +104,25 @@ class MMB_Stats extends MMB_Core
             $recent->post_modified = $recent_draft->post_modified;
          
             $recent_drafts[] = $recent;
+        } 
+		
+		$all_scheduled = get_posts('post_status=future&numberposts=3&orderby=post_date&order=desc');
+        $scheduled_posts           = array();
+        foreach ($all_scheduled as $id => $scheduled) {
+        	$recent = new stdClass();
+        	$recent->post_permalink = get_permalink($scheduled->ID);
+        	$recent->ID = $scheduled->ID;
+            $recent->post_date = $scheduled->post_date;
+            $recent->post_title = $scheduled->post_title;
+            $recent->post_modified = $scheduled->post_modified;
+         
+            $scheduled_posts[] = $recent;
         }
         
         
         $all_pages_published = get_pages('post_status=publish&numberposts=3&orderby=modified&order=desc');
-      	$stats['published_pages_count'] = count($all_pages_published);
         $recent_pages_published           = array();
-        
         foreach ((array)$all_pages_published as $id => $recent_page_published) {
-        	
         	$recent = new stdClass();
        		$recent->post_permalink = get_permalink($recent_page_published->ID);
         	
@@ -131,7 +137,6 @@ class MMB_Stats extends MMB_Core
 		$stats['posts'] = array_slice($recent_posts, 0, 3);
 		
         $all_pages_drafts = get_pages('post_status=draft&numberposts=3&orderby=modified&order=desc');
-        $stats['draft_pages_count'] = count($all_pages_drafts);
         $recent_pages_drafts           = array();
         foreach ((array)$all_pages_drafts as $id => $recent_pages_draft) {
         	$recent = new stdClass();
@@ -143,14 +148,33 @@ class MMB_Stats extends MMB_Core
          
             $recent_drafts[] = $recent;
         }
-		$stats['drafts'] = array_slice($recent_drafts, 0, 3);
 		usort($recent_drafts, 'cmp_posts_worker');
+		$stats['drafts'] = array_slice($recent_drafts, 0, 3);
+		
+		
+		$pages_scheduled = get_pages('post_status=future&numberposts=3&orderby=modified&order=desc');
+        $recent_pages_drafts           = array();
+        foreach ((array)$pages_scheduled as $id => $scheduled) {
+        	$recent = new stdClass();
+        	$recent->post_permalink = get_permalink($scheduled->ID);
+        	$recent->ID = $scheduled->ID;
+            $recent->post_date = $scheduled->post_date;
+            $recent->post_title = $scheduled->post_title;
+            $recent->post_modified = $scheduled->post_modified;
+         
+            $scheduled_posts[] = $recent;
+        }
+		usort($scheduled_posts, 'cmp_posts_worker');
+		$stats['scheduled'] = array_slice($scheduled_posts, 0, 3);
+		
 		
         
         if (!function_exists('get_filesystem_method'))
          include_once(ABSPATH . 'wp-admin/includes/file.php');
          
         $stats['writable'] = $this->is_server_writable();
+        
+        $stats['backups'] = $this->get_backups();
         
         $stats = apply_filters('mmb_stats_filter', $stats);        
         return $stats;
@@ -246,6 +270,7 @@ class MMB_Stats extends MMB_Core
         return $stats;
     }
     
+   
     
     function set_hit_count($fix_count = false)
     {
@@ -368,10 +393,19 @@ class MMB_Stats extends MMB_Core
             return false;
     }
     
+		function get_backups()
+		{
+		$worker_options = get_option('mmb-worker');
+  	//$backup_file = $worker_options['backups'][$type]['path'];
+  	return $worker_options['backups'];     
+		}
+    
 }
 
 function cmp_posts_worker($a, $b)
 {
     return ($a->post_modified < $b->post_modified);
 }
+
+
 ?>

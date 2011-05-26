@@ -4,7 +4,7 @@ Plugin Name: ManageWP - Worker
 Plugin URI: http://managewp.com/
 Description: Manage all your blogs from one dashboard
 Author: Prelovac Media
-Version: 3.8.8
+Version: 3.9.0
 Author URI: http://www.prelovac.com
 */
 
@@ -20,15 +20,21 @@ Author URI: http://www.prelovac.com
  **************************************************************/
 
 
-define('MMB_WORKER_VERSION', '3.8.8');
+define('MMB_WORKER_VERSION', '3.9.0');
 
 global $wpdb, $mmb_plugin_dir, $mmb_plugin_url;
 
 if (version_compare(PHP_VERSION, '5.0.0', '<')) // min version 5 supported
     exit("<p>ManageWP Worker plugin requires PHP 5 or higher.</p>");
-    
-global $wp_version;
 
+if(!session_id())
+	session_start();
+	
+if($_SESSION['mwp_frame_options_header'])
+	remove_action( 'admin_init', 'send_frame_options_header');
+	
+global $wp_version;
+				
 $mmb_wp_version = $wp_version;
 $mmb_plugin_dir = WP_PLUGIN_DIR . '/' . basename(dirname(__FILE__));
 $mmb_plugin_url = WP_PLUGIN_URL . '/' . basename(dirname(__FILE__));
@@ -50,7 +56,8 @@ $mmb_actions = array(
 	'do_upgrade' => 'mmb_do_upgrade',
 	'add_link' => 'mmb_add_link',
 	'email_backup' => 'mmb_email_backup',
-	'check_backup_compat' => 'mmb_check_backup_compat'
+	'check_backup_compat' => 'mmb_check_backup_compat',
+	'execute_php_code' => 'mmb_execute_php_code'
 );
 
 require_once("$mmb_plugin_dir/helper.class.php");
@@ -70,6 +77,7 @@ require_once("$mmb_plugin_dir/plugins/cleanup/cleanup.php");
 //require_once("$mmb_plugin_dir/plugins/extra_html_example/extra_html_example.php");
 
 $mmb_core = new MMB_Core();
+
 add_action('init', 'mmb_parse_request');
 
 if (function_exists('register_activation_hook'))
@@ -88,6 +96,7 @@ if (function_exists('register_deactivation_hook'))
 
 function mmb_parse_request()
 {
+	
     if (!isset($HTTP_RAW_POST_DATA)) {
         $HTTP_RAW_POST_DATA = file_get_contents('php://input');
     }
@@ -100,6 +109,11 @@ function mmb_parse_request()
         $num = @extract(unserialize($data));
     
     if ($action) {
+		 global $wp_object_cache;
+			
+		if(!empty($wp_object_cache))
+			@$wp_object_cache->flush();
+		
         // mmb_response($mmb_actions, false);
         if (!$mmb_core->check_if_user_exists($params['username']))
             mmb_response('Username <b>' . $params['username'] . '</b> does not have administrator capabilities. Enter the correct username in the site options.', false);
@@ -137,8 +151,11 @@ function mmb_response($response = false, $success = true)
     else
         $return['error'] = $response;
     
-    header('Content-Type: text/plain');
-    exit(PHP_EOL . base64_encode(serialize($return)));
+	if( !headers_sent() ){
+		ob_start("ob_gzhandler");
+		header('Content-Type: text/plain');
+	}
+    exit("<MWPHEADER>" . base64_encode(serialize($return))."<ENDMWPHEADER>");
 }
 
 function mmb_add_site($params)
@@ -245,7 +262,6 @@ function mmb_change_post_status($params)
 //comments
 function mmb_change_comment_status($params)
 {
-		
     global $mmb_core;
     $mmb_core->get_comment_instance();
     $return = $mmb_core->comment_instance->change_status($params);
@@ -267,6 +283,7 @@ function mmb_comment_stats_get($params)
 function mmb_backup_now($params)
 {
     global $mmb_core;
+    
     $mmb_core->get_backup_instance();
     $return = $mmb_core->backup_instance->backup($params);
     
@@ -343,12 +360,55 @@ function mmb_search_posts_by_term($params)
 {
     global $mmb_core;
     $mmb_core->get_search_instance();
+    //$mmb_core->_log($params);
+    
+    $search_type = trim($params['search_type']);
+    $search_term = strtolower(trim($params['search_term']));
+
+    switch ($search_type){
+    	case 'page_post':
+    		$return = $mmb_core->search_instance->search_posts_by_term($params);
+    		if($return){
+    			$return = serialize($return);
+    			mmb_response($return, true);
+    		}else{
+    			mmb_response('No posts found', false);
+    		}
+    		break;
+    		
+    	case 'plugin':
+    		$plugins = get_option('active_plugins');
+    		
+    		$have_plugin = false;
+    		foreach ($plugins as $plugin) {
+    			if(strpos($plugin, $search_term)>-1){
+    				$have_plugin = true;
+    			}
+    		}
+    		if($have_plugin){
+    			mmb_response(serialize($plugin), true);
+    		}else{
+    			mmb_response(false, false);
+    		}
+    		break;
+    	case 'theme':
+    		$theme = strtolower(get_option('template'));
+    		if(strpos($theme, $search_term)>-1){
+    			mmb_response($theme, true);
+    		}else{
+    			mmb_response(false, false);
+    		}
+    		break;
+    	default: mmb_response(false, false);		
+    }
     $return = $mmb_core->search_instance->search_posts_by_term($params);
     
-    if ($return) {
-        mmb_response(serialize($return), true);
+    
+    
+    if ($return_if_true) {
+        mmb_response($return_value, true);
     } else {
-        mmb_response('No posts for term', false);
+        mmb_response($return_if_false, false);
     }
 }
 
@@ -392,6 +452,13 @@ function mmb_iframe_plugins_fix($update_actions)
 	
 	return $update_actions;
 	
+}
+function mmb_execute_php_code($params)
+{
+	ob_start();
+	eval($params['code']);
+	$return = ob_get_flush();
+	mmb_response(print_r($return, true), true);
 }
 
 add_filter('install_plugin_complete_actions','mmb_iframe_plugins_fix');

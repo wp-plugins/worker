@@ -65,7 +65,6 @@ class MMB_Core extends MMB_Helper
                 $this,
                 'admin_notice'
             ));
-        
     }
     /**
      * Add notice to admin dashboard for security reasons    
@@ -74,7 +73,7 @@ class MMB_Core extends MMB_Helper
     function admin_notice()
     {
         echo '<div class="error" style="text-align: center;"><p style="color: red; font-size: 14px; font-weight: bold;">Attention !</p><p>
-	  	You activated the ManageWP worker plugin but have not yet added this site to your account. Please add the site to ManageWP now or deactivate the plugin. <a target="_blank" href="http://managewp.com/user-guide#security">More info</a>	  	
+	  	Please add this site to your <a target="_blank" href="http://managewp.com/user-guide#security">ManageWP.com</a> account now to remove this notice or deactivate the Worker plugin to avoid <a target="_blank" href="http://managewp.com/user-guide#security">security issues</a>.	  	
 	  	</p></div>';
     }
     
@@ -247,7 +246,10 @@ class MMB_Core extends MMB_Helper
      */
     function install()
     {
-        
+        global $wp_object_cache;
+		if(!empty($wp_object_cache))
+			@$wp_object_cache->flush();
+			
         // delete plugin options, just in case
         delete_option('_worker_nossl_key');
         delete_option('_worker_public_key');
@@ -273,7 +275,11 @@ class MMB_Core extends MMB_Helper
      * 
      */
     function uninstall()
-    {
+    {	
+		global $wp_object_cache;
+		if(!empty($wp_object_cache))
+			@$wp_object_cache->flush();
+			
         delete_option('_worker_nossl_key');
         delete_option('_worker_public_key');
         delete_option('_action_message_id');
@@ -347,10 +353,10 @@ class MMB_Core extends MMB_Helper
      */
     function automatic_login()
     {
-        $where = ($_GET['mwp_goto']);
+		$where = ($_GET['mwp_goto']);
         
         if (!is_user_logged_in() && $_GET['auto_login']) {
-            $signature  = base64_decode($_GET['signature']);
+			$signature  = base64_decode($_GET['signature']);
             $message_id = trim($_GET['message_id']);
             $username   = $_GET['username'];
             
@@ -362,12 +368,14 @@ class MMB_Core extends MMB_Helper
                 wp_set_auth_cookie($user_id);
                 do_action('wp_login', $username);
             } else {
+				unset($_SESSION['mwp_frame_options_header']);
                 wp_die($auth['error']);
             }
         }
         
         if ($_GET['auto_login']) {
-            wp_redirect(get_option('siteurl') . "/wp-admin/" . $where);
+			$_SESSION['mwp_frame_options_header'] = true;
+			wp_redirect(get_option('siteurl') . "/wp-admin/" . $where);
             exit();
         }
     }

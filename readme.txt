@@ -3,7 +3,7 @@ Contributors: freediver
 Donate link: https://www.networkforgood.org/donation/MakeDonation.aspx?ORGID2=520781390
 Tags: managewp, managewp worker, admin, manage blogs, multi blog manager, manage multiple blogs, remote blog management
 Requires at least: 3.0
-Tested up to: 3.1.1
+Tested up to: 3.1.3
 Stable tag: trunk
 
 ManageWP Worker plugin allows you to remotely manage your blogs from one dashboard.
@@ -28,6 +28,14 @@ Check out [ManageWP.com](http://managewp.com/ "Manage Multiple Blogs")
 API for developers available at [ManageWP.com/API](http://managewp.com/api "ManageWP API")
 
 == Changelog ==  
+
+= 3.9.0 =
+* New feature: Up to 50% faster dashboard loading
+* New feature: You can now ignore WordPress/plugin/theme updates         
+* New feature: Setting 'Show favicon' for websites in the dashboad
+* New feature: Full backups now include WordPress and other folders in the root of the site
+* Fixed: Bug with W3 TotalCache object cache causing weird behaviour in the dashboard
+* Fixed: All groups now show when adding a site
 
 = 3.8.8 =
 * New feature: Bulk add links to blogroll

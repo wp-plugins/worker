@@ -74,24 +74,41 @@ class MMB_Installer extends MMB_Core
                 'hook_extra' => array()
             ));
         }
-        
+		
         if ($activate) {
-            $all_plugins = get_plugins();
-            foreach ($all_plugins as $plugin_slug => $plugin) {
-                $plugin_dir = preg_split('/\//', $plugin_slug);
-                foreach ($install_info as $key => $install) {
-                    if (!$install || is_wp_error($install))
-                        continue;
-                    
-                    if ($install['destination_name'] == $plugin_dir[0]) {
-                        $install_info[$key]['activated'] = activate_plugin($plugin_slug, '', false);
-                    }
-                }
-            }
+			if($type == 'plugins'){
+				include_once(ABSPATH.'wp-admin/includes/plugin.php');
+				$all_plugins = get_plugins();
+				foreach ($all_plugins as $plugin_slug => $plugin) {
+					$plugin_dir = preg_split('/\//', $plugin_slug);
+					foreach ($install_info as $key => $install) {
+						if (!$install || is_wp_error($install))
+							continue;
+						
+						if ($install['destination_name'] == $plugin_dir[0]) {
+							$install_info[$key]['activated'] = activate_plugin($plugin_slug, '', false);
+						}
+					}
+				}
+			}else if(count($install_info) == 1){
+				include_once(ABSPATH.'wp-includes/theme.php');
+				$all_themes = get_themes();
+				foreach ($all_themes as $theme_name => $theme_data) {
+					
+					foreach ($install_info as $key => $install) {
+						if (!$install || is_wp_error($install))
+							continue;
+							
+						if ($theme_data['Template'] == $install['destination_name']) {
+							$install_info[$key]['activated'] = switch_theme($theme_data['Template'], $theme_data['Stylesheet']);
+						}
+					}
+				}
+			}
         }
 		ob_clean();
 		$this->mmb_maintenance_mode(false);
-        return $install_info;
+		return $install_info;
     }
 	
 	function do_upgrade($params = null){
