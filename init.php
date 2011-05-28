@@ -28,7 +28,7 @@ if (version_compare(PHP_VERSION, '5.0.0', '<')) // min version 5 supported
     exit("<p>ManageWP Worker plugin requires PHP 5 or higher.</p>");
 
 if(!session_id())
-	session_start();
+	@session_start();
 	
 if($_SESSION['mwp_frame_options_header'])
 	remove_action( 'admin_init', 'send_frame_options_header');
