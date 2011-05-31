@@ -374,7 +374,7 @@ class MMB_Core extends MMB_Helper
         }
         
         if ($_GET['auto_login']) {
-			$_SESSION['mwp_frame_options_header'] = true;
+			update_option('mwp_iframe_options_header', microtime(true));
 			wp_redirect(get_option('siteurl') . "/wp-admin/" . $where);
             exit();
         }

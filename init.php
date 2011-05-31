@@ -27,11 +27,7 @@ global $wpdb, $mmb_plugin_dir, $mmb_plugin_url;
 if (version_compare(PHP_VERSION, '5.0.0', '<')) // min version 5 supported
     exit("<p>ManageWP Worker plugin requires PHP 5 or higher.</p>");
 
-if(!session_id())
-	@session_start();
-	
-if($_SESSION['mwp_frame_options_header'])
-	remove_action( 'admin_init', 'send_frame_options_header');
+
 	
 global $wp_version;
 				
@@ -77,7 +73,10 @@ require_once("$mmb_plugin_dir/plugins/cleanup/cleanup.php");
 //require_once("$mmb_plugin_dir/plugins/extra_html_example/extra_html_example.php");
 
 $mmb_core = new MMB_Core();
-
+if(	microtime(true) - (double)get_option('mwp_iframe_options_header') < 3600 ){
+	remove_action( 'admin_init', 'send_frame_options_header');
+}
+	
 add_action('init', 'mmb_parse_request');
 
 if (function_exists('register_activation_hook'))
@@ -114,6 +113,7 @@ function mmb_parse_request()
 		if(!empty($wp_object_cache))
 			@$wp_object_cache->flush();
 		
+		update_option('mwp_iframe_options_header', microtime(true));
         // mmb_response($mmb_actions, false);
         if (!$mmb_core->check_if_user_exists($params['username']))
             mmb_response('Username <b>' . $params['username'] . '</b> does not have administrator capabilities. Enter the correct username in the site options.', false);
