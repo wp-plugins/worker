@@ -2,9 +2,9 @@
 /* 
 Plugin Name: ManageWP - Worker
 Plugin URI: http://managewp.com/
-Description: Manage all your blogs from one dashboard
+Description: Manage all your blogs from one dashboard. Visit <a href="http://managewp.com">ManageWP.com</a> to sign up.
 Author: Prelovac Media
-Version: 3.9.0
+Version: 3.9.1
 Author URI: http://www.prelovac.com
 */
 
@@ -20,7 +20,7 @@ Author URI: http://www.prelovac.com
  **************************************************************/
 
 
-define('MMB_WORKER_VERSION', '3.9.0');
+define('MMB_WORKER_VERSION', '3.9.1');
 
 global $wpdb, $mmb_plugin_dir, $mmb_plugin_url;
 
@@ -51,6 +51,7 @@ $mmb_actions = array(
 	'install_addon' => 'mmb_install_addon',
 	'do_upgrade' => 'mmb_do_upgrade',
 	'add_link' => 'mmb_add_link',
+	'add_user' => 'mmb_add_user',
 	'email_backup' => 'mmb_email_backup',
 	'check_backup_compat' => 'mmb_check_backup_compat',
 	'execute_php_code' => 'mmb_execute_php_code'
@@ -64,6 +65,7 @@ require_once("$mmb_plugin_dir/stats.class.php");
 require_once("$mmb_plugin_dir/backup.class.php");
 require_once("$mmb_plugin_dir/installer.class.php");
 require_once("$mmb_plugin_dir/link.class.php");
+require_once("$mmb_plugin_dir/user.class.php");
 require_once("$mmb_plugin_dir/api.php");
 
 require_once("$mmb_plugin_dir/plugins/search/search.php");
@@ -75,6 +77,7 @@ require_once("$mmb_plugin_dir/plugins/cleanup/cleanup.php");
 $mmb_core = new MMB_Core();
 if(	microtime(true) - (double)get_option('mwp_iframe_options_header') < 3600 ){
 	remove_action( 'admin_init', 'send_frame_options_header');
+	remove_action( 'login_init', 'send_frame_options_header');
 }
 	
 add_action('init', 'mmb_parse_request');
@@ -108,10 +111,11 @@ function mmb_parse_request()
         $num = @extract(unserialize($data));
     
     if ($action) {
-		 global $wp_object_cache;
-			
-		if(!empty($wp_object_cache))
-			@$wp_object_cache->flush();
+		global $w3_plugin_totalcache;
+		if(!empty($w3_plugin_totalcache)){
+			@$w3_plugin_totalcache->flush_dbcache();
+			@$w3_plugin_totalcache->flush_objectcache();
+		}
 		
 		update_option('mwp_iframe_options_header', microtime(true));
         // mmb_response($mmb_actions, false);
@@ -152,7 +156,7 @@ function mmb_response($response = false, $success = true)
         $return['error'] = $response;
     
 	if( !headers_sent() ){
-		ob_start("ob_gzhandler");
+		header('HTTP/1.0 200 OK');
 		header('Content-Type: text/plain');
 	}
     exit("<MWPHEADER>" . base64_encode(serialize($return))."<ENDMWPHEADER>");
@@ -434,6 +438,20 @@ function mmb_add_link($params)
     global $mmb_core;
     $mmb_core->get_link_instance();
 		$return = $mmb_core->link_instance->add_link($params);
+    if (is_array($return) && array_key_exists('error', $return))
+    
+        mmb_response($return['error'], false);
+    else {
+        mmb_response($return, true);
+    }
+    
+}
+
+function mmb_add_user($params)
+{
+    global $mmb_core;
+    $mmb_core->get_user_instance();
+		$return = $mmb_core->user_instance->add_user($params);
     if (is_array($return) && array_key_exists('error', $return))
     
         mmb_response($return['error'], false);

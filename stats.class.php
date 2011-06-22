@@ -25,7 +25,15 @@ class MMB_Stats extends MMB_Core
     
     function get($params)
     {
-        global $mmb_wp_version, $mmb_plugin_dir;
+		$num = extract($params);
+		if($refresh == 'transient'){
+			include_once(ABSPATH.'wp-includes/update.php');
+			wp_update_plugins();
+			wp_update_themes();
+			wp_version_check();
+		}
+		
+        global $wpdb, $mmb_wp_version, $mmb_plugin_dir;
         $stats = array();
         
         //define constants
@@ -39,6 +47,9 @@ class MMB_Stats extends MMB_Core
         
         $stats['worker_version']    = MMB_WORKER_VERSION;
         $stats['wordpress_version'] = $mmb_wp_version;
+        $stats['wp_multisite'] =  $this->mmb_multisite;
+        $stats['php_version'] = phpversion();
+        $stats['mysql_version'] = $wpdb->db_version();
         
         $updates = $this->mmb_get_transient('update_core');
         
@@ -381,7 +392,7 @@ class MMB_Stats extends MMB_Core
         
         $thebot = '';
         foreach ($bot_list as $bot) {
-            if (ereg($bot, $agent)) {
+            if ((boolean)strpos($bot, $agent)) {
                 $thebot = $bot;
                 break;
             }

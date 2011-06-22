@@ -19,6 +19,7 @@ class MMB_Backup extends MMB_Core
     
     function backup($args)
     {		
+    		
     		@ini_set('memory_limit', '300M');
 				@set_time_limit(300);
         //type like manual, weekly, daily
@@ -44,10 +45,10 @@ class MMB_Backup extends MMB_Core
         if (trim($what) == 'full') {
             //take wp-content backup
             $content_backup = $this->backup_wpcontent($type);
-            if (!$content_backup) {
+            if (array_key_exists('error',$content_backup)) {
                 @unlink($content_backup['path']);
                 return array(
-                    'error' => 'Failed to backup wp-content.'
+                    'error' => $content_backup['error']
                 );
             }
         }
@@ -70,9 +71,8 @@ class MMB_Backup extends MMB_Core
         
         // Get previous backup in tmp
         $worker_options = get_option('mmb-worker');
-
         $tmp_file       = WP_CONTENT_DIR . '/' . basename($worker_options['backups'][$type]['path']);
-        
+                
         if (rename($worker_options['backups'][$type]['path'], $tmp_file)) {
             @unlink($worker_options['backups'][$type]['path']);
         }
@@ -147,7 +147,6 @@ class MMB_Backup extends MMB_Core
         $worker_options['backups'][$type]['url']  = $backup_url;
         update_option('mmb-worker', $worker_options);
         
-       
         //Everything went fine, return backup url to master
         return $worker_options['backups'][$type]['url'];
     }
@@ -168,25 +167,23 @@ class MMB_Backup extends MMB_Core
             $result = $this->mmb_exec($command);
             ob_get_clean();
             $file_url = WP_CONTENT_URL . $file;
-            
-            if($result)
-            {
+            if($result){
             	return array(
                     'path' => $file_path,
                     'url' => $file_url
             	);
           	}
-          	else
-          	{
-          		return false;
+          	else{
+          		return array('error' => 'Failed to backup site. Try to enable Zip Command on your server.');
           	}
             
             
         } else {
             require_once ABSPATH . '/wp-admin/includes/class-pclzip.php';
             $archive = new PclZip($file_path);
-						$result  = $archive->add(ABSPATH, PCLZIP_OPT_REMOVE_PATH, ABSPATH);           
-            $result = $archive->delete(PCLZIP_OPT_BY_NAME, $content_dir.'/'.$sec_string.'/');
+						$result  = $archive->add(ABSPATH, PCLZIP_OPT_REMOVE_PATH, ABSPATH);
+						//$result = $archive->delete(PCLZIP_OPT_BY_NAME, $content_dir.'/'.$sec_string.'/');
+						$this->_log($archive);
             if ($result) {
                 $file_url = WP_CONTENT_URL . $file;
                 return array(
@@ -194,8 +191,15 @@ class MMB_Backup extends MMB_Core
                     'url' => $file_url
                 );
             }
+            else {
             @unlink($file_path);
-            return false;
+            	if($archive->error_code == '-10'){
+								return array('error' => 'Failed to zip backup file. Try increasing memory limit and/or free space on your server.');
+							}
+							else{
+								return array('error' => 'Failed to backup site. Try to enable Zip Command on your server.');
+							}
+          	}
         }
     }
     
@@ -278,7 +282,7 @@ class MMB_Backup extends MMB_Core
                         $j          = 1;
                         foreach ($row as $value) {
                             $value = addslashes($value);
-                            $value = ereg_replace("\n", "\\n", $value);
+                            $value = preg_replace("\n", "\\n", $value);
                             $num_values == $j ? $dump_data .= "'" . $value . "'" : $dump_data .= "'" . $value . "', ";
                             $j++;
                             unset($value);
@@ -626,6 +630,7 @@ class MMB_Backup extends MMB_Core
 						$pass = false;
 						}
 						
+						
 						if(is_writable(WP_CONTENT_DIR))
 						{
 							$reqs['Backup Folder']['status'] = "writable";
@@ -636,6 +641,11 @@ class MMB_Backup extends MMB_Core
 							$reqs['Backup Folder']['status'] = "not writable";
 							$reqs['Backup Folder']['pass'] = false;
 						}
+						
+						$sec_string = md5('mmb-worker');
+						$file       = "/$sec_string/mwp_backups";
+        		$file_path  = WP_CONTENT_DIR . $file;
+						$reqs['Backup Folder']['status'].= ' ('.$file_path.')';
 						
 						if($func = $this->check_sys())
 						{
@@ -683,7 +693,6 @@ class MMB_Backup extends MMB_Core
 							$reqs['MySQL Dump']['info'] = "(will try PHP)";
 							$reqs['MySQL Dump']['pass'] = false;
 						}
-						
 						
 						
     	return $reqs;
