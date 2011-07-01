@@ -85,11 +85,11 @@ class MMB_Helper
 		if($this->mmb_multisite)
 			return $this->mmb_set_sitemeta_transient($option_name, $data);
 			
-		global $mmb_wp_version;
+		global $wp_version;
         
-        if (version_compare($mmb_wp_version, '2.7.9', '<=')) {
+        if (version_compare($wp_version, '2.7.9', '<=')) {
             update_option($option_name, $data);
-        } else if (version_compare($mmb_wp_version, '2.9.9', '<=')) {
+        } else if (version_compare($wp_version, '2.9.9', '<=')) {
             update_option('_transient_' . $option_name, $data);
         } else {
 			update_option('_site_transient_' . $option_name, $data);
@@ -104,12 +104,12 @@ class MMB_Helper
         if($this->mmb_multisite)
 			return $this->mmb_get_sitemeta_transient($option_name);
 			
-        global $mmb_wp_version;
+        global $wp_version;
 		
         
-        if (version_compare($mmb_wp_version, '2.7.9', '<=')) {
+        if (version_compare($wp_version, '2.7.9', '<=')) {
 			return get_option($option_name);
-        } else if (version_compare($mmb_wp_version, '2.9.9', '<=')) {
+        } else if (version_compare($wp_version, '2.9.9', '<=')) {
 			return get_option('_transient_' . $option_name);
         } else {
 			return get_option('_site_transient_' . $option_name);
@@ -122,11 +122,11 @@ class MMB_Helper
             return FALSE;
         }
         
-        global $mmb_wp_version;
+        global $wp_version;
         
-		if (version_compare($mmb_wp_version, '2.7.9', '<=')) {
+		if (version_compare($wp_version, '2.7.9', '<=')) {
             delete_option($option_name);
-        } else if (version_compare($mmb_wp_version, '2.9.9', '<=')) {
+        } else if (version_compare($wp_version, '2.9.9', '<=')) {
             delete_option('_transient_' . $option_name);
         } else {
             delete_option('_site_transient_' . $option_name);

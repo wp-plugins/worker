@@ -258,14 +258,25 @@ class MMB_Core extends MMB_Helper
      */
     function install()
     {
-        global $wp_object_cache;
+        global $wp_object_cache, $wpdb;
 		if(!empty($wp_object_cache))
 			@$wp_object_cache->flush();
 			
         // delete plugin options, just in case
-        delete_option('_worker_nossl_key');
-        delete_option('_worker_public_key');
-        delete_option('_action_message_id');
+        if($this->mmb_multisite != false){
+			$blog_ids = $wpdb->get_results($wpdb->prepare('SELECT blog_id FROM `wp_blogs`'));
+			if(!empty($blog_ids)){
+				foreach($blog_ids as $blog_id){
+					$wpdb->query($wpdb->prepare('DELETE FROM '.$wpdb->prefix.$blog->blog_id.'_options WHERE `option_name` = "_worker_nossl_key";'));
+					$wpdb->query($wpdb->prepare('DELETE FROM '.$wpdb->prefix.$blog->blog_id.'_options WHERE `option_name` = "_worker_public_key";'));
+					$wpdb->query($wpdb->prepare('DELETE FROM '.$wpdb->prefix.$blog->blog_id.'_options WHERE `option_name` = "_action_message_id";'));
+				}
+			}
+		} else {
+			delete_option('_worker_nossl_key');
+			delete_option('_worker_public_key');
+			delete_option('_action_message_id');
+		}
         
     }
     
@@ -288,13 +299,24 @@ class MMB_Core extends MMB_Helper
      */
     function uninstall()
     {	
-		global $wp_object_cache;
+		global $wp_object_cache, $wpdb;
 		if(!empty($wp_object_cache))
 			@$wp_object_cache->flush();
-			
-        delete_option('_worker_nossl_key');
-        delete_option('_worker_public_key');
-        delete_option('_action_message_id');
+		
+		if($this->mmb_multisite != false){
+			$blog_ids = $wpdb->get_results($wpdb->prepare('SELECT blog_id FROM `wp_blogs`'));
+			if(!empty($blog_ids)){
+				foreach($blog_ids as $blog){
+					$wpdb->query($wpdb->prepare('DELETE FROM '.$wpdb->prefix.$blog->blog_id.'_options WHERE `option_name` = "_worker_nossl_key";'));
+					$wpdb->query($wpdb->prepare('DELETE FROM '.$wpdb->prefix.$blog->blog_id.'_options WHERE `option_name` = "_worker_public_key";'));
+					$wpdb->query($wpdb->prepare('DELETE FROM '.$wpdb->prefix.$blog->blog_id.'_options WHERE `option_name` = "_action_message_id";'));
+				}
+			}
+		} else {
+			delete_option('_worker_nossl_key');
+			delete_option('_worker_public_key');
+			delete_option('_action_message_id');
+		}
     }
     
     /**

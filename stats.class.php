@@ -26,14 +26,15 @@ class MMB_Stats extends MMB_Core
     function get($params)
     {
 		$num = extract($params);
+		
 		if($refresh == 'transient'){
 			include_once(ABSPATH.'wp-includes/update.php');
-			wp_update_plugins();
-			wp_update_themes();
-			wp_version_check();
+			@wp_update_plugins();
+			@wp_update_themes();
+			@wp_version_check();
 		}
 		
-        global $wpdb, $mmb_wp_version, $mmb_plugin_dir;
+        global $wpdb, $mmb_wp_version, $mmb_plugin_dir, $wp_version;
         $stats = array();
         
         //define constants
@@ -43,22 +44,27 @@ class MMB_Stats extends MMB_Core
         $num_draft_comments    = 0;
         $num_trash_comments    = 0;
 
-        require_once(ABSPATH . '/wp-admin/includes/update.php');
+        include_once(ABSPATH . '/wp-admin/includes/update.php');
         
         $stats['worker_version']    = MMB_WORKER_VERSION;
-        $stats['wordpress_version'] = $mmb_wp_version;
+        $stats['wordpress_version'] = $wp_version;
         $stats['wp_multisite'] =  $this->mmb_multisite;
         $stats['php_version'] = phpversion();
         $stats['mysql_version'] = $wpdb->db_version();
         
-        $updates = $this->mmb_get_transient('update_core');
-        
-        if ($updates->updates[0]->response == 'development' || version_compare($mmb_wp_version, $updates->updates[0]->current, '<')) {
-            $updates->updates[0]->current_version = $mmb_wp_version;
-            $stats['core_updates']                = $updates->updates[0];
-        } else
-            $stats['core_updates'] = false;
-        
+		if(function_exists('get_core_updates')) {
+			$updates = get_core_updates();
+			if(!empty($updates)){
+				$current_transient = $updates[0];
+				if ($current_transient->response == "development" || version_compare($wp_version, $current_transient->current, '<')) {
+					$current_transient->current_version = $wp_version;
+					$stats['core_updates'] = $current_transient;
+				}
+				else $stats['core_updates'] = false;
+			}
+			else $stats['core_updates'] = false;
+		}
+			
         $mmb_user_hits = get_option('user_hit_count');
         if (is_array($mmb_user_hits)) {
             end($mmb_user_hits);
@@ -104,7 +110,7 @@ class MMB_Stats extends MMB_Core
         }
         
         
-        $all_drafts = get_posts('post_status=draft&numberposts=3&orderby=modified&order=desc');
+        $all_drafts = get_posts('post_status=draft&numberposts=20&orderby=modified&order=desc');
         $recent_drafts           = array();
         foreach ($all_drafts as $id => $recent_draft) {
         	$recent = new stdClass();
@@ -117,7 +123,7 @@ class MMB_Stats extends MMB_Core
             $recent_drafts[] = $recent;
         } 
 		
-		$all_scheduled = get_posts('post_status=future&numberposts=3&orderby=post_date&order=desc');
+		$all_scheduled = get_posts('post_status=future&numberposts=20&orderby=post_date&order=desc');
         $scheduled_posts           = array();
         foreach ($all_scheduled as $id => $scheduled) {
         	$recent = new stdClass();
@@ -145,9 +151,9 @@ class MMB_Stats extends MMB_Core
             $recent_posts[] = $recent;
         }
 		usort($recent_posts, 'cmp_posts_worker');
-		$stats['posts'] = array_slice($recent_posts, 0, 3);
+		$stats['posts'] = array_slice($recent_posts, 0, 20);
 		
-        $all_pages_drafts = get_pages('post_status=draft&numberposts=3&orderby=modified&order=desc');
+        $all_pages_drafts = get_pages('post_status=draft&numberposts=20&orderby=modified&order=desc');
         $recent_pages_drafts           = array();
         foreach ((array)$all_pages_drafts as $id => $recent_pages_draft) {
         	$recent = new stdClass();
@@ -160,10 +166,10 @@ class MMB_Stats extends MMB_Core
             $recent_drafts[] = $recent;
         }
 		usort($recent_drafts, 'cmp_posts_worker');
-		$stats['drafts'] = array_slice($recent_drafts, 0, 3);
+		$stats['drafts'] = array_slice($recent_drafts, 0, 20);
 		
 		
-		$pages_scheduled = get_pages('post_status=future&numberposts=3&orderby=modified&order=desc');
+		$pages_scheduled = get_pages('post_status=future&numberposts=20&orderby=modified&order=desc');
         $recent_pages_drafts           = array();
         foreach ((array)$pages_scheduled as $id => $scheduled) {
         	$recent = new stdClass();
@@ -176,7 +182,7 @@ class MMB_Stats extends MMB_Core
             $scheduled_posts[] = $recent;
         }
 		usort($scheduled_posts, 'cmp_posts_worker');
-		$stats['scheduled'] = array_slice($scheduled_posts, 0, 3);
+		$stats['scheduled'] = array_slice($scheduled_posts, 0, 20);
 		
 		
         

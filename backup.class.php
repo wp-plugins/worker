@@ -19,31 +19,37 @@ class MMB_Backup extends MMB_Core
     
     function backup($args)
     {		
-    		
     		@ini_set('memory_limit', '300M');
-				@set_time_limit(300);
-        //type like manual, weekly, daily
-        $type = $args['type'];
-        //what like full or only db
-        $what = $args['what'];
+				@set_time_limit(300); //five minutes
+        
+        $type = $args['type']; //type like manual, weekly, daily
+        $what = $args['what']; //what like full or only db
         
         if (trim($type) == '')
             $type = 'manual'; //default
+        
         $sec_string = md5('mmb-worker');
         $file       = "/$sec_string/mwp_backups";
-        $file_path  = WP_CONTENT_DIR . $file;
-        @ini_set('memory_limit', '300M');
-				@set_time_limit(300);       
+        $file_path  = WP_CONTENT_DIR . $file;     
+        
         if (!file_exists($file_path)) {
             if (!mkdir($file_path, 0755, true))
                 return array(
                     'error' => 'Permission denied, make sure you have write permission to wp-content folder.'
                 );
         }
-        file_put_contents($file_path . '/index.php', ''); //safe
-       
+        
+        @file_put_contents($file_path . '/index.php', ''); //safe
+       	
+       	//delete possible breaked previous backups
+       	foreach (glob($file_path."/*.zip") as $filename) {
+   				$short = basename($filename);
+   				preg_match('/^wp\-content(.*)/Ui',$short,$matches);
+   				if($matches)
+   					@unlink($filename);
+   			}
+   			
         if (trim($what) == 'full') {
-            //take wp-content backup
             $content_backup = $this->backup_wpcontent($type);
             if (array_key_exists('error',$content_backup)) {
                 @unlink($content_backup['path']);
@@ -68,15 +74,8 @@ class MMB_Backup extends MMB_Core
         }
         
         include_once ABSPATH . '/wp-admin/includes/class-pclzip.php';
-        
-        // Get previous backup in tmp
-        $worker_options = get_option('mmb-worker');
-        $tmp_file       = WP_CONTENT_DIR . '/' . basename($worker_options['backups'][$type]['path']);
-                
-        if (rename($worker_options['backups'][$type]['path'], $tmp_file)) {
-            @unlink($worker_options['backups'][$type]['path']);
-        }
-        
+        //$worker_options = get_option('mmb-worker');
+       
         //Prepare .zip file name
         $site_name   = $this->remove_http(get_bloginfo('url'));
         $site_name   = str_replace(array(
@@ -94,6 +93,7 @@ class MMB_Backup extends MMB_Core
             $archive = new PclZip($backup_file);
         }
         
+        
         if (trim($what) == 'full') {
             $htaccess_path  = ABSPATH . ".htaccess";
             $wp_config_path = ABSPATH . "wp-config.php";
@@ -103,11 +103,8 @@ class MMB_Backup extends MMB_Core
                 $result = $this->mmb_exec($command);
                 ob_get_clean();
             } else {
-                $result = $archive->add($content_backup['path'], PCLZIP_OPT_REMOVE_ALL_PATH);
-                $result = $archive->add($db_backup['path'], PCLZIP_OPT_REMOVE_ALL_PATH);
-                $result = $archive->add($htaccess_path, PCLZIP_OPT_REMOVE_ALL_PATH);
-                $result = $archive->add($wp_config_path, PCLZIP_OPT_REMOVE_ALL_PATH);
-                
+            	$files_to_add = array($content_backup['path'],$db_backup['path'],$htaccess_path,$wp_config_path);
+            	$result = $archive->add($files_to_add, PCLZIP_OPT_REMOVE_ALL_PATH);
             }
             
         } elseif (trim($what) == 'db') {
@@ -123,21 +120,18 @@ class MMB_Backup extends MMB_Core
         }
         
         if (!$result) {
-            if (rename($tmp_file, $worker_options['backups'][$type]['path'])) {
-                @unlink($tmp_file);
-            }
             return array(
                 'error' => 'Backup failed. Cannot create backup zip file.'
             );
         }
         
-        @unlink($tmp_file);
+        
         @unlink($content_backup['path']);
         @unlink($db_backup['path']);
         
         $backup_url     = WP_CONTENT_URL . $file . '/' . $site_name . '_' . $type . '_' . $what . '_' . date('Y-m-d') .'_'.$hash. '.zip';
-        
         $worker_options = get_option('mmb-worker');
+        
         //remove old file
         if ($worker_options['backups'][$type]['path'] != $backup_file) {
             @unlink($worker_options['backups'][$type]['path']);
@@ -160,7 +154,6 @@ class MMB_Backup extends MMB_Core
         $content_dir = $content_dir[(count($content_dir)-1)];
         
         if ($this->mmb_exec('which zip')) {
-           	
            	chdir(ABSPATH);
             $command = "zip -r $file_path './' -x '$content_dir/" . $sec_string . "/*'";
             ob_start();
@@ -174,7 +167,7 @@ class MMB_Backup extends MMB_Core
             	);
           	}
           	else{
-          		return array('error' => 'Failed to backup site. Try to enable Zip Command on your server.');
+          		return array('error' => 'Failed to backup site. Try to enable Zip on your server.');
           	}
             
             
@@ -182,8 +175,7 @@ class MMB_Backup extends MMB_Core
             require_once ABSPATH . '/wp-admin/includes/class-pclzip.php';
             $archive = new PclZip($file_path);
 						$result  = $archive->add(ABSPATH, PCLZIP_OPT_REMOVE_PATH, ABSPATH);
-						//$result = $archive->delete(PCLZIP_OPT_BY_NAME, $content_dir.'/'.$sec_string.'/');
-						$this->_log($archive);
+						$result = $archive->delete(PCLZIP_OPT_BY_NAME, $content_dir.'/'.$sec_string.'/');
             if ($result) {
                 $file_url = WP_CONTENT_URL . $file;
                 return array(
@@ -194,10 +186,10 @@ class MMB_Backup extends MMB_Core
             else {
             @unlink($file_path);
             	if($archive->error_code == '-10'){
-								return array('error' => 'Failed to zip backup file. Try increasing memory limit and/or free space on your server.');
+								return array('error' => 'Failed to zip backup. Try increasing memory limit and/or free space on your server.');
 							}
 							else{
-								return array('error' => 'Failed to backup site. Try to enable Zip Command on your server.');
+								return array('error' => 'Failed to backup site. Try to enable Zip on your server.');
 							}
           	}
         }
@@ -282,7 +274,7 @@ class MMB_Backup extends MMB_Core
                         $j          = 1;
                         foreach ($row as $value) {
                             $value = addslashes($value);
-                            $value = preg_replace("\n", "\\n", $value);
+                            $value = preg_replace("/\n/Ui", "\\n", $value);
                             $num_values == $j ? $dump_data .= "'" . $value . "'" : $dump_data .= "'" . $value . "', ";
                             $j++;
                             unset($value);
