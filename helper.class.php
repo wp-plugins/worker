@@ -31,7 +31,7 @@ class MMB_Helper
         fwrite($handle, $mixed . PHP_EOL);
         fclose($handle);
     }
-    
+	
     function _escape(&$array)
     {
         global $wpdb;
@@ -82,11 +82,14 @@ class MMB_Helper
 		if (!$option_name || !$data) {
             return false;
         }
-		global $mmb_wp_version;
+		if($this->mmb_multisite)
+			return $this->mmb_set_sitemeta_transient($option_name, $data);
+			
+		global $wp_version;
         
-        if (version_compare($mmb_wp_version, '2.8.0', '<')) {
+        if (version_compare($wp_version, '2.7.9', '<=')) {
             update_option($option_name, $data);
-        } else if (version_compare($mmb_wp_version, '3.0.0', '<')) {
+        } else if (version_compare($wp_version, '2.9.9', '<=')) {
             update_option('_transient_' . $option_name, $data);
         } else {
 			update_option('_site_transient_' . $option_name, $data);
@@ -98,15 +101,18 @@ class MMB_Helper
         if (trim($option_name) == '') {
             return FALSE;
         }
+        if($this->mmb_multisite)
+			return $this->mmb_get_sitemeta_transient($option_name);
+			
+        global $wp_version;
+		
         
-        global $mmb_wp_version;
-        
-        if (version_compare($mmb_wp_version, '2.8.0', '<')) {
-            return get_option($option_name);
-        } else if (version_compare($mmb_wp_version, '3.0.0', '<')) {
-            return get_option('_transient_' . $option_name);
+        if (version_compare($wp_version, '2.7.9', '<=')) {
+			return get_option($option_name);
+        } else if (version_compare($wp_version, '2.9.9', '<=')) {
+			return get_option('_transient_' . $option_name);
         } else {
-            return get_option('_site_transient_' . $option_name);
+			return get_option('_site_transient_' . $option_name);
         }
     }
     
@@ -116,17 +122,52 @@ class MMB_Helper
             return FALSE;
         }
         
-        global $mmb_wp_version;
+        global $wp_version;
         
-        if (version_compare($mmb_wp_version, '2.8.0', '<')) {
+		if (version_compare($wp_version, '2.7.9', '<=')) {
             delete_option($option_name);
-        } else if (version_compare($mmb_wp_version, '3.0.0', '<')) {
+        } else if (version_compare($wp_version, '2.9.9', '<=')) {
             delete_option('_transient_' . $option_name);
         } else {
             delete_option('_site_transient_' . $option_name);
         }
     }
     
+	function mmb_get_sitemeta_transient($option_name){
+		global $wpdb;
+		$option_name = '_site_transient_'. $option_name;
+		
+		$result = $wpdb->get_var( $wpdb->prepare("SELECT `meta_value` FROM `{$wpdb->sitemeta}` WHERE meta_key = '{$option_name}' AND `site_id` = '{$this->mmb_multisite}' ")); 
+		$result = maybe_unserialize($result);
+		return $result;
+	}
+	
+	function mmb_set_sitemeta_transient($option_name, $option_value){
+		global $wpdb;
+		$option_name = '_site_transient_'. $option_name;
+		
+		if($this->mmb_get_sitemeta_transient($option_name)){
+			$result = $wpdb->update( $wpdb->sitemeta,
+				array(
+					'meta_value' => maybe_serialize($option_value)
+				),
+				array(
+					'meta_key' => $option_name, 
+					'site_id' => $this->mmb_multisite
+				)
+			); 
+		}else {
+			$result = $wpdb->insert( $wpdb->sitemeta,
+				array(
+					'meta_key' => $option_name,
+					'meta_value' => maybe_serialize($option_value),
+					'site_id' => $this->mmb_multisite
+				)
+			); 
+		}
+		return $result;
+	}
+	
     function delete_temp_dir($directory)
     {
         if (substr($directory, -1) == "/") {

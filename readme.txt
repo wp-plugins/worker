@@ -3,7 +3,7 @@ Contributors: freediver
 Donate link: https://www.networkforgood.org/donation/MakeDonation.aspx?ORGID2=520781390
 Tags: managewp, managewp worker, admin, manage blogs, multi blog manager, manage multiple blogs, remote blog management
 Requires at least: 3.0
-Tested up to: 3.1.3
+Tested up to: 3.2
 Stable tag: trunk
 
 ManageWP Worker plugin allows you to remotely manage your blogs from one dashboard.
@@ -17,10 +17,11 @@ Main features:
 *   Secure! No passwords for sites required, uses OpenSSL encrypted protocol
 *   One click upgrades of WordPress, plugin and themes across all your sites
 *   One click to access administration dashboard for any site
+* 	Add sub-users (writes, staff..) to your account
 *   Bulk publish posts to multiple sites at once
 *   Bulk upload themes and plugins to multiple sites at once
 *   Automatic backups of your sites
-*   Clone one site to another
+*   Clone or migrate site to another domain
 *   Much, much more...
 
 Check out [ManageWP.com](http://managewp.com/ "Manage Multiple Blogs")
@@ -28,6 +29,22 @@ Check out [ManageWP.com](http://managewp.com/ "Manage Multiple Blogs")
 API for developers available at [ManageWP.com/API](http://managewp.com/api "ManageWP API")
 
 == Changelog ==  
+
+= 3.9.3 =
+* Included support for WordPress 3.2 partial updates
+
+= 3.9.2 =
+* Fixed problem with full backups
+* Fixed problem with wordpress dev version upgrades
+
+= 3.9.1 =
+* Support for sub-users (limited access users)
+* Bulk add user
+* 'Select all' feature for bulk posting
+* Featured image support for bulk posting
+* Reload button on the dashboard (on the top of the Right now widget) will now refresh information about available updates
+* Fixed a problem with the import tool
+* Fixed a problem when remote dashboard would not work for some servers
 
 = 3.9.0 =
 * New feature: Up to 50% faster dashboard loading
