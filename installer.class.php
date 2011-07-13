@@ -164,78 +164,148 @@ class MMB_Installer extends MMB_Core
     function upgrade_core($current)
     {
 		ob_start();
-        global $mmb_wp_version, $wp_filesystem;
+		if(!function_exists('wp_version_check'))
+			include_once(ABSPATH.'/wp-admin/includes/update.php');
         
-		if(!class_exists('WP_Upgrader')){
-			include_once(ABSPATH.'wp-admin/includes/update.php');
-				if(function_exists('wp_update_core')){
-					$update = wp_update_core($current);
-					if(is_wp_error($update)){
-						return array(
-							'error' => $this->mmb_get_error($update)
-						);
+		@wp_version_check();
+		
+		if(!function_exists('get_core_updates'))
+			include_once(ABSPATH.'/wp-admin/includes/update.php');
+		
+		$updates = get_core_updates();
+		$current_update = false;
+		ob_end_flush();
+		ob_end_clean();
+		
+		if(!empty($updates)){
+			$updated = $updates[0];
+			if ( !isset( $updated->response ) || $updated->response == 'latest' )
+				return array('upgraded' => ' Upgraded successfully.');
+				
+			if ($updated->response == "development" && $current->response == "upgrade") {
+				return array('upgraded' => '<font color="#900">Transient mismatch. Please upgrade manualy</font>');
+			}
+			else if ($updated->response == $current->response || ($updated->response == "upgrade" && $current->response == "development")){
+				if($updated->locale != $current->locale){
+					foreach($updates as $update){
+						if($update->locale == $current->locale){
+							$current_update = $update;
+							break;
+						}
 					}
-					else 
+					if($current_update == false)
+						return array('error' => ' Localization mismatch. Try again.');
+				} else {
+					$current_update = $updated;
+				}
+			}
+			else
+				return array('error' => ' Transient mismatch. Try again.');
+		} else
+			return array('error' => ' Refresh transient failed. Try again.');
+		
+		if($current_update != false){
+			global $mmb_wp_version, $wp_filesystem, $wp_version;
+			
+			if (version_compare($wp_version, '3.1.9', '>')) { 
+				if(!class_exists('Core_Upgrader'))
+					include_once(ABSPATH.'wp-admin/includes/class-wp-upgrader.php');
+				
+				$core = new Core_Upgrader();
+				$result = $core->upgrade($current_update);
+				if(is_wp_error($result)){
+					return array(
+						'error' => $this->mmb_get_error($result)
+					);
+				}
+				else 
+					return array(
+						'upgraded' => ' Upgraded successfully.'
+					);
+				
+			} else {
+				if(!class_exists('WP_Upgrader')){
+					include_once(ABSPATH.'wp-admin/includes/update.php');
+						if(function_exists('wp_update_core')){
+							$result = wp_update_core($current_update);
+							if(is_wp_error($result)){
+								return array(
+									'error' => $this->mmb_get_error($result)
+								);
+							}
+							else 
+								return array(
+									'upgraded' => ' Upgraded successfully.'
+								);
+						}
+				}
+				
+				if(class_exists('WP_Upgrader')){
+					$upgrader = new WP_Upgrader();
+					
+					// Is an update available?
+					if (!isset($current_update->response) || $current_update->response == 'latest')
 						return array(
 							'upgraded' => ' Upgraded successfully.'
 						);
+					
+					$res = $upgrader->fs_connect(array(
+						ABSPATH,
+						WP_CONTENT_DIR
+					));
+					if (is_wp_error($res))
+						return array(
+							'error' => $this->mmb_get_error($res)
+						);
+					
+					$wp_dir = trailingslashit($wp_filesystem->abspath());
+					
+					$download = $upgrader->download_package($current_update->package);
+					if (is_wp_error($download))
+						return array(
+							'error' => $this->mmb_get_error($download)
+						);
+					
+					$working_dir = $upgrader->unpack_package($download);
+					if (is_wp_error($working_dir))
+						return array(
+							'error' => $this->mmb_get_error($working_dir)
+						);
+					
+					if (!$wp_filesystem->copy($working_dir . '/wordpress/wp-admin/includes/update-core.php', $wp_dir . 'wp-admin/includes/update-core.php', true)) {
+						$wp_filesystem->delete($working_dir, true);
+						return array(
+							'error' => 'Unable to move update files.'
+						);
+					}
+					
+					$wp_filesystem->chmod($wp_dir . 'wp-admin/includes/update-core.php', FS_CHMOD_FILE);
+					
+					require(ABSPATH . 'wp-admin/includes/update-core.php');
+					
+					
+					$update_core = update_core($working_dir, $wp_dir);
+					ob_end_clean();
+					
+					if (is_wp_error($update_core))
+						return array(
+							'error' => $this->mmb_get_error($update_core)
+						);
+					ob_end_flush();
+					return array(
+						'upgraded' => 'Upgraded successfully.'
+					);
+				} else {
+					return array(
+						'error' => 'Upgrade failed.'
+					);
 				}
+			}
+		} else {
+			return array(
+					'error' => 'Upgrade failed.'
+				);
 		}
-			
-		$upgrader = new WP_Upgrader();
-        
-        // Is an update available?
-        if (!isset($current->response) || $current->response == 'latest')
-            return array(
-                'upgraded' => ' Upgraded successfully.'
-            );
-        
-        $res = $upgrader->fs_connect(array(
-            ABSPATH,
-            WP_CONTENT_DIR
-        ));
-        if (is_wp_error($res))
-            return array(
-                'error' => $this->mmb_get_error($res)
-            );
-        
-        $wp_dir = trailingslashit($wp_filesystem->abspath());
-        
-        $download = $upgrader->download_package($current->package);
-        if (is_wp_error($download))
-            return array(
-                'error' => $this->mmb_get_error($download)
-            );
-        
-        $working_dir = $upgrader->unpack_package($download);
-        if (is_wp_error($working_dir))
-            return array(
-                'error' => $this->mmb_get_error($working_dir)
-            );
-        
-        if (!$wp_filesystem->copy($working_dir . '/wordpress/wp-admin/includes/update-core.php', $wp_dir . 'wp-admin/includes/update-core.php', true)) {
-            $wp_filesystem->delete($working_dir, true);
-            return array(
-                'error' => 'Unable to move update files.'
-            );
-        }
-        
-        $wp_filesystem->chmod($wp_dir . 'wp-admin/includes/update-core.php', FS_CHMOD_FILE);
-        
-        require(ABSPATH . 'wp-admin/includes/update-core.php');
-        
-        
-        $update_core = update_core($working_dir, $wp_dir);
-		ob_end_clean();
-        
-        if (is_wp_error($update_core))
-            return array(
-                'error' => $this->mmb_get_error($update_core)
-            );
-        ob_end_flush();
-        return array(
-            'upgraded' => 'Upgraded successfully.'
-        );
     }
 	
 	
