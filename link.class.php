@@ -1,9 +1,9 @@
 <?php
 /*************************************************************
  * 
- * user.class.php
+ * link.class.php
  * 
- * Add Users
+ * Add Links
  * 
  * 
  * Copyright (c) 2011 Prelovac Media

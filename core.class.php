@@ -22,16 +22,14 @@ class MMB_Core extends MMB_Helper
     var $post_instance;
     var $stats_instance;
     var $search_instance;
-    var $links_instance;
     var $user_instance;
     var $backup_instance;
     var $installer_instance;
-    var $mmb_multisite = false;
     
     
     function __construct()
     {
-        global $mmb_plugin_dir, $wpmu_version, $blog_id;
+        global $mmb_plugin_dir;
         
         $this->name     = 'Manage Multiple Blogs';
         $this->slug     = 'manage-multiple-blogs';
@@ -45,15 +43,6 @@ class MMB_Core extends MMB_Helper
             );
             $this->save_options();
         }
-
-		if (function_exists('is_multisite')){
-			if (is_multisite()) {
-				$this->mmb_multisite = $blog_id;
-			}
-		} else if (!empty($wpmu_version)) {
-			$this->mmb_multisite = $blog_id;
-		}
-			
         add_action('rightnow_end', array(
             $this,
             'add_right_now_info'
@@ -69,15 +58,14 @@ class MMB_Core extends MMB_Helper
         add_action('init', array(
             $this,
             'automatic_login'
-        )); 
-		        
+        ));
+        
         if (!get_option('_worker_public_key'))
             add_action('admin_notices', array(
                 $this,
                 'admin_notice'
             ));
     }
-	
     /**
      * Add notice to admin dashboard for security reasons    
      * 
@@ -258,25 +246,14 @@ class MMB_Core extends MMB_Helper
      */
     function install()
     {
-        global $wp_object_cache, $wpdb;
+        global $wp_object_cache;
 		if(!empty($wp_object_cache))
 			@$wp_object_cache->flush();
 			
         // delete plugin options, just in case
-        if($this->mmb_multisite != false){
-			$blog_ids = $wpdb->get_results($wpdb->prepare('SELECT blog_id FROM `wp_blogs`'));
-			if(!empty($blog_ids)){
-				foreach($blog_ids as $blog_id){
-					$wpdb->query($wpdb->prepare('DELETE FROM '.$wpdb->prefix.$blog->blog_id.'_options WHERE `option_name` = "_worker_nossl_key";'));
-					$wpdb->query($wpdb->prepare('DELETE FROM '.$wpdb->prefix.$blog->blog_id.'_options WHERE `option_name` = "_worker_public_key";'));
-					$wpdb->query($wpdb->prepare('DELETE FROM '.$wpdb->prefix.$blog->blog_id.'_options WHERE `option_name` = "_action_message_id";'));
-				}
-			}
-		} else {
-			delete_option('_worker_nossl_key');
-			delete_option('_worker_public_key');
-			delete_option('_action_message_id');
-		}
+        delete_option('_worker_nossl_key');
+        delete_option('_worker_public_key');
+        delete_option('_action_message_id');
         
     }
     
@@ -299,24 +276,13 @@ class MMB_Core extends MMB_Helper
      */
     function uninstall()
     {	
-		global $wp_object_cache, $wpdb;
+		global $wp_object_cache;
 		if(!empty($wp_object_cache))
 			@$wp_object_cache->flush();
-		
-		if($this->mmb_multisite != false){
-			$blog_ids = $wpdb->get_results($wpdb->prepare('SELECT blog_id FROM `wp_blogs`'));
-			if(!empty($blog_ids)){
-				foreach($blog_ids as $blog){
-					$wpdb->query($wpdb->prepare('DELETE FROM '.$wpdb->prefix.$blog->blog_id.'_options WHERE `option_name` = "_worker_nossl_key";'));
-					$wpdb->query($wpdb->prepare('DELETE FROM '.$wpdb->prefix.$blog->blog_id.'_options WHERE `option_name` = "_worker_public_key";'));
-					$wpdb->query($wpdb->prepare('DELETE FROM '.$wpdb->prefix.$blog->blog_id.'_options WHERE `option_name` = "_action_message_id";'));
-				}
-			}
-		} else {
-			delete_option('_worker_nossl_key');
-			delete_option('_worker_public_key');
-			delete_option('_action_message_id');
-		}
+			
+        delete_option('_worker_nossl_key');
+        delete_option('_worker_public_key');
+        delete_option('_action_message_id');
     }
     
     /**
@@ -387,19 +353,15 @@ class MMB_Core extends MMB_Helper
      */
     function automatic_login()
     {
-		global $current_user;
 		$where = ($_GET['mwp_goto']);
         
-        if ((!is_user_logged_in() || $_GET['username'] != $current_user->user_login) && $_GET['auto_login']) {
-			
+        if (!is_user_logged_in() && $_GET['auto_login']) {
 			$signature  = base64_decode($_GET['signature']);
             $message_id = trim($_GET['message_id']);
             $username   = $_GET['username'];
             
             $auth = $this->authenticate_message($where . $message_id, $signature, $message_id);
             if ($auth === true) {
-				if(isset($current_user->user_login))
-					do_action('wp_logout'); 
                 $user    = get_user_by('login', $username);
                 $user_id = $user->ID;
                 wp_set_current_user($user_id, $username);
@@ -412,7 +374,7 @@ class MMB_Core extends MMB_Helper
         }
         
         if ($_GET['auto_login']) {
-			update_option('mwp_iframe_options_header', microtime(true));
+			$_SESSION['mwp_frame_options_header'] = true;
 			wp_redirect(get_option('siteurl') . "/wp-admin/" . $where);
             exit();
         }

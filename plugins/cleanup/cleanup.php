@@ -96,25 +96,9 @@ function mmb_get_overhead()
 	$tot_idx = 0;
 	$tot_all = 0;
 	$query = 'SHOW TABLE STATUS FROM '. DB_NAME;
-	$tables = $wpdb->get_results($wpdb->prepare($query),ARRAY_A);
+	$tables = $wpdb->get_results($query,ARRAY_A);
 	foreach($tables as $table)
 	{
-		if($wpdb->base_prefix != $wpdb->prefix){
-			if(preg_match('/^'.$wpdb->prefix.'*/Ui', $table['Name'])){
-				$tot_data = $table['Data_length'];
-				$tot_idx  = $table['Index_length'];
-				$total = $tot_data + $tot_idx;
-				$total = $total / 1024 ;
-				$total = round ($total,3);
-				$gain= $table['Data_free'];
-				$gain = $gain / 1024 ;
-				$total_gain += $gain;
-				$gain = round ($gain,3);
-			}
-		} else if(preg_match('/^'.$wpdb->prefix.'[0-9]{1,20}_*/Ui', $table['Name'])){
-			continue;
-		}
-		else {
 			$tot_data = $table['Data_length'];
 			$tot_idx  = $table['Index_length'];
 			$total = $tot_data + $tot_idx;
@@ -124,26 +108,18 @@ function mmb_get_overhead()
 			$gain = $gain / 1024 ;
 			$total_gain += $gain;
 			$gain = round ($gain,3);
-		}
+
 	}
+
 	return round($total_gain,3);
 }
-
 
 function mmb_clear_overhead()
 {
         global $wpdb;
         $tables = $wpdb->get_col("SHOW TABLES");
         foreach ($tables as $table_name) {
-			if($wpdb->base_prefix != $wpdb->prefix){
-				if(preg_match('/^'.$wpdb->prefix.'*/Ui', $table_name)){
-					$table_string .= $table_name . ",";
-				}
-			} else if(preg_match('/^'.$wpdb->prefix.'[0-9]{1,20}_*/Ui', $table_name)){
-				continue;
-			}
-			else 
-				$table_string .= $table_name . ",";
+            $table_string .= $table_name . ",";
         }
         $table_string = substr($table_string,0,strlen($table_string)-1); //remove last ,
 
@@ -154,7 +130,6 @@ function mmb_clear_overhead()
         $optimize     = $wpdb->query($query);
         return $optimize ? true : false;
 }
-
 
 
 
