@@ -297,6 +297,31 @@ class MMB_Helper
             );
     }
     
+	function _secure_data($data = false){
+		if($data == false)
+			return false;
+			
+		$pl_key = $this->get_master_public_key();
+        if (!$pl_key)
+            return false;
+		
+		$secure = '';
+		if( function_exists('openssl_public_decrypt') && !$this->get_random_signature()){
+			if(is_array($data) && !empty($data)){
+				foreach($data as $input){
+					openssl_public_decrypt($input, &$decrypted, $pl_key);
+					$secure .= $decrypted;
+				}
+			} else {
+				openssl_public_decrypt($input, &$decrypted, $pl_key);
+				$secure = $decrypted;
+			}
+			return $secure;
+		}
+		return false;
+		
+	}
+	
     function check_if_user_exists($username = false)
     {
         global $wpdb;

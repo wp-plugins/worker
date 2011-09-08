@@ -30,6 +30,11 @@ API for developers available at [ManageWP.com/API](http://managewp.com/api "Mana
 
 == Changelog ==  
 
+= 3.9.4 =
+* Now supporting schedule backups to Amazon S3 and Dropbox
+* Revamped cloning procedure with more features
+* Site colors for your websites
+
 = 3.9.3 =
 * Included support for WordPress 3.2 partial updates
 

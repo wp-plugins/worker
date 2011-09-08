@@ -192,9 +192,17 @@ class MMB_Stats extends MMB_Core
          
         $stats['writable'] = $this->is_server_writable();
         
-        $stats['backups'] = $this->get_backups();
+        //Backup Results
+        $stats['mwp_backups'] = $this->get_backup_instance()->get_backup_stats();
         
+        //Backup requirements
+        $stats['mwp_backup_req'] = $this->get_backup_instance()->check_backup_compat();
+        
+		$stats['sheduled_backup'] = '12.07.2011 13:00';
+		$stats['sheduled_next'] = '12.08.2011 13:00';
+		
         $stats = apply_filters('mmb_stats_filter', $stats);        
+        
         return $stats;
     }
     
@@ -411,13 +419,7 @@ class MMB_Stats extends MMB_Core
             return false;
     }
     
-		function get_backups()
-		{
-		$worker_options = get_option('mmb-worker');
-  	//$backup_file = $worker_options['backups'][$type]['path'];
-  	return $worker_options['backups'];     
-		}
-    
+		
 }
 
 function cmp_posts_worker($a, $b)

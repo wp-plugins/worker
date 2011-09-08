@@ -10,12 +10,13 @@
  * www.prelovac.com
  **************************************************************/
 
- add_filter('mmb_stats_filter', mmb_get_extended_info);
+ add_filter('mmb_stats_filter', 'mmb_get_extended_info');
  
  
  function mmb_get_extended_info($stats)
  {
  	$stats['num_revisions'] = mmb_num_revisions();
+ 	//$stats['num_revisions'] = 5;
  	$stats['overhead'] = mmb_get_overhead();
  	$stats['num_spam_comments'] = mmb_num_spam_comments();
  	return $stats;
@@ -99,31 +100,20 @@ function mmb_get_overhead()
 	$tables = $wpdb->get_results($wpdb->prepare($query),ARRAY_A);
 	foreach($tables as $table)
 	{
-		if($wpdb->base_prefix != $wpdb->prefix){
-			if(preg_match('/^'.$wpdb->prefix.'*/Ui', $table['Name'])){
-				$tot_data = $table['Data_length'];
-				$tot_idx  = $table['Index_length'];
-				$total = $tot_data + $tot_idx;
-				$total = $total / 1024 ;
-				$total = round ($total,3);
-				$gain= $table['Data_free'];
-				$gain = $gain / 1024 ;
-				$total_gain += $gain;
-				$gain = round ($gain,3);
+		if(in_array($table['Engine'], array('MyISAM', 'ISAM', 'HEAP', 'MEMORY', 'ARCHIVE'))){
+			
+			if($wpdb->base_prefix != $wpdb->prefix){
+				if(preg_match('/^'.$wpdb->prefix.'*/Ui', $table['Name'])){
+					$total_gain += $table['Data_free'] / 1024;
+				}
+			} else if(preg_match('/^'.$wpdb->prefix.'[0-9]{1,20}_*/Ui', $table['Name'])){
+				continue;
 			}
-		} else if(preg_match('/^'.$wpdb->prefix.'[0-9]{1,20}_*/Ui', $table['Name'])){
-			continue;
-		}
-		else {
-			$tot_data = $table['Data_length'];
-			$tot_idx  = $table['Index_length'];
-			$total = $tot_data + $tot_idx;
-			$total = $total / 1024 ;
-			$total = round ($total,3);
-			$gain= $table['Data_free'];
-			$gain = $gain / 1024 ;
-			$total_gain += $gain;
-			$gain = round ($gain,3);
+			else {
+				$total_gain += $table['Data_free'] / 1024;
+			}
+		} elseif ($table['Engine'] == 'InnoDB'){
+			$total_gain +=  $table['Data_free'] > 100*1024*1024 ? $table['Data_free'] / 1024 : 0;
 		}
 	}
 	return round($total_gain,3);

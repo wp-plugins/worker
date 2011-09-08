@@ -4,7 +4,7 @@ Plugin Name: ManageWP - Worker
 Plugin URI: http://managewp.com/
 Description: Manage all your blogs from one dashboard. Visit <a href="http://managewp.com">ManageWP.com</a> to sign up.
 Author: Prelovac Media
-Version: 3.9.3
+Version: 3.9.4
 Author URI: http://www.prelovac.com
 */
 
@@ -20,7 +20,7 @@ Author URI: http://www.prelovac.com
  **************************************************************/
 
 
-define('MMB_WORKER_VERSION', '3.9.3');
+define('MMB_WORKER_VERSION', '3.9.4');
 
 global $wpdb, $mmb_plugin_dir, $mmb_plugin_url;
 
@@ -39,7 +39,7 @@ $mmb_actions = array(
     'remove_site' => 'mmb_remove_site',
     'get_stats' => 'mmb_stats_get',
 	'get_stats_notification' => 'mmb_get_stats_notification',
-    'backup' => 'mmb_backup_now',
+    'backup_clone' => 'mmb_backup_now',
     'restore' => 'mmb_restore_now',
     'optimize_tables' => 'mmb_optimize_tables',
     'check_wp_version' => 'mmb_wp_checkversion',
@@ -54,7 +54,10 @@ $mmb_actions = array(
 	'add_user' => 'mmb_add_user',
 	'email_backup' => 'mmb_email_backup',
 	'check_backup_compat' => 'mmb_check_backup_compat',
-	'execute_php_code' => 'mmb_execute_php_code'
+	'scheduled_backup' => 'mmb_scheduled_backup',
+	'test_as3' => 'mmb_test_as3',
+	'execute_php_code' => 'mmb_execute_php_code',
+	'delete_backup' => 'mmm_delete_backup'
 );
 
 require_once("$mmb_plugin_dir/helper.class.php");
@@ -81,6 +84,7 @@ if(	microtime(true) - (double)get_option('mwp_iframe_options_header') < 3600 ){
 }
 	
 add_action('init', 'mmb_parse_request');
+
 
 if (function_exists('register_activation_hook'))
     register_activation_hook(__FILE__, array(
@@ -111,23 +115,15 @@ if( !function_exists ( 'mmb_parse_request' )) {
 			$num = @extract(unserialize($data));
 		
 		if ($action) {
-			global $w3_plugin_totalcache, $wp_object_cache;
-			@set_time_limit(300);
-
-			if(is_object($w3_plugin_totalcache) && !empty($w3_plugin_totalcache)){
-				@$w3_plugin_totalcache->flush_dbcache();
-				@$w3_plugin_totalcache->flush_objectcache();
-			}
 			
-			if(is_object($wp_object_cache) && !empty($wp_object_cache)){
-				$wp_object_cache->flush();
-			}
+			@set_time_limit(300);
+			
 			update_option('mwp_iframe_options_header', microtime(true));
 			// mmb_response($mmb_actions, false);
 			if (!$mmb_core->check_if_user_exists($params['username']))
 				mmb_response('Username <b>' . $params['username'] . '</b> does not have administrator capabilities. Enter the correct username in the site options.', false);
 			
-			
+			$mmb_core->_log(print_r($params, true));
 			/* in case database upgrade required, do database backup and perform upgrade ( wordpress wp_upgrade() function ) */
 			if( strlen(trim($wp_db_version)) ){
 				if ( get_option('db_version') != $wp_db_version ) {
@@ -148,13 +144,25 @@ if( !function_exists ( 'mmb_parse_request' )) {
 				mmb_add_site($params);
 				mmb_response('You should never see this.', false);
 			}
-			
 			$auth = $mmb_core->authenticate_message($action . $id, $signature, $id);
 			if ($auth === true) {
+				if(isset($params['secure'])){
+					if($decrypted = $mmb_core->_secure_data($params['secure'])){
+						$decrypted = maybe_unserialize($decrypted);
+						if(is_array($decrypted)){
+							foreach($decrypted as $key => $val){
+								if(!is_numeric($key))
+									$params[$key] = $val;							
+							}
+							unset($params['secure']);
+						} else $params['secure'] = $decrypted;
+					}
+				}
+				
 				if (array_key_exists($action, $mmb_actions) && function_exists($mmb_actions[$action]))
 					call_user_func($mmb_actions[$action], $params);
 				else
-					mmb_response('Action "' . $action . '" does not exist.', false);
+					mmb_response('Action "' . $action . '" does not exist. Please update your Worker plugin.', false);
 			} else {
 				mmb_response($auth['error'], false);
 			}
@@ -199,6 +207,7 @@ if( !function_exists ( 'mmb_add_site' )) {
 				
 				if (function_exists('openssl_verify')) {
 					$verify = openssl_verify($action . $id, base64_decode($signature), $public_key);
+					$mmb_core->_log('openssl_verify: '. $verify);
 					if ($verify == 1) {
 						$mmb_core->set_master_public_key($public_key);
 						$mmb_core->set_worker_message_id($id);
@@ -212,6 +221,7 @@ if( !function_exists ( 'mmb_add_site' )) {
 				} else {
 					if (!get_option('_worker_nossl_key')) {
 						srand();
+						$mmb_core->_log('!openssl_verify: '. srand());
 						$random_key = md5(base64_encode($public_key) . rand(0, getrandmax()));
 						
 						$mmb_core->set_random_signature($random_key);
@@ -368,6 +378,28 @@ if( !function_exists ( 'mmb_check_backup_compat' )) {
 		}
 	}
 }
+
+if( !function_exists ( 'mmb_scheduled_backup' )) {
+	function mmb_scheduled_backup($params)
+	{
+
+		global $mmb_core;
+		$mmb_core->get_backup_instance();
+		$return = $mmb_core->backup_instance->set_backup_task($params);
+		mmb_response($return, $return);
+	}
+}
+
+if( !function_exists ( 'mmm_delete_backup' )) {
+	function mmm_delete_backup($params)
+	{
+		global $mmb_core;
+		$mmb_core->get_backup_instance();
+		$return = $mmb_core->backup_instance->delete_backup($params);
+		mmb_response($return, $return);
+	}
+}
+
 if( !function_exists ( 'mmb_optimize_tables' )) {
 	function mmb_optimize_tables($params)
 	{
@@ -503,6 +535,14 @@ if( !function_exists ( 'mmb_add_link' )) {
 		
 	}
 }
+
+function do_log($string){
+	$path = 'log.log';
+	$file = fopen($path, 'a');
+	fwrite($file, print_r($string , true));
+	fclose($file);
+}
+
 if( !function_exists ( 'mmb_add_user' )) {
 	function mmb_add_user($params)
 	{
@@ -518,6 +558,7 @@ if( !function_exists ( 'mmb_add_user' )) {
 		
 	}
 }
+add_filter('install_plugin_complete_actions','mmb_iframe_plugins_fix');
 if( !function_exists ( 'mmb_iframe_plugins_fix' )) {
 	function mmb_iframe_plugins_fix($update_actions)
 	{
@@ -539,7 +580,28 @@ if( !function_exists ( 'mmb_execute_php_code' )) {
 		mmb_response(print_r($return, true), true);
 	}
 }
-add_filter('install_plugin_complete_actions','mmb_iframe_plugins_fix');
 
-    
+if(!function_exists('mmb_more_reccurences')){
+	//Backup Tasks
+	add_filter('cron_schedules', 'mmb_more_reccurences');
+	function mmb_more_reccurences() {
+		return array(
+			'minutely' => array('interval' => 60, 'display' => 'Once in a minute'),
+			'fiveminutes' => array('interval' => 300, 'display' => 'Once in a five minutes')
+		);
+	}
+}
+		
+	if (!wp_next_scheduled('mwp_backup_tasks')) {
+		wp_schedule_event( time(), 'fiveminutes', 'mwp_backup_tasks' );
+	}
+	add_action('mwp_backup_tasks', 'mwp_check_backup_tasks');
+	
+	
+        
+ 	function mwp_check_backup_tasks() {
+		global $mmb_core;
+		$mmb_core->get_backup_instance()->check_backup_tasks();
+	}
+     
 ?>

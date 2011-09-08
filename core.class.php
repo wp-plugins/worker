@@ -45,6 +45,8 @@ class MMB_Core extends MMB_Helper
             );
             $this->save_options();
         }
+        
+        
 
 		if (function_exists('is_multisite')){
 			if (is_multisite()) {
@@ -76,6 +78,8 @@ class MMB_Core extends MMB_Helper
                 $this,
                 'admin_notice'
             ));
+        
+        
     }
 	
     /**
@@ -277,7 +281,9 @@ class MMB_Core extends MMB_Helper
 			delete_option('_worker_public_key');
 			delete_option('_action_message_id');
 		}
-        
+		
+		//Reset backup tasks
+		delete_option('mwp_backup_tasks');
     }
     
     /**
@@ -317,7 +323,12 @@ class MMB_Core extends MMB_Helper
 			delete_option('_worker_public_key');
 			delete_option('_action_message_id');
 		}
+		
+		//Delete backup tasks
+		delete_option('mwp_backup_tasks');
+		wp_clear_scheduled_hook('mwp_backup_tasks');
     }
+    
     
     /**
      * Constructs a url (for ajax purpose)
@@ -387,14 +398,16 @@ class MMB_Core extends MMB_Helper
      */
     function automatic_login()
     {
-		global $current_user;
-		$where = ($_GET['mwp_goto']);
-        
-        if ((!is_user_logged_in() || $_GET['username'] != $current_user->user_login) && $_GET['auto_login']) {
+			global $current_user;
+			
+			$where = isset($_GET['mwp_goto']) ? $_GET['mwp_goto'] : '';
+			$username = isset($_GET['username']) ? $_GET['username'] : '';
+			$auto_login = isset($_GET['auto_login']) ? $_GET['auto_login'] : 0;
+				  
+      if ((!is_user_logged_in() || ($this->mmb_multisite && $username != $current_user->user_login)) && $auto_login) {
 			
 			$signature  = base64_decode($_GET['signature']);
-            $message_id = trim($_GET['message_id']);
-            $username   = $_GET['username'];
+      $message_id = trim($_GET['message_id']);
             
             $auth = $this->authenticate_message($where . $message_id, $signature, $message_id);
             if ($auth === true) {
@@ -413,6 +426,8 @@ class MMB_Core extends MMB_Helper
         
         if ($_GET['auto_login']) {
 			update_option('mwp_iframe_options_header', microtime(true));
+			if(!headers_sent())
+				header('P3P: CP="CAO PSA OUR"'); // IE redirect iframe header
 			wp_redirect(get_option('siteurl') . "/wp-admin/" . $where);
             exit();
         }
