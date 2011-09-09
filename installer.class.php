@@ -28,7 +28,7 @@ class MMB_Installer extends MMB_Core
             WP_Filesystem();
         
     }
-    
+		
     function mmb_maintenance_mode($enable = false, $maintenance_message = '')
     {
         global $wp_filesystem;
@@ -136,7 +136,7 @@ class MMB_Installer extends MMB_Core
 		if(!empty($upgrade_plugins)){
 			$plugin_files = array();
 			foreach($upgrade_plugins as $plugin){
-				$plugin_files[] = $plugin->file;
+				$plugin_files[$plugin->file] = $plugin->old_version;
 			}
 			
 			$upgrades['plugins'] = $this->upgrade_plugins($plugin_files);
@@ -173,6 +173,7 @@ class MMB_Installer extends MMB_Core
 			include_once(ABSPATH.'/wp-admin/includes/update.php');
 		
 		$updates = get_core_updates();
+		
 		$current_update = false;
 		ob_end_flush();
 		ob_end_clean();
@@ -203,7 +204,6 @@ class MMB_Installer extends MMB_Core
 				return array('error' => ' Transient mismatch. Try again.');
 		} else
 			return array('error' => ' Refresh transient failed. Try again.');
-		
 		if($current_update != false){
 			global $mmb_wp_version, $wp_filesystem, $wp_version;
 			
@@ -308,7 +308,6 @@ class MMB_Installer extends MMB_Core
 		}
     }
 	
-	
 	function upgrade_plugins($plugins = false){
 		if(!$plugins || empty($plugins))
 			return array(
@@ -317,21 +316,27 @@ class MMB_Installer extends MMB_Core
 		$return = array();
 		if (class_exists('Plugin_Upgrader') && class_exists('Bulk_Plugin_Upgrader_Skin')) {
 			
-			$current_plugins = $this->mmb_get_transient('update_plugins');
-			
 			$upgrader = new Plugin_Upgrader(new Bulk_Plugin_Upgrader_Skin(compact('nonce', 'url')));
-			$result   = $upgrader->bulk_upgrade($plugins);
+			$result   = $upgrader->bulk_upgrade(array_keys($plugins));
+			
+			if( !function_exists('wp_update_plugins') )
+				include_once(ABSPATH . 'wp-includes/update.php');
+				
+			@wp_update_plugins();
+			$current_plugins = $this->mmb_get_transient('update_plugins');
 			
 			if (!empty($result)) {
 				foreach ($result as $plugin_slug => $plugin_info) {
 					if (!$plugin_info || is_wp_error($plugin_info)) {
 						$return[$plugin_slug] = $this->mmb_get_error($plugin_info);
 					} else {
-						unset($current_plugins->response[$plugin_slug]);
-						$return[$plugin_slug] = 1;
+						if(isset($current_plugins->response[$plugin_slug]) && !empty($current_plugins->response[$plugin_slug])){
+							$return[$plugin_slug] = false;
+						} else {
+							$return[$plugin_slug] = 1;
+						}
 					}
 				}
-				$this->mmb_set_transient('update_plugins', $current_plugins);
 				ob_end_clean();
 				return array(
 					'upgraded' => $return
@@ -354,13 +359,17 @@ class MMB_Installer extends MMB_Core
 			return array(
                 'error' => 'No theme files for upgrade.'
             );
-		
 		if (class_exists('Theme_Upgrader') && class_exists('Bulk_Theme_Upgrader_Skin')) {
 			
-			$current_themes = $this->mmb_get_transient('update_themes');
 			
 			$upgrader = new Theme_Upgrader(new Bulk_Theme_Upgrader_Skin(compact('title', 'nonce', 'url', 'theme')));
 			$result = $upgrader->bulk_upgrade($themes);
+			
+			if( !function_exists('wp_update_themes') )
+				include_once(ABSPATH . 'wp-includes/update.php');
+				
+			@wp_update_themes();
+			$current_themes = $this->mmb_get_transient('update_themes');
 			
 			$return = array();
 			if (!empty($result)) {
@@ -368,11 +377,14 @@ class MMB_Installer extends MMB_Core
 					if (is_wp_error($theme_info) || !$theme_info) {
 						$return[$theme_tmp] = $this->mmb_get_error($theme_info);
 					} else {
-						unset($current_themes->response[$theme_tmp]);
-						$return[$theme_tmp] = 1;
+						if(isset($current_themes->response[$theme_tmp]) && !empty($current_themes->response[$theme_tmp])){
+							$return[$theme_tmp] = false;
+						} else {
+							$return[$theme_tmp] = 1;
+						}
 					}
 				}
-				$this->mmb_set_transient('update_themes', $current_themes);
+				
 				return array(
 					'upgraded' => $return
 				);
