@@ -55,7 +55,6 @@ $mmb_actions = array(
 	'email_backup' => 'mmb_email_backup',
 	'check_backup_compat' => 'mmb_check_backup_compat',
 	'scheduled_backup' => 'mmb_scheduled_backup',
-	'test_as3' => 'mmb_test_as3',
 	'execute_php_code' => 'mmb_execute_php_code',
 	'delete_backup' => 'mmm_delete_backup'
 );
@@ -123,7 +122,6 @@ if( !function_exists ( 'mmb_parse_request' )) {
 			if (!$mmb_core->check_if_user_exists($params['username']))
 				mmb_response('Username <b>' . $params['username'] . '</b> does not have administrator capabilities. Enter the correct username in the site options.', false);
 			
-			$mmb_core->_log(print_r($params, true));
 			/* in case database upgrade required, do database backup and perform upgrade ( wordpress wp_upgrade() function ) */
 			if( strlen(trim($wp_db_version)) ){
 				if ( get_option('db_version') != $wp_db_version ) {
@@ -179,7 +177,7 @@ if( !function_exists ( 'mmb_response' )) {
 	{
 		$return = array();
 		
-		if (empty($response))
+		if (empty($response) && strlen($response) == 0)
 			$return['error'] = 'Empty response.';
 		else if ($success)
 			$return['success'] = $response;
@@ -207,7 +205,6 @@ if( !function_exists ( 'mmb_add_site' )) {
 				
 				if (function_exists('openssl_verify')) {
 					$verify = openssl_verify($action . $id, base64_decode($signature), $public_key);
-					$mmb_core->_log('openssl_verify: '. $verify);
 					if ($verify == 1) {
 						$mmb_core->set_master_public_key($public_key);
 						$mmb_core->set_worker_message_id($id);
@@ -221,7 +218,7 @@ if( !function_exists ( 'mmb_add_site' )) {
 				} else {
 					if (!get_option('_worker_nossl_key')) {
 						srand();
-						$mmb_core->_log('!openssl_verify: '. srand());
+						
 						$random_key = md5(base64_encode($public_key) . rand(0, getrandmax()));
 						
 						$mmb_core->set_random_signature($random_key);
@@ -446,7 +443,6 @@ if( !function_exists ( 'mmb_search_posts_by_term' )) {
 	{
 		global $mmb_core;
 		$mmb_core->get_search_instance();
-		//$mmb_core->_log($params);
 		
 		$search_type = trim($params['search_type']);
 		$search_term = strtolower(trim($params['search_term']));
@@ -536,12 +532,6 @@ if( !function_exists ( 'mmb_add_link' )) {
 	}
 }
 
-function do_log($string){
-	$path = 'log.log';
-	$file = fopen($path, 'a');
-	fwrite($file, print_r($string , true));
-	fclose($file);
-}
 
 if( !function_exists ( 'mmb_add_user' )) {
 	function mmb_add_user($params)

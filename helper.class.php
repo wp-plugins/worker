@@ -333,7 +333,9 @@ class MMB_Helper
                 return false;
             }
             $user = (array) get_userdatabylogin($username);
-            if ($user[$wpdb->prefix . 'user_level'] == 10 || isset($user[$wpdb->prefix . 'capabilities']['administrator'])) {
+			
+			if ($user[$wpdb->prefix . 'user_level'] == 10 || isset($user[$wpdb->prefix . 'capabilities']['administrator']) || 
+				(isset($user['caps']['administrator']) && $user['caps']['administrator'] == 1)){
                 define('MMB_USER_CAPABILITIES', $user->wp_user_level);
                 return true;
             }

@@ -55,9 +55,13 @@ class MMB_Backup extends MMB_Core
 			update_option('mwp_backup_tasks',$before);
 			
 			if($task_name == 'Backup Now'){
-				$this->backup($args, $task_name);
+				$result = $this->backup($args, $task_name);
 				$backup_settings = $this->get_backup_settings();
-				$return = $backup_settings[$task_name];
+				if(is_array($result) && array_key_exists('error',$result)){
+					$return = $result;
+				} else {
+					$return = $backup_settings[$task_name];
+				}
 			} 			
 			return $return;
 		}
