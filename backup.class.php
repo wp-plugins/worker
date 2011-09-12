@@ -111,8 +111,8 @@ class MMB_Backup extends MMB_Core
     	
     		
 		//try increase memory limit	
-		@ini_set('memory_limit', '300M');
-		@set_time_limit(300); //five minutes
+		@ini_set('memory_limit', '1000M');
+		@set_time_limit(600); //ten minutes
 				
    			//Remove old backup(s)
    			 if($type ==  'manual'){
@@ -1037,7 +1037,7 @@ class MMB_Backup extends MMB_Core
 				
 						if($schedule[1]) { $delay_time = $schedule[1] * 60;}
 						
-						$current_hour = date("h");
+						$current_hour = date("H");
 						$schedule_hour = $schedule[0]; 
 						if($current_hour >= $schedule_hour)
 							$time = mktime($schedule_hour, 0, 0, date("m"), date("d")+1, date("Y"));
@@ -1050,7 +1050,7 @@ class MMB_Backup extends MMB_Core
 						if($schedule[2]) { $delay_time = $schedule[2] * 60;} 
 						$current_weekday = date('w');
 						$schedule_weekday = $schedule[1];
-						$current_hour = date("h");
+						$current_hour = date("H");
 						$schedule_hour = $schedule[0];
 						
 						if($current_weekday > $schedule_weekday)
@@ -1074,7 +1074,7 @@ class MMB_Backup extends MMB_Core
 						if($schedule[2]) { $delay_time = $schedule[2] * 60;} 
 						$current_monthday = date('j');
 						$schedule_monthday = $schedule[1];
-						$current_hour = date("h");
+						$current_hour = date("H");
 						$schedule_hour = $schedule[0];
 						
 						if($current_monthday > $schedule_monthday){
