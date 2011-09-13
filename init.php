@@ -107,14 +107,14 @@ if( !function_exists ( 'mmb_parse_request' )) {
 		}
 		ob_start();
 		
-		global $mmb_core, $mmb_actions, $new_actions, $wp_db_version, $wpmu_version;
+		global $mmb_core, $mmb_actions, $new_actions, $wp_db_version, $wpmu_version, $_wp_using_ext_object_cache;
 		
 		$data = base64_decode($HTTP_RAW_POST_DATA);
 		if ($data)
 			$num = @extract(unserialize($data));
 		
 		if ($action) {
-			
+			$_wp_using_ext_object_cache = false;
 			@set_time_limit(600);
 			
 			update_option('mwp_iframe_options_header', microtime(true));
