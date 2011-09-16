@@ -37,21 +37,21 @@ function cleanup_delete_worker($params = array()){
 					if(mmb_delete_all_revisions()){
 						$return_array['revision'] = 'Revisions deleted.';
 					}else{
-						$return_array['revision'] = 'Revisions not deleted.';
+						$return_array['revision_error'] = 'Revisions not deleted.';
 					}
 					break;
 				case 'overhead' : 
 					if(mmb_clear_overhead()){
 						$return_array['overhead'] = 'Overhead cleared.';
 					}else{
-						$return_array['overhead'] = 'Overhead not cleared.';
+						$return_array['overhead_error'] = 'Overhead not cleared.';
 					}
 					break;
 				case 'comment' : 
 					if(mmb_delete_spam_comments()){
 						$return_array['comment'] = 'Comments deleted';
 					}else{
-						$return_array['comment'] = 'Comments not deleted';
+						$return_array['comment_error'] = 'Comments not deleted';
 					}
 					break;
 				default: 
@@ -113,7 +113,7 @@ function mmb_get_overhead()
 				$total_gain += $table['Data_free'] / 1024;
 			}
 		} elseif ($table['Engine'] == 'InnoDB'){
-			$total_gain +=  $table['Data_free'] > 100*1024*1024 ? $table['Data_free'] / 1024 : 0;
+			//$total_gain +=  $table['Data_free'] > 100*1024*1024 ? $table['Data_free'] / 1024 : 0;
 		}
 	}
 	return round($total_gain,3);

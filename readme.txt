@@ -30,6 +30,12 @@ API for developers available at [ManageWP.com/API](http://managewp.com/api "Mana
 
 == Changelog ==  
 
+== 3.9.6 ==
+* Improved dashboard performance
+* Fixed bug with W3TC, we hope it is fully comptabile now
+* Improved backup feature
+* Various other fixes and improvements
+
 = 3.9.5 =
 * Now supporting scheduled backups to Amazon S3 and Dropbox
 * Revamped cloning procedure

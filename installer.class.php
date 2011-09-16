@@ -405,19 +405,19 @@ class MMB_Installer extends MMB_Core
         $current            = $this->mmb_get_transient('update_plugins');
         $upgradable_plugins = array();
         if (!empty($current->response)) {
+			if (!function_exists('get_plugin_data'))
+                    include_once ABSPATH . 'wp-admin/includes/plugin.php';
             foreach ($current->response as $plugin_path => $plugin_data) {
 				if($plugin_path == 'worker/init.php')
 					continue;
 				
-                if (!function_exists('get_plugin_data'))
-                    include_once ABSPATH . 'wp-admin/includes/plugin.php';
-					
                 $data = get_plugin_data(WP_PLUGIN_DIR . '/' . $plugin_path);
-                
-                $current->response[$plugin_path]->name        = $data['Name'];
-                $current->response[$plugin_path]->old_version = $data['Version'];
-                $current->response[$plugin_path]->file        = $plugin_path;
-                $upgradable_plugins[]                         = $current->response[$plugin_path];
+                if(strlen($data['Name']) > 0 && strlen($data['Version']) > 0) {
+					$current->response[$plugin_path]->name        = $data['Name'];
+					$current->response[$plugin_path]->old_version = $data['Version'];
+					$current->response[$plugin_path]->file        = $plugin_path;
+					$upgradable_plugins[]                         = $current->response[$plugin_path];
+				}
             }
             return $upgradable_plugins;
         } else
@@ -435,11 +435,12 @@ class MMB_Installer extends MMB_Core
             if (!empty($current->response)) {
                 foreach ($current->response as $current_themes => $theme) {
                     if ($theme_data['Template'] == $current_themes) {
-                        $current->response[$current_themes]['name']        = $theme_data['Name'];
-                        $current->response[$current_themes]['old_version'] = $theme_data['Version'];
-                        $current->response[$current_themes]['theme_tmp']   = $theme_data['Template'];
-                        $upgrade_themes[]                                  = $current->response[$current_themes];
-                        continue;
+						if(strlen($theme_data['Name']) > 0 && strlen($theme_data['Version']) > 0) {
+							$current->response[$current_themes]['name']        = $theme_data['Name'];
+							$current->response[$current_themes]['old_version'] = $theme_data['Version'];
+							$current->response[$current_themes]['theme_tmp']   = $theme_data['Template'];
+							$upgrade_themes[]                                  = $current->response[$current_themes];
+						}
                     }
                 }
             }

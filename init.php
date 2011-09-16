@@ -4,7 +4,7 @@ Plugin Name: ManageWP - Worker
 Plugin URI: http://managewp.com/
 Description: Manage all your blogs from one dashboard. Visit <a href="http://managewp.com">ManageWP.com</a> to sign up.
 Author: Prelovac Media
-Version: 3.9.5
+Version: 3.9.6
 Author URI: http://www.prelovac.com
 */
 
@@ -20,7 +20,7 @@ Author URI: http://www.prelovac.com
  **************************************************************/
 
 
-define('MMB_WORKER_VERSION', '3.9.5');
+define('MMB_WORKER_VERSION', '3.9.6');
 
 global $wpdb, $mmb_plugin_dir, $mmb_plugin_url;
 
@@ -56,7 +56,9 @@ $mmb_actions = array(
 	'check_backup_compat' => 'mmb_check_backup_compat',
 	'scheduled_backup' => 'mmb_scheduled_backup',
 	'execute_php_code' => 'mmb_execute_php_code',
-	'delete_backup' => 'mmm_delete_backup'
+	'delete_backup' => 'mmm_delete_backup',
+	'remote_backup_now' => 'mmb_remote_backup_now',
+	'clean_orphan_backups' => 'mmb_clean_orphan_backups'
 );
 
 require_once("$mmb_plugin_dir/helper.class.php");
@@ -191,6 +193,8 @@ if( !function_exists ( 'mmb_response' )) {
 		exit("<MWPHEADER>" . base64_encode(serialize($return))."<ENDMWPHEADER>");
 	}
 }
+
+
 
 if( !function_exists ( 'mmb_add_site' )) {
 	function mmb_add_site($params)
@@ -422,6 +426,34 @@ if( !function_exists ( 'mmb_restore_now' )) {
 		
 	}
 }
+
+if( !function_exists ( 'mmb_remote_backup_now' )) {
+	function mmb_remote_backup_now($params)
+	{
+		global $mmb_core;
+		$backup_instance = $mmb_core->get_backup_instance();
+		$return = $mmb_core->backup_instance->remote_backup_now($params);
+		if (is_array($return) && array_key_exists('error', $return))
+			mmb_response($return['error'], false);
+		else
+			mmb_response($return, true);
+	}
+}
+
+
+if( !function_exists ( 'mmb_clean_orphan_backups' )) {
+	function mmb_clean_orphan_backups()
+	{
+		global $mmb_core;
+		$backup_instance = $mmb_core->get_backup_instance();
+		$return = $mmb_core->backup_instance->cleanup();
+		if(is_array($return))
+			mmb_response($return, true);
+		else
+			mmb_response($return, false);
+	}
+}
+
 if( !function_exists ( 'mmb_update_worker_plugin' )) {
 	function mmb_update_worker_plugin($params)
 	{
@@ -588,12 +620,11 @@ if(!function_exists('mmb_more_reccurences')){
 	add_action('mwp_backup_tasks', 'mwp_check_backup_tasks');
 	
 	
-        
+if( !function_exists('mwp_check_backup_tasks') ){
  	function mwp_check_backup_tasks() {
 		global $mmb_core;
-		$mmb_core->get_backup_instance()->check_backup_tasks();
+		$mmb_core->get_backup_instance();
+		$mmb_core->backup_instance->check_backup_tasks();
 	}
-	
-
-     
+}
 ?>

@@ -104,9 +104,12 @@ class MMB_Backup extends MMB_Core
     */
     
     function backup($args, $task_name = false){
+    
     	if(!$args || empty($args))
     		return false;
     
+    	
+    	
     	extract($args); //extract settings
     	
     		
@@ -164,21 +167,26 @@ class MMB_Backup extends MMB_Core
             //take database backup
             
            	$db_result = $this->backup_db();
-    				if(!$db_result){
-    					return array('error' => 'Failed to extract database.');
+    				if($db_result == false){
+    					return array('error' => 'Failed to backup database.');
     				}
-    				else
+    				else if(is_array($db_result) && isset($db_result['error']))
+    				{
+    					return array('error' => $db_result['error']);
+    					
+    				}else
     				{
     					if ($this->mmb_exec('which zip')) {
-              	$command = "zip $backup_file -j $db_result";
+              	chdir(WP_CONTENT_DIR);
+            		$command = "zip -r $backup_file 'mwp_db'";
+            		$this->_log($command);
                 ob_start();
                 $result = $this->mmb_exec($command);
                 ob_get_clean();
             	} else {
             		require_once ABSPATH . '/wp-admin/includes/class-pclzip.php';
                 $archive = new PclZip($backup_file);
-								$result  = $archive->add($db_result, PCLZIP_OPT_REMOVE_ALL_PATH);
-								
+								$result  = $archive->add($db_result, PCLZIP_OPT_REMOVE_PATH, WP_CONTENT_DIR);
             	}
             	
             	@unlink($db_result);
@@ -211,7 +219,12 @@ class MMB_Backup extends MMB_Core
 	        }
 	        $paths['time'] = time();
 	      	
-	      	if(!$backup_settings[$task_name]['task_args']['del_host_file']){
+	      	if($task_name != 'Backup Now') {
+	      		if(!$backup_settings[$task_name]['task_args']['del_host_file']){
+	      		$paths['server'] = array('file_path' => $backup_file, 'file_url' => $backup_url);
+	      		}
+	      	} else 
+	      	{
 	      		$paths['server'] = array('file_path' => $backup_file, 'file_url' => $backup_url);
 	      	}
 	      	
@@ -245,69 +258,86 @@ class MMB_Backup extends MMB_Core
         	update_option('mwp_manual_backup', $manual_backup);
       	}
    
-   	//Additional: Table optimize, email, ftp, amazon_s3, dropbox...
+   
+   	//Additional: Email, ftp, amazon_s3, dropbox...
    	if(isset($optimize_tables) && !empty($optimize_tables)){
         	$this->optimize_tables();
-      	}
+     }
    
-   if(isset($account_info['mwp_ftp']) && !empty($account_info['mwp_ftp'])){
-        	$account_info['mwp_ftp']['backup_file'] = $backup_file;
-        	$this->ftp_backup($account_info['mwp_ftp']);
-      	}
+   if($task_name != 'Backup Now'){
+	   if(isset($account_info['mwp_ftp']) && !empty($account_info['mwp_ftp'])){
+	        	$account_info['mwp_ftp']['backup_file'] = $backup_file;
+	        	$this->ftp_backup($account_info['mwp_ftp']);
+	      	}
+			
+			if (isset($account_info['mwp_amazon_s3']) && !empty($account_info['mwp_amazon_s3'])){
+				$account_info['mwp_amazon_s3']['backup_file'] = $backup_file;
+				$this->amazons3_backup($account_info['mwp_amazon_s3']);
+			}
+			 
+			if(isset($account_info['mwp_dropbox']) && !empty($account_info['mwp_dropbox'])){
+	        	$account_info['mwp_dropbox']['backup_file'] = $backup_file;
+	        	$this->dropbox_backup($account_info['mwp_dropbox']);
+	      	}
+			
+			if(isset($email_backup) && is_email($email_backup)){
+				$mail_args = array(
+					'email' => $email_backup,
+					'task_name' => $task_name,
+					'file_path' => $backup_file				
+				);
+				$this->email_backup($mail_args);
+			}
+			
+			if($del_host_file){
+		    	@unlink($backup_file);
+		  }
+		    
+		} //end additional
 		
-		if (isset($account_info['mwp_amazon_s3']) && !empty($account_info['mwp_amazon_s3'])){
-			$account_info['mwp_amazon_s3']['backup_file'] = $backup_file;
-			$this->amazons3_backup($account_info['mwp_amazon_s3']);
-		}
-		 
-		if(isset($account_info['mwp_dropbox']) && !empty($account_info['mwp_dropbox'])){
-        	$account_info['mwp_dropbox']['backup_file'] = $backup_file;
-        	$this->dropbox_backup($account_info['mwp_dropbox']);
-      	}
-		
-		if(isset($email_backup) && is_email($email_backup)){
-			$mail_args = array(
-				'email' => $email_backup,
-				'task_name' => $task_name,
-				'file_path' => $backup_file				
-			);
-			$this->email_backup($mail_args);
-		}
-    
-    if($del_host_file){
-    	@unlink($backup_file);
-    }
-    				
     return $backup_url; //Return url to backup file (we need return only for manual backup)
    }
     
-    function backup_full($path, $exclude = array())
+    function backup_full($backup_file, $exclude = array())
     {		
     		$db_result = $this->backup_db();
-    		if(!$db_result)
-    			return array('error' => 'Failed to backup database.');
+    		if($db_result == false){
+    					return array('error' => 'Failed to backup database.');
+    		}else if(is_array($db_result) && isset($db_result['error'])){
+    			return array('error' => $db_result['error']);
+    		}
+    		
     		$sec_string = md5('mmb-worker');
-        $remove       = "wp-content/$sec_string/mwp_backups";
+        $remove       = array("wp-content/$sec_string/mwp_backups","wp-content/mwp_db");
         
         if ($this->mmb_exec('which zip')) {
            	chdir(ABSPATH);
             
             //exclude paths
-    				if(empty($exclude)){
-    					$exclude[0] = $remove;
-    				} else {
-    					$exclude[count($exclude)] = $remove;
+            $exclude_data = "-x";
+    				if(!empty($exclude)){
+    					foreach($exclude as $data){
+    						if($data)
+    						$exclude_data .= " '$data/*'";
+    					}
     				}
     				
-    				$exclude_data = "-x";
-    				foreach($exclude as $data){
+    				foreach($remove as $data){
     						$exclude_data .= " '$data/*'";
     					}
     				    				
-            $command = "zip -r $path './' $exclude_data";
+            $command = "zip -r $backup_file './' $exclude_data";
             ob_start();
             $result = $this->mmb_exec($command);
             ob_get_clean();
+            
+            //Add database file
+            chdir(WP_CONTENT_DIR);
+            $command = "zip -r $backup_file 'mwp_db'";
+            ob_start();
+            $result = $this->mmb_exec($command);
+            ob_get_clean();
+            
             @unlink($db_result);
             
             if($result){
@@ -319,18 +349,23 @@ class MMB_Backup extends MMB_Core
           	         
         } 
         else { //php zip
+        		
             require_once ABSPATH . '/wp-admin/includes/class-pclzip.php';
-            $archive = new PclZip($path);
+            $archive = new PclZip($backup_file);
 						$result  = $archive->add(ABSPATH, PCLZIP_OPT_REMOVE_PATH, ABSPATH);
+						$result  = $archive->add($db_result, PCLZIP_OPT_REMOVE_PATH, WP_CONTENT_DIR);
 						$exclude_data = array();
 						if(!empty($exclude) && $result){
 							$exclude_data = array();
     					foreach($exclude as $data){
+    						if($data)
     						$exclude_data [] = $data.'/';
     					}
-    					
     				}
-    				$exclude_data[] = $remove.'/';
+    				foreach($remove as $rem){
+    						$exclude_data[] = $rem.'/';
+    				}
+    				
     				$result = $archive->delete(PCLZIP_OPT_BY_NAME, $exclude_data);
     				
             @unlink($db_result);
@@ -339,7 +374,7 @@ class MMB_Backup extends MMB_Core
             }
             else {
             	if($archive->error_code == '-10'){
-								return array('error' => 'Failed to zip backup. Try increasing memory limit and/or free space on your server.');
+								return array('error' => 'Failed to backup site. Try increasing memory limit and/or free space on your server.');
 							}
 							else{
 								return array('error' => 'Failed to backup site. Try to enable Zip on your server.');
@@ -351,11 +386,11 @@ class MMB_Backup extends MMB_Core
     
     function backup_db()
     {		
-    	  $db_folder = ABSPATH.'mwp_db/';
+    	  $db_folder = ABSPATH.'wp-content/mwp_db/';
     	  if (!file_exists($db_folder)) {
             if (!mkdir($db_folder, 0755, true))
                 return array(
-                    'error' => 'Error creating database backup folder. Make sure you have write permission to your site root folder.'
+                    'error' => 'Error creating database backup folder. Make sure you have write permissions to your site root folder.'
                 );
         }
         
@@ -514,11 +549,8 @@ class MMB_Backup extends MMB_Core
       	}
         
         if ($this->mmb_exec('which unzip')) {
-                if($what == 'db')
-                	chdir(ABSPATH.'mwp_db/');
-                else {
-                	chdir(ABSPATH);
-                }
+                
+               chdir(ABSPATH);
                 $command = "unzip -o $backup_file";
                 ob_start();
                 $result = $this->mmb_exec($command);
@@ -527,11 +559,7 @@ class MMB_Backup extends MMB_Core
             } else {
                 require_once ABSPATH . '/wp-admin/includes/class-pclzip.php';
                 $archive   = new PclZip($backup_file);
-                if($what == 'db'){
-                	$result = $archive->extract(PCLZIP_OPT_PATH, ABSPATH.'mwp_db/');
-                } else {
-                	$result = $archive->extract(PCLZIP_OPT_PATH, ABSPATH);
-                }     
+                $result = $archive->extract(PCLZIP_OPT_PATH, ABSPATH);
             }
             
             if($unlink_file){
@@ -725,13 +753,13 @@ class MMB_Backup extends MMB_Core
     //Check if exec, system, passthru functions exist
     function check_sys()
     {
-        if (function_exists('exec'))
+        if ($this->mmb_function_exists('exec'))
             return 'exec';
         
-        if (function_exists('system'))
+        if ($this->mmb_function_exists('system'))
             return 'system';
         
-        if (function_exists('passhtru'))
+        if ($this->mmb_function_exists('passhtru'))
             return 'passthru';
         
         return false;
@@ -742,21 +770,21 @@ class MMB_Backup extends MMB_Core
     {
     	if($command == '')
     	return false;
-    	
-  		if (function_exists('exec'))
+    			
+  		if ($this->mmb_function_exists('exec'))
   		{		
   				$log = @exec($command,$output,$return);
   			
   				if($string) return $log;
   				return $return ? false : true;
   		}	
-  		elseif(function_exists('system')){
+  		elseif($this->mmb_function_exists('system')){
         	$log = @system($command,$return);
         	
   				if($string) return $log;
   				return $return ? false : true;
       }
-      elseif (function_exists('passthru')){
+      elseif ($this->mmb_function_exists('passthru')){
   				$log = passthru($command,$return);
   				
   				return $return ? false : true;
@@ -765,7 +793,7 @@ class MMB_Backup extends MMB_Core
         	return false;
       }
     }
-     
+    
     function check_backup_compat()
     {				
     				$reqs = array();
@@ -860,16 +888,19 @@ class MMB_Backup extends MMB_Core
 		 $backup_file = $args['file_path'];
 		 $task_name = isset($args['task_name']) ? $args['task_name'].' on ' : '';
 		 if(file_exists($backup_file) && $email)
-   		 {
+   	 {
+   	 	
    		 	$attachments = array($backup_file);
    		 	$headers = 'From: ManageWP <no-reply@managewp.com>' . "\r\n";
-   		 	$subject = "ManageWP Backup - ".$task_name . date('F jS, y H:s');
+   		 	$subject = "ManageWP Backup - ".$task_name . date('F jS, G:i');
    		 	ob_start();
    		 	wp_mail($email, $subject, $subject, $headers, $attachments);
 				ob_end_clean();
 			
    		}
- 
+ 			
+ 			return true;
+ 			
     }
     
     function ftp_backup($args){
@@ -881,30 +912,28 @@ class MMB_Backup extends MMB_Core
 				}else if (function_exists('ftp_connect')){
 					$conn_id = ftp_connect($ftp_hostname);
 					if ($conn_id===false){
-						$this->_log("ftp failed to connect");
+						return array('error' => 'Failed to connect to '.$ftp_hostname);
 					}
 				}
 				else {
-					$this->_log("ftp not supported");
+					return array('error' => 'Your server doesn\'t support FTP');
 				}
 				
 			$login = @ftp_login($conn_id, $ftp_username, $ftp_password);
 			if ($login === false ) {
-				$this->_log("failed to login");
-			} else {
-				$this->_log("connected to ftp");
+				return array('error' => 'FTP login failed for '.$ftp_username.', '.$ftp_password);
 			}
 			
 			@ftp_mkdir($conn_id, $ftp_remote_folder);
 			
 			$upload = @ftp_put($conn_id, $ftp_remote_folder . '/' . basename($backup_file), $backup_file, FTP_BINARY);
 			if ($upload === false) {
-				$this->_log("not uploaded to ftp");
-			} else {
-				$this->_log("ftp uploaded successfuly");
+				return array('error' => 'Failed to upload file. Please check your specified path.');
 			}
+			
 			ftp_close($conn_id);	
       
+      return true;
     }
     
     function remove_ftp_backup($args)
@@ -913,28 +942,28 @@ class MMB_Backup extends MMB_Core
     		//Args: $ftp_username, $ftp_password, $ftp_hostname, $backup_file, $ftp_remote_folder
 				if($ftp_ssl && function_exists('ftp_ssl_connect')){
 					$conn_id = ftp_ssl_connect($ftp_hostname);
-					$this->_log("sftp failed to connect");
+					
 				}else if (function_exists('ftp_connect')){
 					$conn_id = ftp_connect($ftp_hostname);
 					if ($conn_id===false){
-						$this->_log("ftp failed to connect");
+						
 					}
 				}
 				else {
-					$this->_log("ftp not supported");
+					
 				}
 			$login = @ftp_login($conn_id, $ftp_username, $ftp_password);
 			if ($login === false ) {
-				$this->_log("failed to connect");
+				
 			} else {
-				$this->_log("connected");
+				
 			}
 			
 			$delete = ftp_delete($conn_id, $ftp_remote_folder . '/' . $backup_file);
 			if ($delete === false) {
-				$this->_log("not deleted");
+				
 			} else {
-				$this->_log("deleted successfuly");
+				
 			}
 			ftp_close($conn_id);	
       
@@ -945,7 +974,7 @@ class MMB_Backup extends MMB_Core
     		//Args: $ftp_username, $ftp_password, $ftp_hostname, $backup_file, $ftp_remote_folder
 				if($ftp_ssl && function_exists('ftp_ssl_connect')){
 					$conn_id = ftp_ssl_connect($ftp_hostname);
-					$this->_log("sftp failed to connect");
+					
 				}else if (function_exists('ftp_connect')){
 					$conn_id = ftp_connect($ftp_hostname);
 					if ($conn_id===false){
@@ -953,13 +982,13 @@ class MMB_Backup extends MMB_Core
 					}
 				}
 				else {
-					$this->_log("ftp not supported");
+					
 				}
 			$login = @ftp_login($conn_id, $ftp_username, $ftp_password);
 			if ($login === false ) {
 				return false;
 			} else {
-				$this->_log("connected");
+				
 			}
 			
 			$temp = ABSPATH.'mwp_temp_backup.zip';
@@ -967,7 +996,7 @@ class MMB_Backup extends MMB_Core
 			if ($get === false) {
 				return false;
 			} else {
-				$this->_log("download successfuly");
+				
 			}
 			ftp_close($conn_id);	
     	
@@ -978,29 +1007,33 @@ class MMB_Backup extends MMB_Core
     {
     	require_once('lib/dropbox.php');
 			extract($args);
-		
+			
 			//$email, $password, $backup_file, $destination
 			try{
 			$uploader = new DropboxUploader($dropbox_username, $dropbox_password);
 			$uploader->upload($backup_file, $dropbox_destination);
 			} catch (Exception $e){
-				$this->_log($e->getMessage());
+				return array('error' => $e->getMessage());
 			}
+			
+			return true;
+			
     }
     
     function amazons3_backup($args)
     {
 			require_once('lib/s3.php');
 			extract($args);
-		
+			
+			$start_time = time();
 			$s3 = new S3( $as3_access_key, str_replace(' ', '+', $as3_secure_key));
 		
 			$s3->putBucket( $as3_bucket, S3::ACL_PUBLIC_READ );
 		
 			if ( $s3->putObjectFile( $backup_file, $as3_bucket, $as3_directory .'/'. basename($backup_file), S3::ACL_PRIVATE) ) {
-				return array('success' => 'ok');
+				return true;
 			} else {
-				return array('success' => 'error');
+				return array('error' => 'Failed to upload to Amazon S3. Please check your details.');
 			}
 		
 		}
@@ -1009,7 +1042,7 @@ class MMB_Backup extends MMB_Core
 		{
 			require_once('lib/s3.php');
 			extract($args);
-			$this->_log("delete");
+			
 			$s3 = new S3( $as3_access_key, str_replace(' ', '+', $as3_secure_key));
 			$s3->deleteObject($as3_bucket,$as3_directory.'/'. $backup_file);
 		}
@@ -1213,7 +1246,8 @@ function cleanup()
 	$tasks = $this->get_backup_settings();
 	$backup_folder = WP_CONTENT_DIR.'/'.md5('mmb-worker').'/mwp_backups/';
 	$files = glob($backup_folder."*.*");
-	if(count($files)){
+	$deleted = array();
+	if(is_array($files) && count($files)){
 	$results = array();
 	if(count($tasks)){
 	foreach($tasks as $task){
@@ -1229,12 +1263,98 @@ function cleanup()
 	
 		$num_deleted = 0;
 		foreach($files as $file){
-			if(!in_array($file,$results)) {
+			if(!in_array($file,$results) && basename($file) != 'index.php') {
 				@unlink($file);
+				$deleted[] = basename($file);
 				$num_deleted++;
 			}
 		}
 	}
+	
+	//Failed db files?
+	$db_folder = WP_CONTENT_DIR.'/mwp_db/';
+	$files = glob($db_folder."*.*");
+	if(is_array($files) && count($files)){
+		foreach($files as $file){
+			@unlink($file);
+		}
+	}
+	
+	return $deleted;
+}
+
+
+function remote_backup_now($args){
+		if(!empty($args))
+			extract($args);
+		$tasks = $this->get_backup_settings();
+		$task = $tasks['Backup Now'];
+		
+		if(!empty($task)){
+			extract($task['task_args']);
+		}
+		
+		$results = $task['task_results'];
+		
+		if(is_array($results) && count($results)){
+			$backup_file = $results[count($results)-1]['server']['file_path'];
+		}
+		
+		if($backup_file && file_exists($backup_file)){
+			
+			if($email){
+				
+				$mail_args = array(
+					'email' => $email_backup,
+					'task_name' => 'Backup Now',
+					'file_path' => $backup_file				
+				);
+				
+				
+				
+				$return = $this->email_backup($mail_args);
+				
+				//delete from server?
+				if($return == true && $del_host_file){
+		    		@unlink($backup_file);
+		    		
+		    		unset($tasks['Backup Now']['task_results'][count($results)-1]['server']);
+		    		update_option('mwp_backup_tasks',$tasks);
+		    		
+		  	}
+			} else {
+				
+				//FTP, Amazon S3 or Dropbox
+			   if(isset($account_info['mwp_ftp']) && !empty($account_info['mwp_ftp'])){
+			        	$account_info['mwp_ftp']['backup_file'] = $backup_file;
+			        	$return = $this->ftp_backup($account_info['mwp_ftp']);
+			      	}
+					
+					if (isset($account_info['mwp_amazon_s3']) && !empty($account_info['mwp_amazon_s3'])){
+						$account_info['mwp_amazon_s3']['backup_file'] = $backup_file;
+						$return = $this->amazons3_backup($account_info['mwp_amazon_s3']);
+					}
+					 
+					if(isset($account_info['mwp_dropbox']) && !empty($account_info['mwp_dropbox'])){
+			        	$account_info['mwp_dropbox']['backup_file'] = $backup_file;
+			        	$return = $this->dropbox_backup($account_info['mwp_dropbox']);
+			      	}
+			    
+			    if($return == true && $del_host_file && !$email_backup){
+		    		@unlink($backup_file);
+		    		unset($tasks['Backup Now']['task_results'][count($results)-1]['server']);
+		    		
+		    		update_option('mwp_backup_tasks',$tasks);
+		  	}
+			    
+	    }
+			
+		 } else {
+			$return =  array('error' => 'Backup file not found on your server. Please try again.');
+		}
+		  
+		  return $return;
+	
 }
 	
 }

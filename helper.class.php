@@ -69,6 +69,30 @@ class MMB_Helper
         return TRUE;
     }
     
+	/**
+	 *
+	 * Check if function exists or not on `suhosin` black list
+	 *
+	 */
+	
+	function mmb_function_exists($function_callback){
+		
+		if(!function_exists($function_callback))
+			return false;
+			
+		if (extension_loaded('suhosin')) {
+			$suhosin = @ini_get("suhosin.executor.func.blacklist");
+			if (empty($suhosin) == false) {
+				$suhosin = explode(',', $suhosin);
+				$blacklist = array_map('trim', $suhosin);
+				$blacklist = array_map('strtolower', $blacklist);
+				if(in_array($function_callback, $blacklist))
+					return false;
+			}
+		}
+		return true;
+	}
+	
     /**
      *  Gets transient based on WP version
      *
