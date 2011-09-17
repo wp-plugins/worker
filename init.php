@@ -4,7 +4,7 @@ Plugin Name: ManageWP - Worker
 Plugin URI: http://managewp.com/
 Description: Manage all your blogs from one dashboard. Visit <a href="http://managewp.com">ManageWP.com</a> to sign up.
 Author: Prelovac Media
-Version: 3.9.6
+Version: 3.9.7
 Author URI: http://www.prelovac.com
 */
 
@@ -20,7 +20,7 @@ Author URI: http://www.prelovac.com
  **************************************************************/
 
 
-define('MMB_WORKER_VERSION', '3.9.6');
+define('MMB_WORKER_VERSION', '3.9.7');
 
 global $wpdb, $mmb_plugin_dir, $mmb_plugin_url;
 
@@ -606,16 +606,18 @@ if( !function_exists ( 'mmb_execute_php_code' )) {
 if(!function_exists('mmb_more_reccurences')){
 	//Backup Tasks
 	add_filter('cron_schedules', 'mmb_more_reccurences');
-	function mmb_more_reccurences() {
-		return array(
-			'minutely' => array('interval' => 60, 'display' => 'Once in a minute'),
-			'fiveminutes' => array('interval' => 300, 'display' => 'Once in a five minutes')
-		);
+	function mmb_more_reccurences($schedules) {
+		
+		$schedules['minutely'] = array('interval' => 60, 'display' => 'Once in a minute');
+		$schedules['fiveminutes'] = array('interval' => 300, 'display' => 'Once every five minutes');
+		$schedules['tenminutes'] = array('interval' => 600, 'display' => 'Once every ten minutes');
+		
+		return $schedules;
 	}
 }
 		
 	if (!wp_next_scheduled('mwp_backup_tasks')) {
-		wp_schedule_event( time(), 'fiveminutes', 'mwp_backup_tasks' );
+		wp_schedule_event( time(), 'tenminutes', 'mwp_backup_tasks' );
 	}
 	add_action('mwp_backup_tasks', 'mwp_check_backup_tasks');
 	

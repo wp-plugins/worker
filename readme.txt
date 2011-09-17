@@ -30,7 +30,10 @@ API for developers available at [ManageWP.com/API](http://managewp.com/api "Mana
 
 == Changelog ==  
 
-== 3.9.6 ==
+= 3.9.7 =
+* Fixed problem with cron schedules
+
+= 3.9.6 =
 * Improved dashboard performance
 * Fixed bug with W3TC, we hope it is fully comptabile now
 * Improved backup feature
