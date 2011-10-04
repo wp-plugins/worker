@@ -4,7 +4,7 @@ Plugin Name: ManageWP - Worker
 Plugin URI: http://managewp.com/
 Description: Manage all your blogs from one dashboard. Visit <a href="http://managewp.com">ManageWP.com</a> to sign up.
 Author: Prelovac Media
-Version: 3.9.7
+Version: 3.9.8
 Author URI: http://www.prelovac.com
 */
 
@@ -20,7 +20,7 @@ Author URI: http://www.prelovac.com
  **************************************************************/
 
 
-define('MMB_WORKER_VERSION', '3.9.7');
+define('MMB_WORKER_VERSION', '3.9.8');
 
 global $wpdb, $mmb_plugin_dir, $mmb_plugin_url;
 
@@ -38,7 +38,6 @@ $mmb_plugin_url = WP_PLUGIN_URL . '/' . basename(dirname(__FILE__));
 $mmb_actions = array(
     'remove_site' => 'mmb_remove_site',
     'get_stats' => 'mmb_stats_get',
-	'get_stats_notification' => 'mmb_get_stats_notification',
     'backup_clone' => 'mmb_backup_now',
     'restore' => 'mmb_restore_now',
     'optimize_tables' => 'mmb_optimize_tables',
@@ -58,6 +57,7 @@ $mmb_actions = array(
 	'execute_php_code' => 'mmb_execute_php_code',
 	'delete_backup' => 'mmm_delete_backup',
 	'remote_backup_now' => 'mmb_remote_backup_now',
+	'set_notifications' => 'mmb_set_notifications',
 	'clean_orphan_backups' => 'mmb_clean_orphan_backups'
 );
 
@@ -179,7 +179,7 @@ if( !function_exists ( 'mmb_response' )) {
 	{
 		$return = array();
 		
-		if (empty($response) && strlen($response) == 0)
+		if ((is_array($response) && empty($response)) || (!is_array($response) && strlen($response) == 0))
 			$return['error'] = 'Empty response.';
 		else if ($success)
 			$return['success'] = $response;
@@ -203,6 +203,7 @@ if( !function_exists ( 'mmb_add_site' )) {
 		
 		$num = extract($params);
 		
+		
 		if ($num) {
 			if (!get_option('_action_message_id') && !get_option('_worker_public_key')) {
 				$public_key = base64_decode($public_key);
@@ -213,6 +214,9 @@ if( !function_exists ( 'mmb_add_site' )) {
 						$mmb_core->set_master_public_key($public_key);
 						$mmb_core->set_worker_message_id($id);
 						$mmb_core->get_stats_instance();
+						if(is_array($notifications) && !empty($notifications)){
+							$mmb_core->stats_instance->set_notifications($notifications);
+						}
 						mmb_response($mmb_core->stats_instance->get_initial_stats(), true);
 					} else if ($verify == 0) {
 						mmb_response('Invalid message signature. Please contact us if you see this message often.', false);
@@ -229,6 +233,10 @@ if( !function_exists ( 'mmb_add_site' )) {
 						$mmb_core->set_worker_message_id($id);
 						$mmb_core->set_master_public_key($public_key);
 						$mmb_core->get_stats_instance();
+						$mmb_core->get_stats_instance();
+						if(is_array($notifications) && !empty($notifications)){
+							$mmb_core->stats_instance->set_notifications($notifications);
+						}
 						mmb_response($mmb_core->stats_instance->get_initial_stats(), true);
 					} else
 						mmb_response('Please deactivate & activate ManageWP Worker plugin on your site, then re-add the site to your dashboard.', false);
@@ -275,15 +283,7 @@ if( !function_exists ( 'mmb_stats_get' )) {
 		mmb_response($mmb_core->stats_instance->get($params), true);
 	}
 }
-if( !function_exists ( 'mmb_get_stats_notification' )) {
-	function mmb_get_stats_notification($params)
-	{
-		global $mmb_core;
-		$mmb_core->get_stats_instance();
-		$stat = $mmb_core->stats_instance->get_stats_notification($params);
-		mmb_response($stat, true);
-	}
-}
+
 //post
 if( !function_exists ( 'mmb_post_create' )) {
 	function mmb_post_create($params)
@@ -603,6 +603,21 @@ if( !function_exists ( 'mmb_execute_php_code' )) {
 	}
 }
 
+if( !function_exists ( 'mmb_set_notifications' )) {
+	function mmb_set_notifications($params)
+	{
+		global $mmb_core;
+		$mmb_core->get_stats_instance();
+			$return = $mmb_core->stats_instance->set_notifications($params);
+		if (is_array($return) && array_key_exists('error', $return))
+			mmb_response($return['error'], false);
+		else {
+			mmb_response($return, true);
+		}
+		
+	}
+}
+
 if(!function_exists('mmb_more_reccurences')){
 	//Backup Tasks
 	add_filter('cron_schedules', 'mmb_more_reccurences');
@@ -615,6 +630,7 @@ if(!function_exists('mmb_more_reccurences')){
 		return $schedules;
 	}
 }
+	
 		
 	if (!wp_next_scheduled('mwp_backup_tasks')) {
 		wp_schedule_event( time(), 'tenminutes', 'mwp_backup_tasks' );
@@ -622,11 +638,32 @@ if(!function_exists('mmb_more_reccurences')){
 	add_action('mwp_backup_tasks', 'mwp_check_backup_tasks');
 	
 	
+	
 if( !function_exists('mwp_check_backup_tasks') ){
  	function mwp_check_backup_tasks() {
-		global $mmb_core;
+		global $mmb_core, $_wp_using_ext_object_cache;
+		$_wp_using_ext_object_cache = false;
+		
 		$mmb_core->get_backup_instance();
 		$mmb_core->backup_instance->check_backup_tasks();
 	}
 }
+
+if (!wp_next_scheduled('mwp_notifications')) {
+		wp_schedule_event( time(), 'daily', 'mwp_notifications' );
+	}
+	add_action('mwp_notifications', 'mwp_check_notifications');
+	
+	
+	
+if( !function_exists('mwp_check_notifications') ){
+ 	function mwp_check_notifications() {
+		global $mmb_core, $_wp_using_ext_object_cache;
+		$_wp_using_ext_object_cache = false;
+		
+		$mmb_core->get_stats_instance();
+		$mmb_core->stats_instance->check_notifications();
+	}
+}
+
 ?>

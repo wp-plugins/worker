@@ -91,10 +91,13 @@ class MMB_Installer extends MMB_Core
 					}
 				}
 			}else if(count($install_info) == 1){
+				global $wp_themes;
 				include_once(ABSPATH.'wp-includes/theme.php');
+				
+				$wp_themes = null; unset($wp_themes); //prevent theme data caching				
+				
 				$all_themes = get_themes();
 				foreach ($all_themes as $theme_name => $theme_data) {
-					
 					foreach ($install_info as $key => $install) {
 						if (!$install || is_wp_error($install))
 							continue;
@@ -260,7 +263,13 @@ class MMB_Installer extends MMB_Core
 					
 					$wp_dir = trailingslashit($wp_filesystem->abspath());
 					
-					$download = $upgrader->download_package($current_update->package);
+					$core_package = false;
+					if(isset($current_update->package) && !empty($current_update->package))
+						$core_package = $current_update->package;
+					elseif (isset($current_update->packages->full) && !empty($current_update->packages->full))
+						$core_package = $current_update->packages->full;
+						
+					$download = $upgrader->download_package($core_package);
 					if (is_wp_error($download))
 						return array(
 							'error' => $this->mmb_get_error($download)

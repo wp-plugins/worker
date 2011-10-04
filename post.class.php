@@ -246,8 +246,8 @@ class MMB_Post extends MMB_Core
             }
         }
         
-        
-        // create post
+        //Prepare post data and temporarily remove content filters before insert post
+       	remove_filter('content_save_pre', 'wp_filter_post_kses'); 
         $post_id = wp_insert_post($post_data);
         
         if (count($attachments)) {

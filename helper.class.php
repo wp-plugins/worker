@@ -393,9 +393,15 @@ class MMB_Helper
             return $error_object != '' ? $error_object : '';
         } else {
             $errors = array();
-            foreach ($error_object->error_data as $error_key => $error_string) {
-                $errors[] = str_replace('_', ' ', ucfirst($error_key)) . ': ' . $error_string;
-            }
+			if(!empty($error_object->error_data))  {
+				foreach ($error_object->error_data as $error_key => $error_string) {
+					$errors[] = str_replace('_', ' ', ucfirst($error_key)) . ': ' . $error_string;
+				} 
+			} elseif (!empty($error_object->errors)){
+				foreach ($error_object->errors as $error_key => $err) {
+					$errors[] = 'Error: '.str_replace('_', ' ', strtolower($error_key));
+				} 
+			}
             return implode('<br />', $errors);
         }
     }

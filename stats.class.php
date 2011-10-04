@@ -151,7 +151,7 @@ class MMB_Stats extends MMB_Core
          
             $recent_posts[] = $recent;
         }
-		usort($recent_posts, 'cmp_posts_worker');
+		usort($recent_posts, array($this, 'cmp_posts_worker'));
 		$stats['posts'] = array_slice($recent_posts, 0, 20);
 		
         $all_pages_drafts = get_pages('post_status=draft&numberposts=20&orderby=modified&order=desc');
@@ -166,7 +166,7 @@ class MMB_Stats extends MMB_Core
          
             $recent_drafts[] = $recent;
         }
-		usort($recent_drafts, 'cmp_posts_worker');
+		usort($recent_drafts, array($this, 'cmp_posts_worker'));
 		$stats['drafts'] = array_slice($recent_drafts, 0, 20);
 		
 		
@@ -182,7 +182,7 @@ class MMB_Stats extends MMB_Core
          
             $scheduled_posts[] = $recent;
         }
-		usort($scheduled_posts, 'cmp_posts_worker');
+		usort($scheduled_posts, array($this, 'cmp_posts_worker'));
 		$stats['scheduled'] = array_slice($scheduled_posts, 0, 20);
 		
 		
@@ -194,63 +194,24 @@ class MMB_Stats extends MMB_Core
         
         //Backup Results
         $stats['mwp_backups'] = $this->get_backup_instance()->get_backup_stats();
+        $stats['mwp_next_backups'] = $this->get_backup_instance()->get_next_schedules();
         
+        $clone_backup = get_option('mwp_manual_backup');
+        
+        if(!is_array($clone_backup) || !file_exists($clone_backup['file_path'])){
+         		$clone_backup = '';
+       	 } else {
+       		$clone_backup = $clone_backup['file_url'];
+       	}
+       	 $stats['clone_backup'] = $clone_backup;
+       	 
         //Backup requirements
         $stats['mwp_backup_req'] = $this->get_backup_instance()->check_backup_compat();
         
-		$stats['sheduled_backup'] = '12.07.2011 13:00';
-		$stats['sheduled_next'] = '12.08.2011 13:00';
-		
         $stats = apply_filters('mmb_stats_filter', $stats);        
         
         return $stats;
     }
-    
-    function get_stats_notification($params)
-    {	
-
-        global $mmb_wp_version, $mmb_plugin_dir;
-        $stats = array();
-        
-        //define constants
-        $num_pending_comments  = 1000;
-
-        
-        require_once(ABSPATH . '/wp-admin/includes/update.php');
-        
-        $stats['worker_version']    = MMB_WORKER_VERSION;
-        $stats['wordpress_version'] = $mmb_wp_version;
-        
-        $updates = $this->mmb_get_transient('update_core');
-        
-        if ($updates->updates[0]->response == 'development' || version_compare($mmb_wp_version, $updates->updates[0]->current, '<')) {
-            $updates->updates[0]->current_version = $mmb_wp_version;
-            $stats['core_updates']                = $updates->updates[0];
-        } else
-            $stats['core_updates'] = false;
-        
-        $mmb_user_hits = get_option('user_hit_count');
-        if (is_array($mmb_user_hits)) {
-            end($mmb_user_hits);
-            $last_key_date = key($mmb_user_hits);
-            $current_date  = date('Y-m-d');
-            if ($last_key_date != $curent_date)
-                $this->set_hit_count(true);
-        }
-
-        
-        $this->get_theme_instance();
-        $this->get_plugin_instance();
-        $stats['upgradable_themes']  = $this->theme_instance->get_upgradable_themes();
-        $stats['upgradable_plugins'] = $this->plugin_instance->get_upgradable_plugins();
-        
-        $pending_comments = get_comments('status=hold&number=' . $num_pending_comments);
-
-        $stats['comments_pending'] = count($pending_comments);
-
-        return $stats;
-    }
-    
     
     function get_comments_stats(){
     	$num_pending_comments  = 3;
@@ -272,6 +233,7 @@ class MMB_Stats extends MMB_Core
         
         return $stats;
     }
+    
     function get_initial_stats()
     {
         global $mmb_plugin_dir;
@@ -419,13 +381,86 @@ class MMB_Stats extends MMB_Core
             return false;
     }
     
-		
+    
+    function set_notifications($params)
+    {
+    	if(empty($params))
+    		return false;
+    	
+    	extract($params);
+    	
+    	if(!isset($delete)){
+    		$mwp_notifications = array('plugins' => $plugins, 'themes' => $themes, 'wp' => $wp,'url' => $url, 'notification_key' => $notification_key);
+    		update_option('mwp_notifications',$mwp_notifications);
+    	} else {
+    		delete_option('mwp_notifications');
+    	} 	
+    	
+    	return true;
+    	
+    }
+    
+    //Cron update check for notifications
+    function check_notifications(){
+    	global $wpdb, $mmb_wp_version, $mmb_plugin_dir, $wp_version, $wp_local_package;
+    	
+    	$mwp_notifications = get_option('mwp_notifications',true);
+    	$updates = array();
+    	
+    	if(is_array($mwp_notifications) && $mwp_notifications != false){
+    		include_once(ABSPATH . 'wp-includes/update.php');
+    		include_once(ABSPATH . '/wp-admin/includes/update.php');
+    		extract($mwp_notifications);
+    		
+    		//Check wordpress core updates
+    		if($wp){
+					@wp_version_check();
+    			if (function_exists('get_core_updates')) {
+						$wp_updates = get_core_updates();
+			       if (!empty($wp_updates)) {
+							$current_transient = $wp_updates[0];
+							if ($current_transient->response == "development" || version_compare($wp_version, $current_transient->current, '<')) {
+									$current_transient->current_version = $wp_version;
+									$updates['core_updates'] = $current_transient;
+			           } else
+			             $updates['core_updates'] = array();
+			           } else
+			                $updates['core_updates'] = array();
+				}
+				
+				//Check plugin updates
+				if($plugins){
+					@wp_update_plugins();
+				$this->get_installer_instance();
+				$updates['upgradable_plugins'] = $this->installer_instance->get_upgradable_plugins();
+				}
+				
+				//Check theme updates
+				if($themes)
+				{
+					@wp_update_themes();
+					$this->get_installer_instance();
+					
+					$updates['upgradable_themes']  = $this->installer_instance->get_upgradable_themes();
+				}
+    		
+    	}
+    	
+    	if( !class_exists( 'WP_Http' ) ){
+    		include_once( ABSPATH . WPINC. '/class-http.php' );
+    	}
+    	
+				$args = array();
+				$args['body'] = array('updates' => $updates, 'notification_key' => $notification_key);
+				$result= wp_remote_post($url, $args);
+    }
+	}
+	
+	
+	function cmp_posts_worker($a, $b)
+	{
+		return ($a->post_modified < $b->post_modified);
+	}
+
 }
-
-function cmp_posts_worker($a, $b)
-{
-    return ($a->post_modified < $b->post_modified);
-}
-
-
 ?>

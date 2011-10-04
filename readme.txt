@@ -3,7 +3,7 @@ Contributors: freediver
 Donate link: https://www.networkforgood.org/donation/MakeDonation.aspx?ORGID2=520781390
 Tags: managewp, managewp worker, admin, manage blogs, multi blog manager, manage multiple blogs, remote blog management
 Requires at least: 3.0
-Tested up to: 3.2
+Tested up to: 3.2.1
 Stable tag: trunk
 
 ManageWP Worker plugin allows you to remotely manage your blogs from one dashboard.
@@ -29,6 +29,14 @@ Check out [ManageWP.com](http://managewp.com/ "Manage Multiple Blogs")
 API for developers available at [ManageWP.com/API](http://managewp.com/api "ManageWP API")
 
 == Changelog ==  
+
+= 3.9.8 =
+* Conversion goals and Adsense integration
+* Update notifications
+* Enhanced security for your account
+* Better backups
+* Better update interface
+* [Full changelog](http://managewp.com/update-goals-and-adsense-analytics-integration-update-notifications-login-by-ip-better-backups "Full changelog")
 
 = 3.9.7 =
 * Fixed problem with cron schedules
