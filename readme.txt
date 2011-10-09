@@ -10,7 +10,7 @@ ManageWP Worker plugin allows you to remotely manage your blogs from one dashboa
 
 == Description ==
 
-[ManageWP.com](http://managewp.com/ "Manage Multiple Blogs") is a revolutionary plugin that allows you to manage multiple WordPress blogs from one dashboard.
+[ManageWP](http://managewp.com/ "Manage Multiple Blogs") is a revolutionary plugin that helps users manage multiple WordPress blogs from one dashboard.
 
 Main features:
 
@@ -30,6 +30,7 @@ Check out the [ManageWP Tour video](http://vimeo.com/22099014).
 
 http://vimeo.com/22099014
 
+Check out [ManageWP.com](http://managewp.com/ "Manage Multiple Blogs").
 
 == Changelog ==  
 
