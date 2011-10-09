@@ -14,14 +14,13 @@ ManageWP Worker plugin allows you to remotely manage your blogs from one dashboa
 
 Main features:
 
-*   Secure! No passwords for sites required, uses OpenSSL encrypted protocol
+*   Secure and fast solution for managing your WordPress sites
 *   One click upgrades of WordPress, plugin and themes across all your sites
-* 	Automaic scheduled backups of your websites including backups to AMazon S3 and Dropbox
-*   One click to access administration dashboard for any site
+* 	Schedule automatic backups of your websites (Amazon S3 and Dropbox supported)
+*   One click access to access WP admin of any site
+*   Bulk install themes and plugins to multiple sites at once
 * 	Add sub-users (writes, staff..) to your account
 *   Bulk publish posts to multiple sites at once
-*   Bulk upload themes and plugins to multiple sites at once
-*   Automatic backups of your sites
 *   Clone or migrate site to another domain
 *   API for developers available at [ManageWP.com/API](http://managewp.com/api "ManageWP API")
 *   Much, much more...
