@@ -281,13 +281,13 @@ class MMB_Helper
         
         if ((int) $current_message > (int) $message_id)
             return array(
-                'error' => 'Invalid message recieved. You can try to reinstall worker plugin and re-add the site to your account.'
+                'error' => 'Invalid message recieved. Deactivate and activate the ManageWP Worker plugin on this site, then remove the website from your ManageWP account and add it again.'
             );
         
         $pl_key = $this->get_master_public_key();
         if (!$pl_key) {
             return array(
-                'error' => 'Authentication failed (public key). You can try to reinstall worker plugin and re-add the site to your account.'
+                'error' => 'Authentication failed. Deactivate and activate the ManageWP Worker plugin on this site, then remove the website from your ManageWP account and add it again.'
             );
         }
         
@@ -298,7 +298,7 @@ class MMB_Helper
                 return true;
             } else if ($verify == 0) {
                 return array(
-                    'error' => 'Invalid message signature. You can try to reinstall worker plugin and re-add the site to your account.'
+                    'error' => 'Invalid message signature. Deactivate and activate the ManageWP Worker plugin on this site, then remove the website from your ManageWP account and add it again.'
                 );
             } else {
                 return array(
@@ -311,13 +311,13 @@ class MMB_Helper
                 return true;
             }
             return array(
-                'error' => 'Invalid message signature. You can try to reinstall the worker plugin and then re-add the site to your dashboard.'
+                'error' => 'Invalid message signature. Deactivate and activate the ManageWP Worker plugin on this site, then remove the website from your ManageWP account and add it again.'
             );
         }
         // no rand key - deleted in get_stat maybe
         else
             return array(
-                'error' => 'Invalid message signature, try reinstalling worker plugin and re-adding the site to your dashboard.'
+                'error' => 'Invalid message signature. Deactivate and activate the ManageWP Worker plugin on this site, then remove the website from your ManageWP account and add it again.'
             );
     }
     
