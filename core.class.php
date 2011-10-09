@@ -386,11 +386,11 @@ class MMB_Core extends MMB_Helper
             ob_end_clean();
             if (is_wp_error($result) || !$result) {
                 return array(
-                    'error' => 'ManageWP Worker plugin could not be upgraded.'
+                    'error' => 'ManageWP Worker plugin could not be updated.'
                 );
             } else {
                 return array(
-                    'success' => 'ManageWP Worker plugin successfully upgraded.'
+                    'success' => 'ManageWP Worker plugin successfully updated.'
                 );
             }
         }

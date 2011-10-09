@@ -1,7 +1,7 @@
 === ManageWP Worker ===
 Contributors: freediver
 Donate link: https://www.networkforgood.org/donation/MakeDonation.aspx?ORGID2=520781390
-Tags: managewp, managewp worker, admin, manage blogs, multi blog manager, manage multiple blogs, remote blog management
+Tags: admin, administration, amazon, api, authentication, automatic, dashboard, dropbox, events, integration, manage, multsite, notification, performance, s3, security, seo, stats, tracking, managewp
 Requires at least: 3.0
 Tested up to: 3.2.1
 Stable tag: trunk
@@ -10,23 +10,26 @@ ManageWP Worker plugin allows you to remotely manage your blogs from one dashboa
 
 == Description ==
 
-ManageWP is a revolutionary plugin that allows you to manage multiple WordPress blogs from one dashboard.
+[ManageWP.com](http://managewp.com/ "Manage Multiple Blogs") is a revolutionary plugin that allows you to manage multiple WordPress blogs from one dashboard.
 
 Main features:
 
 *   Secure! No passwords for sites required, uses OpenSSL encrypted protocol
 *   One click upgrades of WordPress, plugin and themes across all your sites
+* 	Automaic scheduled backups of your websites including backups to AMazon S3 and Dropbox
 *   One click to access administration dashboard for any site
 * 	Add sub-users (writes, staff..) to your account
 *   Bulk publish posts to multiple sites at once
 *   Bulk upload themes and plugins to multiple sites at once
 *   Automatic backups of your sites
 *   Clone or migrate site to another domain
+*   API for developers available at [ManageWP.com/API](http://managewp.com/api "ManageWP API")
 *   Much, much more...
 
-Check out [ManageWP.com](http://managewp.com/ "Manage Multiple Blogs")
+Check out the [ManageWP Tour video](http://vimeo.com/22099014).
 
-API for developers available at [ManageWP.com/API](http://managewp.com/api "ManageWP API")
+http://vimeo.com/22099014
+
 
 == Changelog ==  
 

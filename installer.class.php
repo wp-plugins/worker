@@ -184,10 +184,10 @@ class MMB_Installer extends MMB_Core
 		if(!empty($updates)){
 			$updated = $updates[0];
 			if ( !isset( $updated->response ) || $updated->response == 'latest' )
-				return array('upgraded' => ' Upgraded successfully.');
+				return array('upgraded' => ' updated');
 				
 			if ($updated->response == "development" && $current->response == "upgrade") {
-				return array('upgraded' => '<font color="#900">Transient mismatch. Please upgrade manualy</font>');
+				return array('upgraded' => '<font color="#900">Unexpected error. Please upgrade manually.</font>');
 			}
 			else if ($updated->response == $current->response || ($updated->response == "upgrade" && $current->response == "development")){
 				if($updated->locale != $current->locale){
@@ -223,7 +223,7 @@ class MMB_Installer extends MMB_Core
 				}
 				else 
 					return array(
-						'upgraded' => ' Upgraded successfully.'
+						'upgraded' => ' updated'
 					);
 				
 			} else {
@@ -238,7 +238,7 @@ class MMB_Installer extends MMB_Core
 							}
 							else 
 								return array(
-									'upgraded' => ' Upgraded successfully.'
+									'upgraded' => ' updated'
 								);
 						}
 				}
@@ -249,7 +249,7 @@ class MMB_Installer extends MMB_Core
 					// Is an update available?
 					if (!isset($current_update->response) || $current_update->response == 'latest')
 						return array(
-							'upgraded' => ' Upgraded successfully.'
+							'upgraded' => ' updated'
 						);
 					
 					$res = $upgrader->fs_connect(array(
@@ -302,17 +302,17 @@ class MMB_Installer extends MMB_Core
 						);
 					ob_end_flush();
 					return array(
-						'upgraded' => 'Upgraded successfully.'
+						'upgraded' => 'updated'
 					);
 				} else {
 					return array(
-						'error' => 'Upgrade failed.'
+						'error' => 'failed'
 					);
 				}
 			}
 		} else {
 			return array(
-					'error' => 'Upgrade failed.'
+					'error' => 'failed'
 				);
 		}
     }
