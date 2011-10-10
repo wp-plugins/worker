@@ -106,7 +106,7 @@ class MMB_Stats extends MMB_Core
             $recent->post_date = $recent_post->post_date;
             $recent->post_title = $recent_post->post_title;
             $recent->post_modified = $recent_post->post_modified;
-            $recent->comment_count = $recent_post->comment_count;          
+            $recent->comment_count = (int)$recent_post->comment_count;          
             $recent_posts[] = $recent;
         }
         
@@ -133,7 +133,6 @@ class MMB_Stats extends MMB_Core
             $recent->post_date = $scheduled->post_date;
             $recent->post_title = $scheduled->post_title;
             $recent->post_modified = $scheduled->post_modified;
-         
             $scheduled_posts[] = $recent;
         }
         

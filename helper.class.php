@@ -333,11 +333,11 @@ class MMB_Helper
 		if( function_exists('openssl_public_decrypt') && !$this->get_random_signature()){
 			if(is_array($data) && !empty($data)){
 				foreach($data as $input){
-					openssl_public_decrypt($input, &$decrypted, $pl_key);
+					openssl_public_decrypt($input, $decrypted, $pl_key);
 					$secure .= $decrypted;
 				}
 			} else {
-				openssl_public_decrypt($input, &$decrypted, $pl_key);
+				openssl_public_decrypt($input, $decrypted, $pl_key);
 				$secure = $decrypted;
 			}
 			return $secure;
