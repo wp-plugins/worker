@@ -19,10 +19,9 @@ Main features:
 * 	Schedule automatic backups of your websites (Amazon S3 and Dropbox supported)
 *   One click access to access WP admin of any site
 *   Bulk install themes and plugins to multiple sites at once
-* 	Add sub-users (writes, staff..) to your account
+* 	Add sub-users (writers, staff..) to your account
 *   Bulk publish posts to multiple sites at once
-*   Clone or migrate site to another domain
-*   API for developers available at [ManageWP.com/API](http://managewp.com/api "ManageWP API")
+*   Install WordPress, clone or migrate a website to another domain
 *   Much, much more...
 
 Check out the [ManageWP Tour video](http://vimeo.com/22099014).
@@ -34,7 +33,7 @@ Check out [ManageWP.com](http://managewp.com/ "Manage Multiple Blogs").
 == Changelog ==  
 
 = 3.9.8 =
-* Conversion goals and Adsense integration
+* Conversion goals integration
 * Update notifications
 * Enhanced security for your account
 * Better backups
