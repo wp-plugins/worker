@@ -16,7 +16,7 @@ Main features:
 
 *   Secure and fast solution for managing your WordPress sites
 *   One click upgrades of WordPress, plugin and themes across all your sites
-* 	Scheduled automatic backups of your websites (Amazon S3 and Dropbox supported)
+* 	Schedule automatic backups of your websites (Amazon S3 and Dropbox supported)
 *   One click access to access WP admin of any site
 *   Bulk install themes and plugins to multiple sites at once
 * 	Add sub-users (writers, staff..) to your account
