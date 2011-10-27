@@ -25,27 +25,50 @@ class MMB_Stats extends MMB_Core
     
     function get($params)
     {
-		$num = extract($params);
+	
+		include_once(ABSPATH . 'wp-includes/update.php');
+		include_once(ABSPATH . '/wp-admin/includes/update.php');
 		
-        if ($refresh == 'transient') {
-            include_once(ABSPATH . 'wp-includes/update.php');
-			@wp_update_plugins();
-			@wp_update_themes();
-			@wp_version_check();
+		$num = extract($params);
+		$stats = array();
+		$update_check = array();
+		$updates = array();
+		
+		if ($refresh == 'transient') {
+			$current = $this->mmb_get_transient('update_core');
+			if(isset($current->last_checked)){
+				if(time() - $current->last_checked > 1800 ) {
+					@wp_update_plugins();
+					@wp_update_themes();
+					@wp_version_check();
+					
+					$update_check = apply_filters('mwp_premium_update_check', $update_check);
+					if(!empty($update_check)){
+						foreach($update_check as $update){
+							if( is_array($update['callback']) ) {
+								$update_result = call_user_func( array( $update['callback'][0], $update['callback'][1] ) );
+							}
+							else if ( is_string($update['callback']) ) {
+								$update_result = call_user_func($update['callback']);
+							}
+						}
+					}
+				}
+			}			
 		}
 		
         global $wpdb, $mmb_wp_version, $mmb_plugin_dir, $wp_version, $wp_local_package;
-        $stats = array();
         
+		$premium_updates = array();
+		$stats['premium_updates'] = apply_filters('mwp_premium_update_notification', $premium_updates);
+		 
         //define constants
         $num_pending_comments  = 10;
         $num_approved_comments = 3;
         $num_spam_comments     = 0;
         $num_draft_comments    = 0;
         $num_trash_comments    = 0;
-
-        include_once(ABSPATH . '/wp-admin/includes/update.php');
-        
+       		
         $stats['worker_version']    = MMB_WORKER_VERSION;
         $stats['wordpress_version'] = $wp_version;
 		$stats['wordpress_locale_pckg'] = $wp_local_package;
@@ -53,19 +76,19 @@ class MMB_Stats extends MMB_Core
         $stats['php_version'] = phpversion();
         $stats['mysql_version'] = $wpdb->db_version();
         
-        if (function_exists('get_core_updates')) {
-			$updates = get_core_updates();
-            if (!empty($updates)) {
+		if (function_exists('get_core_updates')) {
+			$updates = get_core_updates();					
+			if (!empty($updates)) {
 				$current_transient = $updates[0];
 				if ($current_transient->response == "development" || version_compare($wp_version, $current_transient->current, '<')) {
 					$current_transient->current_version = $wp_version;
 					$stats['core_updates'] = $current_transient;
-                } else
-                    $stats['core_updates'] = false;
-            } else
-                $stats['core_updates'] = false;
+				} else
+					$stats['core_updates'] = false;
+			} else
+				$stats['core_updates'] = false;
 		}
-			
+		
         $mmb_user_hits = get_option('user_hit_count');
         if (is_array($mmb_user_hits)) {
             end($mmb_user_hits);

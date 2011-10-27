@@ -8,21 +8,23 @@
  * Copyright (c) 2011 Prelovac Media
  * www.prelovac.com
  **************************************************************/
+if( !function_exists('mmb_add_action')) :
+	function mmb_add_action($action = false, $callback = false)
+	{
+		if (!$action || !$callback)
+			return false;
+		
+		global $mmb_actions;
+		mmb_function_exists($callback);
+		
+		if (isset($mmb_actions[$action]))
+			wp_die('Cannot redeclare ManageWP action "' . $action . '".');
+		
+		$mmb_actions[$action] = $callback;
+	}
+endif;
 
-function mmb_add_action($action = false, $callback = false)
-{
-    if (!$action || !$callback)
-        return false;
-    
-    global $mmb_actions;
-    mmb_function_exists($callback);
-    
-    if (isset($mmb_actions[$action]))
-        wp_die('Cannot redeclare ManageWP action "' . $action . '".');
-    
-    $mmb_actions[$action] = $callback;
-}
-
+if( !function_exists('mmb_function_exists') ) :
 function mmb_function_exists($callback)
 {
     global $mwp_core;
@@ -34,5 +36,6 @@ function mmb_function_exists($callback)
             wp_die($mwp_core->mwp_dashboard_widget('Information', '', '<p>Function <b>"' . $callback . '"</b> does not exists.</p>', '', '50%'));
     }
 }
+endif;
 
 ?>

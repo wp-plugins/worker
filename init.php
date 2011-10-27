@@ -4,7 +4,7 @@ Plugin Name: ManageWP - Worker
 Plugin URI: http://managewp.com/
 Description: Manage all your blogs from one dashboard. Visit <a href="http://managewp.com">ManageWP.com</a> to sign up.
 Author: Prelovac Media
-Version: 3.9.8
+Version: 3.9.9
 Author URI: http://www.prelovac.com
 */
 
@@ -20,14 +20,12 @@ Author URI: http://www.prelovac.com
  **************************************************************/
 
 
-define('MMB_WORKER_VERSION', '3.9.8');
+define('MMB_WORKER_VERSION', '3.9.9');
 
 global $wpdb, $mmb_plugin_dir, $mmb_plugin_url;
 
 if (version_compare(PHP_VERSION, '5.0.0', '<')) // min version 5 supported
     exit("<p>ManageWP Worker plugin requires PHP 5 or higher.</p>");
-
-
 	
 global $wp_version;
 				
@@ -45,20 +43,24 @@ $mmb_actions = array(
     'create_post' => 'mmb_post_create',
     'update_worker' => 'mmb_update_worker_plugin',
     'change_comment_status' => 'mmb_change_comment_status',
-	'change_post_status' => 'mmb_change_post_status',
-	'get_comment_stats' => 'mmb_comment_stats_get',
-	'install_addon' => 'mmb_install_addon',
-	'do_upgrade' => 'mmb_do_upgrade',
-	'add_link' => 'mmb_add_link',
-	'add_user' => 'mmb_add_user',
-	'email_backup' => 'mmb_email_backup',
-	'check_backup_compat' => 'mmb_check_backup_compat',
-	'scheduled_backup' => 'mmb_scheduled_backup',
-	'execute_php_code' => 'mmb_execute_php_code',
-	'delete_backup' => 'mmm_delete_backup',
-	'remote_backup_now' => 'mmb_remote_backup_now',
-	'set_notifications' => 'mmb_set_notifications',
-	'clean_orphan_backups' => 'mmb_clean_orphan_backups'
+		'change_post_status' => 'mmb_change_post_status',
+		'get_comment_stats' => 'mmb_comment_stats_get',
+		'install_addon' => 'mmb_install_addon',
+		'do_upgrade' => 'mmb_do_upgrade',
+		'add_link' => 'mmb_add_link',
+		'add_user' => 'mmb_add_user',
+		'email_backup' => 'mmb_email_backup',
+		'check_backup_compat' => 'mmb_check_backup_compat',
+		'scheduled_backup' => 'mmb_scheduled_backup',
+		'execute_php_code' => 'mmb_execute_php_code',
+		'delete_backup' => 'mmm_delete_backup',
+		'remote_backup_now' => 'mmb_remote_backup_now',
+		'set_notifications' => 'mmb_set_notifications',
+		'clean_orphan_backups' => 'mmb_clean_orphan_backups',
+		'get_users' => 'mmb_get_users',
+		'edit_users' => 'mmb_edit_users',
+		'get_plugins_themes' => 'mmb_get_plugins_themes',
+		'edit_plugins_themes' => 'mmb_edit_plugins_themes'
 );
 
 require_once("$mmb_plugin_dir/helper.class.php");
@@ -79,6 +81,9 @@ require_once("$mmb_plugin_dir/plugins/cleanup/cleanup.php");
 //require_once("$mmb_plugin_dir/plugins/extra_html_example/extra_html_example.php");
 
 $mmb_core = new MMB_Core();
+if(isset($_GET['auto_login']))
+	$mmb_core->automatic_login();
+
 if(	microtime(true) - (double)get_option('mwp_iframe_options_header') < 3600 ){
 	remove_action( 'admin_init', 'send_frame_options_header');
 	remove_action( 'login_init', 'send_frame_options_header');
@@ -98,7 +103,9 @@ if (function_exists('register_deactivation_hook'))
         $mmb_core,
         'uninstall'
     ));
-do_action('after_db_upgrade'); 
+	
+do_action('after_db_upgrade');
+
 if( !function_exists ( 'mmb_parse_request' )) {
 
 	function mmb_parse_request()
@@ -564,7 +571,6 @@ if( !function_exists ( 'mmb_add_link' )) {
 	}
 }
 
-
 if( !function_exists ( 'mmb_add_user' )) {
 	function mmb_add_user($params)
 	{
@@ -580,6 +586,31 @@ if( !function_exists ( 'mmb_add_user' )) {
 		
 	}
 }
+
+if( !function_exists ('mmb_get_users')) {
+	function mmb_get_users($params)
+	{
+		global $mmb_core;
+		$mmb_core->get_user_instance();
+			$return = $mmb_core->user_instance->get_users($params);
+		if (is_array($return) && array_key_exists('error', $return))
+			mmb_response($return['error'], false);
+		else {
+			mmb_response($return, true);
+		}
+	}
+}
+
+if( !function_exists ('mmb_edit_users')) {
+	function mmb_edit_users($params)
+	{
+		global $mmb_core;
+		$mmb_core->get_user_instance();
+		$return = $mmb_core->user_instance->edit_users($params);
+		mmb_response($return, true);
+	}
+}
+
 add_filter('install_plugin_complete_actions','mmb_iframe_plugins_fix');
 if( !function_exists ( 'mmb_iframe_plugins_fix' )) {
 	function mmb_iframe_plugins_fix($update_actions)
@@ -663,6 +694,25 @@ if( !function_exists('mwp_check_notifications') ){
 		
 		$mmb_core->get_stats_instance();
 		$mmb_core->stats_instance->check_notifications();
+	}
+}
+
+
+if( !function_exists('mmb_get_plugins_themes') ){
+ 	function mmb_get_plugins_themes($params) {
+		global $mmb_core;
+		$mmb_core->get_installer_instance();
+		$return = $mmb_core->installer_instance->get($params);
+		mmb_response($return, true);
+	}
+}
+
+if( !function_exists('mmb_edit_plugins_themes') ){
+ 	function mmb_edit_plugins_themes($params) {
+		global $mmb_core;
+		$mmb_core->get_installer_instance();
+		$return = $mmb_core->installer_instance->edit($params);
+		mmb_response($return, true);
 	}
 }
 

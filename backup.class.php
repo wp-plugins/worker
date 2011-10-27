@@ -1334,7 +1334,7 @@ class MMB_Backup extends MMB_Core
     {
         $tasks         = $this->get_backup_settings();
         $backup_folder = WP_CONTENT_DIR . '/' . md5('mmb-worker') . '/mwp_backups/';
-        $files         = glob($backup_folder . "*.*");
+        $files         = glob($backup_folder . "*");
         $deleted       = array();
         $clone_backup = get_option('mwp_manual_backup');
         if(isset($clone_backup['file_path'])){

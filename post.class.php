@@ -19,6 +19,7 @@ class MMB_Post extends MMB_Core
     
     function create($args)
     {
+    	
         /**
          * algorithm
          * 1. create post using wp_insert_post (insert tags also here itself)
@@ -247,6 +248,10 @@ class MMB_Post extends MMB_Core
         }
         
         //Prepare post data and temporarily remove content filters before insert post
+				$user = get_userdatabylogin($args['username']);
+				if($user && $user->ID){
+					$post_data['post_author'] = $user->ID;
+				}
        	remove_filter('content_save_pre', 'wp_filter_post_kses'); 
         $post_id = wp_insert_post($post_data);
         

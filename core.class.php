@@ -67,12 +67,7 @@ class MMB_Core extends MMB_Helper
         register_activation_hook($mmb_plugin_dir . '/init.php', array(
             $this,
             'install'
-        ));
-        add_action('init', array(
-            $this,
-            'automatic_login'
-        ));
-        
+        ));        
         if (!get_option('_worker_public_key'))
             add_action('admin_notices', array(
                 $this,
@@ -405,40 +400,42 @@ class MMB_Core extends MMB_Helper
      */
     function automatic_login()
     {
-        global $current_user;
-        
-        $where      = isset($_GET['mwp_goto']) ? $_GET['mwp_goto'] : '';
+        $where      = isset($_GET['mwp_goto']) ? $_GET['mwp_goto'] : false;
         $username   = isset($_GET['username']) ? $_GET['username'] : '';
         $auto_login = isset($_GET['auto_login']) ? $_GET['auto_login'] : 0;
         
-        if ((!is_user_logged_in() || ($this->mmb_multisite && $username != $current_user->user_login)) && $auto_login) {
-            $signature  = base64_decode($_GET['signature']);
+		if( !function_exists('is_user_logged_in') )
+			include_once( ABSPATH.'wp-includes/pluggable.php' );
+		
+		if (( $auto_login && strlen(trim($username)) && !is_user_logged_in() ) || (isset($this->mmb_multisite) && $this->mmb_multisite )) {
+			$signature  = base64_decode($_GET['signature']);
             $message_id = trim($_GET['message_id']);
             
             $auth = $this->authenticate_message($where . $message_id, $signature, $message_id);
-            if ($auth === true) {
-                if (isset($current_user->user_login))
-                    do_action('wp_logout');
-                $user    = get_user_by('login', $username);
-                $user_id = $user->ID;
-                wp_set_current_user($user_id, $username);
-                wp_set_auth_cookie($user_id);
-                do_action('wp_login', $username);
+			if ($auth === true) {
+                update_option('mwp_iframe_options_header', microtime(true));
+				
+				if (!headers_sent())
+					header('P3P: CP="CAO PSA OUR"');
+					
+				$siteurl = get_site_option( 'siteurl' );
+				$user = get_user_by('login', $username);
+				wp_set_current_user($user->ID);
+				
+				$expiration = time() + apply_filters('auth_cookie_expiration', 21600, $user->ID, false);
+				$auth_cookie = wp_generate_auth_cookie($user->ID, $expiration, 'auth');
+				$logged_in_cookie = wp_generate_auth_cookie($user->ID, $expiration, 'logged_in');
+				
+				$_COOKIE['wordpress_'.md5( $siteurl )] = $auth_cookie;
+				$_COOKIE['wordpress_logged_in_'.md5( $siteurl )] = $logged_in_cookie;
+				
+				wp_set_auth_cookie($user->ID);
+				
+					
             } else {
-                unset($_SESSION['mwp_frame_options_header']);
                 wp_die($auth['error']);
             }
         }
-        
-        if ($auto_login) {
-            update_option('mwp_iframe_options_header', microtime(true));
-            if (!headers_sent())
-                header('P3P: CP="CAO PSA OUR"'); // IE redirect iframe header
-            wp_redirect(get_option('siteurl') . "/wp-admin/" . $where);
-            exit();
-        }
     }
-    
-    
 }
 ?>

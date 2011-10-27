@@ -17,7 +17,7 @@ Main features:
 *   Secure and fast solution for managing your WordPress sites
 *   One click upgrades of WordPress, plugin and themes across all your sites
 * 	Schedule automatic backups of your websites (Amazon S3 and Dropbox supported)
-*   One click access to access WP admin of any site
+*   One click to access WP admin of any site
 *   Bulk install themes and plugins to multiple sites at once
 * 	Add sub-users (writers, staff..) to your account
 *   Bulk publish posts to multiple sites at once
@@ -31,6 +31,14 @@ http://vimeo.com/22099014
 Check out [ManageWP.com](http://managewp.com/ "Manage Multiple Blogs").
 
 == Changelog ==  
+
+= 3.9.9 =
+* New widget on the dashboard - Backup status
+* New screen for managing plugins and themes (activate, deactivate, delete, add to favorites, install) across all sites
+* New screen for managing users (change role or password, delete user) across all sites 
+* Option to overwrite old plugins and themes during bulk installation
+* Your website admin now loads faster in ManageWP
+* Added API for premium theme and plugin updates
 
 = 3.9.8 =
 * Conversion goals integration
