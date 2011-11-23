@@ -248,7 +248,7 @@ class MMB_Post extends MMB_Core
         }
         
         //Prepare post data and temporarily remove content filters before insert post
-				$user = get_userdatabylogin($args['username']);
+				$user = $this->mmb_get_user_info( $args['username'] );
 				if($user && $user->ID){
 					$post_data['post_author'] = $user->ID;
 				}

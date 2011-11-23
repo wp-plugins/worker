@@ -75,6 +75,63 @@ class MMB_Helper
 	 *
 	 */
 	
+	function mmb_get_user_info( $user_info = false, $info = 'login' ){
+				
+		if($user_info === false)
+			return false;
+			
+		if( strlen( trim( $user_info ) ) == 0)
+			return false;
+			
+			
+		global $wp_version;
+		if (version_compare($wp_version, '3.2.9', '<=')){
+			return get_userdatabylogin( $user_info );
+		} else {
+			return get_user_by( $info, $user_info );
+		}
+	}
+	
+	/**
+	 *
+	 * Call action item filters
+	 *
+	 */
+	
+	function mmb_parse_action_params( $key = '', $params = null, $call_object = null ){
+		
+		global $_mmb_item_filter;
+		$call_object = $call_object !== null ? $call_object : $this;
+		// $this->_log('key: '.print_r($key, true));
+		// $this->_log('params: '.print_r($params, true));
+		// $this->_log('call_object: '.print_r($call_object, true));
+		// $this->_log('$_mmb_item_filter[$key]: '.print_r($_mmb_item_filter[$key], true));
+		$return = array();
+		
+		if(isset($_mmb_item_filter[$key]) && !empty($_mmb_item_filter[$key])){
+			if( isset($params['item_filter']) && !empty($params['item_filter'])){
+				foreach($params['item_filter'] as $_items){
+					if(!empty($_items)){
+						foreach($_items as $_item){
+							if(in_array($_item[0], $_mmb_item_filter[$key])){
+								$_item[1] = isset($_item[1]) ? $_item[1] : array();
+								$return = call_user_func(array( &$call_object, 'get_'.$_item[0]), $return, $_item[1]);
+							}
+						}
+					}
+				}
+			}
+		}
+		
+		return $return;
+	}
+	
+	/**
+	 *
+	 * Check if function exists or not on `suhosin` black list
+	 *
+	 */
+	
 	function mmb_function_exists($function_callback){
 		
 		if(!function_exists($function_callback))
@@ -130,13 +187,16 @@ class MMB_Helper
 			
         global $wp_version;
 		
-        
+        $transient = array();
+		
         if (version_compare($wp_version, '2.7.9', '<=')) {
 			return get_option($option_name);
         } else if (version_compare($wp_version, '2.9.9', '<=')) {
-			return get_option('_transient_' . $option_name);
+			$transient = get_option('_transient_' . $option_name);
+			return apply_filters("transient_".$option_name, $transient);
         } else {
-			return get_option('_site_transient_' . $option_name);
+			$transient = get_option('_site_transient_' . $option_name);
+			return apply_filters("site_transient_".$option_name, $transient);
         }
     }
     
@@ -308,7 +368,7 @@ class MMB_Helper
         } else if ($this->get_random_signature()) {
             if (md5($data . $this->get_random_signature()) == $signature) {
                 $message_id = $this->set_worker_message_id($message_id);
-                return true;
+				return true;
             }
             return array(
                 'error' => 'Invalid message signature. Deactivate and activate the ManageWP Worker plugin on this site, then remove the website from your ManageWP account and add it again.'
@@ -350,17 +410,19 @@ class MMB_Helper
     {
         global $wpdb;
         if ($username) {
-            require_once(ABSPATH . WPINC . '/registration.php');
+			if( !function_exists('username_exists') )
+				include_once(ABSPATH . WPINC . '/registration.php');
+				
             include_once(ABSPATH . 'wp-includes/pluggable.php');
             
             if (username_exists($username) == null) {
                 return false;
             }
-            $user = (array) get_userdatabylogin($username);
 			
-			if ($user[$wpdb->prefix . 'user_level'] == 10 || isset($user[$wpdb->prefix . 'capabilities']['administrator']) || 
+            $user = (array) $this->mmb_get_user_info( $username );
+			
+			if ((isset($user[$wpdb->prefix . 'user_level']) && $user[$wpdb->prefix . 'user_level'] == 10) || isset($user[$wpdb->prefix . 'capabilities']['administrator']) || 
 				(isset($user['caps']['administrator']) && $user['caps']['administrator'] == 1)){
-                define('MMB_USER_CAPABILITIES', $user->wp_user_level);
                 return true;
             }
             return false;

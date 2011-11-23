@@ -3,7 +3,7 @@ Contributors: freediver
 Donate link: https://www.networkforgood.org/donation/MakeDonation.aspx?ORGID2=520781390
 Tags: admin, administration, amazon, api, authentication, automatic, dashboard, dropbox, events, integration, manage, multsite, notification, performance, s3, security, seo, stats, tracking, managewp
 Requires at least: 3.0
-Tested up to: 3.3
+Tested up to: 3.2.1
 Stable tag: trunk
 
 ManageWP Worker plugin allows you to remotely manage your blogs from one dashboard.
@@ -16,10 +16,10 @@ Main features:
 
 *   Secure and fast solution for managing your WordPress sites
 *   One click upgrades of WordPress, plugin and themes across all your sites
-*   Schedule automatic backups of your websites (Amazon S3 and Dropbox supported)
+* 	Schedule automatic backups of your websites (Amazon S3 and Dropbox supported)
 *   One click to access WP admin of any site
 *   Bulk install themes and plugins to multiple sites at once
-*   Add sub-users (writers, staff..) to your account
+* 	Add sub-users (writers, staff..) to your account
 *   Bulk publish posts to multiple sites at once
 *   Install WordPress, clone or migrate a website to another domain
 *   Much, much more...
@@ -31,19 +31,6 @@ http://vimeo.com/22099014
 Check out [ManageWP.com](http://managewp.com/ "Manage Multiple Blogs").
 
 == Changelog ==  
-
-= 3.9.10 =
-* Supporting updates for more premium plugins/themes
-* Backup notifications (users can now get notices when the backup succeeds or fails)
-* Support for WordPress 3.3
-* Worker Branding (useful for web agencies, add your own Name/Description)
-* Manage Groups screem
-* Specify wp-admin path if your site uses a custom one
-* Amazon S3 backups support for mixed case bucket names
-* Bulk Add Links has additional options
-* Better Multisite support
-* Option to set the number of items for Google Analytics
-* ManageWP backup folder changed to wp-content/managewp/backups
 
 = 3.9.9 =
 * New widget on the dashboard - Backup status

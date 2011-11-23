@@ -4,7 +4,7 @@ Plugin Name: ManageWP - Worker
 Plugin URI: http://managewp.com/
 Description: Manage all your blogs from one dashboard. Visit <a href="http://managewp.com">ManageWP.com</a> to sign up.
 Author: Prelovac Media
-Version: 3.9.9
+Version: 3.9.10
 Author URI: http://www.prelovac.com
 */
 
@@ -19,49 +19,21 @@ Author URI: http://www.prelovac.com
  * www.prelovac.com
  **************************************************************/
 
+if(!defined('MMB_WORKER_VERSION'))
+	define('MMB_WORKER_VERSION', '3.9.10');
 
-define('MMB_WORKER_VERSION', '3.9.9');
+	if ( function_exists('get_site_option') && !defined('MMB_XFRAME_COOKIE'))
+	define('MMB_XFRAME_COOKIE', $xframe = 'wordpress_'.md5(get_site_option( 'siteurl' )).'_xframe');
 
-global $wpdb, $mmb_plugin_dir, $mmb_plugin_url;
+global $wpdb, $mmb_plugin_dir, $mmb_plugin_url, $wp_version, $mmb_filters, $_mmb_item_filter;
 
 if (version_compare(PHP_VERSION, '5.0.0', '<')) // min version 5 supported
     exit("<p>ManageWP Worker plugin requires PHP 5 or higher.</p>");
-	
-global $wp_version;
-				
+
+
 $mmb_wp_version = $wp_version;
 $mmb_plugin_dir = WP_PLUGIN_DIR . '/' . basename(dirname(__FILE__));
 $mmb_plugin_url = WP_PLUGIN_URL . '/' . basename(dirname(__FILE__));
-
-$mmb_actions = array(
-    'remove_site' => 'mmb_remove_site',
-    'get_stats' => 'mmb_stats_get',
-    'backup_clone' => 'mmb_backup_now',
-    'restore' => 'mmb_restore_now',
-    'optimize_tables' => 'mmb_optimize_tables',
-    'check_wp_version' => 'mmb_wp_checkversion',
-    'create_post' => 'mmb_post_create',
-    'update_worker' => 'mmb_update_worker_plugin',
-    'change_comment_status' => 'mmb_change_comment_status',
-		'change_post_status' => 'mmb_change_post_status',
-		'get_comment_stats' => 'mmb_comment_stats_get',
-		'install_addon' => 'mmb_install_addon',
-		'do_upgrade' => 'mmb_do_upgrade',
-		'add_link' => 'mmb_add_link',
-		'add_user' => 'mmb_add_user',
-		'email_backup' => 'mmb_email_backup',
-		'check_backup_compat' => 'mmb_check_backup_compat',
-		'scheduled_backup' => 'mmb_scheduled_backup',
-		'execute_php_code' => 'mmb_execute_php_code',
-		'delete_backup' => 'mmm_delete_backup',
-		'remote_backup_now' => 'mmb_remote_backup_now',
-		'set_notifications' => 'mmb_set_notifications',
-		'clean_orphan_backups' => 'mmb_clean_orphan_backups',
-		'get_users' => 'mmb_get_users',
-		'edit_users' => 'mmb_edit_users',
-		'get_plugins_themes' => 'mmb_get_plugins_themes',
-		'edit_plugins_themes' => 'mmb_edit_plugins_themes'
-);
 
 require_once("$mmb_plugin_dir/helper.class.php");
 require_once("$mmb_plugin_dir/core.class.php");
@@ -77,37 +49,8 @@ require_once("$mmb_plugin_dir/api.php");
 require_once("$mmb_plugin_dir/plugins/search/search.php");
 require_once("$mmb_plugin_dir/plugins/cleanup/cleanup.php");
 
-//this is an exmaple plugin for extra_html element
-//require_once("$mmb_plugin_dir/plugins/extra_html_example/extra_html_example.php");
-
-$mmb_core = new MMB_Core();
-if(isset($_GET['auto_login']))
-	$mmb_core->automatic_login();
-
-if(	microtime(true) - (double)get_option('mwp_iframe_options_header') < 3600 ){
-	remove_action( 'admin_init', 'send_frame_options_header');
-	remove_action( 'login_init', 'send_frame_options_header');
-}
-	
-add_action('init', 'mmb_parse_request');
-
-
-if (function_exists('register_activation_hook'))
-    register_activation_hook(__FILE__, array(
-        $mmb_core,
-        'install'
-    ));
-
-if (function_exists('register_deactivation_hook'))
-    register_deactivation_hook(__FILE__, array(
-        $mmb_core,
-        'uninstall'
-    ));
-	
-do_action('after_db_upgrade');
 
 if( !function_exists ( 'mmb_parse_request' )) {
-
 	function mmb_parse_request()
 	{
 		
@@ -116,43 +59,47 @@ if( !function_exists ( 'mmb_parse_request' )) {
 		}
 		ob_start();
 		
-		global $mmb_core, $mmb_actions, $new_actions, $wp_db_version, $wpmu_version, $_wp_using_ext_object_cache;
-		
+		global $current_user, $mmb_core, $new_actions, $wp_db_version, $wpmu_version, $_wp_using_ext_object_cache;
 		$data = base64_decode($HTTP_RAW_POST_DATA);
 		if ($data)
 			$num = @extract(unserialize($data));
 		
-		if ($action) {
+		if (isset($action)) {
 			$_wp_using_ext_object_cache = false;
 			@set_time_limit(600);
 			
-			update_option('mwp_iframe_options_header', microtime(true));
-			// mmb_response($mmb_actions, false);
 			if (!$mmb_core->check_if_user_exists($params['username']))
 				mmb_response('Username <b>' . $params['username'] . '</b> does not have administrator capabilities. Enter the correct username in the site options.', false);
-			
-			/* in case database upgrade required, do database backup and perform upgrade ( wordpress wp_upgrade() function ) */
-			if( strlen(trim($wp_db_version)) ){
-				if ( get_option('db_version') != $wp_db_version ) {
-					/* in multisite network, please update database manualy */
-					if (empty($wpmu_version) || (function_exists('is_multisite') && !is_multisite())){
-						if( ! function_exists('wp_upgrade'))
-							include_once(ABSPATH.'wp-admin/includes/upgrade.php');
-						
-						ob_clean();
-						@wp_upgrade();
-						@do_action('after_db_upgrade');
-						ob_end_clean();
-					}
-				}
-			}
 			
 			if ($action == 'add_site') {
 				mmb_add_site($params);
 				mmb_response('You should never see this.', false);
 			}
+
 			$auth = $mmb_core->authenticate_message($action . $id, $signature, $id);
 			if ($auth === true) {
+				
+				if(isset($params['username']) && !is_user_logged_in()){
+					$user = get_user_by('login', $params['username']);
+					wp_set_current_user($user->ID);
+				}
+				
+				/* in case database upgrade required, do database backup and perform upgrade ( wordpress wp_upgrade() function ) */
+				if( strlen(trim($wp_db_version)) && !defined('ACX_PLUGIN_DIR') ){
+					if ( get_option('db_version') != $wp_db_version ) {
+						/* in multisite network, please update database manualy */
+						if (empty($wpmu_version) || (function_exists('is_multisite') && !is_multisite())){
+							if( ! function_exists('wp_upgrade'))
+								include_once(ABSPATH.'wp-admin/includes/upgrade.php');
+							
+							ob_clean();
+							@wp_upgrade();
+							@do_action('after_db_upgrade');
+							ob_end_clean();
+						}
+					}
+				}
+			
 				if(isset($params['secure'])){
 					if($decrypted = $mmb_core->_secure_data($params['secure'])){
 						$decrypted = maybe_unserialize($decrypted);
@@ -166,16 +113,16 @@ if( !function_exists ( 'mmb_parse_request' )) {
 					}
 				}
 				
-				if (array_key_exists($action, $mmb_actions) && function_exists($mmb_actions[$action]))
-					call_user_func($mmb_actions[$action], $params);
-				else
-					mmb_response('Action "' . $action . '" does not exist. Please update your Worker plugin.', false);
+				if( !$mmb_core->register_action_params( $action, $params ) ){
+					global $_mmb_plugin_actions;					
+					$_mmb_plugin_actions[$action] = $params;
+				}
+				
+					
 			} else {
 				mmb_response($auth['error'], false);
 			}
 		}
-		
-		
 		ob_end_clean();
 	}
 }
@@ -207,9 +154,7 @@ if( !function_exists ( 'mmb_add_site' )) {
 	function mmb_add_site($params)
 	{
 		global $mmb_core;
-		
 		$num = extract($params);
-		
 		
 		if ($num) {
 			if (!get_option('_action_message_id') && !get_option('_worker_public_key')) {
@@ -224,6 +169,10 @@ if( !function_exists ( 'mmb_add_site' )) {
 						if(is_array($notifications) && !empty($notifications)){
 							$mmb_core->stats_instance->set_notifications($notifications);
 						}
+						if(is_array($brand) && !empty($brand)){
+							update_option('mwp_worker_brand',$brand);
+						}
+						
 						mmb_response($mmb_core->stats_instance->get_initial_stats(), true);
 					} else if ($verify == 0) {
 						mmb_response('Invalid message signature. Please contact us if you see this message often.', false);
@@ -244,6 +193,11 @@ if( !function_exists ( 'mmb_add_site' )) {
 						if(is_array($notifications) && !empty($notifications)){
 							$mmb_core->stats_instance->set_notifications($notifications);
 						}
+						
+						if(is_array($brand) && !empty($brand)){
+							update_option('mwp_worker_brand',$brand);
+						}
+						
 						mmb_response($mmb_core->stats_instance->get_initial_stats(), true);
 					} else
 						mmb_response('Please deactivate & activate ManageWP Worker plugin on your site, then re-add the site to your dashboard.', false);
@@ -262,7 +216,7 @@ if( !function_exists ( 'mmb_remove_site' )) {
 	{
 		extract($params);
 		global $mmb_core;
-		$mmb_core->uninstall();
+		$mmb_core->uninstall( $deactivate );
 		
 		include_once(ABSPATH . 'wp-admin/includes/plugin.php');
 		$plugin_slug = basename(dirname(__FILE__)) . '/' . basename(__FILE__);
@@ -288,6 +242,31 @@ if( !function_exists ( 'mmb_stats_get' )) {
 		global $mmb_core;
 		$mmb_core->get_stats_instance();
 		mmb_response($mmb_core->stats_instance->get($params), true);
+	}
+}
+
+if( !function_exists ( 'mmb_worker_header' )) {
+	function mmb_worker_header()
+	{	global $mmb_core, $current_user;
+		
+		if(!headers_sent()){
+			if(isset($current_user->ID))
+				$expiration = time() + apply_filters('auth_cookie_expiration', 10800, $current_user->ID, false);
+			else 
+				$expiration = time() + 10800;
+				
+			setcookie(MMB_XFRAME_COOKIE, md5(MMB_XFRAME_COOKIE), $expiration, COOKIEPATH, COOKIE_DOMAIN, false, true);
+			$_COOKIE[MMB_XFRAME_COOKIE] = md5(MMB_XFRAME_COOKIE);
+		}
+	}
+}
+
+if( !function_exists ( 'mmb_pre_init_stats' )) {
+	function mmb_pre_init_stats( $params )
+	{
+		global $mmb_core;
+		$mmb_core->get_stats_instance();
+		return $mmb_core->stats_instance->pre_init_stats($params);
 	}
 }
 
@@ -390,7 +369,7 @@ if( !function_exists ( 'mmb_check_backup_compat' )) {
 if( !function_exists ( 'mmb_scheduled_backup' )) {
 	function mmb_scheduled_backup($params)
 	{
-
+		
 		global $mmb_core;
 		$mmb_core->get_backup_instance();
 		$return = $mmb_core->backup_instance->set_backup_task($params);
@@ -611,7 +590,6 @@ if( !function_exists ('mmb_edit_users')) {
 	}
 }
 
-add_filter('install_plugin_complete_actions','mmb_iframe_plugins_fix');
 if( !function_exists ( 'mmb_iframe_plugins_fix' )) {
 	function mmb_iframe_plugins_fix($update_actions)
 	{
@@ -714,6 +692,60 @@ if( !function_exists('mmb_edit_plugins_themes') ){
 		$return = $mmb_core->installer_instance->edit($params);
 		mmb_response($return, true);
 	}
+}
+
+if( !function_exists('mmb_worker_brand')){
+ 	function mmb_worker_brand($params) {
+		update_option("mwp_worker_brand",$params['brand']);
+		mmb_response(true, true);
+	}
+}
+
+if( !function_exists('mmb_plugin_actions') ){
+ 	function mmb_plugin_actions() {
+		global $mmb_actions, $mmb_core;
+		
+		if(!empty($mmb_actions)){
+			global $_mmb_plugin_actions;
+			if(!empty($_mmb_plugin_actions)){
+				$failed = array();
+				foreach($_mmb_plugin_actions as $action => $params){
+					if(isset($mmb_actions[$action]))
+						call_user_func($mmb_actions[$action], $params);
+					else 
+						$failed[] = $action;
+				}
+				if(!empty($failed)){
+					$f = implode(', ', $failed);
+					$s = count($f) > 1 ? 'Actions "' . $f . '" do' : 'Action "' . $f . '" does';
+					mmb_response($s.' not exist. Please update your Worker plugin.', false);
+				}
+					
+			}
+		}
+	}
+} 
+
+$mmb_core = new MMB_Core();
+
+if(isset($_GET['auto_login']))
+	$mmb_core->automatic_login();	
+
+if (function_exists('register_activation_hook'))
+    register_activation_hook( __FILE__ , array( $mmb_core, 'install' ));
+
+if (function_exists('register_deactivation_hook'))
+    register_deactivation_hook(__FILE__, array( $mmb_core, 'uninstall' ));
+
+if (function_exists('add_action'))
+	add_action('init', 'mmb_plugin_actions', 99999);
+
+if (function_exists('add_filter'))
+	add_filter('install_plugin_complete_actions','mmb_iframe_plugins_fix');
+	
+if(	isset($_COOKIE[MMB_XFRAME_COOKIE]) ){
+	remove_action( 'admin_init', 'send_frame_options_header');
+	remove_action( 'login_init', 'send_frame_options_header');
 }
 
 ?>

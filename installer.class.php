@@ -16,11 +16,11 @@ class MMB_Installer extends MMB_Core
     {
         @set_time_limit(300);
         parent::__construct();
-		include_once(ABSPATH . 'wp-admin/includes/file.php');
-		include_once(ABSPATH . 'wp-admin/includes/plugin.php');
-		include_once(ABSPATH . 'wp-admin/includes/theme.php');
-		include_once(ABSPATH . 'wp-admin/includes/misc.php');
-		include_once(ABSPATH . 'wp-admin/includes/template.php');
+		@include_once(ABSPATH . 'wp-admin/includes/file.php');
+		@include_once(ABSPATH . 'wp-admin/includes/plugin.php');
+		@include_once(ABSPATH . 'wp-admin/includes/theme.php');
+		@include_once(ABSPATH . 'wp-admin/includes/misc.php');
+		@include_once(ABSPATH . 'wp-admin/includes/template.php');
 		@include_once(ABSPATH . 'wp-admin/includes/class-wp-upgrader.php');
 
 		global $wp_filesystem;
@@ -62,7 +62,10 @@ class MMB_Installer extends MMB_Core
 		if(!class_exists('WP_Upgrader'))
 			include_once(ABSPATH.'wp-admin/includes/class-wp-upgrader.php');
         
-		$upgrader    = new WP_Upgrader();
+		$upgrader_skin = new WP_Upgrader_Skin();
+		$upgrader_skin->done_header = true;
+		
+		$upgrader    = new WP_Upgrader($upgrader_skin);
         $destination = $type == 'themes' ? WP_CONTENT_DIR . '/themes' : WP_PLUGIN_DIR;
         $clear_destination = isset($clear_destination) ? $clear_destination : false;
         
@@ -125,6 +128,7 @@ class MMB_Installer extends MMB_Core
                 'error' => 'Failed, please <a target="_blank" href="http://managewp.com/user-guide#ftp">add FTP details</a></a>'
             );
         }
+			
 		$params = isset($params['upgrades_all']) ? $params['upgrades_all'] : $params;
 			
 		$core_upgrade = isset($params['wp_upgrade']) ? $params['wp_upgrade'] : array();
@@ -194,18 +198,15 @@ class MMB_Installer extends MMB_Core
 			include_once(ABSPATH.'/wp-admin/includes/update.php');
         
 		@wp_version_check();
-		
-		if(!function_exists('get_core_updates'))
-			include_once(ABSPATH.'/wp-admin/includes/update.php');
-		
-		$updates = get_core_updates();
-		
+			
 		$current_update = false;
 		ob_end_flush();
 		ob_end_clean();
+		$core = $this->mmb_get_transient('update_core');
 		
-		if(!empty($updates)){
-			$updated = $updates[0];
+		if(isset($core->updates) && !empty($core->updates)){
+			$updates = $core->updates[0];
+			$updated = $core->updates[0];
 			if ( !isset( $updated->response ) || $updated->response == 'latest' )
 				return array('upgraded' => ' updated');
 				
@@ -267,7 +268,10 @@ class MMB_Installer extends MMB_Core
 				}
 				
 				if(class_exists('WP_Upgrader')){
-					$upgrader = new WP_Upgrader();
+					$upgrader_skin = new WP_Upgrader_Skin();
+					$upgrader_skin->done_header = true;
+		
+					$upgrader = new WP_Upgrader( $upgrader_skin );
 					
 					// Is an update available?
 					if (!isset($current_update->response) || $current_update->response == 'latest')
@@ -459,8 +463,12 @@ class MMB_Installer extends MMB_Core
 							if (defined('WP_INSTALLING') && file_exists(ABSPATH . '.maintenance'))
 								$pr_update[$update['type'].'s']['upgraded'][md5($update['name'])] = 'Site under maintanace.';
 							
-							if($upgrader == false)
+							if($upgrader == false){
+								$upgrader_skin = new WP_Upgrader_Skin();
+								$upgrader_skin->done_header = true;
+								
 								$upgrader = new WP_Upgrader();
+							}
 							
 							@$update_result = $upgrader->run(array(
 								'package' => $update['url'],
@@ -499,9 +507,9 @@ class MMB_Installer extends MMB_Core
 		}
 	}
 	
-	function get_upgradable_plugins()
-    {
-        $current            = $this->mmb_get_transient('update_plugins');
+	function get_upgradable_plugins() {
+		
+		$current = $this->mmb_get_transient('update_plugins');
         $upgradable_plugins = array();
         if (!empty($current->response)) {
 			if (!function_exists('get_plugin_data'))
@@ -512,21 +520,20 @@ class MMB_Installer extends MMB_Core
 				
                 $data = get_plugin_data(WP_PLUGIN_DIR . '/' . $plugin_path);
                 if(strlen($data['Name']) > 0 && strlen($data['Version']) > 0) {
-					$current->response[$plugin_path]->name        = $data['Name'];
+					$current->response[$plugin_path]->name = $data['Name'];
 					$current->response[$plugin_path]->old_version = $data['Version'];
-					$current->response[$plugin_path]->file        = $plugin_path;
-					$upgradable_plugins[]                         = $current->response[$plugin_path];
+					$current->response[$plugin_path]->file = $plugin_path;
+					$upgradable_plugins[] = $current->response[$plugin_path];
 				}
             }
             return $upgradable_plugins;
         } else
             return array();
-        
     }
 	
-	function get_upgradable_themes()
-  {
-        $all_themes     = get_themes();
+	function get_upgradable_themes(){
+        
+		$all_themes = get_themes();
         $upgrade_themes = array();
         
         $current = $this->mmb_get_transient('update_themes');
@@ -535,10 +542,10 @@ class MMB_Installer extends MMB_Core
                 foreach ($current->response as $current_themes => $theme) {
                     if ($theme_data['Template'] == $current_themes) {
 						if(strlen($theme_data['Name']) > 0 && strlen($theme_data['Version']) > 0) {
-							$current->response[$current_themes]['name']        = $theme_data['Name'];
+							$current->response[$current_themes]['name'] = $theme_data['Name'];
 							$current->response[$current_themes]['old_version'] = $theme_data['Version'];
-							$current->response[$current_themes]['theme_tmp']   = $theme_data['Template'];
-							$upgrade_themes[]                                  = $current->response[$current_themes];
+							$current->response[$current_themes]['theme_tmp'] = $theme_data['Template'];
+							$upgrade_themes[] = $current->response[$current_themes];
 						}
                     }
                 }

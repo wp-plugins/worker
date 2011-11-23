@@ -98,6 +98,7 @@ function mmb_get_overhead()
 	$tot_all = 0;
 	$query = 'SHOW TABLE STATUS FROM '. DB_NAME;
 	$tables = $wpdb->get_results($wpdb->prepare($query),ARRAY_A);
+	$total_gain = 0;
 	foreach($tables as $table)
 	{
 		if(in_array($table['Engine'], array('MyISAM', 'ISAM', 'HEAP', 'MEMORY', 'ARCHIVE'))){

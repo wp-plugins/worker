@@ -27,20 +27,27 @@ class MMB_User extends MMB_Core
 			extract($args);
 		
 		$userlevels = array();
+		$level_strings = array();
 		foreach($user_roles as $user_role){
 		switch(strtolower($user_role)){
-			case 'subscriber' : $userlevels[] = 0; break;
-			case 'contributor' : $userlevels[] = 1; break;
-			case 'author' : $userlevels[] = 2; break;
-			case 'editor' : $userlevels[] = 7; break;
-			case 'administrator' : $userlevels[] = 10; break;
+			case 'subscriber' : $userlevels[] = 0; $level_strings[] = $user_role; break;
+			case 'contributor' : $userlevels[] = 1; $level_strings[] = $user_role; break;
+			case 'author' : $userlevels[] = 2; $level_strings[] = $user_role; break;
+			case 'editor' : $userlevels[] = 7; $level_strings[] = $user_role; break;
+			case 'administrator' : $userlevels[] = 10; $level_strings[] = $user_role; break;
 			default: break;
 			}
 		}
-		
+				
 		$users = array();
 		$userlevel_qry = "('".implode("','",$userlevels)."')";
-		$user_metas = $wpdb->get_results("SELECT * from $wpdb->usermeta WHERE meta_key = 'wp_user_level' AND meta_value IN $userlevel_qry");
+		$userlevel_fallback_qry = "('%".implode("%','%",$level_strings)."%')";
+		$field = $wpdb->prefix."capabilities";
+		
+		$user_metas = $wpdb->get_results("SELECT * from $wpdb->usermeta WHERE meta_key = '$field' AND meta_value IN $userlevel_fallback_qry");
+		if($user_metas == false || empty($user_metas)){
+			$user_metas = $wpdb->get_results("SELECT * from $wpdb->usermeta WHERE meta_key = 'wp_user_level' AND meta_value IN $userlevel_qry");	
+		}
 		
 		$include = array();
 			if(is_array($user_metas) && !empty($user_metas)){
@@ -50,7 +57,6 @@ class MMB_User extends MMB_Core
 			}
 			
 			$args = array();
-			
 			$args['include'] = $include;
 			$args['fields'] = 'all_with_meta';
 			$temp_users = get_users($args);
@@ -58,7 +64,7 @@ class MMB_User extends MMB_Core
 			foreach ((array)$temp_users as $temp){
 				$user['user_id'] = $temp->ID;
 				$user['user_login'] = $temp->user_login;
-				$user['wp_capabilities'] = array_keys($temp->wp_capabilities);
+				$user['wp_capabilities'] = array_keys($temp->$field);
 				$users[] = $user;
 			}
 			
@@ -111,7 +117,7 @@ class MMB_User extends MMB_Core
     	 if(count($users)){
     	 foreach($users as $user){
     	 	$result = '';
-    	 	$user_obj = get_userdatabylogin($user);
+    	 	$user_obj = $this->mmb_get_user_info( $user );
     	 	if($user_obj != false){
 		    	 switch($user_edit_action){
 		    		case 'change-password':
@@ -146,7 +152,7 @@ class MMB_User extends MMB_Core
 		    			if($user != $username){
 			    			if(!$this->last_admin($user_obj)){
 				    			if($reassign_user){
-				    			$to_user = get_userdatabylogin($reassign_user);
+				    			$to_user = $this->mmb_get_user_info( $reassign_user );
 				    				if($to_user != false){
 				    					$result = wp_delete_user($user_obj->ID, $to_user->ID);
 				    				} else {
@@ -185,9 +191,10 @@ class MMB_User extends MMB_Core
     
     //Check if user is the only one admin on the site
     function last_admin($user_obj){
-    	$capabilities = array_map('strtolower',array_keys($user_obj->wp_capabilities));
+    	global $wpdb;
+    	$field = $wpdb->prefix."capabilities";
+    	$capabilities = array_map('strtolower',array_keys($user_obj->$field));
     	$result = count_users();
-    	print_r($result);
 	    	if(in_array('administrator',$capabilities)){
 	    		
 	    		if(!function_exists('count_users')){
