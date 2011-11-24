@@ -105,9 +105,8 @@ class MMB_Backup extends MMB_Core
         $settings = $this->get_backup_settings();
         if (is_array($settings) && !empty($settings)) {
             foreach ($settings as $task_name => $setting) {
-                //if ($setting['task_args']['next'] && $setting['task_args']['next'] < time()) {
-                if ($setting['task_args']['next'] && $_GET['force_backup']) {
-                	
+                if ($setting['task_args']['next'] && $setting['task_args']['next'] < time()) {
+                //if ($setting['task_args']['next'] && $_GET['force_backup']) {
                 	if($setting['task_args']['url'] && $setting['task_args']['task_id'] && $setting['task_args']['site_key']){
                 		//Check orphan task
                 		$check_data = array(
