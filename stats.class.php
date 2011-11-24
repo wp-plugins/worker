@@ -191,7 +191,7 @@ class MMB_Stats extends MMB_Core
 		
 	function get_backups( $stats, $options = array() ){
 		
-		$stats['mwp_backups'] = $this->get_backup_instance()->get_backup_stats();
+				$stats['mwp_backups'] = $this->get_backup_instance()->get_backup_stats();
         $stats['mwp_next_backups'] = $this->get_backup_instance()->get_next_schedules();
         $stats['mwp_backup_req'] = $this->get_backup_instance()->check_backup_compat();
 		
@@ -299,6 +299,7 @@ class MMB_Stats extends MMB_Core
 	
     function get( $params )
     {
+    	
 		global $wpdb, $mmb_wp_version, $mmb_plugin_dir, $_mmb_item_filter;
 		
 		include_once(ABSPATH . 'wp-includes/update.php');

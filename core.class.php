@@ -126,7 +126,7 @@ class MMB_Core extends MMB_Helper
 		
         add_action('rightnow_end', array( 'MMB_Stats', 'add_right_now_info' ));
         add_action('wp_footer', array( 'MMB_Stats', 'set_hit_count' ));
-    add_action('admin_init', array($this,'admin_actions'));   
+		add_action('admin_init', array($this,'admin_actions'));   
 		add_action('init', array( &$this, 'mmb_remote_action'), 9999);
 		add_action('setup_theme', 'mmb_parse_request');
     }
@@ -572,10 +572,13 @@ class MMB_Core extends MMB_Helper
 				$_COOKIE['wordpress_'.md5( $siteurl )] = $auth_cookie;
 				$_COOKIE['wordpress_logged_in_'.md5( $siteurl )] = $logged_in_cookie;
 				
+				if(isset($this->mmb_multisite) && $this->mmb_multisite )
+					wp_cookie_constants();
+					
 				wp_set_auth_cookie($user->ID);
 				setcookie(MMB_XFRAME_COOKIE, md5(MMB_XFRAME_COOKIE), $expiration, COOKIEPATH, COOKIE_DOMAIN, false, true);
 				$_COOKIE[MMB_XFRAME_COOKIE] = md5(MMB_XFRAME_COOKIE);
-            } else {
+			} else {
                 wp_die($auth['error']);
             }
         } elseif( is_user_logged_in() ) {
@@ -590,14 +593,17 @@ class MMB_Core extends MMB_Helper
     function worker_replace($all_plugins){
     	$replace = get_option("mwp_worker_brand");
     	if(is_array($replace)){
-    		if($replace['name']){
+    		if($replace['name'] || $replace['desc'] || $replace['author'] || $replace['author_url']){
     			$all_plugins['worker/init.php']['Name'] = $replace['name'];
-    			$all_plugins['worker/init.php']['Title'] = $replace['name'];	
+    			$all_plugins['worker/init.php']['Title'] = $replace['name'];
+    			$all_plugins['worker/init.php']['Description'] = $replace['desc'];
+    			$all_plugins['worker/init.php']['AuthorURI'] = $replace['author_url'];
+    			$all_plugins['worker/init.php']['Author'] = $replace['author'];
+    			$all_plugins['worker/init.php']['AuthorName'] = $replace['author'];
+    			$all_plugins['worker/init.php']['PluginURI'] = '';
+    			}
     		}
-    		if($replace['desc']){
-    			$all_plugins['worker/init.php']['Description'] = $replace['desc'];	
-    		}
-    	}
+    	
     	  	
     	return $all_plugins;
     }

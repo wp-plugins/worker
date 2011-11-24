@@ -88,6 +88,7 @@ class MMB_Backup extends MMB_Core
             if ($task_name == 'Backup Now') {
                 $result          = $this->backup($args, $task_name);
                 $backup_settings = $this->get_backup_settings();
+                
                 if (is_array($result) && array_key_exists('error', $result)) {
                     $return = $result;
                 } else {
@@ -158,7 +159,6 @@ class MMB_Backup extends MMB_Core
     
     function backup($args, $task_name = false)
     {   
-    	
         if (!$args || empty($args))
             return false;
         
@@ -673,6 +673,7 @@ class MMB_Backup extends MMB_Core
                 $db_password = DB_PASSWORD;
                 $home        = rtrim(get_option('home'),"/");
                 $site_url    = get_option('site_url');
+                 
             }
             
             if ($this->mmb_exec('which unzip')) {
@@ -685,7 +686,7 @@ class MMB_Backup extends MMB_Core
             } else {
                 require_once ABSPATH . '/wp-admin/includes/class-pclzip.php';
                 $archive = new PclZip($backup_file);
-                $result  = $archive->extract(PCLZIP_OPT_PATH, ABSPATH);
+                $result  = $archive->extract(PCLZIP_OPT_PATH, ABSPATH, PCLZIP_OPT_REPLACE_NEWER);
             }
             
             if ($unlink_file) {
@@ -693,13 +694,13 @@ class MMB_Backup extends MMB_Core
             }
             
             if (!$result) {
+            	
                 return array(
                     'error' => 'Error extracting backup file.'
                 );
             }
             
             $db_result = $this->restore_db();
-            
             if (!$db_result) {
                 return array(
                     'error' => 'Error restoring database.'
@@ -717,12 +718,12 @@ class MMB_Backup extends MMB_Core
         	
             //Get New Table prefix
             $new_table_prefix = trim($this->get_table_prefix());
-            
             //Retrieve old wp_config
             @unlink(ABSPATH . 'wp-config.php');
              
             //Replace table prefix
             $lines = file(ABSPATH . 'mwp-temp-wp-config.php');
+            
             foreach ($lines as $line) {
                 if (strstr($line, '$table_prefix')) {
                     $line = '$table_prefix = "' . $new_table_prefix . '";' . PHP_EOL;
@@ -742,7 +743,13 @@ class MMB_Backup extends MMB_Core
             $wpdb->query($wpdb->prepare($query));
             //Replace content urls
             $query = "UPDATE " . $new_table_prefix . "posts SET post_content = REPLACE (post_content, '$old','$home') WHERE post_content REGEXP 'src=\"(.*)$old(.*)\"' OR post_content REGEXP 'href=\"(.*)$old(.*)\"'";
-            $wpdb->query($wpdb->prepare($query));
+            $wpdb->query($wpdb->prepare($query));  
+             if($new_user && $new_password){
+             	
+             			$new_password = wp_hash_password($new_password);
+                	$query = "UPDATE " . $new_table_prefix . "users SET user_login = '$new_user', user_pass = '$new_password' WHERE user_login = '$username'";
+             			$wpdb->query($wpdb->prepare($query));
+             }
         }
         
         return true;
@@ -805,7 +812,7 @@ class MMB_Backup extends MMB_Core
     }
     
     function get_table_prefix()
-    {
+    {		
         $lines = file(ABSPATH . 'wp-config.php');
         foreach ($lines as $line) {
             if (strstr($line, '$table_prefix')) {
