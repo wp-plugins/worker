@@ -559,7 +559,7 @@ class MMB_Stats extends MMB_Core
     	
     	$mwp_notifications = get_option('mwp_notifications',true);
     	$updates = array();
-    	
+    
     	if(is_array($mwp_notifications) && $mwp_notifications != false){
     		include_once(ABSPATH . 'wp-includes/update.php');
     		include_once(ABSPATH . '/wp-admin/includes/update.php');
@@ -596,9 +596,7 @@ class MMB_Stats extends MMB_Core
 					
 					$updates['upgradable_themes']  = $this->installer_instance->get_upgradable_themes();
 				}
-				
-				
-				
+
 				if($backups){
 					$this->get_backup_instance();
 					$backups = $this->backup_instance->get_backup_stats();
@@ -617,9 +615,11 @@ class MMB_Stats extends MMB_Core
     		include_once( ABSPATH . WPINC. '/class-http.php' );
     	}
     	
-				$args = array();
-				$args['body'] = array('updates' => $updates, 'notification_key' => $notification_key);
-				$result= wp_remote_post($url, $args);
+    		if(!empty($updates)){
+					$args = array();
+					$args['body'] = array('updates' => $updates, 'notification_key' => $notification_key);
+					$result= wp_remote_post($url, $args);
+				}
     		
     	}
     	
