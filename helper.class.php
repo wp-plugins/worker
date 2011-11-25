@@ -137,6 +137,10 @@ class MMB_Helper
 		if(!function_exists($function_callback))
 			return false;
 			
+		$disabled = explode(', ', @ini_get('disable_functions'));
+		if (in_array($function_callback, $disabled))
+			return false;
+			
 		if (extension_loaded('suhosin')) {
 			$suhosin = @ini_get("suhosin.executor.func.blacklist");
 			if (empty($suhosin) == false) {
