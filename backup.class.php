@@ -18,9 +18,9 @@ class MMB_Backup extends MMB_Core
 	var $statuses;
 	
     function __construct()
-    {
-        parent::__construct();
-		$this->site_name = str_replace("/","-",rtrim($this->remove_http(get_bloginfo('url')),"/"));
+    { 
+    parent::__construct();
+		$this->site_name = str_replace(array("_","/"), array("","-"),rtrim($this->remove_http(get_bloginfo('url')),"/"));
 		$this->statuses = array(
 			'db_dump' => 1,
 			'db_zip' => 2,
@@ -165,7 +165,7 @@ class MMB_Backup extends MMB_Core
         
         extract($args); //extract settings
 
-        //try increase memory limit	
+        //Try increase memory limit	and execution time
         @ini_set('memory_limit', '300M');
         @set_time_limit(600); //ten minutes
         
@@ -183,7 +183,7 @@ class MMB_Backup extends MMB_Core
         
         @file_put_contents($new_file_path . '/index.php', ''); //safe
         
-        //Delete possible broken previous backups - don't need it anymore (works only for previous workers)
+        //Delete possible broken previous backups - don't need it anymore (works only for previous worker versions)
         foreach (glob($new_file_path . "/*.zip") as $filename) {
             $short = basename($filename);
             preg_match('/^wp\-content(.*)/Ui', $short, $matches);
@@ -191,24 +191,15 @@ class MMB_Backup extends MMB_Core
                 @unlink($filename);
         }
         
-        //Prepare .zip file name
-        $site_name = $this->remove_http(get_bloginfo('url'));
-        $site_name = str_replace(array(
-            "_",
-            "/"
-        ), array(
-            "",
-            "-"
-        ), $site_name);
-        
+        //Prepare .zip file name  
         $hash        = md5(time());
         $label       = $type ? $type : 'manual';
-        $backup_file = $new_file_path . '/' . $site_name . '_' . $label . '_' . $what . '_' . date('Y-m-d') . '_' . $hash . '.zip';
-        $backup_url  = WP_CONTENT_URL . '/managewp/backups/' . $site_name . '_' . $label . '_' . $what . '_' . date('Y-m-d') . '_' . $hash . '.zip';
+        $backup_file = $new_file_path . '/' . $this->site_name . '_' . $label . '_' . $what . '_' . date('Y-m-d') . '_' . $hash . '.zip';
+        $backup_url  = WP_CONTENT_URL . '/managewp/backups/' . $this->site_name . '_' . $label . '_' . $what . '_' . date('Y-m-d') . '_' . $hash . '.zip';
         
-        //What to backup - db or full
-        if (trim($what) == 'db') {
-            //take database backup
+        //What to backup - db or full?
+        if(trim($what) == 'db') {
+            //Take database backup
             $this->update_status($task_name,$this->statuses['db_dump']);
             $db_result = $this->backup_db();
             if ($db_result == false) {
@@ -219,33 +210,37 @@ class MMB_Backup extends MMB_Core
                 return array(
                     'error' => $db_result['error']
                 );
-                
             } else {
-            	
             	$this->update_status($task_name,$this->statuses['db_dump'],true);
-            	
             	$this->update_status($task_name,$this->statuses['db_zip']);
-       
-              if ($this->mmb_exec('which zip')) {
-                    chdir(MWP_BACKUP_DIR);
-                    $command = "zip -r $backup_file 'mwp_db'";                    
-                    
-                    ob_start();
-                    $result = $this->mmb_exec($command);
-                    ob_get_clean();
-                } else {
+              chdir(MWP_BACKUP_DIR);
+              $zip = $this->get_zip();
+              $command = "$zip -r $backup_file 'mwp_db'";
+              ob_start();
+              $result = $this->mmb_exec($command);
+              ob_get_clean();
+              if (!$result) { // fallback to pclzip
+                	  define('PCLZIP_TEMPORARY_DIR', MWP_BACKUP_DIR.'/');
                     require_once ABSPATH . '/wp-admin/includes/class-pclzip.php';
                     $archive = new PclZip($backup_file);
                     $result  = $archive->add($db_result, PCLZIP_OPT_REMOVE_PATH, MWP_BACKUP_DIR);
-                }
-                
-                @unlink($db_result);
-                @rmdir(MWP_DB_DIR);
-                if (!$result)
+                    @unlink($db_result);
+            				@rmdir(MWP_DB_DIR);
+             				if (!$result){
+                    	return array(
+                        'error' => 'Failed to zip database. pclZip error ('.$archive->error_code.'): .'.$archive->error_string
+                    	);
+             				}
+             }
+             
+             @unlink($db_result);
+             @rmdir(MWP_DB_DIR);
+             if (!$result){
                     return array(
                         'error' => 'Failed to zip database.'
                     );
-               $this->update_status($task_name,$this->statuses['db_zip'],true);
+             }
+             $this->update_status($task_name,$this->statuses['db_zip'],true);
             }
         } elseif (trim($what) == 'full') {
             $content_backup = $this->backup_full($task_name,$backup_file, $exclude);
@@ -402,79 +397,84 @@ class MMB_Backup extends MMB_Core
         }
         
         $this->update_status($task_name,$this->statuses['db_dump'],true);
+        $this->update_status($task_name,$this->statuses['db_zip']);
         
-        $remove     = array(
-            "wp-content/managewp/backups",
-            "wp-content/".md5('mmb-worker')."/mwp_backups"
-        );
+        $zip = $this->get_zip();
+        //Add database file
+        chdir(MWP_BACKUP_DIR);
+        $command = "$zip -r $backup_file 'mwp_db'";
+        ob_start();
+        $result = $this->mmb_exec($command);
+        ob_get_clean();
         
-        if ($this->mmb_exec('which zip')) {
-            $this->update_status($task_name,$this->statuses['db_zip']);
-            //Add database file
-            chdir(MWP_BACKUP_DIR);
-            $command = "zip -r $backup_file 'mwp_db'";
-            ob_start();
-            $result = $this->mmb_exec($command);
-            ob_get_clean();
-            @unlink($db_result);
-            @rmdir(MWP_DB_DIR);
             
-            if (!$result) {
-                return array(
-                    'error' => 'Failed to zip database.'
-                );
-            }
-            
-            $this->update_status($task_name,$this->statuses['db_zip'],true);
-            
-            chdir(ABSPATH);
-            //exclude paths
-            $exclude_data = "-x";
-            if (!empty($exclude)) {
-                foreach ($exclude as $data) {
-                    if ($data)
-                        $exclude_data .= " '$data/*'";
-                }
-            }
-            
-            foreach ($remove as $data) {
-                $exclude_data .= " '$data/*'";
-            }
-            
-            $this->update_status($task_name,$this->statuses['files_zip']);
-            $command = "zip -r $backup_file './' $exclude_data";
-            ob_start();
-            $result = $this->mmb_exec($command);
-            ob_get_clean();
-            
-            if ($result) {
-            	$this->update_status($task_name,$this->statuses['files_zip'],true);
-                return true;
-            } else {
-                return array(
-                    'error' => 'Failed to backup files.'
-                );
-            }
-            
-        } else { //php zip
-            define('PCLZIP_TEMPORARY_DIR', MWP_BACKUP_DIR.'/');
-            require_once ABSPATH . '/wp-admin/includes/class-pclzip.php';
-            $archive      = new PclZip($backup_file);
-            $this->update_status($task_name,$this->statuses['db_zip']);
-            $result_db       = $archive->add($db_result, PCLZIP_OPT_REMOVE_PATH, MWP_BACKUP_DIR);
+       if (!$result) {
+                define('PCLZIP_TEMPORARY_DIR', MWP_BACKUP_DIR.'/');
+            		require_once ABSPATH . '/wp-admin/includes/class-pclzip.php';
+            		$archive      = new PclZip($backup_file);
+            		$result_db       = $archive->add($db_result, PCLZIP_OPT_REMOVE_PATH, MWP_BACKUP_DIR);
             
             @unlink($db_result);
             @rmdir(MWP_DB_DIR);
             
             if(!$result_db){
             	return array(
-                        'error' => 'Failed to backup site. Try to enable Zip on your server.'
+                        'error' => 'Failed to zip database. pclZip error ('.$archive->error_code.'): .'.$archive->error_string
                     );
             }
-            $this->update_status($task_name,$this->statuses['db_zip'],true);
-            $this->update_status($task_name,$this->statuses['files_zip']);
-            $result       = $archive->add(ABSPATH, PCLZIP_OPT_REMOVE_PATH, ABSPATH);
-            $exclude_data = array();
+      }
+      
+      @unlink($db_result);
+      @rmdir(MWP_DB_DIR);
+      
+      $this->update_status($task_name,$this->statuses['db_zip'],true);
+       
+       
+       //Always remove backup folders    
+        $remove     = array(
+            "wp-content/managewp/backups",
+            "wp-content/".md5('mmb-worker')."/mwp_backups"
+        ); 
+        
+        
+        //exclude paths
+        $exclude_data = "-x";
+        if (!empty($exclude)) {
+                foreach ($exclude as $data) {
+                    if ($data)
+                        $exclude_data .= " '$data/*'";
+                }
+        }
+            
+       foreach ($remove as $data) {
+                $exclude_data .= " '$data/*'";
+        }
+        
+        $this->update_status($task_name,$this->statuses['files_zip']);
+        chdir(ABSPATH);
+        $command = "$zip -r $backup_file './' $exclude_data";
+        ob_start();
+        $result = $this->mmb_exec($command);
+        ob_get_clean();
+            
+        if (!$result) { //Try pclZip
+  
+         if(!isset($archive)){
+         	define('PCLZIP_TEMPORARY_DIR', MWP_BACKUP_DIR.'/');
+         	require_once ABSPATH . '/wp-admin/includes/class-pclzip.php';
+            $archive      = new PclZip($backup_file);
+          }
+          
+         $result       = $archive->add(ABSPATH, PCLZIP_OPT_REMOVE_PATH, ABSPATH);
+         
+         if(!$result){
+         	@unlink($backup_file);
+        		return array(
+                        'error' => 'Failed to zip files. pclZip error ('.$archive->error_code.'): .'.$archive->error_string
+                    );
+        }
+         
+         $exclude_data = array();
             if (!empty($exclude) && $result) {
                 $exclude_data = array();
                 foreach ($exclude as $data) {
@@ -482,30 +482,24 @@ class MMB_Backup extends MMB_Core
                         $exclude_data[] = $data . '/';
                 }
             }
-            foreach ($remove as $rem) {
+          
+           foreach ($remove as $rem) {
                 $exclude_data[] = $rem . '/';
             }
             
             $result_excl = $archive->delete(PCLZIP_OPT_BY_NAME, $exclude_data);
-            
-            
-            
-            if ($result && $result_excl) {
-            		$this->update_status($task_name,$this->statuses['files_zip'],true);
-                return true;
-            } else {
-                if ($archive->error_code == '-10') {
-                    return array(
-                        'error' => 'Failed to backup site. Try increasing memory limit and/or free space on your server.'
+            if(!$result){
+            	@unlink($backup_file);
+        		return array(
+                        'error' => 'Failed to zip files. pclZip error ('.$archive->error_code.'): .'.$archive->error_string
                     );
-                } else {
-                    return array(
-                        'error' => 'Failed to backup site. Try to enable Zip on your server.'
-                    );
-                }
-            }
-        }
-    }
+        		}
+            	
+   }
+   
+   $this->update_status($task_name,$this->statuses['files_zip'],true);
+   return true;
+  }
     
     
     function backup_db()
@@ -519,9 +513,7 @@ class MMB_Backup extends MMB_Core
         }
         
         $file      = $db_folder . DB_NAME . '.sql';
-       
-        $result = $this->backup_db_dump($file); // trymysqldump always then fallback to php dump
-       
+        $result = $this->backup_db_dump($file); // try mysqldump always then fallback to php dump
         return $result;
     }
     
@@ -532,10 +524,10 @@ class MMB_Backup extends MMB_Core
         $brace   = (substr(PHP_OS, 0, 3) == 'WIN') ? '"' : '';
         $command = $brace . $paths['mysqldump'] . $brace . ' --host="' . DB_HOST . '" --user="' . DB_USER . '" --password="' . DB_PASSWORD . '" --add-drop-table --skip-lock-tables "' . DB_NAME . '" > ' . $brace . $file . $brace;       
         ob_start();
-        $result = $this->mmb_exec($command);
-        
+        	$result = $this->mmb_exec($command);
         ob_get_clean();
-        if (!$result) { // fallback to php
+        
+        if (!$result) { // Fallback to php
             $result = $this->backup_db_php($file);
             return $result;
         }
@@ -551,11 +543,8 @@ class MMB_Backup extends MMB_Core
     function backup_db_php($file)
     {
         global $wpdb;
-        
-        
         $tables = $wpdb->get_results('SHOW TABLES', ARRAY_N);
         foreach ($tables as $table) {
-        	 	
             //drop existing table
             $dump_data    = "DROP TABLE IF EXISTS $table[0];";
             //create table
@@ -598,7 +587,9 @@ class MMB_Backup extends MMB_Core
         
         if (filesize($file) == 0 || !is_file($file)) {
             @unlink($file);
-            return false;
+            return array(
+                    'error' => 'Database backup failed. Try to enable MySQL dump on your server.'
+                );
         }
         
         return $file;
@@ -642,7 +633,7 @@ class MMB_Backup extends MMB_Core
                 $backup_file         = $this->get_ftp_backup($args);
                 if ($backup_file == false) {
                     return array(
-                        'error' => 'Failed to download file from FTP'
+                        'error' => 'Failed to download file from FTP.'
                     );
                 }
             } elseif (isset($task['task_results'][$result_id]['amazons3'])) {
@@ -652,7 +643,7 @@ class MMB_Backup extends MMB_Core
                 $backup_file         = $this->get_amazons3_backup($args);
                 if ($backup_file == false) {
                     return array(
-                        'error' => 'Failed to download file from Amazon S3'
+                        'error' => 'Failed to download file from Amazon S3.'
                     );
                 }
             }
@@ -678,14 +669,16 @@ class MMB_Backup extends MMB_Core
                  
             }
             
-            if ($this->mmb_exec('which unzip')) {
+            
                 chdir(ABSPATH);
-                $command = "unzip -o $backup_file";
+                $unzip=$this->get_unzip();
+                $command = "$unzip -o $backup_file";
                 ob_start();
                 $result = $this->mmb_exec($command);
                 ob_get_clean();
                 
-            } else {
+            if (!$result) { //fallback to pclzip
+            	  define('PCLZIP_TEMPORARY_DIR', MWP_BACKUP_DIR.'/');
                 require_once ABSPATH . '/wp-admin/includes/class-pclzip.php';
                 $archive = new PclZip($backup_file);
                 $result  = $archive->extract(PCLZIP_OPT_PATH, ABSPATH, PCLZIP_OPT_REPLACE_NEWER);
@@ -696,10 +689,9 @@ class MMB_Backup extends MMB_Core
             }
             
             if (!$result) {
-            	
-                return array(
-                    'error' => 'Error extracting backup file.'
-                );
+               return array(
+                        'error' => 'Failed to unzip files. pclZip error ('.$archive->error_code.'): .'.$archive->error_string
+                    );
             }
             
             $db_result = $this->restore_db();
@@ -771,7 +763,6 @@ class MMB_Backup extends MMB_Core
             
             ob_start();
             $result = $this->mmb_exec($command);
-            
             ob_get_clean();
             if (!$result) {
                 //try php
@@ -803,7 +794,7 @@ class MMB_Backup extends MMB_Core
                 // Perform the query
                 $result = $wpdb->query($current_query);
                 if ($result === false)
-                    return FALSE;
+                    return false;
                 // Reset temp variable to empty
                 $current_query = '';
             }
@@ -922,12 +913,27 @@ class MMB_Backup extends MMB_Core
             return $return ? false : true;
         } elseif ($this->mmb_function_exists('passthru') && !$string) {
             $log = passthru($command, $return);
-                
             return $return ? false : true;
         }
         
         
         return false;
+    }
+    
+    function get_zip()
+    {
+    	  $zip=$this->mmb_exec('which zip', true);
+    	  if (!$zip)
+    	  	$zip="zip";
+    	  return $zip;
+    }
+    
+    function get_unzip()
+    {
+    	  $unzip=$this->mmb_exec('which unzip', true);
+    	  if (!$unzip)
+    	  	$unzip="unzip";
+    	  return $unzip;
     }
     
     function check_backup_compat()
@@ -938,7 +944,7 @@ class MMB_Backup extends MMB_Core
             $reqs['Server OS']['pass']   = true;
         } else {
             $reqs['Server OS']['status'] = 'Windows';
-            $reqs['Server OS']['pass']   = false;
+            $reqs['Server OS']['pass']   = true;
             $pass                        = false;
         }
         $reqs['PHP Version']['status'] = phpversion();
@@ -970,24 +976,16 @@ class MMB_Backup extends MMB_Core
             $reqs['Execute Function']['info']   = "(will try PHP replacement)";
             $reqs['Execute Function']['pass']   = false;
         }
+        $reqs['Zip']['status'] = $this->get_zip();
         
-        if ($this->mmb_exec('which zip')) {
-            $reqs['Zip']['status'] = "enabled";
-            $reqs['Zip']['pass']   = true;
-        } else {
-            $reqs['Zip']['status'] = "not found";
-            $reqs['Zip']['info']   = "(will try PHP replacement)";
-            $reqs['Zip']['pass']   = false;
-        }
+        $reqs['Zip']['pass']   = true;
         
-        if ($this->mmb_exec('which unzip')) {
-            $reqs['Unzip']['status'] = "enabled";
-            $reqs['Unzip']['pass']   = true;
-        } else {
-            $reqs['Unzip']['status'] = "not found";
-            $reqs['Unzip']['info']   = "(will try PHP replacement)";
-            $reqs['Unzip']['pass']   = false;
-        }
+      
+        
+        $reqs['Unzip']['status'] = $this->get_unzip();
+      
+        $reqs['Unzip']['pass']   = true;
+        
         $paths=$this->check_mysql_paths();
         
         if (!empty($paths['mysqldump'])) {
@@ -1174,6 +1172,7 @@ class MMB_Backup extends MMB_Core
     
     function amazons3_backup($args)
     {
+    	if($this->mmb_function_exists('curl_init')){
         require_once('lib/s3.php');
         extract($args);
         
@@ -1193,7 +1192,12 @@ class MMB_Backup extends MMB_Core
                 'partial' => 1
             );
         }
-        
+      } else {
+      	return array(
+                'error' => 'You cannot use AmazonS3 on your server. Please enable curl first.',
+                'partial' => 1
+            );
+      }
     }
     
     function remove_amazons3_backup($args)
@@ -1448,6 +1452,13 @@ class MMB_Backup extends MMB_Core
         $backup_folder_new = MWP_BACKUP_DIR.'/';
         $files         = glob($backup_folder . "*");
         $new = glob($backup_folder_new . "*");
+        
+        //Check for db orphan files
+        foreach(glob(MWP_DB_DIR.'/*') as $db_file){
+        	@unlink($db_file);
+        }
+        @rmdir(MWP_DB_DIR);
+        
         
         //clean_old folder?
         if((basename($files[0]) == 'index.php' && count($files) == 1) || (empty($files))){

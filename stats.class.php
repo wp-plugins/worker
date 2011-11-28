@@ -265,7 +265,7 @@ class MMB_Stats extends MMB_Core
 		include_once(ABSPATH . 'wp-includes/update.php');
 		include_once(ABSPATH . '/wp-admin/includes/update.php');
 		
-		$stats = $this->mmb_parse_action_params( 'pre_init_stats', $params, &$this );
+		$stats = $this->mmb_parse_action_params( 'pre_init_stats', $params, $this );
 		$num = extract($params);
 		
 		if ($refresh == 'transient') {
@@ -305,7 +305,7 @@ class MMB_Stats extends MMB_Core
 		include_once(ABSPATH . 'wp-includes/update.php');
 		include_once(ABSPATH . '/wp-admin/includes/update.php');
 		
-		$stats = $this->mmb_parse_action_params( 'get', $params, &$this );
+		$stats = $this->mmb_parse_action_params( 'get', $params, $this );
 		$update_check = array();
 		$num = extract($params);
 		if ($refresh == 'transient') {
