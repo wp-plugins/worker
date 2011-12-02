@@ -597,7 +597,8 @@ class MMB_Backup extends MMB_Core
     }
     
     function restore($args)
-    {
+    {		
+    	
         global $wpdb;
         if (empty($args)) {
             return false;
@@ -666,6 +667,14 @@ class MMB_Backup extends MMB_Core
                 $db_password = DB_PASSWORD;
                 $home        = rtrim(get_option('home'),"/");
                 $site_url    = get_option('site_url');
+                
+                if(trim($clone_from_url)){
+                	$clone_options = array();
+                	$clone_options['_worker_nossl_key'] = get_option('_worker_nossl_key');
+            			$clone_options['_worker_public_key'] = get_option('_worker_public_key');
+            			$clone_options['_action_message_id'] = get_option('_action_message_id');
+             		}
+                
                  
             }
             
@@ -695,6 +704,7 @@ class MMB_Backup extends MMB_Core
             }
             
             $db_result = $this->restore_db();
+            
             if (!$db_result) {
                 return array(
                     'error' => 'Error restoring database.'
@@ -738,12 +748,27 @@ class MMB_Backup extends MMB_Core
             //Replace content urls
             $query = "UPDATE " . $new_table_prefix . "posts SET post_content = REPLACE (post_content, '$old','$home') WHERE post_content REGEXP 'src=\"(.*)$old(.*)\"' OR post_content REGEXP 'href=\"(.*)$old(.*)\"'";
             $wpdb->query($wpdb->prepare($query));  
-             if($new_user && $new_password){
-             	
+            if($new_user && $new_password){
              			$new_password = wp_hash_password($new_password);
-                	$query = "UPDATE " . $new_table_prefix . "users SET user_login = '$new_user', user_pass = '$new_password' WHERE user_login = '$username'";
+                	$query = "UPDATE " . $new_table_prefix . "users SET user_login = '$new_user', user_pass = '$new_password' WHERE user_login = '$old_user'";
              			$wpdb->query($wpdb->prepare($query));
-             }
+            }
+            
+            if(is_array($clone_options)){
+            	
+            	foreach($clone_options as $key => $option){
+            		if(!empty($key)){
+            			$query = "UPDATE " . $new_table_prefix . "options  SET option_value = '$option' WHERE option_name = '$key'";
+            			
+            			$wpdb->query($wpdb->prepare($query));
+            		}
+            	}
+            }
+            			$clone_options['_worker_nossl_key'] = get_option('_worker_nossl_key');
+            			$clone_options['_worker_public_key'] = get_option('_worker_public_key');
+            			$clone_options['_action_message_id'] = get_option('_action_message_id');
+             
+             
         }
         
         return true;
@@ -776,7 +801,8 @@ class MMB_Backup extends MMB_Core
     }
     
     function restore_db_php($file_name)
-    {
+    {		
+    	
     		global $wpdb;
         $current_query = '';
         // Read in entire file
@@ -1012,11 +1038,16 @@ class MMB_Backup extends MMB_Core
             $headers     = 'From: ManageWP <no-reply@managewp.com>' . "\r\n";
             $subject     = "ManageWP - " . $task_name . " - ".$this->site_name;
             ob_start();
-            wp_mail($email, $subject, $subject, $headers, $attachments);
+            $result = wp_mail($email, $subject, $subject, $headers, $attachments);
             ob_end_clean();
             
         }
         
+        if(!$result){
+        	return array(
+                'error' => 'Email not sent. Maybe your backup is too big for email or email server is not available on your website.',
+            );
+        }
         return true;
         
     }
@@ -1180,7 +1211,7 @@ class MMB_Backup extends MMB_Core
 			$as3_directory .= '/'.$this->site_name;
 		
         
-        $s3         = new S3($as3_access_key, str_replace(' ', '+', $as3_secure_key));
+        $s3         = new S3(trim($as3_access_key), trim(str_replace(' ', '+', $as3_secure_key)));
         
         $s3->putBucket($as3_bucket, S3::ACL_PUBLIC_READ);
         
@@ -1346,9 +1377,12 @@ class MMB_Backup extends MMB_Core
     
     function remove_old_backups($task_name)
     {
-    	
+    		
+    		//Check for previous failed backups first
+    		$this->cleanup();
+    		
+    		//Remove by limit
         $backups = $this->get_backup_settings();
-        
         if($task_name == 'Backup Now'){
         	$num = 0;	
         } else {
@@ -1453,11 +1487,15 @@ class MMB_Backup extends MMB_Core
         $files         = glob($backup_folder . "*");
         $new = glob($backup_folder_new . "*");
         
-        //Check for db orphan files
-        foreach(glob(MWP_DB_DIR.'/*') as $db_file){
-        	@unlink($db_file);
+        //Failed db files first
+        $db_folder = MWP_DB_DIR.'/';
+        $db_files     = glob($db_folder . "*");
+        if (is_array($db_files) && !empty($db_files)) {
+            foreach ($db_files as $file) {
+                @unlink($file);
+            }
+            @rmdir(MWP_DB_DIR);
         }
-        @rmdir(MWP_DB_DIR);
         
         
         //clean_old folder?
@@ -1499,14 +1537,7 @@ class MMB_Backup extends MMB_Core
             }
         }
         
-        //Failed db files?
-        $db_folder = MWP_DB_DIR.'/';
-        $files     = glob($db_folder . "*.*");
-        if (is_array($files) && count($files)) {
-            foreach ($files as $file) {
-                @unlink($file);
-            }
-        }
+        
         
         return $deleted;
     }

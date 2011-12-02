@@ -60,22 +60,46 @@ class MMB_Stats extends MMB_Core
 	function get_comments( $stats, $options = array() ){
 		
 		$nposts = isset($options['numberposts']) ? (int) $options['numberposts'] : 20;
+		$trimlen = isset($options['trimcontent']) ? (int) $options['trimcontent'] : 200;
 		
 		if( $nposts ){			
-			$pending_comments = get_comments('status=hold&number=' . $nposts);
-			foreach ($pending_comments as &$comment) {
-				$commented_post      = get_post($comment->comment_post_ID);
-				$comment->post_title = $commented_post->post_title;
+			$comments = get_comments('status=hold&number=' . $nposts);
+			if(!empty($comments)){
+				foreach ($comments as &$comment) {
+					$commented_post = get_post($comment->comment_post_ID);
+					$comment->post_title = $commented_post->post_title;
+					$comment->comment_content = $this->trim_content($comment->comment_content, $trimlen);
+					unset($comment->comment_author_url);
+					unset($comment->comment_author_email);
+					unset($comment->comment_author_IP);
+					unset($comment->comment_date_gmt);
+					unset($comment->comment_karma);
+					unset($comment->comment_agent);
+					unset($comment->comment_type);
+					unset($comment->comment_parent);
+					unset($comment->user_id);
+				}
+				$stats['comments']['pending'] = $comments;
 			}
-			$stats['comments']['pending'] = $pending_comments;
 			
-			
-			$approved_comments = get_comments('status=approve&number=' . $nposts);
-			foreach ($approved_comments as &$comment) {
-				$commented_post      = get_post($comment->comment_post_ID);
-				$comment->post_title = $commented_post->post_title;
+			$comments = get_comments('status=approve&number=' . $nposts);
+			if(!empty($comments)){
+				foreach ($comments as &$comment) {
+					$commented_post = get_post($comment->comment_post_ID);
+					$comment->post_title = $commented_post->post_title;
+					$comment->comment_content = $this->trim_content($comment->comment_content, $trimlen);
+					unset($comment->comment_author_url);
+					unset($comment->comment_author_email);
+					unset($comment->comment_author_IP);
+					unset($comment->comment_date_gmt);
+					unset($comment->comment_karma);
+					unset($comment->comment_agent);
+					unset($comment->comment_type);
+					unset($comment->comment_parent);
+					unset($comment->user_id);
+				}
+				$stats['comments']['approved'] = $comments;
 			}
-			$stats['comments']['approved'] = $approved_comments;
 		}
 		return $stats;
 	}
@@ -85,35 +109,38 @@ class MMB_Stats extends MMB_Core
 		$nposts = isset($options['numberposts']) ? (int) $options['numberposts'] : 20;
 		
 		if( $nposts ){			
-			$all_posts = get_posts('post_status=publish&numberposts='.$nposts.'&orderby=modified&order=desc');
+			$posts = get_posts('post_status=publish&numberposts='.$nposts.'&orderby=post_date&order=desc');
 			$recent_posts = array();
-			
-			foreach ($all_posts as $id => $recent_post) {
-				$recent = new stdClass();
-				$recent->post_permalink = get_permalink($recent_post->ID);
-				$recent->ID = $recent_post->ID;
-				$recent->post_date = $recent_post->post_date;
-				$recent->post_title = $recent_post->post_title;
-				$recent->post_modified = $recent_post->post_modified;
-				$recent->comment_count = (int)$recent_post->comment_count;          
-				$recent_posts[] = $recent;
+			if(!empty($posts)){
+				foreach ($posts as $id => $recent_post) {
+					$recent = new stdClass();
+					$recent->post_permalink = get_permalink($recent_post->ID);
+					$recent->ID = $recent_post->ID;
+					$recent->post_date = $recent_post->post_date;
+					$recent->post_title = $recent_post->post_title;
+					$recent->comment_count = (int)$recent_post->comment_count;          
+					$recent_posts[] = $recent;
+				}
 			}
 			
-			$all_pages_published = get_pages('post_status=publish&numberposts='.$nposts.'&orderby=modified&order=desc');
-			$recent_pages_published           = array();
-			foreach ((array)$all_pages_published as $id => $recent_page_published) {
-				$recent = new stdClass();
-				$recent->post_permalink = get_permalink($recent_page_published->ID);
-				
-				$recent->ID = $recent_page_published->ID;
-				$recent->post_date = $recent_page_published->post_date;
-				$recent->post_title = $recent_page_published->post_title;
-				$recent->post_modified = $recent_page_published->post_modified;
-			 
-				$recent_posts[] = $recent;
+			$posts = get_pages('post_status=publish&numberposts='.$nposts.'&orderby=post_date&order=desc');
+			$recent_pages_published = array();
+			if(!empty($posts)){
+				foreach ((array)$posts as $id => $recent_page_published) {
+					$recent = new stdClass();
+					$recent->post_permalink = get_permalink($recent_page_published->ID);
+					
+					$recent->ID = $recent_page_published->ID;
+					$recent->post_date = $recent_page_published->post_date;
+					$recent->post_title = $recent_page_published->post_title;
+				 
+					$recent_posts[] = $recent;
+				}
 			}
-			usort($recent_posts, array($this, 'cmp_posts_worker'));
-			$stats['posts'] = array_slice($recent_posts, 0, $nposts);
+			if(!empty($recent_posts)){
+				usort($recent_posts, array($this, 'cmp_posts_worker'));
+				$stats['posts'] = array_slice($recent_posts, 0, $nposts);
+			}
 		}
 		return $stats;
 	}
@@ -123,33 +150,36 @@ class MMB_Stats extends MMB_Core
 		$nposts = isset($options['numberposts']) ? (int) $options['numberposts'] : 20;
 		
 		if( $nposts ){
-			$all_drafts = get_posts('post_status=draft&numberposts='.$nposts.'&orderby=modified&order=desc');
-			$recent_drafts           = array();
-			foreach ($all_drafts as $id => $recent_draft) {
-				$recent = new stdClass();
-				$recent->post_permalink = get_permalink($recent_draft->ID);
-				$recent->ID = $recent_draft->ID;
-				$recent->post_date = $recent_draft->post_date;
-				$recent->post_title = $recent_draft->post_title;
-				$recent->post_modified = $recent_draft->post_modified;
-			 
-				$recent_drafts[] = $recent;
-			} 
-			
-			$all_pages_drafts = get_pages('post_status=draft&numberposts='.$nposts.'&orderby=modified&order=desc');
-			$recent_pages_drafts           = array();
-			foreach ((array)$all_pages_drafts as $id => $recent_pages_draft) {
-				$recent = new stdClass();
-				$recent->post_permalink = get_permalink($recent_pages_draft->ID);
-				$recent->ID = $recent_pages_draft->ID;
-				$recent->post_date = $recent_pages_draft->post_date;
-				$recent->post_title = $recent_pages_draft->post_title;
-				$recent->post_modified = $recent_pages_draft->post_modified;
-			 
-				$recent_drafts[] = $recent;
+			$drafts = get_posts('post_status=draft&numberposts='.$nposts.'&orderby=post_date&order=desc');
+			$recent_drafts = array();
+			if(!empty($drafts)){
+				foreach ($drafts as $id => $recent_draft) {
+					$recent = new stdClass();
+					$recent->post_permalink = get_permalink($recent_draft->ID);
+					$recent->ID = $recent_draft->ID;
+					$recent->post_date = $recent_draft->post_date;
+					$recent->post_title = $recent_draft->post_title;
+				 
+					$recent_drafts[] = $recent;
+				} 
 			}
-			usort($recent_drafts, array($this, 'cmp_posts_worker'));
-			$stats['drafts'] = array_slice($recent_drafts, 0, $nposts);
+			$drafts = get_pages('post_status=draft&numberposts='.$nposts.'&orderby=post_date&order=desc');
+			$recent_pages_drafts           = array();
+			if(!empty($drafts)){
+				foreach ((array)$drafts as $id => $recent_pages_draft) {
+					$recent = new stdClass();
+					$recent->post_permalink = get_permalink($recent_pages_draft->ID);
+					$recent->ID = $recent_pages_draft->ID;
+					$recent->post_date = $recent_pages_draft->post_date;
+					$recent->post_title = $recent_pages_draft->post_title;
+				 
+					$recent_drafts[] = $recent;
+				}
+			}
+			if(!empty($recent_drafts)){
+				usort($recent_drafts, array($this, 'cmp_posts_worker'));
+				$stats['drafts'] = array_slice($recent_drafts, 0, $nposts);
+			}
 		}
 		return $stats;
 	}
@@ -159,59 +189,84 @@ class MMB_Stats extends MMB_Core
 		$nposts = isset($options['numberposts']) ? (int) $options['numberposts'] : 20;
 		
 		if( $nposts ){
-			$all_scheduled = get_posts('post_status=future&numberposts='.$nposts.'&orderby=post_date&order=desc');
-			$scheduled_posts           = array();
-			foreach ($all_scheduled as $id => $scheduled) {
-				$recent = new stdClass();
-				$recent->post_permalink = get_permalink($scheduled->ID);
-				$recent->ID = $scheduled->ID;
-				$recent->post_date = $scheduled->post_date;
-				$recent->post_title = $scheduled->post_title;
-				$recent->post_modified = $scheduled->post_modified;
-				$scheduled_posts[] = $recent;
+			$scheduled = get_posts('post_status=future&numberposts='.$nposts.'&orderby=post_date&order=desc');
+			$scheduled_posts = array();
+			if(!empty($scheduled)){
+				foreach ($scheduled as $id => $scheduled) {
+					$recent = new stdClass();
+					$recent->post_permalink = get_permalink($scheduled->ID);
+					$recent->ID = $scheduled->ID;
+					$recent->post_date = $scheduled->post_date;
+					$recent->post_title = $scheduled->post_title;
+					$scheduled_posts[] = $recent;
+				}
 			}
-				
-			$pages_scheduled = get_pages('post_status=future&numberposts='.$nposts.'&orderby=modified&order=desc');
-			$recent_pages_drafts           = array();
-			foreach ((array)$pages_scheduled as $id => $scheduled) {
-				$recent = new stdClass();
-				$recent->post_permalink = get_permalink($scheduled->ID);
-				$recent->ID = $scheduled->ID;
-				$recent->post_date = $scheduled->post_date;
-				$recent->post_title = $scheduled->post_title;
-				$recent->post_modified = $scheduled->post_modified;
-			 
-				$scheduled_posts[] = $recent;
+			$scheduled = get_pages('post_status=future&numberposts='.$nposts.'&orderby=post_date&order=desc');
+			$recent_pages_drafts = array();
+			if(!empty($scheduled)){
+				foreach ((array)$scheduled as $id => $scheduled) {
+					$recent = new stdClass();
+					$recent->post_permalink = get_permalink($scheduled->ID);
+					$recent->ID = $scheduled->ID;
+					$recent->post_date = $scheduled->post_date;
+					$recent->post_title = $scheduled->post_title;
+				 
+					$scheduled_posts[] = $recent;
+				}
 			}
-			usort($scheduled_posts, array($this, 'cmp_posts_worker'));
-			$stats['scheduled'] = array_slice($scheduled_posts, 0, $nposts);
+			if(!empty($scheduled_posts)){
+				usort($scheduled_posts, array($this, 'cmp_posts_worker'));
+				$stats['scheduled'] = array_slice($scheduled_posts, 0, $nposts);
+			}
 		}
 		return $stats;
 	}
 		
 	function get_backups( $stats, $options = array() ){
 		
-				$stats['mwp_backups'] = $this->get_backup_instance()->get_backup_stats();
+		$stats['mwp_backups'] = $this->get_backup_instance()->get_backup_stats();
         $stats['mwp_next_backups'] = $this->get_backup_instance()->get_next_schedules();
-        $stats['mwp_backup_req'] = $this->get_backup_instance()->check_backup_compat();
+        
+		return $stats;
+	}
+	
+	function get_backup_req( $stats = array(), $options = array() ){
+		
+		$stats['mwp_backups'] = $this->get_backup_instance()->get_backup_stats();
+        $stats['mwp_next_backups'] = $this->get_backup_instance()->get_next_schedules();
+		$stats['mwp_backup_req'] = $this->get_backup_instance()->check_backup_compat();
 		
 		return $stats;
 	}
 	
 	function get_updates( $stats, $options = array() ){
 		
+		$upgrades = false;
+		
 		if(isset($options['premium']) && $options['premium']){
 			$premium_updates = array();
-			$stats['premium_updates'] = apply_filters('mwp_premium_update_notification', $premium_updates);
+			$upgrades = apply_filters('mwp_premium_update_notification', $premium_updates);
+			if(!empty($upgrades)){
+				$stats['premium_updates'] = $upgrades;
+				$upgrades = false;
+			}
 		}
 		if(isset($options['themes']) && $options['themes']){
 			$this->get_installer_instance();
-			$stats['upgradable_themes']  = $this->installer_instance->get_upgradable_themes();
+			$upgrades = $this->installer_instance->get_upgradable_themes();
+			if(!empty($upgrades)){
+				$stats['upgradable_themes'] = $upgrades;
+				$upgrades = false;
+			}
 		}
 		
 		if(isset($options['plugins']) && $options['plugins']){
 			$this->get_installer_instance();
-			$stats['upgradable_plugins'] = $this->installer_instance->get_upgradable_plugins();
+			$upgrades = $this->installer_instance->get_upgradable_plugins();
+			if(!empty($upgrades)){
+				$stats['upgradable_plugins'] = $upgrades;
+				$upgrades = false;
+			}
 		}
 		
 		return $stats;
@@ -254,7 +309,9 @@ class MMB_Stats extends MMB_Core
 				}
 			}
 		}
-		$stats['errors'] = $errors;
+		if(!empty($errors))
+			$stats['errors'] = $errors;
+		
 		return $stats;
 	}
 	
@@ -271,7 +328,7 @@ class MMB_Stats extends MMB_Core
 		if ($refresh == 'transient') {
 			$current = $this->mmb_get_transient('update_core');
 			if(isset($current->last_checked)){
-				if(time() - $current->last_checked > 1800 ) {
+				if(time() - $current->last_checked > 14400 ) {
 					@wp_version_check();
 					@wp_update_plugins();
 					@wp_update_themes();
@@ -629,7 +686,17 @@ class MMB_Stats extends MMB_Core
 	
 	function cmp_posts_worker($a, $b)
 	{
-		return ($a->post_modified < $b->post_modified);
+		return ($a->post_date < $b->post_date);
+	}
+	
+	function trim_content($content = '', $length = 200){
+		
+		if( function_exists('mb_strlen') && function_exists('mb_substr') )
+			$content = (mb_strlen($content) > ($length + 3)) ? mb_substr($content, 0, $length) . '...' : $content;
+		else 
+			$content = (strlen($content) > ($length + 3)) ? substr($content, 0, $length) . '...' : $content;
+		
+		return $content;
 	}
 
 }
