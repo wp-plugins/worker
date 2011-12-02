@@ -22,9 +22,10 @@ Author URI: http://www.prelovac.com
 if(!defined('MMB_WORKER_VERSION'))
 	define('MMB_WORKER_VERSION', '3.9.11');
 
-	if ( function_exists('get_site_option') && !defined('MMB_XFRAME_COOKIE'))
-	define('MMB_XFRAME_COOKIE', $xframe = 'wordpress_'.md5(get_site_option( 'siteurl' )).'_xframe');
-
+if ( !defined('MMB_XFRAME_COOKIE')){
+	$siteurl = function_exists('get_site_option') ? get_site_option( 'siteurl' ) : get_option('siteurl');
+	define('MMB_XFRAME_COOKIE', $xframe = 'wordpress_'.md5($siteurl).'_xframe');
+}
 global $wpdb, $mmb_plugin_dir, $mmb_plugin_url, $wp_version, $mmb_filters, $_mmb_item_filter;
 
 if (version_compare(PHP_VERSION, '5.0.0', '<')) // min version 5 supported
@@ -80,7 +81,7 @@ if( !function_exists ( 'mmb_parse_request' )) {
 			if ($auth === true) {
 				
 				if(isset($params['username']) && !is_user_logged_in()){
-					$user = get_user_by('login', $params['username']);
+					$user = function_exists('get_user_by') ? get_user_by('login', $params['username']) : get_userdatabylogin( $params['username'] );
 					wp_set_current_user($user->ID);
 				}
 				
@@ -351,6 +352,7 @@ if( !function_exists ( 'mmb_email_backup' )) {
 		}
 	}
 }
+
 if( !function_exists ( 'mmb_check_backup_compat' )) {
 	function mmb_check_backup_compat($params)
 	{
@@ -363,6 +365,17 @@ if( !function_exists ( 'mmb_check_backup_compat' )) {
 		else {
 			mmb_response($return, true);
 		}
+	}
+}
+
+if( !function_exists ( 'mmb_get_backup_req' )) {
+	function mmb_get_backup_req( $params )
+	{
+		global $mmb_core;
+		$mmb_core->get_stats_instance();
+		$return = $mmb_core->stats_instance->get_backup_req($params);
+		
+		mmb_response($return, true);
 	}
 }
 

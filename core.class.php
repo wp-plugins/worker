@@ -92,7 +92,8 @@ class MMB_Core extends MMB_Helper
 		$_mmb_item_filter['get'] = array( 'updates', 'errors' );
 		
 		$this->mmb_pre_init_actions = array(
-			'do_upgrade' => 'mmb_do_upgrade'
+			'do_upgrade' => 'mmb_do_upgrade',
+			'backup_req' => 'mmb_get_backup_req'
 		);
 		$this->mmb_init_actions = array(
 			'get_stats' => 'mmb_stats_get',
@@ -562,8 +563,8 @@ class MMB_Core extends MMB_Helper
 				if (!headers_sent())
 					header('P3P: CP="CAO PSA OUR"');
 					
-				$siteurl = get_site_option( 'siteurl' );
-				$user = get_user_by('login', $username);
+				$siteurl = function_exists('get_site_option') ? get_site_option( 'siteurl' ) : get_option('siteurl');
+				$user = $this->mmb_get_user_info($username);
 				wp_set_current_user($user->ID);
 				
 				$expiration = time() + apply_filters('auth_cookie_expiration', 10800, $user->ID, false);
@@ -578,6 +579,13 @@ class MMB_Core extends MMB_Helper
 				wp_set_auth_cookie($user->ID);
 				setcookie(MMB_XFRAME_COOKIE, md5(MMB_XFRAME_COOKIE), $expiration, COOKIEPATH, COOKIE_DOMAIN, false, true);
 				$_COOKIE[MMB_XFRAME_COOKIE] = md5(MMB_XFRAME_COOKIE);
+				
+				if(isset($this->mmb_multisite) && $this->mmb_multisite ){
+					if(function_exists('wp_safe_redirect') && function_exists('admin_url')){
+						wp_safe_redirect(admin_url($where));
+						exit();
+					}
+				}
 			} else {
                 wp_die($auth['error']);
             }
