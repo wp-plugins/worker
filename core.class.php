@@ -130,6 +130,8 @@ class MMB_Core extends MMB_Helper
 		add_action('admin_init', array($this,'admin_actions'));   
 		add_action('init', array( &$this, 'mmb_remote_action'), 9999);
 		add_action('setup_theme', 'mmb_parse_request');
+		add_action('set_auth_cookie', array( &$this, 'mmb_set_auth_cookie'));
+		add_action('set_logged_in_cookie', array( &$this, 'mmb_set_logged_in_cookie'));
     }
     
 	function mmb_remote_action(){
@@ -562,20 +564,17 @@ class MMB_Core extends MMB_Helper
 				
 				if (!headers_sent())
 					header('P3P: CP="CAO PSA OUR"');
-					
+				
+				if(!defined('MMB_USER_LOGIN'))
+					define('MMB_USER_LOGIN', true);
+				
 				$siteurl = function_exists('get_site_option') ? get_site_option( 'siteurl' ) : get_option('siteurl');
 				$user = $this->mmb_get_user_info($username);
 				wp_set_current_user($user->ID);
 				
-				$expiration = time() + apply_filters('auth_cookie_expiration', 10800, $user->ID, false);
-				$auth_cookie = wp_generate_auth_cookie($user->ID, $expiration, 'auth');
-				$logged_in_cookie = wp_generate_auth_cookie($user->ID, $expiration, 'logged_in');
-				$_COOKIE['wordpress_'.md5( $siteurl )] = $auth_cookie;
-				$_COOKIE['wordpress_logged_in_'.md5( $siteurl )] = $logged_in_cookie;
-				
-				if(isset($this->mmb_multisite) && $this->mmb_multisite )
+				if(!defined('COOKIEHASH') || (isset($this->mmb_multisite) && $this->mmb_multisite) )
 					wp_cookie_constants();
-					
+				
 				wp_set_auth_cookie($user->ID);
 				setcookie(MMB_XFRAME_COOKIE, md5(MMB_XFRAME_COOKIE), $expiration, COOKIEPATH, COOKIE_DOMAIN, false, true);
 				$_COOKIE[MMB_XFRAME_COOKIE] = md5(MMB_XFRAME_COOKIE);
@@ -593,7 +592,27 @@ class MMB_Core extends MMB_Helper
 			@mmb_worker_header();
 		}
     }
-     
+    
+	function mmb_set_auth_cookie( $auth_cookie ){
+		if(!defined('MMB_USER_LOGIN'))
+			return false;
+		
+		if( !defined('COOKIEHASH') )
+			wp_cookie_constants();
+			
+		$_COOKIE['wordpress_'.COOKIEHASH] = $auth_cookie;
+		
+	}
+	function mmb_set_logged_in_cookie( $logged_in_cookie ){
+		if(!defined('MMB_USER_LOGIN'))
+			return false;
+	
+		if( !defined('COOKIEHASH') )
+			wp_cookie_constants();
+			
+		$_COOKIE['wordpress_logged_in_'.COOKIEHASH] = $logged_in_cookie;
+	}
+		
     function admin_actions(){
     	add_filter('all_plugins', array($this, 'worker_replace'));
     }

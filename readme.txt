@@ -32,8 +32,9 @@ Check out [ManageWP.com](http://managewp.com/ "Manage Multiple Blogs").
 
 == Changelog ==  
 
-= 3.9.11 =
+= 3.9.12 =
 * Minor bug fixes
+* Backup, clone, favorites functionality improved
 
 = 3.9.10 =
 * Supporting updates for more premium plugins/themes

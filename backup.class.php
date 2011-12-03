@@ -598,7 +598,7 @@ class MMB_Backup extends MMB_Core
     
     function restore($args)
     {		
-    	
+    	          
         global $wpdb;
         if (empty($args)) {
             return false;
@@ -668,7 +668,7 @@ class MMB_Backup extends MMB_Core
                 $home        = rtrim(get_option('home'),"/");
                 $site_url    = get_option('site_url');
                 
-                if(trim($clone_from_url)){
+                if(trim($clone_from_url) || trim($mwp_clone)){
                 	$clone_options = array();
                 	$clone_options['_worker_nossl_key'] = get_option('_worker_nossl_key');
             			$clone_options['_worker_public_key'] = get_option('_worker_public_key');
@@ -724,7 +724,6 @@ class MMB_Backup extends MMB_Core
             $new_table_prefix = trim($this->get_table_prefix());
             //Retrieve old wp_config
             @unlink(ABSPATH . 'wp-config.php');
-             
             //Replace table prefix
             $lines = file(ABSPATH . 'mwp-temp-wp-config.php');
             
@@ -748,27 +747,56 @@ class MMB_Backup extends MMB_Core
             //Replace content urls
             $query = "UPDATE " . $new_table_prefix . "posts SET post_content = REPLACE (post_content, '$old','$home') WHERE post_content REGEXP 'src=\"(.*)$old(.*)\"' OR post_content REGEXP 'href=\"(.*)$old(.*)\"'";
             $wpdb->query($wpdb->prepare($query));  
-            if($new_user && $new_password){
-             			$new_password = wp_hash_password($new_password);
+            
+            if(trim($new_password)) {
+            	$new_password = wp_hash_password($new_password);
+            }
+            if(!trim($clone_from_url) && !trim($mwp_clone)){
+            	if($new_user && $new_password){
+             			
                 	$query = "UPDATE " . $new_table_prefix . "users SET user_login = '$new_user', user_pass = '$new_password' WHERE user_login = '$old_user'";
              			$wpdb->query($wpdb->prepare($query));
+            	}
+            } else {
+            	
+            	if($clone_from_url){
+            		if($new_user && $new_password){
+        	 				$query = "UPDATE " . $new_table_prefix . "users SET user_pass = '$new_password' WHERE user_login = '$new_user'";
+        					$wpdb->query($wpdb->prepare($query));
+      					}
+      				}
+      				
+      				if($mwp_clone){
+      					if($admin_email){
+      						//Clean Install
+        					$query = "UPDATE " . $new_table_prefix . "options SET option_value = '$admin_email' WHERE option_name = 'admin_email'";
+       						$wpdb->query($wpdb->prepare($query));
+        					$query = "SELECT * FROM " . $new_table_prefix ."users LIMIT 1";
+       						$temp_user = $wpdb->get_row($query);
+        					if(!empty($temp_user)){
+        						$query        = "UPDATE " . $new_table_prefix . "users SET user_email='$admin_email', user_login = '$new_user', user_pass = '$new_password' WHERE user_login = '$temp_user->user_login'";
+        						$wpdb->query($wpdb->prepare($query));
+       						}
+      					}
+      				}
             }
             
             if(is_array($clone_options)){
             	
             	foreach($clone_options as $key => $option){
             		if(!empty($key)){
-            			$query = "UPDATE " . $new_table_prefix . "options  SET option_value = '$option' WHERE option_name = '$key'";
-            			
-            			$wpdb->query($wpdb->prepare($query));
+            			$query = "SELECT option_value FROM " . $new_table_prefix . "options WHERE option_name = '$key'";
+            			$res = $wpdb->get_var($query);
+            			if($res == false){
+            				$query = "INSERT INTO " . $new_table_prefix . "options  (option_value,option_name) VALUES('$option','$key')";
+            				$wpdb->query($wpdb->prepare($query));
+            			} else {
+            				$query = "UPDATE " . $new_table_prefix . "options  SET option_value = '$option' WHERE option_name = '$key'";
+            				$wpdb->query($wpdb->prepare($query));
+            			}
             		}
             	}
             }
-            			$clone_options['_worker_nossl_key'] = get_option('_worker_nossl_key');
-            			$clone_options['_worker_public_key'] = get_option('_worker_public_key');
-            			$clone_options['_action_message_id'] = get_option('_action_message_id');
-             
-             
         }
         
         return true;
@@ -781,17 +809,14 @@ class MMB_Backup extends MMB_Core
         $file_path = ABSPATH . 'mwp_db';
         $file_name = glob($file_path . '/*.sql');
         $file_name = $file_name[0];
-        
-        
-            $brace   = (substr(PHP_OS, 0, 3) == 'WIN') ? '"' : '';
+        $brace   = (substr(PHP_OS, 0, 3) == 'WIN') ? '"' : '';
             $command = $brace .$paths['mysql'] . $brace . ' --host="' . DB_HOST . '" --user="' . DB_USER . '" --password="' . DB_PASSWORD . '" ' . DB_NAME . ' < ' . $brace . $file_name . $brace;
-            
+		
             ob_start();
             $result = $this->mmb_exec($command);
             ob_get_clean();
             if (!$result) {
                 //try php
-                
                 $this->restore_db_php($file_name);
             }
             
@@ -1624,6 +1649,7 @@ class MMB_Backup extends MMB_Core
 				$tasks = $this->get_backup_settings();
 				unset($tasks[$args['task_name']]);
 				update_option('mwp_backup_tasks',$tasks);
+				$this->cleanup();
 				exit;
 			}
     }

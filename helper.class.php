@@ -102,10 +102,6 @@ class MMB_Helper
 		
 		global $_mmb_item_filter;
 		$call_object = $call_object !== null ? $call_object : $this;
-		// $this->_log('key: '.print_r($key, true));
-		// $this->_log('params: '.print_r($params, true));
-		// $this->_log('call_object: '.print_r($call_object, true));
-		// $this->_log('$_mmb_item_filter[$key]: '.print_r($_mmb_item_filter[$key], true));
 		$return = array();
 		
 		if(isset($_mmb_item_filter[$key]) && !empty($_mmb_item_filter[$key])){
