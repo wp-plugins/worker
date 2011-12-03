@@ -183,7 +183,7 @@ class MMB_Core extends MMB_Helper
     function network_admin_notice()
     {
         echo '<div class="error" style="text-align: center;"><p style="color: red; font-size: 14px; font-weight: bold;">Attention !</p><p>
-	  	Please add this site and your network blogs, with your network adminstrator username, to your <a target="_blank" href="http://managewp.com/user-guide#multisite">ManageWP.com</a> account now to remove this notice or "Network Deactivate" the Worker plugin to avoid <a target="_blank" href="http://managewp.com/user-guide#security">security issues</a>.	  	
+	  	Please add this site and your network blogs, with your network adminstrator username, to your <a target="_blank" href="http://managewp.com/user-guide#multisite">ManageWP.com</a> account now to remove this notice or "Network Deactivate" the Worker plugin to avoid <a target="_blank" href="http://managewp.com/user-guide/security">security issues</a>.	  	
 	  	</p></div>';
     }
 	
