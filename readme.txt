@@ -32,6 +32,12 @@ Check out [ManageWP.com](http://managewp.com/ "Manage Multiple Blogs").
 
 == Changelog ==  
 
+= 3.9.13 =
+* Added bucket location for Amazon S3 backups
+* Better backup feature for larger sites
+* Added Disable compression to further help with larger sites
+* Backing up wp-admin, wp-includes and wp-content by default now, other folders can be included manually
+
 = 3.9.12 =
 * Minor bug fixes
 * Backup, clone, favorites functionality improved

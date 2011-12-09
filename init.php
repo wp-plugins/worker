@@ -4,7 +4,7 @@ Plugin Name: ManageWP - Worker
 Plugin URI: http://managewp.com/
 Description: Manage all your blogs from one dashboard. Visit <a href="http://managewp.com">ManageWP.com</a> to sign up.
 Author: Prelovac Media
-Version: 3.9.12
+Version: 3.9.13
 Author URI: http://www.prelovac.com
 */
 
@@ -100,7 +100,7 @@ if( !function_exists ( 'mmb_parse_request' )) {
 						}
 					}
 				}
-			
+				
 				if(isset($params['secure'])){
 					if($decrypted = $mmb_core->_secure_data($params['secure'])){
 						$decrypted = maybe_unserialize($decrypted);
@@ -759,5 +759,6 @@ if(	isset($_COOKIE[MMB_XFRAME_COOKIE]) ){
 	remove_action( 'admin_init', 'send_frame_options_header');
 	remove_action( 'login_init', 'send_frame_options_header');
 }
+
 
 ?>

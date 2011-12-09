@@ -183,7 +183,7 @@ class MMB_Core extends MMB_Helper
     function network_admin_notice()
     {
         echo '<div class="error" style="text-align: center;"><p style="color: red; font-size: 14px; font-weight: bold;">Attention !</p><p>
-	  	Please add this site and your network blogs, with your network adminstrator username, to your <a target="_blank" href="http://managewp.com">ManageWP.com</a> account now to remove this notice or "Network Deactivate" the Worker plugin to avoid <a target="_blank" href="http://managewp.com/user-guide/security">security issues</a>.	  	
+	  	Please add this site and your network blogs, with your network adminstrator username, to your <a target="_blank" href="http://managewp.com/wp-admin">ManageWP.com</a> account now to remove this notice or "Network Deactivate" the Worker plugin to avoid <a target="_blank" href="http://managewp.com/user-guide/security">security issues</a>.	  	
 	  	</p></div>';
     }
 	
@@ -195,7 +195,7 @@ class MMB_Core extends MMB_Helper
     function admin_notice()
     {
         echo '<div class="error" style="text-align: center;"><p style="color: red; font-size: 14px; font-weight: bold;">Attention !</p><p>
-	  	Please add this site now to your <a target="_blank" href="http://managewp.com">ManageWP.com</a> account.  Or deactivate the Worker plugin to avoid <a target="_blank" href="http://managewp.com/user-guide/security">security issues</a>.	  	
+	  	Please add this site now to your <a target="_blank" href="http://managewp.com/wp-admin">ManageWP.com</a> account.  Or deactivate the Worker plugin to avoid <a target="_blank" href="http://managewp.com/user-guide/security">security issues</a>.	  	
 	  	</p></div>';
     }
     
@@ -576,10 +576,9 @@ class MMB_Core extends MMB_Helper
 					wp_cookie_constants();
 				
 				wp_set_auth_cookie($user->ID);
-				setcookie(MMB_XFRAME_COOKIE, md5(MMB_XFRAME_COOKIE), $expiration, COOKIEPATH, COOKIE_DOMAIN, false, true);
-				$_COOKIE[MMB_XFRAME_COOKIE] = md5(MMB_XFRAME_COOKIE);
+				@mmb_worker_header();
 				
-				if(isset($this->mmb_multisite) && $this->mmb_multisite ){
+				if((isset($this->mmb_multisite) && $this->mmb_multisite ) || isset($_REQUEST['mwpredirect'])){
 					if(function_exists('wp_safe_redirect') && function_exists('admin_url')){
 						wp_safe_redirect(admin_url($where));
 						exit();
@@ -590,6 +589,12 @@ class MMB_Core extends MMB_Helper
             }
         } elseif( is_user_logged_in() ) {
 			@mmb_worker_header();
+			if(isset($_REQUEST['mwpredirect'])){
+				if(function_exists('wp_safe_redirect') && function_exists('admin_url')){
+					wp_safe_redirect(admin_url($where));
+					exit();
+				}
+			}
 		}
     }
     
