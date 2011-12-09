@@ -20,7 +20,7 @@ Author URI: http://www.prelovac.com
  **************************************************************/
 
 if(!defined('MMB_WORKER_VERSION'))
-	define('MMB_WORKER_VERSION', '3.9.12');
+	define('MMB_WORKER_VERSION', '3.9.13');
 
 if ( !defined('MMB_XFRAME_COOKIE')){
 	$siteurl = function_exists('get_site_option') ? get_site_option( 'siteurl' ) : get_option('siteurl');
