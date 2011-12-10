@@ -12,6 +12,10 @@
 define ('MWP_BACKUP_DIR', WP_CONTENT_DIR.'/managewp/backups');
 define ('MWP_DB_DIR', MWP_BACKUP_DIR.'/mwp_db');
 
+$zip_errors = array('No error','No error','Unexpected end of zip file','A generic error in the zipfile format was detected.','zip was unable to allocate itself memory','A severe error in the zipfile format was detected','Entry too large to be split with zipsplit','Invalid comment format','zip -T failed or out of memory','The user aborted zip prematurely','zip encountered an error while using a temp file','Read or seek error','zip has nothing to do','Missing or empty zip file','Error writing to a file','zip was unable to create a file to write to','bad command line parameters','no error', 'zip could not open a specified file to read');  
+$unzip_errors = array('No error','One or more warning errors were encountered, but processing completed successfully anyway','A generic error in the zipfile format was detected','A severe error in the zipfile format was detected.','unzip was unable to allocate itself memory.','unzip was unable to allocate memory, or encountered an encryption error','unzip was unable to allocate memory during decompression to disk','unzip was unable allocate memory during in-memory decompression','unused','The specified zipfiles were not found','Bad command line parameters','No matching files were found','50'=>'The disk is (or was) full during extraction',51=>'The end of the ZIP archive was encountered prematurely.',80=>'The user aborted unzip prematurely.',81=>'Testing or extraction of one or more files failed due to unsupported compression methods or unsupported decryption.',82=>'No files were found due to bad decryption password(s)');
+
+
 class MMB_Backup extends MMB_Core
 {	
 	var $site_name;
@@ -173,7 +177,7 @@ class MMB_Backup extends MMB_Core
         extract($args); //extract settings
 
         //Try increase memory limit	and execution time
-        @ini_set('memory_limit', '300M');
+        @ini_set('memory_limit', '256M');
         @set_time_limit(600); //ten minutes
         
         //Remove old backup(s)
@@ -503,18 +507,18 @@ class MMB_Backup extends MMB_Core
         chdir(ABSPATH);
         ob_start();
          	$command = "$zip -q -j $comp_level $backup_file * $exclude_data";
-        	$result_f = $this->mmb_exec($command);
-        	if($result_f){
+        	$result_f = $this->mmb_exec($command, false, true);
+        	if(!$result_f || $result_f = 18){ // disregard permissions error, file can't be accessed
         		$command = "$zip -q -r $comp_level $backup_file $include_data $exclude_data";
-        		$result_d = $this->mmb_exec($command);
-        		if(!$result_d){
+        		$result_d = $this->mmb_exec($command, false, true);
+        		if($result_d && $result_d!=18){
         			@unlink($backup_file);
         			return array('error' => 'Failed to archive files.');
         		}
         	}  	
         ob_get_clean();
         
-        if (!$result_f) { //Try pclZip
+        if ($result_f && $result_f!=18) { //Try pclZip
   				
          if(!isset($archive)){
          	define('PCLZIP_TEMPORARY_DIR', MWP_BACKUP_DIR.'/');
@@ -691,7 +695,7 @@ class MMB_Backup extends MMB_Core
         }
         
         extract($args);
-        @ini_set('memory_limit', '300M');
+        @ini_set('memory_limit', '256M');
         @set_time_limit(600);
         
         $unlink_file = true; //Delete file after restore
@@ -1031,7 +1035,7 @@ class MMB_Backup extends MMB_Core
         
     }
     
-    function mmb_exec($command, $string = false)
+    function mmb_exec($command, $string = false, $rawreturn=false)
     {
         if ($command == '')
             return false;
@@ -1041,15 +1045,26 @@ class MMB_Backup extends MMB_Core
             
             if ($string)
                 return $log;
+            if ($rawreturn)
+            	return $return;
+            	
             return $return ? false : true;
         } elseif ($this->mmb_function_exists('system')) {
             $log = @system($command, $return);
             
             if ($string)
                 return $log;
+            
+            if ($rawreturn)
+            	return $return;
+            
             return $return ? false : true;
         } elseif ($this->mmb_function_exists('passthru') && !$string) {
             $log = passthru($command, $return);
+            
+            if ($rawreturn)
+            	return $return;
+                        
             return $return ? false : true;
         }
         
@@ -1092,7 +1107,7 @@ class MMB_Backup extends MMB_Core
             $pass                        = false;
         }
         
-        
+                       
         if (is_writable(WP_CONTENT_DIR)) {
             $reqs['Backup Folder']['status'] = "writable";
             $reqs['Backup Folder']['pass']   = true;

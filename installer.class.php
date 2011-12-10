@@ -14,7 +14,7 @@ class MMB_Installer extends MMB_Core
 {
     function __construct()
     {
-        @set_time_limit(300);
+        @set_time_limit(600);
         parent::__construct();
 		@include_once(ABSPATH . 'wp-admin/includes/file.php');
 		@include_once(ABSPATH . 'wp-admin/includes/plugin.php');
