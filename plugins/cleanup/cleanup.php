@@ -35,23 +35,23 @@ function cleanup_delete_worker($params = array()){
 			switch ($param){
 				case 'revision' : 
 					if(mmb_delete_all_revisions()){
-						$return_array['revision'] = 'Revisions deleted.';
+						$return_array['revision'] = 'OK';
 					}else{
-						$return_array['revision_error'] = 'Revisions not deleted.';
+						$return_array['revision_error'] = 'Failed, please try again';
 					}
 					break;
 				case 'overhead' : 
 					if(mmb_clear_overhead()){
-						$return_array['overhead'] = 'Overhead cleared.';
+						$return_array['overhead'] = 'OK';
 					}else{
-						$return_array['overhead_error'] = 'Overhead not cleared.';
+						$return_array['overhead_error'] = 'Failed, please try again';
 					}
 					break;
 				case 'comment' : 
 					if(mmb_delete_spam_comments()){
-						$return_array['comment'] = 'Comments deleted';
+						$return_array['comment'] = 'OK';
 					}else{
-						$return_array['comment_error'] = 'Comments not deleted';
+						$return_array['comment_error'] = 'Failed, please try again';
 					}
 					break;
 				default: 
