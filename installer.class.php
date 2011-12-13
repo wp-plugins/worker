@@ -25,8 +25,7 @@ class MMB_Installer extends MMB_Core
 
 		global $wp_filesystem;
         if (!$wp_filesystem)
-            WP_Filesystem();
-        
+            WP_Filesystem();        
     }
 		
     function mmb_maintenance_mode($enable = false, $maintenance_message = '')
@@ -240,6 +239,7 @@ class MMB_Installer extends MMB_Core
 				
 				$core = new Core_Upgrader();
 				$result = $core->upgrade($current_update);
+				$this->mmb_maintenance_mode(false);
 				if(is_wp_error($result)){
 					return array(
 						'error' => $this->mmb_get_error($result)
@@ -323,6 +323,7 @@ class MMB_Installer extends MMB_Core
 					$update_core = update_core($working_dir, $wp_dir);
 					ob_end_clean();
 					
+					$this->mmb_maintenance_mode(false);
 					if (is_wp_error($update_core))
 						return array(
 							'error' => $this->mmb_get_error($update_core)

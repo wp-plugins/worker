@@ -85,7 +85,7 @@ class MMB_Helper
 			
 			
 		global $wp_version;
-		if (version_compare($wp_version, '3.2.9', '<=')){
+		if (version_compare($wp_version, '3.2.2', '<=')){
 			return get_userdatabylogin( $user_info );
 		} else {
 			return get_user_by( $info, $user_info );
