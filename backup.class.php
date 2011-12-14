@@ -1131,7 +1131,9 @@ class MMB_Backup extends MMB_Core
             return $return ? false : true;
         }
         
-        
+        if ($rawreturn)
+        	return -1;
+        	
         return false;
     }
     
