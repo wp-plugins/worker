@@ -189,8 +189,7 @@ if( !function_exists ( 'mmb_add_site' )) {
 						$mmb_core->set_random_signature($random_key);
 						$mmb_core->set_worker_message_id($id);
 						$mmb_core->set_master_public_key($public_key);
-						$mmb_core->get_stats_instance();
-						$mmb_core->get_stats_instance();
+						$mmb_core->get_stats_instance();						
 						if(is_array($notifications) && !empty($notifications)){
 							$mmb_core->stats_instance->set_notifications($notifications);
 						}

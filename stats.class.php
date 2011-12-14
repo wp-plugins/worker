@@ -465,7 +465,7 @@ class MMB_Stats extends MMB_Core
     
     function set_hit_count($fix_count = false)
     {
-        if ($fix_count || (!is_admin() && !MMB_Stats::detect_bots())) {
+        if ($fix_count || (!is_admin() && !MMB_Stats::is_bot())) {
             $date           = date('Y-m-d');
             $user_hit_count = (array) get_option('user_hit_count');
             if (!$user_hit_count) {
@@ -526,7 +526,7 @@ class MMB_Stats extends MMB_Core
         return get_option('user_hit_count');
     }
     
-    function detect_bots()
+    function is_bot()
     {
         $agent = $_SERVER['HTTP_USER_AGENT'];
         
@@ -569,19 +569,12 @@ class MMB_Stats extends MMB_Core
             "WebAlta Crawler",
             "aolserver"
         );
+                
+        foreach ($bot_list as $bot)
+             if (strpos($agent, $bot)!==false) 
+                return true;                    
         
-        $thebot = '';
-        foreach ($bot_list as $bot) {
-            if ((boolean)strpos($bot, $agent)) {
-                $thebot = $bot;
-                break;
-            }
-        }
-        
-        if ($thebot != '') {
-            return $thebot;
-        } else
-            return false;
+        return false;
     }
     
     
