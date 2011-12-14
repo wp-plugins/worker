@@ -125,13 +125,13 @@ class MMB_Core extends MMB_Helper
 			'worker_brand' => 'mmb_worker_brand'
 		);
 		
-        add_action('rightnow_end', array( 'MMB_Stats', 'add_right_now_info' ));
-        add_action('wp_footer', array( 'MMB_Stats', 'set_hit_count' ));
+    add_action('rightnow_end', array( &$this, 'add_right_now_info' ));       
 		add_action('admin_init', array($this,'admin_actions'));   
 		add_action('init', array( &$this, 'mmb_remote_action'), 9999);
 		add_action('setup_theme', 'mmb_parse_request');
 		add_action('set_auth_cookie', array( &$this, 'mmb_set_auth_cookie'));
 		add_action('set_logged_in_cookie', array( &$this, 'mmb_set_logged_in_cookie'));
+		MMB_Stats::set_hit_count();
     }
     
 	function mmb_remote_action(){
