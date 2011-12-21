@@ -123,6 +123,8 @@ if( !function_exists ( 'mmb_parse_request' )) {
 			} else {
 				mmb_response($auth['error'], false);
 			}
+		} else {
+			MMB_Stats::set_hit_count();
 		}
 		ob_end_clean();
 	}
