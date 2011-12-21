@@ -40,7 +40,7 @@ Check out [ManageWP.com](http://managewp.com/ "Manage Multiple Blogs").
 * You can now opt to completely hide the Worker plugin from the list of plugins (part of Worker branding features)
 * We improved the backups for folks running Windows servers
 * Amazon S3 directory name now "ManageWP" by default
-* [Read more on ManageWP.com] (http://managewp.com/update-two-factor-authentication-run-code-tool-sucuri-security-check-more-accurate-pageview-statistics)
+* Read more on ManageWP.com http://managewp.com/update-two-factor-authentication-run-code-tool-sucuri-security-check-more-accurate-pageview-statistics
 
 = 3.9.13 =
 * Added bucket location for Amazon S3 backups
