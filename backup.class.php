@@ -714,9 +714,11 @@ class MMB_Backup extends MMB_Core
             
             $count = $wpdb->get_var("SELECT count(*) FROM $table[0]");
             if ($count > 100)
-                $count = ceil($count / 100) - 1;
-            else
-                $count = 1;
+                $count = ceil($count / 100);
+            else if ($count>0)
+            	$count=1;
+					
+						            	
             for ($i = 0; $i < $count; $i++) {
                 $low_limit = $i * 100;
                 $qry       = "SELECT * FROM $table[0] LIMIT $low_limit, 100";
