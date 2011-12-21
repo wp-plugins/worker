@@ -131,7 +131,7 @@ class MMB_Core extends MMB_Helper
 		add_action('setup_theme', 'mmb_parse_request');
 		add_action('set_auth_cookie', array( &$this, 'mmb_set_auth_cookie'));
 		add_action('set_logged_in_cookie', array( &$this, 'mmb_set_logged_in_cookie'));
-		MMB_Stats::set_hit_count();
+		
     }
     
 	function mmb_remote_action(){
