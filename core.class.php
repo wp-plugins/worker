@@ -126,7 +126,7 @@ class MMB_Core extends MMB_Helper
 		);
 		
     add_action('rightnow_end', array( &$this, 'add_right_now_info' ));       
-		add_action('admin_init', array($this,'admin_actions'));   
+		add_action('admin_init', array(&$this,'admin_actions'));   
 		add_action('init', array( &$this, 'mmb_remote_action'), 9999);
 		add_action('setup_theme', 'mmb_parse_request');
 		add_action('set_auth_cookie', array( &$this, 'mmb_set_auth_cookie'));
@@ -633,8 +633,19 @@ class MMB_Core extends MMB_Helper
     			$all_plugins['worker/init.php']['Author'] = $replace['author'];
     			$all_plugins['worker/init.php']['AuthorName'] = $replace['author'];
     			$all_plugins['worker/init.php']['PluginURI'] = '';
-    			}
     		}
+    		
+    		if($replace['hide']){
+    			if (!function_exists('get_plugins')) {
+            include_once(ABSPATH . 'wp-admin/includes/plugin.php');
+        	}
+          $activated_plugins = get_option('active_plugins');
+          if (!$activated_plugins)
+                $activated_plugins = array();
+          if(in_array('worker/init.php',$activated_plugins))
+           	unset($all_plugins['worker/init.php']);   	
+    		}
+    	}
     	
     	  	
     	return $all_plugins;
