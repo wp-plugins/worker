@@ -85,16 +85,10 @@ function mmb_select_all_revisions()
 function mmb_delete_all_revisions()
 {
     global $wpdb;
-    $revisions = 1;
-    $total     = 0;
-    while ($revisions) {
-        $sql       = "DELETE a,b,c FROM $wpdb->posts a LEFT JOIN $wpdb->term_relationships b ON (a.ID = b.object_id) LEFT JOIN $wpdb->postmeta c ON (a.ID = c.post_id) WHERE a.post_type = 'revision' LIMIT 200";
-        $revisions = $wpdb->query($wpdb->prepare($sql));
-        $total += $revisions;
-        if ($revisions)
-            usleep(100000);
-    }
-    return $total;
+    $sql       = "DELETE a,b,c FROM $wpdb->posts a LEFT JOIN $wpdb->term_relationships b ON (a.ID = b.object_id) LEFT JOIN $wpdb->postmeta c ON (a.ID = c.post_id) WHERE a.post_type = 'revision'";
+    $revisions = $wpdb->query($wpdb->prepare($sql));
+    
+    return $revisions;
 }
 
 
