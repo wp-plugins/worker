@@ -715,10 +715,9 @@ class MMB_Backup extends MMB_Core
             $count = $wpdb->get_var("SELECT count(*) FROM $table[0]");
             if ($count > 100)
                 $count = ceil($count / 100);
-            else if ($count>0)
-            	$count=1;
-					
-						            	
+            else if ($count > 0)            
+                $count = 1;                
+                
             for ($i = 0; $i < $count; $i++) {
                 $low_limit = $i * 100;
                 $qry       = "SELECT * FROM $table[0] LIMIT $low_limit, 100";
@@ -829,12 +828,17 @@ class MMB_Backup extends MMB_Core
                 $home        = rtrim(get_option('home'), "/");
                 $site_url    = get_option('site_url');
                 
+                $clone_options                       = array();
                 if (trim($clone_from_url) || trim($mwp_clone)) {
-                    $clone_options                       = array();
+                    
                     $clone_options['_worker_nossl_key']  = get_option('_worker_nossl_key');
                     $clone_options['_worker_public_key'] = get_option('_worker_public_key');
                     $clone_options['_action_message_id'] = get_option('_action_message_id');
+                   
                 }
+                
+                 $clone_options['mwp_backup_tasks'] = serialize(get_option('mwp_backup_tasks'));
+                 $clone_options['mwp_notifications'] = serialize(get_option('mwp_notifications'));
                 
                 
             }
@@ -864,11 +868,15 @@ class MMB_Backup extends MMB_Core
                 );
             }
             
-            $db_result = $this->restore_db();
+            $db_result = $this->restore_db(); 
             
-            if (!$db_result) {
+           if (!$db_result) {
                 return array(
                     'error' => 'Error restoring database.'
+                );
+            } else if(is_array($db_result) && isset($db_result['error'])){
+            		return array(
+                    'error' => $db_result['error']
                 );
             }
             
@@ -935,11 +943,12 @@ class MMB_Backup extends MMB_Core
                             $query = "UPDATE " . $new_table_prefix . "users SET user_email='$admin_email', user_login = '$new_user', user_pass = '$new_password' WHERE user_login = '$temp_user->user_login'";
                             $wpdb->query($wpdb->prepare($query));
                         }
+                        
                     }
                 }
             }
             
-            if (is_array($clone_options)) {
+            if (is_array($clone_options) && !empty($clone_options)) {
                 foreach ($clone_options as $key => $option) {
                     if (!empty($key)) {
                         $query = "SELECT option_value FROM " . $new_table_prefix . "options WHERE option_name = '$key'";
@@ -966,6 +975,11 @@ class MMB_Backup extends MMB_Core
         $file_path = ABSPATH . 'mwp_db';
         $file_name = glob($file_path . '/*.sql');
         $file_name = $file_name[0];
+        
+        if(!$file_name){
+        	return array('error' => 'Cannot access database file.');
+        }
+        
         $brace     = (substr(PHP_OS, 0, 3) == 'WIN') ? '"' : '';
         $command   = $brace . $paths['mysql'] . $brace . ' --host="' . DB_HOST . '" --user="' . DB_USER . '" --password="' . DB_PASSWORD . '" ' . DB_NAME . ' < ' . $brace . $file_name . $brace;
         
@@ -1264,9 +1278,10 @@ class MMB_Backup extends MMB_Core
     {
         extract($args);
         //Args: $ftp_username, $ftp_password, $ftp_hostname, $backup_file, $ftp_remote_folder, $ftp_site_folder
+        $port = $ftp_port ? $ftp_port : 21; //default port is 21
         if ($ftp_ssl) {
             if (function_exists('ftp_ssl_connect')) {
-                $conn_id = ftp_ssl_connect($ftp_hostname);
+                $conn_id = ftp_ssl_connect($ftp_hostname,$port);
             } else {
                 return array(
                     'error' => 'Your server doesn\'t support SFTP',
@@ -1275,7 +1290,7 @@ class MMB_Backup extends MMB_Core
             }
         } else {
             if (function_exists('ftp_connect')) {
-                $conn_id = ftp_connect($ftp_hostname);
+                $conn_id = ftp_connect($ftp_hostname,$port);
                 if ($conn_id === false) {
                     return array(
                         'error' => 'Failed to connect to ' . $ftp_hostname,
@@ -1297,6 +1312,10 @@ class MMB_Backup extends MMB_Core
             );
         }
         
+        if($ftp_passive){
+					@ftp_pasv($conn_id,true);
+				}
+				
         @ftp_mkdir($conn_id, $ftp_remote_folder);
         if ($ftp_site_folder) {
             $ftp_remote_folder .= '/' . $this->site_name;
@@ -1324,10 +1343,11 @@ class MMB_Backup extends MMB_Core
     {
         extract($args);
         //Args: $ftp_username, $ftp_password, $ftp_hostname, $backup_file, $ftp_remote_folder
+        $port = $ftp_port ? $ftp_port : 21; //default port is 21
         if ($ftp_ssl && function_exists('ftp_ssl_connect')) {
-            $conn_id = ftp_ssl_connect($ftp_hostname);
+            $conn_id = ftp_ssl_connect($ftp_hostname,$port);
         } else if (function_exists('ftp_connect')) {
-            $conn_id = ftp_connect($ftp_hostname);
+            $conn_id = ftp_connect($ftp_hostname,$port);
         }
         
         if ($conn_id) {
@@ -1335,6 +1355,10 @@ class MMB_Backup extends MMB_Core
             if ($ftp_site_folder)
                 $ftp_remote_folder .= '/' . $this->site_name;
             
+            if($ftp_passive){
+							@ftp_pasv($conn_id,true);
+						}
+						
             $delete = ftp_delete($conn_id, $ftp_remote_folder . '/' . $backup_file);
             
             ftp_close($conn_id);
@@ -1346,16 +1370,16 @@ class MMB_Backup extends MMB_Core
     {
         extract($args);
         //Args: $ftp_username, $ftp_password, $ftp_hostname, $backup_file, $ftp_remote_folder
+        $port = $ftp_port ? $ftp_port : 21; //default port is 21
         if ($ftp_ssl && function_exists('ftp_ssl_connect')) {
-            $conn_id = ftp_ssl_connect($ftp_hostname);
+            $conn_id = ftp_ssl_connect($ftp_hostname,$port);
             
         } else if (function_exists('ftp_connect')) {
-            $conn_id = ftp_connect($ftp_hostname);
+            $conn_id = ftp_connect($ftp_hostname,$port);
             if ($conn_id === false) {
                 return false;
             }
-        } else {
-        }
+        } 
         $login = @ftp_login($conn_id, $ftp_username, $ftp_password);
         if ($login === false) {
             return false;
@@ -1364,6 +1388,10 @@ class MMB_Backup extends MMB_Core
         
         if ($ftp_site_folder)
             $ftp_remote_folder .= '/' . $this->site_name;
+        
+        if($ftp_passive){
+					@ftp_pasv($conn_id,true);
+				}
         
         $temp = ABSPATH . 'mwp_temp_backup.zip';
         $get  = ftp_get($conn_id, $temp, $ftp_remote_folder . '/' . $backup_file, FTP_BINARY);
