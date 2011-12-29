@@ -395,6 +395,7 @@ class MMB_Backup extends MMB_Core
                 if (is_array($ftp_result) && isset($ftp_result['error'])) {
                     return $ftp_result;
                 }
+                $this->wpdb_reconnect();
                 $this->update_status($task_name, $this->statuses['ftp'], true);
             }
             
@@ -408,6 +409,7 @@ class MMB_Backup extends MMB_Core
                 if (is_array($amazons3_result) && isset($amazons3_result['error'])) {
                     return $amazons3_result;
                 }
+                $this->wpdb_reconnect();
                 $this->update_status($task_name, $this->statuses['s3'], true);
             }
             
@@ -422,7 +424,7 @@ class MMB_Backup extends MMB_Core
                 if (is_array($dropbox_result) && isset($dropbox_result['error'])) {
                     return $dropbox_result;
                 }
-                
+                $this->wpdb_reconnect();
                 $this->update_status($task_name, $this->statuses['dropbox'], true);
             }
             
@@ -657,6 +659,9 @@ class MMB_Backup extends MMB_Core
             }
             
         }
+        
+        //Reconnect
+        $this->wpdb_reconnect();
         
         $this->update_status($task_name, $this->statuses['files_zip'], true);
         return true;
@@ -1895,6 +1900,16 @@ class MMB_Backup extends MMB_Core
     {
         $this->tasks = $tasks;
         update_option('mwp_backup_tasks', $tasks);
+    }
+    
+    function wpdb_reconnect(){
+    	global $wpdb;
+    	//Reconnect to avoid timeout problem after ZIP files
+      	if(class_exists('wpdb') && function_exists('wp_set_wpdb_vars')){
+      		@mysql_close($wpdb->dbh);
+        	$wpdb = new wpdb( DB_USER, DB_PASSWORD, DB_NAME, DB_HOST );
+        	wp_set_wpdb_vars(); 
+      	}
     }
     
 }
