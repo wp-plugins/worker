@@ -715,9 +715,14 @@ if( !function_exists('mmb_worker_brand')){
 
 if( !function_exists('mmb_maintenance_mode')){
  	function mmb_maintenance_mode( $params ) {
+		global $wp_object_cache;
+		
 		$default = get_option('mwp_maintenace_mode');
 		$params = empty($default) ? $params : array_merge($default, $params);
 		update_option("mwp_maintenace_mode", $params);
+		
+		if(!empty($wp_object_cache))
+			@$wp_object_cache->flush(); 
 		mmb_response(true, true);
 	}
 }
@@ -745,13 +750,10 @@ if( !function_exists('mmb_plugin_actions') ){
 			}
 		}
 		
-		global $pagenow, $current_user, $mmode, $_wp_using_ext_object_cache;
+		global $pagenow, $current_user, $mmode;
 		if( !is_admin() && !in_array($pagenow, array( 'wp-login.php' ))){
 			$mmode = get_option('mwp_maintenace_mode');
 			if( !empty($mmode) ){
-			
-				$_wp_using_ext_object_cache = false;
-				
 				if(isset($mmode['active']) && $mmode['active'] == true){
 					if(isset($current_user->data) && !empty($current_user->data) && isset($mmode['hidecaps']) && !empty($mmode['hidecaps'])){
 						$usercaps = array();
