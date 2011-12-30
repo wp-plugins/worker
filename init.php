@@ -745,10 +745,13 @@ if( !function_exists('mmb_plugin_actions') ){
 			}
 		}
 		
-		global $pagenow, $current_user, $mmode;
+		global $pagenow, $current_user, $mmode, $_wp_using_ext_object_cache;
 		if( !is_admin() && !in_array($pagenow, array( 'wp-login.php' ))){
 			$mmode = get_option('mwp_maintenace_mode');
 			if( !empty($mmode) ){
+			
+				$_wp_using_ext_object_cache = false;
+				
 				if(isset($mmode['active']) && $mmode['active'] == true){
 					if(isset($current_user->data) && !empty($current_user->data) && isset($mmode['hidecaps']) && !empty($mmode['hidecaps'])){
 						$usercaps = array();
