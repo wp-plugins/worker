@@ -34,7 +34,7 @@ Check out [ManageWP.com](http://managewp.com/ "Manage Multiple Blogs").
 == Changelog ==  
 
 = 3.9.15 =
-* New: Full range of SEO Statistics now trackable for your websites
+* New: Full range of SEO Statistics now trackable for your websites (Google Page Rank and Page Speed, Backlinks and 20+ more)
 * New: Google keyword rank tracking with history
 * New: Uptime monitoring (5 min interval with email/SMS notification)
 * New: Insights into server PHP error logs right in your dashboard
