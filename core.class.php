@@ -451,6 +451,7 @@ class MMB_Core extends MMB_Helper
 							delete_blog_option($blog_id, '_worker_nossl_key');
 							delete_blog_option($blog_id, '_worker_public_key');
 							delete_blog_option($blog_id, '_action_message_id');
+							delete_blog_option($blog_id, 'mwp_maintenace_mode');
 						}
 					}
 				} else {
@@ -470,6 +471,7 @@ class MMB_Core extends MMB_Helper
         }
         
         //Delete backup tasks
+		delete_option('mwp_maintenace_mode');
         delete_option('mwp_backup_tasks');
         wp_clear_scheduled_hook('mwp_backup_tasks');
         
