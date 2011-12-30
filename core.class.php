@@ -122,7 +122,8 @@ class MMB_Core extends MMB_Helper
 			'edit_users' => 'mmb_edit_users',
 			'get_plugins_themes' => 'mmb_get_plugins_themes',
 			'edit_plugins_themes' => 'mmb_edit_plugins_themes',
-			'worker_brand' => 'mmb_worker_brand'
+			'worker_brand' => 'mmb_worker_brand',
+			'maintenance' => 'mmb_maintenance_mode'
 		);
 		
     add_action('rightnow_end', array( &$this, 'add_right_now_info' ));       

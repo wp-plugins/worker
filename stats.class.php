@@ -282,9 +282,10 @@ class MMB_Stats extends MMB_Core
         return $stats;
     }
     
-    function get_errors($stats, $options = array())
+	function get_errors($stats, $options = array())
     {
-        $period = isset($options['days']) ? (int) $options['days'] * 86400 : 86400;
+		$period = isset($options['days']) ? (int) $options['days'] * 86400 : 86400;
+		$maxerrors = isset($options['max']) ? (int) $options['max'] : 20;
         $errors = array();
         if (isset($options['get']) && $options['get'] == true) {
             if (function_exists('ini_get')) {
@@ -305,8 +306,14 @@ class MMB_Stats extends MMB_Core
                                 foreach ((array) preg_split("/(\r|\n|\r\n)/U", $line) as $l) {
                                     preg_match('/\[(.*)\]/Ui', $l, $match);
                                     if (!empty($match)) {
-                                        $errors[strtotime($match[1])][] = str_replace($match[0], '', $l);
-                                        if (strtotime($match[1]) < ((int) time() - $period)) {
+										$key = str_replace($match[0], '', $l);
+										if(!isset($errors[$key])){
+											$errors[$key] = 1;
+										} else {
+											$errors[$key] = $errors[$key] + 1;
+										}
+										
+										if ((strtotime($match[1]) < ((int) time() - $period)) || count($errors) >= $maxerrors) {
                                             $line = false;
                                             break;
                                         }
@@ -315,13 +322,15 @@ class MMB_Stats extends MMB_Core
                             }
                         }
                     }
-                    
+                    if (!empty($errors)){
+						$stats['errors'] = $errors;
+						$stats['logpath'] = $logpath;
+						$stats['logsize'] = @filesize($logpath);
+					}
                 }
             }
         }
-        if (!empty($errors))
-            $stats['errors'] = $errors;
-        
+		
         return $stats;
     }
     
@@ -355,10 +364,15 @@ class MMB_Stats extends MMB_Core
         $stats['mysql_version']         = $wpdb->db_version();
         $stats['wp_multisite']          = $this->mmb_multisite;
         $stats['network_install']       = $this->network_admin_install;
+        $stats['network_install']       = $this->network_admin_install;
         
         if (!function_exists('get_filesystem_method'))
             include_once(ABSPATH . 'wp-admin/includes/file.php');
-        
+        $mmode = get_option('mwp_maintenace_mode');
+		
+		if( !empty($mmode) && isset($mmode['active']) && $mmode['active'] == true){
+			$stats['maintenance'] = true;
+		}
         $stats['writable'] = $this->is_server_writable();
         
         return $stats;
@@ -371,7 +385,7 @@ class MMB_Stats extends MMB_Core
         include_once(ABSPATH . 'wp-includes/update.php');
         include_once(ABSPATH . '/wp-admin/includes/update.php');
         
-        $stats        = $this->mmb_parse_action_params('get', $params, $this);
+        $stats = $this->mmb_parse_action_params('get', $params, $this);
         $update_check = array();
         $num          = extract($params);
         if ($refresh == 'transient') {

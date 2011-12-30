@@ -21,6 +21,7 @@ Main features:
 *   Bulk install themes and plugins to multiple sites at once
 *   Add sub-users (writers, staff..) to your account
 *   Bulk publish posts to multiple sites at once
+*   SEO Statistics, track your keyword rankings
 *   Install WordPress, clone or migrate a website to another domain
 *   Much, much more...
 
@@ -31,6 +32,14 @@ http://vimeo.com/22099014
 Check out [ManageWP.com](http://managewp.com/ "Manage Multiple Blogs").
 
 == Changelog ==  
+
+= 3.9.15 =
+* New: Full range of SEO Statistics now trackable for your websites
+* New: Google keyword rank tracking with history
+* New: Uptime monitoring (5 min interval with email/SMS notification)
+* New: Insights into server PHP error logs right in your dashboard
+* New: Remote maintenance mode for your websites
+* Fix: A bug when a completed backup was reported as failed
 
 = 3.9.14 =
 * Two factor authentication

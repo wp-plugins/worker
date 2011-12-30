@@ -4,7 +4,7 @@ Plugin Name: ManageWP - Worker
 Plugin URI: http://managewp.com/
 Description: Manage all your blogs from one dashboard. Visit <a href="http://managewp.com">ManageWP.com</a> to sign up.
 Author: Prelovac Media
-Version: 3.9.14
+Version: 3.9.15
 Author URI: http://www.prelovac.com
 */
 
@@ -20,14 +20,13 @@ Author URI: http://www.prelovac.com
  **************************************************************/
 
 if(!defined('MMB_WORKER_VERSION'))
-	define('MMB_WORKER_VERSION', '3.9.14');
+	define('MMB_WORKER_VERSION', '3.9.15');
 
 if ( !defined('MMB_XFRAME_COOKIE')){
 	$siteurl = function_exists('get_site_option') ? get_site_option( 'siteurl' ) : get_option('siteurl');
 	define('MMB_XFRAME_COOKIE', $xframe = 'wordpress_'.md5($siteurl).'_xframe');
 }
 global $wpdb, $mmb_plugin_dir, $mmb_plugin_url, $wp_version, $mmb_filters, $_mmb_item_filter;
-
 if (version_compare(PHP_VERSION, '5.0.0', '<')) // min version 5 supported
     exit("<p>ManageWP Worker plugin requires PHP 5 or higher.</p>");
 
@@ -714,6 +713,15 @@ if( !function_exists('mmb_worker_brand')){
 	}
 }
 
+if( !function_exists('mmb_maintenance_mode')){
+ 	function mmb_maintenance_mode( $params ) {
+		$default = get_option('mwp_maintenace_mode');
+		$params = empty($default) ? $params : array_merge($default, $params);
+		update_option("mwp_maintenace_mode", $params);
+		mmb_response(true, true);
+	}
+}
+
 if( !function_exists('mmb_plugin_actions') ){
  	function mmb_plugin_actions() {
 		global $mmb_actions, $mmb_core;
@@ -734,6 +742,34 @@ if( !function_exists('mmb_plugin_actions') ){
 					mmb_response($s.' not exist. Please update your Worker plugin.', false);
 				}
 					
+			}
+		}
+		
+		global $pagenow, $current_user, $mmode;
+		if( !is_admin() && !in_array($pagenow, array( 'wp-login.php' ))){
+			$mmode = get_option('mwp_maintenace_mode');
+			if( !empty($mmode) ){
+				if(isset($mmode['active']) && $mmode['active'] == true){
+					if(isset($current_user->data) && !empty($current_user->data) && isset($mmode['hidecaps']) && !empty($mmode['hidecaps'])){
+						$usercaps = array();
+						if(isset($current_user->caps) && !empty($current_user->caps)){
+							$usercaps = $current_user->caps;
+						}
+						foreach($mmode['hidecaps'] as $cap => $hide){
+							if(!$hide)
+								continue;
+							
+							foreach($usercaps as $ucap => $val){
+								if($ucap == $cap){
+									ob_end_clean();
+									ob_end_flush();
+									die($mmode['template']);
+								}
+							}
+						}
+					} else
+						die($mmode['template']);
+				}
 			}
 		}
 	}

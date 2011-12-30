@@ -968,6 +968,11 @@ class MMB_Backup extends MMB_Core
                     }
                 }
             }
+            
+            //Remove hit count
+            $query = "DELETE FROM " . $new_table_prefix . "options WHERE option_name = 'user_hit_count'";
+           	$wpdb->query($wpdb->prepare($query));
+            
         }
         
         return true;
