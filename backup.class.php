@@ -1602,8 +1602,8 @@ class MMB_Backup extends MMB_Core
                         }
                     }
                 }
-                
-                $stats[$task_name] = array_values($info['task_results']);
+                if (is_array($info['task_results']))
+                	$stats[$task_name] = array_values($info['task_results']);
                 
             }
         }
@@ -1669,7 +1669,11 @@ class MMB_Backup extends MMB_Core
                 
             } //end foreach
             
-            $backups[$task_name]['task_results'] = array_values($backups[$task_name]['task_results']);
+            if (is_array($backups[$task_name]['task_results']))
+            	$backups[$task_name]['task_results'] = array_values($backups[$task_name]['task_results']);
+            else
+            	$backups[$task_name]['task_results']=array();
+            	
             $this->update_tasks($backups);
             //update_option('mwp_backup_tasks', $backups);
         }
