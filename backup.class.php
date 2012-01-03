@@ -573,7 +573,6 @@ class MMB_Backup extends MMB_Core
         ob_start();
         $command  = "$zip -q -j $comp_level $backup_file .* * $exclude_data";
         $result_f = $this->mmb_exec($command, false, true);
-         
         if (!$result_f || $result_f == 18) { // disregard permissions error, file can't be accessed
             $command  = "$zip -q -r $comp_level $backup_file $include_data $exclude_data";
             $result_d = $this->mmb_exec($command, false, true);            
@@ -985,7 +984,7 @@ class MMB_Backup extends MMB_Core
         global $wpdb;
         $paths     = $this->check_mysql_paths();
         $file_path = ABSPATH . 'mwp_db';
-        @chmod($file_path,0777);
+        @chmod($file_path,0755);
         $file_name = glob($file_path . '/*.sql');
         $file_name = $file_name[0];
         
