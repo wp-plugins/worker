@@ -519,6 +519,7 @@ class MMB_Installer extends MMB_Core
     function get_upgradable_plugins()
     {
         $current            = $this->mmb_get_transient('update_plugins');
+		
         $upgradable_plugins = array();
         if (!empty($current->response)) {
             if (!function_exists('get_plugin_data'))

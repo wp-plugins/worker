@@ -106,6 +106,7 @@ function mmb_handle_overhead($clear = false)
     $query      = 'SHOW TABLE STATUS FROM ' . DB_NAME;
     $tables     = $wpdb->get_results($wpdb->prepare($query), ARRAY_A);
     $total_gain = 0;
+	$table_string = '';
     foreach ($tables as $table) {
         if (in_array($table['Engine'], array(
             'MyISAM',

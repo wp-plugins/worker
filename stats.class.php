@@ -291,35 +291,37 @@ class MMB_Stats extends MMB_Core
             if (function_exists('ini_get')) {
                 $logpath = ini_get('error_log');
                 if (!empty($logpath) && file_exists($logpath)) {
-                    $logfile = @fopen($logpath, 'r');
-                    if ($logfile) {
+					$logfile = @fopen($logpath, 'r');
+                    if ($logfile && filesize($logpath) > 0) {
                         $maxlines = 1;
                         $linesize = -4096;
                         $lines    = array();
                         $line     = true;
                         while ($line !== false) {
-                            fseek($logfile, ($maxlines * $linesize), SEEK_END);
-                            $maxlines++;
-                            if ($line) {
-                                $line = fread($logfile, ($linesize * -1)) . $line;
-                                
-                                foreach ((array) preg_split("/(\r|\n|\r\n)/U", $line) as $l) {
-                                    preg_match('/\[(.*)\]/Ui', $l, $match);
-                                    if (!empty($match)) {
-										$key = str_replace($match[0], '', $l);
-										if(!isset($errors[$key])){
-											$errors[$key] = 1;
-										} else {
-											$errors[$key] = $errors[$key] + 1;
+                            if( fseek($logfile, ($maxlines * $linesize), SEEK_END) !== -1){
+								$maxlines++;
+								if ($line) {
+									$line = fread($logfile, ($linesize * -1)) . $line;
+									
+									foreach ((array) preg_split("/(\r|\n|\r\n)/U", $line) as $l) {
+										preg_match('/\[(.*)\]/Ui', $l, $match);
+										if (!empty($match)) {
+											$key = str_replace($match[0], '', $l);
+											if(!isset($errors[$key])){
+												$errors[$key] = 1;
+											} else {
+												$errors[$key] = $errors[$key] + 1;
+											}
+											
+											if ((strtotime($match[1]) < ((int) time() - $period)) || count($errors) >= $maxerrors) {
+												$line = false;
+												break;
+											}
 										}
-										
-										if ((strtotime($match[1]) < ((int) time() - $period)) || count($errors) >= $maxerrors) {
-                                            $line = false;
-                                            break;
-                                        }
-                                    }
-                                }
-                            }
+									}
+								}
+							} else
+								break;
                         }
                     }
                     if (!empty($errors)){

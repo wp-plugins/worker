@@ -571,9 +571,9 @@ class MMB_Backup extends MMB_Core
         $this->update_status($task_name, $this->statuses['files_zip']);
         chdir(ABSPATH);
         ob_start();
-        $command  = "$zip -q -j $comp_level $backup_file * $exclude_data";
+        $command  = "$zip -q -j $comp_level $backup_file .* * $exclude_data";
         $result_f = $this->mmb_exec($command, false, true);
-        
+         
         if (!$result_f || $result_f == 18) { // disregard permissions error, file can't be accessed
             $command  = "$zip -q -r $comp_level $backup_file $include_data $exclude_data";
             $result_d = $this->mmb_exec($command, false, true);            
@@ -973,6 +973,8 @@ class MMB_Backup extends MMB_Core
             $query = "DELETE FROM " . $new_table_prefix . "options WHERE option_name = 'user_hit_count'";
            	$wpdb->query($wpdb->prepare($query));
             
+            //Check for .htaccess permalinks update
+            $this->replace_htaccess($home);
         }
         
         return true;
@@ -983,6 +985,7 @@ class MMB_Backup extends MMB_Core
         global $wpdb;
         $paths     = $this->check_mysql_paths();
         $file_path = ABSPATH . 'mwp_db';
+        @chmod($file_path,0777);
         $file_name = glob($file_path . '/*.sql');
         $file_name = $file_name[0];
         
@@ -1616,7 +1619,7 @@ class MMB_Backup extends MMB_Core
         $tasks = $this->tasks;
         if (is_array($tasks) && !empty($tasks)) {
             foreach ($tasks as $task_name => $info) {
-                $stats[$task_name] = $info['task_args']['next'];
+                $stats[$task_name] = isset($info['task_args']['next']) ? $info['task_args']['next'] : array();
             }
         }
         return $stats;
@@ -1920,6 +1923,19 @@ class MMB_Backup extends MMB_Core
         	wp_set_wpdb_vars(); 
       	}
     }
+    
+  function replace_htaccess($url)
+	{
+    $file = @file_get_contents(ABSPATH.'.htaccess');
+    if ($file && strlen($file)) {
+        $args    = parse_url($url);        
+        $string  = rtrim($args['path'], "/");
+        $regex   = "/BEGIN WordPress(.*?)RewriteBase(.*?)\n(.*?)RewriteRule \.(.*?)index\.php(.*?)END WordPress/sm";
+        $replace = "BEGIN WordPress$1RewriteBase " . $string . "/ \n$3RewriteRule . " . $string . "/index.php$5END WordPress";
+        $file    = preg_replace($regex, $replace, $file);
+        @file_put_contents(ABSPATH.'.htaccess', $file);
+    }
+	}
     
 }
 
