@@ -638,8 +638,10 @@ class MMB_Stats extends MMB_Core
         global $wpdb, $mmb_wp_version, $mmb_plugin_dir, $wp_version, $wp_local_package;
         
         $mwp_notifications = get_option('mwp_notifications', true);
-        $updates           = array();
         
+        $args         = array();
+        $updates           = array();
+        $send = 0;
         if (is_array($mwp_notifications) && $mwp_notifications != false) {
             include_once(ABSPATH . 'wp-includes/update.php');
             include_once(ABSPATH . '/wp-admin/includes/update.php');
@@ -691,20 +693,33 @@ class MMB_Stats extends MMB_Core
                 $updates['backups'] = $backups;
             }
             
-            if (!class_exists('WP_Http')) {
-                include_once(ABSPATH . WPINC . '/class-http.php');
-            }
             
             if (!empty($updates)) {
-                $args         = array();
-                $args['body'] = array(
-                    'updates' => $updates,
-                    'notification_key' => $notification_key
-                );
-                $result       = wp_remote_post($url, $args);
+                $args['body']['updates'] = $updates;
+                $args['body']['notification_key'] = $notification_key;
+                $send = 1;
             }
             
         }
+        
+        
+        $alert_data = get_option('mwp_pageview_alerts',true);
+        if(is_array($alert_data) && $alert_data['alert']){
+        	$pageviews = get_option('user_hit_count');
+        	$args['body']['alerts']['pageviews'] = $pageviews;
+        	$args['body']['alerts']['site_id'] = $alert_data['site_id'];
+        	if(!isset($url)){
+        		$url = $alert_data['url'];
+        	}
+        	$send = 1;
+        }
+        
+        if($send){
+        	if (!class_exists('WP_Http')) {
+                include_once(ABSPATH . WPINC . '/class-http.php');
+            }
+        	$result       = wp_remote_post($url, $args);
+        }  
         
         
     }
@@ -723,6 +738,11 @@ class MMB_Stats extends MMB_Core
             $content = (strlen($content) > ($length + 3)) ? substr($content, 0, $length) . '...' : $content;
         
         return $content;
+    }
+    
+    function set_alerts($args){
+    	extract($args);
+    	update_option('mwp_pageview_alerts',array('site_id' => $site_id,'alert' => $alert,'url' => $url));
     }
     
 }

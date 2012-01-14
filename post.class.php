@@ -121,8 +121,16 @@ class MMB_Post extends MMB_Core
                 } else {
                     $no_thumb = $get_url[4];
                 }
+                
+                if(isset($upload['error'])){
+                	return array('error' => $upload['error']);
+                }
                 $file_name = basename($no_thumb);
                 $tmp_file  = download_url($no_thumb);
+                
+                if(is_wp_error($tmp_file)){
+                	return array('error' => $tmp_file->get_error_message());
+                }
                 
                 $attach_upload['url']  = $upload['url'] . '/' . $file_name;
                 $attach_upload['path'] = $upload['path'] . '/' . $file_name;
@@ -195,6 +203,10 @@ class MMB_Post extends MMB_Core
                             $post_content = preg_replace($mmb_mp, $mmb_rp, $post_content);
                         }
                     }
+                } else {
+                	@unlink($tmp_file);
+                	return array('error' => "Cannot create attachment file in ".$attach_upload['path']." Please set correct permissions.");
+                	
                 }
                 @unlink($tmp_file);
             }
@@ -206,7 +218,16 @@ class MMB_Post extends MMB_Core
         if (count($post_atta_img)) {
             foreach ($post_atta_img as $img) {
                 $file_name             = basename($img['src']);
+                 
+                if(isset($upload['error'])){
+                	return array('error' => $upload['error']);
+                }
+                
                 $tmp_file              = download_url($img['src']);
+                if(is_wp_error($tmp_file)){
+                	return array('error' => $tmp_file->get_error_message());
+                }
+                
                 $attach_upload['url']  = $upload['url'] . '/' . $file_name;
                 $attach_upload['path'] = $upload['path'] . '/' . $file_name;
                 $renamed               = @rename($tmp_file, $attach_upload['path']);
@@ -242,6 +263,9 @@ class MMB_Post extends MMB_Core
                         }
                     }
                     
+                } else {
+                	@unlink($tmp_file);
+                	return array('error' => "Cannot create attachment file in ".$attach_upload['path']." Please set correct permissions.");
                 }
                 @unlink($tmp_file);
             }
@@ -272,7 +296,13 @@ class MMB_Post extends MMB_Core
         // featured image
         if ($post_featured_img != '') {
             $file_name             = basename($post_featured_img);
+            if(isset($upload['error'])){
+                	return array('error' => $upload['error']);
+                }
             $tmp_file              = download_url($post_featured_img);
+            if(is_wp_error($tmp_file)){
+                	return array('error' => $tmp_file->get_error_message());
+                }
             $attach_upload['url']  = $upload['url'] . '/' . $file_name;
             $attach_upload['path'] = $upload['path'] . '/' . $file_name;
             $renamed               = @rename($tmp_file, $attach_upload['path']);
@@ -294,6 +324,9 @@ class MMB_Post extends MMB_Core
                 $new_custom['_thumbnail_id'] = array(
                     $attach_id
                 );
+            } else {
+            	@unlink($tmp_file);
+                	return array('error' => "Cannot create attachment file in ".$attach_upload['path']." Please set correct permissions.");
             }
             @unlink($tmp_file);
         }
