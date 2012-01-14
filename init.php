@@ -280,8 +280,13 @@ if( !function_exists ( 'mmb_post_create' )) {
 		$return = $mmb_core->post_instance->create($params);
 		if (is_int($return))
 			mmb_response($return, true);
-		else
-			mmb_response($return, false);
+		else{
+			if(isset($return['error'])){
+				mmb_response($return['error'], false);
+			} else {
+				mmb_response($return, false);
+			}
+		}
 	}
 }
 
@@ -330,6 +335,20 @@ if( !function_exists ( 'mmb_backup_now' )) {
 		$mmb_core->get_backup_instance();
 		$return = $mmb_core->backup_instance->backup($params);
 		
+		if (is_array($return) && array_key_exists('error', $return))
+			mmb_response($return['error'], false);
+		else {
+			mmb_response($return, true);
+		}
+	}
+}
+
+if( !function_exists ( 'mmb_run_task_now' )) {
+	function mmb_run_task_now($params)
+	{
+		global $mmb_core;
+		$mmb_core->get_backup_instance();
+		$return = $mmb_core->backup_instance->task_now($params['task_name']);
 		if (is_array($return) && array_key_exists('error', $return))
 			mmb_response($return['error'], false);
 		else {
@@ -637,6 +656,17 @@ if( !function_exists ( 'mmb_set_notifications' )) {
 		}
 		
 	}
+}
+
+if( !function_exists ( 'mmb_set_alerts' )) {
+	function mmb_set_alerts($params)
+	{
+		global $mmb_core;
+			$mmb_core->get_stats_instance();
+			$return = $mmb_core->stats_instance->set_alerts($params);
+			mmb_response(true, true);
+	}
+		
 }
 
 if(!function_exists('mmb_more_reccurences')){

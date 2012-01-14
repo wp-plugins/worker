@@ -159,7 +159,6 @@ class MMB_Backup extends MMB_Core
     //Cron check
     function check_backup_tasks()
     {
-        //$settings = $this->get_backup_settings();
         $settings = $this->tasks;
         if (is_array($settings) && !empty($settings)) {
             foreach ($settings as $task_name => $setting) {
@@ -173,15 +172,27 @@ class MMB_Backup extends MMB_Core
                             'site_key' => $setting['task_args']['site_key']
                         );
                         
-                        $this->validate_task($check_data, $setting['task_args']['url']);
+                        $check = $this->validate_task($check_data, $setting['task_args']['url']);
+                        
+                    }
+
+                    $update = array(
+                        'task_name' => $task_name,
+                        'args' => $settings[$task_name]['task_args']  
+                    );
+                    
+                    
+                    if($check != 'paused'){
+                    	$update['time'] = time();
                     }
                     
                     //Update task with next schedule
-                    $this->set_backup_task(array(
-                        'task_name' => $task_name,
-                        'args' => $settings[$task_name]['task_args'],
-                        'time' => time()
-                    ));
+                    $this->set_backup_task($update);
+                    
+                    if($check == 'paused'){
+                    	continue;
+                    }
+                    
                     
                     $result = $this->backup($setting['task_args'], $task_name);
                     $error  = '';
@@ -199,6 +210,49 @@ class MMB_Backup extends MMB_Core
                 }
             }
         }
+        
+    }
+    
+    function task_now($task_name){
+
+    	 $settings = $this->tasks;
+    	 if(!array_key_exists($task_name,$settings)){
+    	 	return array('error' => $task_name." does not exist.");
+    	 } else {
+    	 	$setting = $settings[$task_name];
+    	 }
+    	
+    	  if ($setting['task_args']['url'] && $setting['task_args']['task_id'] && $setting['task_args']['site_key']) {
+                        //Check orphan task
+                        $check_data = array(
+                            'task_name' => $task_name,
+                            'task_id' => $setting['task_args']['task_id'],
+                            'site_key' => $setting['task_args']['site_key']
+                        );
+                        
+                        $this->validate_task($check_data, $setting['task_args']['url']);
+        }
+        
+        $this->set_backup_task(array(
+                        'task_name' => $task_name,
+                        'args' => $settings[$task_name]['task_args'],
+                        'time' => time()
+                    ));
+      
+      //Run backup              
+      $result = $this->backup($setting['task_args'], $task_name);
+      
+      //Check for error
+      if (is_array($result) && array_key_exists('error', $result)) {
+                        $this->set_backup_task(array(
+                            'task_name' => $task_name,
+                            'args' => $settings[$task_name]['task_args'],
+                            'error' => $result['error']
+                        ));
+        return $result;
+       } else {
+       	return $this->get_backup_stats();
+       }
         
     }
     
@@ -843,6 +897,7 @@ class MMB_Backup extends MMB_Core
                 
                  $clone_options['mwp_backup_tasks'] = serialize(get_option('mwp_backup_tasks'));
                  $clone_options['mwp_notifications'] = serialize(get_option('mwp_notifications'));
+                 $clone_options['mwp_pageview_alerts'] = serialize(get_option('mwp_pageview_alerts'));
                 
                 
             }
@@ -1873,7 +1928,11 @@ class MMB_Backup extends MMB_Core
             $this->update_tasks($tasks);
             $this->cleanup();
             exit;
-        }
+        } elseif(is_array($result) && $result['body'] == 'mwp_pause_task'){
+        	return 'paused';
+        } 
+        
+        return 'ok';
     }
     
     function update_status($task_name, $status, $completed = false)

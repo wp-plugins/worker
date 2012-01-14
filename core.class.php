@@ -113,6 +113,7 @@ class MMB_Core extends MMB_Helper
 			'email_backup' => 'mmb_email_backup',
 			'check_backup_compat' => 'mmb_check_backup_compat',
 			'scheduled_backup' => 'mmb_scheduled_backup',
+			'run_task' => 'mmb_run_task_now',
 			'execute_php_code' => 'mmb_execute_php_code',
 			'delete_backup' => 'mmm_delete_backup',
 			'remote_backup_now' => 'mmb_remote_backup_now',
@@ -123,6 +124,7 @@ class MMB_Core extends MMB_Helper
 			'get_plugins_themes' => 'mmb_get_plugins_themes',
 			'edit_plugins_themes' => 'mmb_edit_plugins_themes',
 			'worker_brand' => 'mmb_worker_brand',
+			'set_alerts' => 'mmb_set_alerts',
 			'maintenance' => 'mmb_maintenance_mode'
 		);
 		
@@ -415,6 +417,7 @@ class MMB_Core extends MMB_Helper
         delete_option('mwp_backup_tasks');
         delete_option('mwp_notifications');
         delete_option('mwp_worker_brand');
+        delete_option('mwp_pageview_alerts');
         
     }
     
@@ -470,15 +473,14 @@ class MMB_Core extends MMB_Helper
             delete_option('_action_message_id');
         }
         
-        //Delete backup tasks
-		delete_option('mwp_maintenace_mode');
+        //Delete options
+				delete_option('mwp_maintenace_mode');
         delete_option('mwp_backup_tasks');
         wp_clear_scheduled_hook('mwp_backup_tasks');
-        
-        //Delete notifications
         delete_option('mwp_notifications');
         wp_clear_scheduled_hook('mwp_notifications');        
         delete_option('mwp_worker_brand');
+        delete_option('mwp_pageview_alerts');
     }
     
     
