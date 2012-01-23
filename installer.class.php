@@ -120,7 +120,7 @@ class MMB_Installer extends MMB_Core
     
     function do_upgrade($params = null)
     {
-        if ($params == null || empty($params))
+		if ($params == null || empty($params))
             return array(
                 'failed' => 'No upgrades passed.'
             );
@@ -131,6 +131,7 @@ class MMB_Installer extends MMB_Core
             );
         }
         
+		
         $params = isset($params['upgrades_all']) ? $params['upgrades_all'] : $params;
         
         $core_upgrade    = isset($params['wp_upgrade']) ? $params['wp_upgrade'] : array();
@@ -360,27 +361,36 @@ class MMB_Installer extends MMB_Core
             return array(
                 'error' => 'No plugin files for upgrade.'
             );
+			
+		$current = $this->mmb_get_transient('update_plugins');
+		$versions = array();
+		if(!empty($current)){
+			foreach($plugins as $plugin => $data){
+				if(isset($current->checked[$plugin])){
+					$versions[$current->checked[$plugin]] = $plugin;
+				}
+			}
+		}
         $return = array();
         if (class_exists('Plugin_Upgrader') && class_exists('Bulk_Plugin_Upgrader_Skin')) {
             $upgrader = new Plugin_Upgrader(new Bulk_Plugin_Upgrader_Skin(compact('nonce', 'url')));
             $result   = $upgrader->bulk_upgrade(array_keys($plugins));
-            
-            if (!function_exists('wp_update_plugins'))
+			if (!function_exists('wp_update_plugins'))
                 include_once(ABSPATH . 'wp-includes/update.php');
             
             @wp_update_plugins();
-            $current_plugins = $this->mmb_get_transient('update_plugins');
-            
-            if (!empty($result)) {
+			$current = $this->mmb_get_transient('update_plugins');
+			if (!empty($result)) {
                 foreach ($result as $plugin_slug => $plugin_info) {
                     if (!$plugin_info || is_wp_error($plugin_info)) {
                         $return[$plugin_slug] = $this->mmb_get_error($plugin_info);
                     } else {
-                        if (isset($current_plugins->response[$plugin_slug]) && !empty($current_plugins->response[$plugin_slug])) {
-                            $return[$plugin_slug] = false;
-                        } else {
-                            $return[$plugin_slug] = 1;
-                        }
+						if(!empty($result[$plugin_slug]) || (isset($current->checked[$plugin_slug]) && version_compare(array_search($plugin_slug, $versions), $current->checked[$plugin_slug], '<') == true)){
+							$return[$plugin_slug] = 1;
+						} else {
+							update_option('mmb_forcerefresh', true);
+							$return[$plugin_slug] = 'Could not refresh upgrade transients, please reload website data';
+						}
                     }
                 }
                 ob_end_clean();
@@ -405,30 +415,39 @@ class MMB_Installer extends MMB_Core
             return array(
                 'error' => 'No theme files for upgrade.'
             );
-        if (class_exists('Theme_Upgrader') && class_exists('Bulk_Theme_Upgrader_Skin')) {
-            $upgrader = new Theme_Upgrader(new Bulk_Theme_Upgrader_Skin(compact('title', 'nonce', 'url', 'theme')));
-            $result   = $upgrader->bulk_upgrade($themes);
-            
-            if (!function_exists('wp_update_themes'))
+		
+		$current = $this->mmb_get_transient('update_themes');
+		$versions = array();
+		if(!empty($current)){
+			foreach($themes as $theme){
+				if(isset($current->checked[$theme])){
+					$versions[$current->checked[$theme]] = $theme;
+				}
+			}
+		}
+		if (class_exists('Theme_Upgrader') && class_exists('Bulk_Theme_Upgrader_Skin')) {
+			$upgrader = new Theme_Upgrader(new Bulk_Theme_Upgrader_Skin(compact('title', 'nonce', 'url', 'theme')));
+            $result = $upgrader->bulk_upgrade($themes);
+			
+			if (!function_exists('wp_update_themes'))
                 include_once(ABSPATH . 'wp-includes/update.php');
             
             @wp_update_themes();
-            $current_themes = $this->mmb_get_transient('update_themes');
-            
-            $return = array();
+			$current = $this->mmb_get_transient('update_themes');
+			$return = array();
             if (!empty($result)) {
                 foreach ($result as $theme_tmp => $theme_info) {
-                    if (is_wp_error($theme_info) || !$theme_info) {
+					 if (is_wp_error($theme_info) || empty($theme_info)) {
                         $return[$theme_tmp] = $this->mmb_get_error($theme_info);
                     } else {
-                        if (isset($current_themes->response[$theme_tmp]) && !empty($current_themes->response[$theme_tmp])) {
-                            $return[$theme_tmp] = false;
-                        } else {
-                            $return[$theme_tmp] = 1;
-                        }
+						if(!empty($result[$theme_tmp]) || (isset($current->checked[$theme_tmp]) && version_compare(array_search($theme_tmp, $versions), $current->checked[$theme_tmp], '<') == true)){
+							$return[$theme_tmp] = 1;
+						} else {
+							update_option('mmb_forcerefresh', true);
+							$return[$theme_tmp] = 'Could not refresh upgrade transients, please reload website data';
+						}
                     }
                 }
-                
                 return array(
                     'upgraded' => $return
                 );
@@ -548,15 +567,18 @@ class MMB_Installer extends MMB_Core
         $upgrade_themes = array();
         
         $current = $this->mmb_get_transient('update_themes');
-        foreach ((array) $all_themes as $theme_template => $theme_data) {
-            if (!empty($current->response)) {
-                foreach ($current->response as $current_themes => $theme) {
+        if (!empty($current->response)) {
+			foreach ((array) $all_themes as $theme_template => $theme_data) {
+				if(isset($theme_data['Parent Theme']) && !empty($theme_data['Parent Theme']))
+					continue;
+					
+				foreach ($current->response as $current_themes => $theme) {
                     if ($theme_data['Template'] == $current_themes) {
                         if (strlen($theme_data['Name']) > 0 && strlen($theme_data['Version']) > 0) {
                             $current->response[$current_themes]['name']        = $theme_data['Name'];
                             $current->response[$current_themes]['old_version'] = $theme_data['Version'];
                             $current->response[$current_themes]['theme_tmp']   = $theme_data['Template'];
-                            $upgrade_themes[]                                  = $current->response[$current_themes];
+                            $upgrade_themes[] = $current->response[$current_themes];
                         }
                     }
                 }

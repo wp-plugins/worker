@@ -92,10 +92,11 @@ class MMB_Core extends MMB_Helper
 		$_mmb_item_filter['get'] = array( 'updates', 'errors' );
 		
 		$this->mmb_pre_init_actions = array(
-			'do_upgrade' => 'mmb_do_upgrade',
-			'backup_req' => 'mmb_get_backup_req'
+			'backup_req' => 'mmb_get_backup_req',
 		);
+		
 		$this->mmb_init_actions = array(
+			'do_upgrade' => 'mmb_do_upgrade',
 			'get_stats' => 'mmb_stats_get',
 			'remove_site' => 'mmb_remove_site',
 			'backup_clone' => 'mmb_backup_now',
@@ -128,7 +129,7 @@ class MMB_Core extends MMB_Helper
 			'maintenance' => 'mmb_maintenance_mode'
 		);
 		
-    add_action('rightnow_end', array( &$this, 'add_right_now_info' ));       
+		add_action('rightnow_end', array( &$this, 'add_right_now_info' ));       
 		add_action('admin_init', array(&$this,'admin_actions'));   
 		add_action('init', array( &$this, 'mmb_remote_action'), 9999);
 		add_action('setup_theme', 'mmb_parse_request');
