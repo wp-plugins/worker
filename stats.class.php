@@ -348,7 +348,8 @@ class MMB_Stats extends MMB_Core
         
         if ($refresh == 'transient') {
             $current = $this->mmb_get_transient('update_core');
-            if (isset($current->last_checked)) {
+            if (isset($current->last_checked) || get_option('mmb_forcerefresh')) {
+				update_option('mmb_forcerefresh', false);
                 if (time() - $current->last_checked > 14400) {
                     @wp_version_check();
                     @wp_update_plugins();
@@ -368,7 +369,7 @@ class MMB_Stats extends MMB_Core
         $stats['network_install']       = $this->network_admin_install;
         $stats['network_install']       = $this->network_admin_install;
         
-        if (!function_exists('get_filesystem_method'))
+        if ( !function_exists('get_filesystem_method') )
             include_once(ABSPATH . 'wp-admin/includes/file.php');
         $mmode = get_option('mwp_maintenace_mode');
 		
@@ -388,7 +389,7 @@ class MMB_Stats extends MMB_Core
         include_once(ABSPATH . '/wp-admin/includes/update.php');
         
         $stats = $this->mmb_parse_action_params('get', $params, $this);
-        $update_check = array();
+		$update_check = array();
         $num          = extract($params);
         if ($refresh == 'transient') {
             $update_check = apply_filters('mwp_premium_update_check', $update_check);
@@ -719,6 +720,10 @@ class MMB_Stats extends MMB_Core
                 include_once(ABSPATH . WPINC . '/class-http.php');
             }
         	$result       = wp_remote_post($url, $args);
+        	
+        	if (is_array($result) && $result['body'] == 'mwp_delete_alert') {
+        		delete_option('mwp_pageview_alerts');
+        	}
         }  
         
         

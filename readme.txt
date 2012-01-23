@@ -33,6 +33,10 @@ Check out [ManageWP.com](http://managewp.com/ "Manage Multiple Blogs").
 
 == Changelog ==  
 
+= 3.9.16 =
+* Option to "Run now" backup tasks
+* Maintenance release with several bug fixes
+
 = 3.9.15 =
 * New: Full range of SEO Statistics now trackable for your websites (Google Page Rank and Page Speed, Backlinks and 20+ more)
 * New: Google keyword rank tracking with history

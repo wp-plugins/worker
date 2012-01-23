@@ -220,20 +220,9 @@ class MMB_Backup extends MMB_Core
     	 	return array('error' => $task_name." does not exist.");
     	 } else {
     	 	$setting = $settings[$task_name];
-    	 }
-    	
-    	  if ($setting['task_args']['url'] && $setting['task_args']['task_id'] && $setting['task_args']['site_key']) {
-                        //Check orphan task
-                        $check_data = array(
-                            'task_name' => $task_name,
-                            'task_id' => $setting['task_args']['task_id'],
-                            'site_key' => $setting['task_args']['site_key']
-                        );
-                        
-                        $this->validate_task($check_data, $setting['task_args']['url']);
-        }
-        
-        $this->set_backup_task(array(
+    	 }    
+       
+       $this->set_backup_task(array(
                         'task_name' => $task_name,
                         'args' => $settings[$task_name]['task_args'],
                         'time' => time()
@@ -835,7 +824,7 @@ class MMB_Backup extends MMB_Core
             $backup_file = download_url($backup_url);
             if (is_wp_error($backup_file)) {
                 return array(
-                    'error' => $backup_file->get_error_message()
+                    'error' => 'Unable to download backup file ('.$backup_file->get_error_message().')'
                 );
             }
             $what = 'full';
