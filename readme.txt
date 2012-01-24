@@ -34,8 +34,10 @@ Check out [ManageWP.com](http://managewp.com/ "Manage Multiple Blogs").
 == Changelog ==  
 
 = 3.9.16 =
-* Option to "Run now" backup tasks
-* Maintenance release with several bug fixes
+* New: Option to "Run now" backup tasks
+* New: Traffic alerts functionality
+* New: Support for Genesis premium theme updates
+* Fix: In some circutmsances .htaccess was not correctly zipped in the backup archive
 
 = 3.9.15 =
 * New: Full range of SEO Statistics now trackable for your websites (Google Page Rank and Page Speed, Backlinks and 20+ more)
