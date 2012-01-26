@@ -122,7 +122,7 @@ class MMB_Post extends MMB_Core
                     $no_thumb = $get_url[4];
                 }
                 
-                if(isset($upload['error'])){
+                if(isset($upload['error']) && !empty($upload['error'])){
                 	return array('error' => $upload['error']);
                 }
                 $file_name = basename($no_thumb);
@@ -219,7 +219,7 @@ class MMB_Post extends MMB_Core
             foreach ($post_atta_img as $img) {
                 $file_name             = basename($img['src']);
                  
-                if(isset($upload['error'])){
+                if(isset($upload['error']) && !empty($upload['error'])){
                 	return array('error' => $upload['error']);
                 }
                 
@@ -296,7 +296,7 @@ class MMB_Post extends MMB_Core
         // featured image
         if ($post_featured_img != '') {
             $file_name             = basename($post_featured_img);
-            if(isset($upload['error'])){
+            if(isset($upload['error']) && !empty($upload['error'])){
                 	return array('error' => $upload['error']);
                 }
             $tmp_file              = download_url($post_featured_img);
