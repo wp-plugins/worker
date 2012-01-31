@@ -889,6 +889,11 @@ class MMB_Backup extends MMB_Core
                  $clone_options['mwp_pageview_alerts'] = serialize(get_option('mwp_pageview_alerts'));
                 
                 
+            } else {
+            	$restore_options                       = array();
+              $restore_options['mwp_notifications'] = get_option('mwp_notifications');
+              $restore_options['mwp_pageview_alerts'] = get_option('mwp_pageview_alerts');
+              $restore_options['user_hit_count'] = get_option('user_hit_count');
             }
             
             
@@ -1018,7 +1023,19 @@ class MMB_Backup extends MMB_Core
             
             //Check for .htaccess permalinks update
             $this->replace_htaccess($home);
+        } else {
+        			
+        			//restore worker options
+              if (is_array($restore_options) && !empty($restore_options)) {
+                foreach ($restore_options as $key => $option) {
+                	update_option($key,$option);
+                }
+              }
         }
+        
+        
+        //replace options
+        
         
         return true;
     }
@@ -1544,8 +1561,9 @@ class MMB_Backup extends MMB_Core
         if ($as3_site_folder == true)
             $as3_directory .= '/' . $this->site_name;
         
-        $s3->getObject($as3_bucket, $as3_directory . '/' . $backup_file, $temp);
         $temp = ABSPATH . 'mwp_temp_backup.zip';
+        $s3->getObject($as3_bucket, $as3_directory . '/' . $backup_file, $temp);
+        
         return $temp;
     }
     

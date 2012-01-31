@@ -465,6 +465,8 @@ class MMB_Installer extends MMB_Core
     
     function upgrade_premium($premium = false)
     {
+		global $mmb_plugin_url;
+		
         if (!class_exists('WP_Upgrader'))
             include_once(ABSPATH . 'wp-admin/includes/class-wp-upgrader.php');
         
@@ -477,7 +479,7 @@ class MMB_Installer extends MMB_Core
         $pr_update      = array();
         $result         = array();
         $premium_update = array();
-        $premium_update = apply_filters('mwp_premium_perform_update', $premium_update);
+		$premium_update = apply_filters('mwp_premium_perform_update', $premium_update);
         
         if (!empty($premium_update)) {
             foreach ($premium as $pr) {
@@ -486,7 +488,7 @@ class MMB_Installer extends MMB_Core
                     
                     if ($update['name'] == $pr['name']) {
                         $update_result = false;
-                        if (isset($update['url'])) {
+						if (isset($update['url'])) {
                             if (defined('WP_INSTALLING') && file_exists(ABSPATH . '.maintenance'))
                                 $pr_update[$update['type'] . 's']['upgraded'][md5($update['name'])] = 'Site under maintanace.';
                             
@@ -496,7 +498,7 @@ class MMB_Installer extends MMB_Core
                                 
                                 $upgrader = new WP_Upgrader();
                             }
-                            
+                        	
                             @$update_result = $upgrader->run(array(
                                 'package' => $update['url'],
                                 'destination' => isset($update['type']) && $update['type'] == 'theme' ? WP_CONTENT_DIR . '/themes' : WP_PLUGIN_DIR,
@@ -504,7 +506,7 @@ class MMB_Installer extends MMB_Core
                                 'clear_working' => true,
                                 'hook_extra' => array()
                             ));
-                            $update_result = !$update_result || is_wp_error($update_result) ? $this->mmb_get_error($update_result) : 1;
+							$update_result = !$update_result || is_wp_error($update_result) ? $this->mmb_get_error($update_result) : 1;
                             
                         } else if (isset($update['callback'])) {
                             if (is_array($update['callback'])) {

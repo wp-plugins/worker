@@ -367,7 +367,6 @@ class MMB_Stats extends MMB_Core
         $stats['mysql_version']         = $wpdb->db_version();
         $stats['wp_multisite']          = $this->mmb_multisite;
         $stats['network_install']       = $this->network_admin_install;
-        $stats['network_install']       = $this->network_admin_install;
         
         if ( !function_exists('get_filesystem_method') )
             include_once(ABSPATH . 'wp-admin/includes/file.php');
@@ -417,21 +416,26 @@ class MMB_Stats extends MMB_Core
     
     function get_multisite($stats = array())
     {
-        global $current_user;
-        
-        if ($this->network_admin_install == '1' && current_user_can('update_core')) {
-            $user_blogs = get_blogs_of_user($current_user->ID);
-            if (!empty($user_blogs)) {
+        global $current_user, $wpdb;
+        $user_blogs = get_blogs_of_user( $current_user->ID );
+		$network_blogs = $wpdb->get_results( $wpdb->prepare("select `blog_id`, `site_id` from `{$wpdb->blogs}`") );
+		if ($this->network_admin_install == '1' && is_super_admin()) {
+			if (!empty($network_blogs)) {
                 $blogs = array();
-                foreach ($user_blogs as $blog_id => $data) {
-                    if ($this->mmb_multisite == $blog_id)
-                        continue;
-                    
-                    if (isset($data->siteurl))
-                        $blogs[] = $data->siteurl;
+                foreach ( $network_blogs as $details) {
+                    if($details->site_id == $details->blog_id)
+						continue;
+					else {
+						$data = get_blog_details($details->blog_id);
+						if(in_array($details->blog_id, array_keys($user_blogs)))
+							$stats['network_blogs'][] = $data->siteurl;
+						else {
+							$user = get_users( array( 'blog_id' => $details->blog_id, 'number' => 1) );
+							if( !empty($user) )
+								$stats['other_blogs'][$data->siteurl] = $user[0]->user_login;
+						}
+					}
                 }
-                if (!empty($blogs))
-                    $stats['network_blogs'] = $blogs;
             }
         }
         return $stats;
