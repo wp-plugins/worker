@@ -420,7 +420,6 @@ class MMB_Helper
             }
 			
             $user = (array) $this->mmb_get_user_info( $username );
-			
 			if ((isset($user[$wpdb->prefix . 'user_level']) && $user[$wpdb->prefix . 'user_level'] == 10) || isset($user[$wpdb->prefix . 'capabilities']['administrator']) || 
 				(isset($user['caps']['administrator']) && $user['caps']['administrator'] == 1)){
                 return true;

@@ -388,25 +388,25 @@ class MMB_Core extends MMB_Helper
 		
         //delete plugin options, just in case
         if ($this->mmb_multisite != false) {
-			$user_blogs = get_blogs_of_user($current_user->ID);
-			if(!empty($user_blogs)){
+			$network_blogs = $wpdb->get_results($wpdb->prepare("select `blog_id`, `site_id` from `{$wpdb->blogs}`"));
+			if(!empty($network_blogs)){
 				if( is_network_admin() ){
 					update_option('mmb_network_admin_install', 1);
-					foreach($user_blogs as $blog_id => $blog_data){
-						if($this->mmb_multisite != $blog_id)
-							update_blog_option($blog_id, 'mmb_network_admin_install', -1);
+					foreach($network_blogs as $details){
+						if($details->site_id == $details->blog_id)
+							update_blog_option($details->blog_id, 'mmb_network_admin_install', 1);
+						else 
+							update_blog_option($details->blog_id, 'mmb_network_admin_install', -1);
 							
 						delete_blog_option($blog_id, '_worker_nossl_key');
 						delete_blog_option($blog_id, '_worker_public_key');
 						delete_blog_option($blog_id, '_action_message_id');
 					}
 				} else {
-					if(isset($user_blogs[$this->mmb_multisite])){
-						update_option('mmb_network_admin_install', -1);
-						delete_option('_worker_nossl_key');
-						delete_option('_worker_public_key');
-						delete_option('_action_message_id');
-					}
+					update_option('mmb_network_admin_install', -1);
+					delete_option('_worker_nossl_key');
+					delete_option('_worker_public_key');
+					delete_option('_action_message_id');
 				}
 			}
         } else {
@@ -445,12 +445,12 @@ class MMB_Core extends MMB_Helper
 		$_wp_using_ext_object_cache = false;
         
         if ($this->mmb_multisite != false) {
-			$user_blogs = get_blogs_of_user($current_user->ID);
-			if(!empty($user_blogs)){
+			$network_blogs = $wpdb->get_col($wpdb->prepare("select `blog_id` from `{$wpdb->blogs}`"));
+			if(!empty($network_blogs)){
 				if( is_network_admin() ){
 					if( $deactivate ) {
 						delete_option('mmb_network_admin_install');
-						foreach($user_blogs as $blog_id => $blog_data){
+						foreach($network_blogs as $blog_id){
 							delete_blog_option($blog_id, 'mmb_network_admin_install');
 							delete_blog_option($blog_id, '_worker_nossl_key');
 							delete_blog_option($blog_id, '_worker_public_key');
@@ -461,15 +461,14 @@ class MMB_Core extends MMB_Helper
 				} else {
 					if( $deactivate )
 						delete_option('mmb_network_admin_install');
-					if(isset($user_blogs[$this->mmb_multisite])){
-						delete_option('_worker_nossl_key');
-						delete_option('_worker_public_key');
-						delete_option('_action_message_id');
-					}
+						
+					delete_option('_worker_nossl_key');
+					delete_option('_worker_public_key');
+					delete_option('_action_message_id');
 				}
 			}
         } else {
-            delete_option('_worker_nossl_key');
+			delete_option('_worker_nossl_key');
             delete_option('_worker_public_key');
             delete_option('_action_message_id');
         }
