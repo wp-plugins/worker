@@ -280,15 +280,7 @@ class MMB_Backup extends MMB_Core
         }
         
         @file_put_contents($new_file_path . '/index.php', ''); //safe
-        
-        //Delete possible broken previous backups - don't need it anymore (works only for previous worker versions)
-        foreach (glob($new_file_path . "/*.zip") as $filename) {
-            $short = basename($filename);
-            preg_match('/^wp\-content(.*)/Ui', $short, $matches);
-            if ($matches)
-                @unlink($filename);
-        }
-        
+           
         //Prepare .zip file name  
         $hash        = md5(time());
         $label       = $type ? $type : 'manual';
@@ -1031,10 +1023,10 @@ class MMB_Backup extends MMB_Core
                 	update_option($key,$option);
                 }
               }
+
         }
         
         
-        //replace options
         
         
         return true;
