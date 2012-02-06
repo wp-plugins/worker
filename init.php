@@ -832,5 +832,4 @@ if(	isset($_COOKIE[MMB_XFRAME_COOKIE]) ){
 	remove_action( 'login_init', 'send_frame_options_header');
 }
 
-
 ?>
