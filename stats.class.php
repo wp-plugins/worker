@@ -252,18 +252,22 @@ class MMB_Stats extends MMB_Core
     function get_updates($stats, $options = array())
     {
         $upgrades = false;
-        
+        $premium = array();
         if (isset($options['premium']) && $options['premium']) {
             $premium_updates = array();
-            $upgrades        = apply_filters('mwp_premium_update_notification', $premium_updates);
-            if (!empty($upgrades)) {
+            $upgrades = apply_filters('mwp_premium_update_notification', $premium_updates);
+			if (!empty($upgrades)) {
+				foreach( $upgrades as $data ){
+					if( isset($data['Name']) )
+						$premium[] = $data['Name'];
+				}
                 $stats['premium_updates'] = $upgrades;
                 $upgrades                 = false;
             }
         }
         if (isset($options['themes']) && $options['themes']) {
             $this->get_installer_instance();
-            $upgrades = $this->installer_instance->get_upgradable_themes();
+            $upgrades = $this->installer_instance->get_upgradable_themes( $premium );
             if (!empty($upgrades)) {
                 $stats['upgradable_themes'] = $upgrades;
                 $upgrades                   = false;
@@ -272,7 +276,7 @@ class MMB_Stats extends MMB_Core
         
         if (isset($options['plugins']) && $options['plugins']) {
             $this->get_installer_instance();
-            $upgrades = $this->installer_instance->get_upgradable_plugins();
+            $upgrades = $this->installer_instance->get_upgradable_plugins( $premium );
             if (!empty($upgrades)) {
                 $stats['upgradable_plugins'] = $upgrades;
                 $upgrades                    = false;
@@ -499,7 +503,9 @@ class MMB_Stats extends MMB_Core
     
     function set_hit_count($fix_count = false)
     {
-        if ($fix_count || (!is_admin() && !MMB_Stats::is_bot())) {
+    	global $mmb_core;
+        if ($fix_count || (!is_admin() && !MMB_Stats::is_bot() && !isset($_GET['doing_wp_cron']))) {
+        	
             $date           = date('Y-m-d');
             $user_hit_count = (array) get_option('user_hit_count');
             if (!$user_hit_count) {

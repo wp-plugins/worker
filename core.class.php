@@ -656,6 +656,5 @@ class MMB_Core extends MMB_Helper
     	return $all_plugins;
     }
     
-   
 }
 ?>

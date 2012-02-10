@@ -98,6 +98,12 @@ class MMB_Backup extends MMB_Core
     {
         //$params => [$task_name, $args, $error]
         if (!empty($params)) {
+        	
+        	//Make sure backup cron job is set
+        if (!wp_next_scheduled('mwp_backup_tasks')) {
+					wp_schedule_event( time(), 'tenminutes', 'mwp_backup_tasks' );
+				}
+        	
             extract($params);
             
             //$before = $this->get_backup_settings();
@@ -153,12 +159,18 @@ class MMB_Backup extends MMB_Core
             }
             return $return;
         }
+        
+        
+				
         return false;
     }
     
     //Cron check
     function check_backup_tasks()
     {
+    	
+    		$this->check_cron_remove();
+        
         $settings = $this->tasks;
         if (is_array($settings) && !empty($settings)) {
             foreach ($settings as $task_name => $setting) {
@@ -722,7 +734,7 @@ class MMB_Backup extends MMB_Core
         global $wpdb;
         $paths   = $this->check_mysql_paths();
         $brace   = (substr(PHP_OS, 0, 3) == 'WIN') ? '"' : '';
-        $command = $brace . $paths['mysqldump'] . $brace . ' --host="' . DB_HOST . '" --user="' . DB_USER . '" --password="' . DB_PASSWORD . '" --add-drop-table --skip-lock-tables "' . DB_NAME . '" > ' . $brace . $file . $brace;
+        $command = $brace . $paths['mysqldump'] . $brace . ' --force --host="' . DB_HOST . '" --user="' . DB_USER . '" --password="' . DB_PASSWORD . '" --add-drop-table --skip-lock-tables "' . DB_NAME . '" > ' . $brace . $file . $brace;
         ob_start();
         $result = $this->mmb_exec($command);
         ob_get_clean();
@@ -1992,6 +2004,13 @@ class MMB_Backup extends MMB_Core
         $file    = preg_replace($regex, $replace, $file);
         @file_put_contents(ABSPATH.'.htaccess', $file);
     }
+	}
+	
+	function check_cron_remove(){
+		if(empty($this->tasks) || (count($this->tasks) == 1 && isset($this->tasks['Backup Now'])) ){
+			wp_clear_scheduled_hook('mwp_backup_tasks');
+			exit;
+		}
 	}
     
 }
