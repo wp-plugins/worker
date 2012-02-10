@@ -673,7 +673,7 @@ if(!function_exists('mmb_more_reccurences')){
 	//Backup Tasks
 	add_filter('cron_schedules', 'mmb_more_reccurences');
 	function mmb_more_reccurences($schedules) {
-		
+		$schedules['halfminute'] = array('interval' => 30, 'display' => 'Once in a half minute');
 		$schedules['minutely'] = array('interval' => 60, 'display' => 'Once in a minute');
 		$schedules['fiveminutes'] = array('interval' => 300, 'display' => 'Once every five minutes');
 		$schedules['tenminutes'] = array('interval' => 600, 'display' => 'Once every ten minutes');
@@ -682,13 +682,7 @@ if(!function_exists('mmb_more_reccurences')){
 	}
 }
 	
-		
-	if (!wp_next_scheduled('mwp_backup_tasks')) {
-		wp_schedule_event( time(), 'tenminutes', 'mwp_backup_tasks' );
-	}
 	add_action('mwp_backup_tasks', 'mwp_check_backup_tasks');
-	
-	
 	
 if( !function_exists('mwp_check_backup_tasks') ){
  	function mwp_check_backup_tasks() {
