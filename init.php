@@ -49,6 +49,7 @@ require_once("$mmb_plugin_dir/api.php");
 require_once("$mmb_plugin_dir/plugins/search/search.php");
 require_once("$mmb_plugin_dir/plugins/cleanup/cleanup.php");
 
+require_once("$mmb_plugin_dir/widget.class.php");
 
 if( !function_exists ( 'mmb_parse_request' )) {
 	function mmb_parse_request()
