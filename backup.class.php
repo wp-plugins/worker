@@ -248,7 +248,7 @@ class MMB_Backup extends MMB_Core
                         $this->set_backup_task(array(
                             'task_name' => $task_name,
                             'args' => $settings[$task_name]['task_args'],
-                            'error' => $result['error']
+                            'error' => $result
                         ));
         return $result;
        } else {
@@ -851,11 +851,22 @@ class MMB_Backup extends MMB_Core
             } elseif (isset($task['task_results'][$result_id]['amazons3'])) {
                 $amazons3_file       = $task['task_results'][$result_id]['amazons3'];
                 $args                = $task['task_args']['account_info']['mwp_amazon_s3'];
-                $args['backup_file'] = $ftp_file;
+                $args['backup_file'] = $amazons3_file;
                 $backup_file         = $this->get_amazons3_backup($args);
                 if ($backup_file == false) {
                     return array(
                         'error' => 'Failed to download file from Amazon S3.'
+                    );
+                }
+            } elseif(isset($task['task_results'][$result_id]['dropbox'])){
+            		$dropbox_file       = $task['task_results'][$result_id]['dropbox'];
+                $args                = $task['task_args']['account_info']['mwp_dropbox'];
+                $args['backup_file'] = $dropbox_file;
+                $backup_file         = $this->get_dropbox_backup($args);
+                
+                if ($backup_file == false) {
+                    return array(
+                        'error' => 'Failed to download file from Dropbox.'
                     );
                 }
             }
@@ -1483,8 +1494,35 @@ class MMB_Backup extends MMB_Core
     
     function dropbox_backup($args)
     {
-        require_once('lib/dropbox.php');
+        
         extract($args);
+        
+        if(isset($consumer_secret) && !empty($consumer_secret)){
+        	//New way
+        	require_once('lib/dropbox.oauth.php');
+   
+					$dropbox = new Dropbox($consumer_key, $consumer_secret);	
+					$dropbox->setOAuthToken($oauth_token);
+					$dropbox->setOAuthTokenSecret($oauth_token_secret);
+        	
+        	if ($dropbox_site_folder == true)
+            $dropbox_destination .= '/' . $this->site_name;
+          
+          try{
+          
+          	$dropbox->filesPost($dropbox_destination, $backup_file,true);
+          	
+          } catch(Exception $e){
+          	return array(
+                'error' => 'Dropbox upload error. '.$e->getMessage()
+            );
+          }
+          
+          return true;
+        	
+        } else {
+        	//old way
+        	require_once('lib/dropbox.php');
         
         //$email, $password, $backup_file, $destination, $dropbox_site_folder
         
@@ -1511,9 +1549,77 @@ class MMB_Backup extends MMB_Core
         }
         
         return true;
+      }
         
     }
     
+    function remove_dropbox_backup($args){
+    	 extract($args);
+        if(isset($consumer_secret) && !empty($consumer_secret)){
+        	//New way
+        	require_once('lib/dropbox.oauth.php');
+   
+					$dropbox = new Dropbox($consumer_key, $consumer_secret);	
+					$dropbox->setOAuthToken($oauth_token);
+					$dropbox->setOAuthTokenSecret($oauth_token_secret);
+        	
+        	if ($dropbox_site_folder == true)
+            $dropbox_destination .= '/' . $this->site_name;
+          
+          try{
+          	$dropbox->fileopsDelete($dropbox_destination.'/'.$backup_file, true);
+          } catch(Exception $e){
+          	
+          }
+    }
+  }
+  
+  function get_dropbox_backup($args){
+  	extract($args);
+  	
+        if(isset($consumer_secret) && !empty($consumer_secret)){
+        	//New way
+        	require_once('lib/dropbox.oauth.php');
+   
+					$dropbox = new Dropbox($consumer_key, $consumer_secret);	
+					$dropbox->setOAuthToken($oauth_token);
+					$dropbox->setOAuthTokenSecret($oauth_token_secret);
+        	
+        	if ($dropbox_site_folder == true)
+            $dropbox_destination .= '/' . $this->site_name;
+          
+          $temp = ABSPATH . 'mwp_temp_backup.zip';
+          
+          try{
+          	$file = $dropbox->filesGet($dropbox_destination.'/'.$backup_file, true);
+          	
+          	if(isset($file['data']) && !empty($file['data']) )
+          		$stream = base64_decode($file['data']); 
+          		else 
+          			return false;
+         
+          $handle = @fopen($temp, 'w+');
+          $result = fwrite($handle,$stream);
+          fclose($handle);
+          
+          if($result)
+          	return $temp;
+          else
+          	return false;
+          
+          } catch(Exception $e){
+          	$this->_log("exception");
+          	
+          	return false;
+          }
+    
+    } else {
+    	return false;
+    }
+    
+    
+  }
+  
     function amazons3_backup($args)
     {
         if ($this->mmb_function_exists('curl_init')) {
@@ -1730,6 +1836,10 @@ class MMB_Backup extends MMB_Core
                 
                 if (isset($backups[$task_name]['task_results'][$i]['dropbox'])) {
                     //To do: dropbox remove
+                    $dropbox_file       = $backups[$task_name]['task_results'][$i]['dropbox'];
+                    $args                = $backups[$task_name]['task_args']['account_info']['mwp_dropbox'];
+                    $args['backup_file'] = $dropbox_file;
+                   $this->remove_dropbox_backup($args);
                 }
                 
                 //Remove database backup info
@@ -1783,6 +1893,10 @@ class MMB_Backup extends MMB_Core
         }
         
         if (isset($backup['dropbox'])) {
+        	$dropbox_file       = $backup['dropbox'];
+            $args                = $tasks[$task_name]['task_args']['account_info']['mwp_dropbox'];
+            $args['backup_file'] = $dropbox_file;
+            $this->remove_dropbox_backup($args);
         }
         
         unset($backups[$result_id]);
