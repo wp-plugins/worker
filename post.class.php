@@ -374,5 +374,264 @@ class MMB_Post extends MMB_Core
 
         return $success;
     }
+	
+	function get_posts($args){
+		global $wpdb;
+		
+		$where='';
+		
+		extract($args);
+		
+		if(!empty($filter_posts))
+ 		{ 
+  			$where.=" AND post_title LIKE '%".mysql_real_escape_string($filter_posts)."%'";
+	 	}
+ 
+		if(!empty($mwp_get_posts_date_from) && !empty($mwp_get_posts_date_to))
+		{
+			$where.=" AND post_date BETWEEN '".mysql_real_escape_string($mwp_get_posts_date_from)."' AND '".mysql_real_escape_string($mwp_get_posts_date_to)."'";
+		}
+		else if(!empty($mwp_get_posts_date_from) && empty($mwp_get_posts_date_to))
+		{
+			$where.=" AND post_date >= '".mysql_real_escape_string($mwp_get_posts_date_from)."'";
+		}
+		else if(empty($mwp_get_posts_date_from) && !empty($mwp_get_posts_date_to))
+		{
+			$where.=" AND post_date <= '".mysql_real_escape_string($mwp_get_posts_date_to)."'";
+		}
+		$post_array=array();
+		$post_statuses = array('publish', 'pending', 'private', 'future', 'draft', 'trash');
+		foreach ($args as $checkbox => $checkbox_val)
+		{
+			if($checkbox_val=="on") {
+				$post_array[]="'".str_replace("mwp_get_posts_","",$checkbox)."'";
+			}
+		}
+		if(!empty($post_array))
+		{
+			$where.=" AND post_status IN (".implode(",",$post_array).")";
+		}
+		
+		$sql_query = "$wpdb->posts  WHERE post_status!='auto-draft' AND post_status!='inherit' AND post_type='post' ".$where." ORDER BY post_date DESC";
+		
+		$total = array();
+		$user_info = $this->getUsersIDs();
+		$post_cats=$this->getPostCats();
+		$post_tags=$this->getPostTags();
+		$posts_total = $wpdb->get_results("SELECT count(*) as total_posts FROM ".$sql_query);
+		$total['total_num']=$posts_total[0]->total_posts;
+		
+		$posts = array();
+		$posts_info = $wpdb->get_results("SELECT * FROM ".$sql_query." LIMIT 250");
+		
+		foreach ( $posts_info as $post_info ) 
+		{
+			
+			$cats=array();
+			foreach($post_cats[$post_info->ID] as $cat_array => $cat_array_val)
+			{
+				$cats[] = array('name' => $cat_array_val);
+			}
+			
+			$tags=array();
+			foreach($post_tags[$post_info->ID] as $tag_array => $tag_array_val)
+			{
+				$tags[] = array('name' => $tag_array_val);
+			}
+			
+			$posts[]=array(
+				'post_id'=>$post_info->ID, 
+				'post_title'=>$post_info->post_title, 
+				'post_name'=>$post_info->post_name,
+				'post_author'=>array('author_id'=>$post_info->post_author, 'author_name'=>$user_info[$post_info->post_author]), 
+				'post_date'=>$post_info->post_date,
+				'post_modified'=>$post_info->post_modified,
+				'post_status'=>$post_info->post_status,
+				'post_type'=>$post_info->post_type,
+				'guid'=>$post_info->guid,
+				'post_password'=>$post_info->post_password,
+				'ping_status'=>$post_info->ping_status,
+				'comment_status'=>$post_info->comment_status,
+				'comment_count'=>$post_info->comment_count,
+				'cats'=>$cats,
+				'tags'=>$tags,
+				
+			);
+		}
+		
+		return array('posts' => $posts, 'total' => $total);
+ 	}
+	
+	function delete_post($args){
+		global $wpdb;
+		if(!empty($args['post_id']) && !empty($args['action']))
+		{
+			if($args['action']=='delete')
+			{
+				$delete_query = "UPDATE $wpdb->posts SET post_status = 'trash' WHERE ID = ".$args['post_id'];
+			}
+			else if($args['action']=='delete_perm'){
+				$delete_query = "DELETE FROM $wpdb->posts WHERE ID = ".$args['post_id'];
+			}
+			else if($args['action']=='delete_restore'){
+				$delete_query = "UPDATE $wpdb->posts SET post_status = 'publish' WHERE ID = ".$args['post_id'];
+			}
+			$wpdb->get_results($delete_query);
+		
+			return 'Post deleted.';
+		}
+		else
+		{
+			return 'No ID...';
+		}
+	}
+	
+	function get_pages($args){
+		global $wpdb;
+		
+		$where='';
+		extract($args);
+		
+		if(!empty($filter_pages))
+ 		{ 
+ 			$where.=" AND post_title LIKE '%".mysql_real_escape_string($filter_pages)."%'";
+	 	}
+		if(!empty($mwp_get_pages_date_from) && !empty($mwp_get_pages_date_to))
+		{
+			$where.=" AND post_date BETWEEN '".mysql_real_escape_string($mwp_get_pages_date_from)."' AND '".mysql_real_escape_string($mwp_get_pages_date_to)."'";
+		}
+		else if(!empty($mwp_get_pages_date_from) && empty($mwp_get_pages_date_to))
+		{
+			$where.=" AND post_date >= '".mysql_real_escape_string($mwp_get_pages_date_from)."'";
+		}
+		else if(empty($mwp_get_pages_date_from) && !empty($mwp_get_pages_date_to))
+		{
+			$where.=" AND post_date <= '".mysql_real_escape_string($mwp_get_pages_date_to)."'";
+		}
+		
+		$post_array=array();
+		$post_statuses = array('publish', 'pending', 'private', 'future', 'draft', 'trash');
+		foreach ($args as $checkbox => $checkbox_val)
+		{
+			if($checkbox_val=="on") {
+				$post_array[]="'".str_replace("mwp_get_pages_","",$checkbox)."'";
+			}
+		}
+		if(!empty($post_array))
+		{
+			$where.=" AND post_status IN (".implode(",",$post_array).")";
+		}
+		
+		$sql_query = "$wpdb->posts  WHERE post_status!='auto-draft' AND post_status!='inherit' AND post_type='page' ".$where.' ORDER BY post_date DESC';
+		
+		$total = array();
+		$user_info = $this->getUsersIDs();
+		$posts_total = $wpdb->get_results("SELECT count(*) as total_posts FROM ".$sql_query);
+		$total['total_num']=$posts_total[0]->total_posts;
+		
+		$posts = array();
+		$posts_info = $wpdb->get_results("SELECT * FROM ".$sql_query." LIMIT 250");
+		
+		foreach ( $posts_info as $post_info ) 
+		{
+			
+			$posts[]=array(
+				'post_id'=>$post_info->ID, 
+				'post_title'=>$post_info->post_title, 
+				'post_name'=>$post_info->post_name,
+				'post_author'=>array('author_id'=>$post_info->post_author, 'author_name'=>$user_info[$post_info->post_author]), 
+				'post_date'=>$post_info->post_date,
+				'post_modified'=>$post_info->post_modified,
+				'post_status'=>$post_info->post_status,
+				'post_type'=>$post_info->post_type,
+				'guid'=>$post_info->guid,
+				'post_password'=>$post_info->post_password,
+				'ping_status'=>$post_info->ping_status,
+				'comment_status'=>$post_info->comment_status,
+				'comment_count'=>$post_info->comment_count
+				
+			);
+		}
+		
+		return array('posts' => $posts, 'total' => $total);
+ 	}
+	
+	function delete_page($args){
+		global $wpdb;
+		if(!empty($args['post_id']) && !empty($args['action']))
+		{
+			if($args['action']=='delete')
+			{
+				$delete_query = "UPDATE $wpdb->posts SET post_status = 'trash' WHERE ID = ".$args['post_id'];
+			}
+			else if($args['action']=='delete_perm'){
+				$delete_query = "DELETE FROM $wpdb->posts WHERE ID = ".$args['post_id'];
+			}
+			else if($args['action']=='delete_restore'){
+				$delete_query = "UPDATE $wpdb->posts SET post_status = 'publish' WHERE ID = ".$args['post_id'];
+			}
+			$wpdb->get_results($delete_query);
+		
+			return 'Page deleted.';
+		}
+		else
+		{
+			return 'No ID...';
+		}
+	}
+	
+	function getPostCats()
+	{
+		global $wpdb;
+		
+		$cats = $wpdb->get_results("SELECT p.ID AS post_id, wp_terms.name
+FROM wp_posts AS p
+INNER JOIN wp_term_relationships ON ( p.ID = wp_term_relationships.object_id )
+INNER JOIN wp_term_taxonomy ON ( wp_term_relationships.term_taxonomy_id = wp_term_taxonomy.term_taxonomy_id
+AND wp_term_taxonomy.taxonomy = 'category' )
+INNER JOIN wp_terms ON ( wp_term_taxonomy.term_taxonomy_id = wp_terms.term_id )");
+		
+		foreach ( $cats as $post_val )
+		{
+			
+			$post_cats[$post_val->post_id][] = $post_val->name;
+		} 
+		
+		return $post_cats;
+	}
+	
+	function getPostTags()
+	{
+		global $wpdb;
+		
+		$cats = $wpdb->get_results("SELECT p.ID AS post_id, wp_terms.name
+FROM wp_posts AS p
+INNER JOIN wp_term_relationships ON ( p.ID = wp_term_relationships.object_id )
+INNER JOIN wp_term_taxonomy ON ( wp_term_relationships.term_taxonomy_id = wp_term_taxonomy.term_taxonomy_id
+AND wp_term_taxonomy.taxonomy = 'post_tag' )
+INNER JOIN wp_terms ON ( wp_term_taxonomy.term_taxonomy_id = wp_terms.term_id )");
+		
+		foreach ( $cats as $post_val )
+		{
+			
+			$post_cats[$post_val->post_id][] = $post_val->name;
+		} 
+		
+		return $post_cats;
+	}
+	
+	function getUsersIDs()
+	{
+		global $wpdb;
+		$users_authors=array();
+		$users = $wpdb->get_results("SELECT ID as user_id, display_name FROM $wpdb->users WHERE user_status=0");
+		
+		foreach ( $users as $user_key=>$user_val )
+		{
+			$users_authors[$user_val->user_id] = $user_val->display_name;
+		} 
+		
+		return $users_authors;
+	}
 }
 ?>

@@ -4,7 +4,7 @@ Plugin Name: ManageWP - Worker
 Plugin URI: http://managewp.com/
 Description: Manage all your blogs from one dashboard. Visit <a href="http://managewp.com">ManageWP.com</a> to sign up.
 Author: Prelovac Media
-Version: 3.9.16
+Version: 3.9.17
 Author URI: http://www.prelovac.com
 */
 
@@ -20,7 +20,7 @@ Author URI: http://www.prelovac.com
  **************************************************************/
 
 if(!defined('MMB_WORKER_VERSION'))
-	define('MMB_WORKER_VERSION', '3.9.16');
+	define('MMB_WORKER_VERSION', '3.9.17');
 
 if ( !defined('MMB_XFRAME_COOKIE')){
 	$siteurl = function_exists('get_site_option') ? get_site_option( 'siteurl' ) : get_option('siteurl');
@@ -619,6 +619,76 @@ if( !function_exists ('mmb_edit_users')) {
 		$mmb_core->get_user_instance();
 		$return = $mmb_core->user_instance->edit_users($params);
 		mmb_response($return, true);
+	}
+}
+
+if( !function_exists ('mmb_get_posts')) {
+	function mmb_get_posts($params)
+	{
+		global $mmb_core;
+		$mmb_core->get_post_instance();
+		
+			$return = $mmb_core->post_instance->get_posts($params);
+		if (is_array($return) && array_key_exists('error', $return))
+			mmb_response($return['error'], false);
+		else {
+			mmb_response($return, true);
+		}
+	}
+}
+
+if( !function_exists ('mmb_delete_post')) {
+	function mmb_delete_post($params)
+	{
+		global $mmb_core;
+		$mmb_core->get_post_instance();
+		
+			$return = $mmb_core->post_instance->delete_post($params);
+		if (is_array($return) && array_key_exists('error', $return))
+			mmb_response($return['error'], false);
+		else {
+			mmb_response($return, true);
+		}
+	}
+}
+
+if( !function_exists ('mmb_edit_posts')) {
+	function mmb_edit_posts($params)
+	{
+		global $mmb_core;
+		$mmb_core->get_posts_instance();
+		$return = $mmb_core->posts_instance->edit_posts($params);
+		mmb_response($return, true);
+	}
+}
+
+if( !function_exists ('mmb_get_pages')) {
+	function mmb_get_pages($params)
+	{
+		global $mmb_core;
+		$mmb_core->get_post_instance();
+		
+			$return = $mmb_core->post_instance->get_pages($params);
+		if (is_array($return) && array_key_exists('error', $return))
+			mmb_response($return['error'], false);
+		else {
+			mmb_response($return, true);
+		}
+	}
+}
+
+if( !function_exists ('mmb_delete_page')) {
+	function mmb_delete_page($params)
+	{
+		global $mmb_core;
+		$mmb_core->get_post_instance();
+		
+			$return = $mmb_core->post_instance->delete_page($params);
+		if (is_array($return) && array_key_exists('error', $return))
+			mmb_response($return['error'], false);
+		else {
+			mmb_response($return, true);
+		}
 	}
 }
 

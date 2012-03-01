@@ -1608,7 +1608,7 @@ class MMB_Backup extends MMB_Core
           	return false;
           
           } catch(Exception $e){
-          	$this->_log("exception");
+          	
           	
           	return false;
           }
@@ -1631,11 +1631,11 @@ class MMB_Backup extends MMB_Core
             
             $endpoint = isset($as3_bucket_region) ? $as3_bucket_region : 's3.amazonaws.com';
             
-            $s3 = new S3(trim($as3_access_key), trim(str_replace(' ', '+', $as3_secure_key)), false, $endpoint);
+            $s3 = new mwpS3(trim($as3_access_key), trim(str_replace(' ', '+', $as3_secure_key)), false, $endpoint);
             
-            $s3->putBucket($as3_bucket, S3::ACL_PUBLIC_READ);
+            $s3->putBucket($as3_bucket, mwpS3::ACL_PUBLIC_READ);
             
-            if ($s3->putObjectFile($backup_file, $as3_bucket, $as3_directory . '/' . basename($backup_file), S3::ACL_PRIVATE)) {
+            if ($s3->putObjectFile($backup_file, $as3_bucket, $as3_directory . '/' . basename($backup_file), mwpS3::ACL_PRIVATE)) {
                 return true;
             } else {
                 return array(
@@ -1658,7 +1658,7 @@ class MMB_Backup extends MMB_Core
         if ($as3_site_folder == true)
             $as3_directory .= '/' . $this->site_name;
         $endpoint = isset($as3_bucket_region) ? $as3_bucket_region : 's3.amazonaws.com';
-        $s3       = new S3($as3_access_key, str_replace(' ', '+', $as3_secure_key), false, $endpoint);
+        $s3       = new mwpS3($as3_access_key, str_replace(' ', '+', $as3_secure_key), false, $endpoint);
         $s3->deleteObject($as3_bucket, $as3_directory . '/' . $backup_file);
     }
     
@@ -1667,7 +1667,7 @@ class MMB_Backup extends MMB_Core
         require_once('lib/s3.php');
         extract($args);
         $endpoint = isset($as3_bucket_region) ? $as3_bucket_region : 's3.amazonaws.com';
-        $s3       = new S3($as3_access_key, str_replace(' ', '+', $as3_secure_key), false, $endpoint);
+        $s3       = new mwpS3($as3_access_key, str_replace(' ', '+', $as3_secure_key), false, $endpoint);
         if ($as3_site_folder == true)
             $as3_directory .= '/' . $this->site_name;
         

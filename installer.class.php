@@ -692,13 +692,13 @@ class MMB_Installer extends MMB_Core
                 if ($plugin['Name'] != 'ManageWP - Worker') {
                     if (in_array($path, $activated_plugins)) {
                         $plugins['active'][$br_a]['path'] = $path;
-                        $plugins['active'][$br_a]['name'] = $plugin['Name'];
+                        $plugins['active'][$br_a]['name'] = strip_tags($plugin['Name']);
                         $br_a++;
                     }
                     
                     if (!in_array($path, $activated_plugins)) {
                         $plugins['inactive'][$br_i]['path'] = $path;
-                        $plugins['inactive'][$br_i]['name'] = $plugin['Name'];
+                        $plugins['inactive'][$br_i]['name'] = strip_tags($plugin['Name']);
                         $br_i++;
                     }
                     
@@ -747,14 +747,14 @@ class MMB_Installer extends MMB_Core
             foreach ($all_themes as $theme_name => $theme) {
                 if ($current_theme == $theme_name) {
                     $themes['active'][$br_a]['path']       = $theme['Template'];
-                    $themes['active'][$br_a]['name']       = $theme['Name'];
+                    $themes['active'][$br_a]['name']       = strip_tags($theme['Name']);
                     $themes['active'][$br_a]['stylesheet'] = $theme['Stylesheet'];
                     $br_a++;
                 }
                 
                 if ($current_theme != $theme_name) {
                     $themes['inactive'][$br_i]['path']       = $theme['Template'];
-                    $themes['inactive'][$br_i]['name']       = $theme['Name'];
+                    $themes['inactive'][$br_i]['name']       = strip_tags($theme['Name']);
                     $themes['inactive'][$br_i]['stylesheet'] = $theme['Stylesheet'];
                     $br_i++;
                 }

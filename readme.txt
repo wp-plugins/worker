@@ -3,7 +3,7 @@ Contributors: freediver
 Donate link: https://www.networkforgood.org/donation/MakeDonation.aspx?ORGID2=520781390
 Tags: admin, administration, amazon, api, authentication, automatic, dashboard, dropbox, events, integration, manage, multsite, notification, performance, s3, security, seo, stats, tracking, managewp
 Requires at least: 3.0
-Tested up to: 3.3
+Tested up to: 3.3.1
 Stable tag: trunk
 
 ManageWP Worker plugin allows you to remotely manage your blogs from one dashboard.
@@ -32,6 +32,15 @@ http://vimeo.com/22099014
 Check out [ManageWP.com](http://managewp.com/ "Manage Multiple Blogs").
 
 == Changelog ==  
+
+= 3.9.17 =
+* New: Add your favorite sites to the Favorites  bar (just drag&drop them to the small heart on the top)
+* New: Entirely new website menu loaded with features and tools
+* New: Manage Posts and Pages across all sites in a more efficient way
+* New: Support for all WPMU.org premium plugin updates
+* New: Complete Dropbox integration through Oauth which allows us to restore/delete Dropbox backups directly
+* New: We have the user guide as PDF now. [Download] (managewp.com/files/ManageWP_User_Guide.zip)
+
 
 = 3.9.16 =
 * New: Option to "Run now" backup tasks
