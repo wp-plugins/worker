@@ -1979,6 +1979,9 @@ class MMB_Backup extends MMB_Core
     
     function remote_backup_now($args)
     {
+    		@ini_set('memory_limit', '256M');
+        @set_time_limit(600); //ten minutes
+        
         if (!empty($args))
             extract($args);
         
