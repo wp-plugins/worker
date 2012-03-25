@@ -417,7 +417,7 @@ class MMB_Post extends MMB_Core
 		$total = array();
 		$user_info = $this->getUsersIDs();
 		$post_cats=$this->getPostCats();
-		$post_tags=$this->getPostTags();
+		$post_tags=$this->getPostCats('post_tag');
 		$posts_total = $wpdb->get_results("SELECT count(*) as total_posts FROM ".$sql_query);
 		$total['total_num']=$posts_total[0]->total_posts;
 		
@@ -580,36 +580,16 @@ class MMB_Post extends MMB_Core
 		}
 	}
 	
-	function getPostCats()
+	function getPostCats($taxonomy = 'category')
 	{
 		global $wpdb;
 		
-		$cats = $wpdb->get_results("SELECT p.ID AS post_id, wp_terms.name
-FROM wp_posts AS p
-INNER JOIN wp_term_relationships ON ( p.ID = wp_term_relationships.object_id )
-INNER JOIN wp_term_taxonomy ON ( wp_term_relationships.term_taxonomy_id = wp_term_taxonomy.term_taxonomy_id
-AND wp_term_taxonomy.taxonomy = 'category' )
-INNER JOIN wp_terms ON ( wp_term_taxonomy.term_taxonomy_id = wp_terms.term_id )");
-		
-		foreach ( $cats as $post_val )
-		{
-			
-			$post_cats[$post_val->post_id][] = $post_val->name;
-		} 
-		
-		return $post_cats;
-	}
-	
-	function getPostTags()
-	{
-		global $wpdb;
-		
-		$cats = $wpdb->get_results("SELECT p.ID AS post_id, wp_terms.name
-FROM wp_posts AS p
-INNER JOIN wp_term_relationships ON ( p.ID = wp_term_relationships.object_id )
-INNER JOIN wp_term_taxonomy ON ( wp_term_relationships.term_taxonomy_id = wp_term_taxonomy.term_taxonomy_id
-AND wp_term_taxonomy.taxonomy = 'post_tag' )
-INNER JOIN wp_terms ON ( wp_term_taxonomy.term_taxonomy_id = wp_terms.term_id )");
+		$cats = $wpdb->get_results("SELECT p.ID AS post_id, $wpdb->terms.name
+FROM $wpdb->posts AS p
+INNER JOIN $wpdb->term_relationships ON ( p.ID = $wpdb->term_relationships.object_id )
+INNER JOIN $wpdb->term_taxonomy ON ( $wpdb->term_relationships.term_taxonomy_id = $wpdb->term_taxonomy.term_taxonomy_id
+AND $wpdb->term_taxonomy.taxonomy = '".$taxonomy."' )
+INNER JOIN $wpdb->terms ON ( $wpdb->term_taxonomy.term_taxonomy_id = $wpdb->terms.term_id )");
 		
 		foreach ( $cats as $post_val )
 		{

@@ -216,10 +216,11 @@ class mwpS3
 	*/
 	private static function __triggerError($message, $file, $line, $code = 0)
 	{
-		if (self::$useExceptions)
+		
+		//if (self::$useExceptions)
 			throw new mwpS3Exception($message, $file, $line, $code);
-		else
-			trigger_error($message, E_USER_WARNING);
+		//else
+			//trigger_error($message, E_USER_WARNING);
 	}
 
 
@@ -1755,7 +1756,7 @@ final class mwpS3Request
 		// Basic setup
 		$curl = curl_init();
 		curl_setopt($curl, CURLOPT_USERAGENT, 'S3/php');
-
+		curl_setopt($curl,CURLOPT_TIMEOUT,600);
 		if (mwpS3::$useSSL)
 		{
 			// SSL Validation can now be optional for those with broken OpenSSL installations
@@ -1768,7 +1769,7 @@ final class mwpS3Request
 		}
 
 		curl_setopt($curl, CURLOPT_URL, $url);
-
+		
 		if (mwpS3::$proxy != null && isset(mwpS3::$proxy['host']))
 		{
 			curl_setopt($curl, CURLOPT_PROXY, mwpS3::$proxy['host']);
