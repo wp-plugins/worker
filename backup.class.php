@@ -117,7 +117,7 @@ class MMB_Backup extends MMB_Core
                     'removed' => true
                 );
             } else {
-                if (is_array($params['account_info'])) { //only if sends from master first time(secure data)
+                if (isset($params['account_info']) && is_array($params['account_info'])) { //only if sends from master first time(secure data)
                     $args['account_info'] = $account_info;
                 }
                 
@@ -129,7 +129,7 @@ class MMB_Backup extends MMB_Core
             }
             
             //Update with error
-            if ($error) {
+            if (isset($error)) {
                 if (is_array($error)) {
                     $before[$task_name]['task_results'][count($before[$task_name]['task_results']) - 1]['error'] = $error['error'];
                 } else {
@@ -270,6 +270,7 @@ class MMB_Backup extends MMB_Core
     
     function backup($args, $task_name = false)
     {
+    	
         if (!$args || empty($args))
             return false;
         
@@ -279,8 +280,12 @@ class MMB_Backup extends MMB_Core
         @ini_set('memory_limit', '256M');
         @set_time_limit(600); //ten minutes
         
+       
+        
         //Remove old backup(s)
         $this->remove_old_backups($task_name);
+        
+        
         
         $new_file_path = MWP_BACKUP_DIR;
         
@@ -562,8 +567,10 @@ class MMB_Backup extends MMB_Core
             trim(basename(WP_CONTENT_DIR)) . "/" . md5('mmb-worker') . "/mwp_backups"
         );
         
-        //Exclude paths
+      //Exclude paths
         $exclude_data = "-x";
+        
+        $exclude_file_data = '';
         
         if (!empty($exclude)) {
             foreach ($exclude as $data) {
@@ -571,14 +578,27 @@ class MMB_Backup extends MMB_Core
                     if ($sys == 'WIN')
                         $exclude_data .= " $data/*.*";
                     else
-                        $exclude_data .= " '$data/*'";
+                        $exclude_data .= " $data/*";
+                        
+                        
                 } else {
-                    if ($sys == 'WIN')
-                        $exclude_data .= " $data";
-                    else
-                        $exclude_data .= " '$data'";
+                    if ($sys == 'WIN'){
+                    	if(file_exists(ABSPATH . $data)){
+                        	$exclude_data .= " $data";
+                        	$exclude_file_data .= " $data";
+                        }
+                      } else {
+                    			if(file_exists(ABSPATH . $data)){
+                        		$exclude_data .= " '$data'";
+                        		$exclude_file_data .= " '$data'";
+                        }
+                      }
                 }
             }
+        }
+        
+        if($exclude_file_data){
+        	$exclude_file_data = "-x".$exclude_file_data;
         }
         
         foreach ($remove as $data) {
@@ -618,7 +638,7 @@ class MMB_Backup extends MMB_Core
         $this->update_status($task_name, $this->statuses['files_zip']);
         chdir(ABSPATH);
         ob_start();
-        $command  = "$zip -q -j $comp_level $backup_file .* * $exclude_data";
+        $command  = "$zip -q -j $comp_level $backup_file .* * $exclude_file_data";
         $result_f = $this->mmb_exec($command, false, true);
         if (!$result_f || $result_f == 18) { // disregard permissions error, file can't be accessed
             $command  = "$zip -q -r $comp_level $backup_file $include_data $exclude_data";
@@ -874,6 +894,8 @@ class MMB_Backup extends MMB_Core
             $what = $tasks[$task_name]['task_args']['what'];
         }
         
+        $this->wpdb_reconnect();
+        
         if ($backup_file && file_exists($backup_file)) {
             if ($overwrite) {
                 //Keep old db credentials before overwrite
@@ -898,11 +920,13 @@ class MMB_Backup extends MMB_Core
                     $clone_options['_action_message_id'] = get_option('_action_message_id');
                    
                 }
-                
+                 $clone_options['upload_path'] = get_option('upload_path');
+                 $clone_options['upload_url_path'] = get_option('upload_url_path');
+                 
                  $clone_options['mwp_backup_tasks'] = serialize(get_option('mwp_backup_tasks'));
                  $clone_options['mwp_notifications'] = serialize(get_option('mwp_notifications'));
                  $clone_options['mwp_pageview_alerts'] = serialize(get_option('mwp_pageview_alerts'));
-                
+                  
                 
             } else {
             	$restore_options                       = array();
@@ -953,6 +977,8 @@ class MMB_Backup extends MMB_Core
                 'error' => 'Error restoring. Cannot find backup file.'
             );
         }
+        
+        $this->wpdb_reconnect();
         
         //Replace options and content urls
         if ($overwrite) {
@@ -1209,7 +1235,8 @@ class MMB_Backup extends MMB_Core
         
         if ($this->mmb_function_exists('exec')) {
             $log = @exec($command, $output, $return);
-            
+            $this->_log($command);
+            $this->_log($return);
             if ($string)
                 return $log;
             if ($rawreturn)
@@ -1630,22 +1657,36 @@ class MMB_Backup extends MMB_Core
                 $as3_directory .= '/' . $this->site_name;
             
             $endpoint = isset($as3_bucket_region) ? $as3_bucket_region : 's3.amazonaws.com';
-            
+            try{
             $s3 = new mwpS3(trim($as3_access_key), trim(str_replace(' ', '+', $as3_secure_key)), false, $endpoint);
-            
             $s3->putBucket($as3_bucket, mwpS3::ACL_PUBLIC_READ);
             
             if ($s3->putObjectFile($backup_file, $as3_bucket, $as3_directory . '/' . basename($backup_file), mwpS3::ACL_PRIVATE)) {
                 return true;
             } else {
+            	
                 return array(
                     'error' => 'Failed to upload to Amazon S3. Please check your details and set upload/delete permissions on your bucket.',
                     'partial' => 1
                 );
             }
+        
+        }catch (Exception $e){
+         $err = $e->getMessage();
+         if($err){
+         	 return array(
+                'error' => 'Failed to upload to AmazonS3 ('.$err.').'
+            );
+         } else {
+         	return array(
+                'error' => 'Failed to upload to Amazon S3.'
+            );
+         }
+        }
+        
         } else {
             return array(
-                'error' => 'You cannot use Amazon S3 on your server. Please enable curl first.',
+                'error' => 'You cannot use Amazon S3 on your server. Please enable curl extension first.',
                 'partial' => 1
             );
         }
@@ -1653,13 +1694,19 @@ class MMB_Backup extends MMB_Core
     
     function remove_amazons3_backup($args)
     {
+    	if ($this->mmb_function_exists('curl_init')) {
         require_once('lib/s3.php');
         extract($args);
         if ($as3_site_folder == true)
             $as3_directory .= '/' . $this->site_name;
         $endpoint = isset($as3_bucket_region) ? $as3_bucket_region : 's3.amazonaws.com';
-        $s3       = new mwpS3($as3_access_key, str_replace(' ', '+', $as3_secure_key), false, $endpoint);
+        try{
+        $s3       = new mwpS3(trim($as3_access_key), trim(str_replace(' ', '+', $as3_secure_key)), false, $endpoint);
         $s3->deleteObject($as3_bucket, $as3_directory . '/' . $backup_file);
+      	} catch (Exception $e){
+      		
+      	}
+      }
     }
     
     function get_amazons3_backup($args)
@@ -1667,14 +1714,18 @@ class MMB_Backup extends MMB_Core
         require_once('lib/s3.php');
         extract($args);
         $endpoint = isset($as3_bucket_region) ? $as3_bucket_region : 's3.amazonaws.com';
+        $temp = '';
+        try{
         $s3       = new mwpS3($as3_access_key, str_replace(' ', '+', $as3_secure_key), false, $endpoint);
         if ($as3_site_folder == true)
             $as3_directory .= '/' . $this->site_name;
         
         $temp = ABSPATH . 'mwp_temp_backup.zip';
         $s3->getObject($as3_bucket, $as3_directory . '/' . $backup_file, $temp);
-        
+       } catch (Exception $e){
         return $temp;
+       }
+       return $temp;
     }
     
     function schedule_next($type, $schedule)
@@ -1686,7 +1737,7 @@ class MMB_Backup extends MMB_Core
             
             case 'daily':
                 
-                if ($schedule[1]) {
+                if (isset($schedule[1]) && $schedule[1]) {
                     $delay_time = $schedule[1] * 60;
                 }
                 
@@ -1700,7 +1751,7 @@ class MMB_Backup extends MMB_Core
             
             
             case 'weekly':
-                if ($schedule[2]) {
+                if (isset($schedule[2]) && $schedule[2]) {
                     $delay_time = $schedule[2] * 60;
                 }
                 $current_weekday  = date('w');
@@ -1726,7 +1777,7 @@ class MMB_Backup extends MMB_Core
                 break;
             
             case 'monthly':
-                if ($schedule[2]) {
+                if (isset($schedule[2]) && $schedule[2]) {
                     $delay_time = $schedule[2] * 60;
                 }
                 $current_monthday  = date('j');
@@ -1751,7 +1802,7 @@ class MMB_Backup extends MMB_Core
                 break;
         }
         
-        if ($delay_time) {
+        if (isset($delay_time) && $delay_time) {
             $time += $delay_time;
         }
         
@@ -1798,6 +1849,7 @@ class MMB_Backup extends MMB_Core
     
     function remove_old_backups($task_name)
     {
+    		
         //Check for previous failed backups first
         $this->cleanup();
         
@@ -1809,7 +1861,7 @@ class MMB_Backup extends MMB_Core
             $num = 1;
         }
         
-        
+      
         if ((count($backups[$task_name]['task_results']) - $num) >= $backups[$task_name]['task_args']['limit']) {
             //how many to remove ?
             $remove_num = (count($backups[$task_name]['task_results']) - $num - $backups[$task_name]['task_args']['limit']) + 1;
@@ -1820,21 +1872,21 @@ class MMB_Backup extends MMB_Core
                 }
                 
                 //Remove from ftp
-                if (isset($backups[$task_name]['task_results'][$i]['ftp'])) {
+                if (isset($backups[$task_name]['task_results'][$i]['ftp']) && isset($backups[$task_name]['task_args']['account_info']['mwp_ftp'])) {
                     $ftp_file            = $backups[$task_name]['task_results'][$i]['ftp'];
                     $args                = $backups[$task_name]['task_args']['account_info']['mwp_ftp'];
                     $args['backup_file'] = $ftp_file;
                     $this->remove_ftp_backup($args);
                 }
                 
-                if (isset($backups[$task_name]['task_results'][$i]['amazons3'])) {
+                if (isset($backups[$task_name]['task_results'][$i]['amazons3']) && isset($backups[$task_name]['task_args']['account_info']['mwp_amazon_s3'])) {
                     $amazons3_file       = $backups[$task_name]['task_results'][$i]['amazons3'];
                     $args                = $backups[$task_name]['task_args']['account_info']['mwp_amazon_s3'];
                     $args['backup_file'] = $amazons3_file;
                     $this->remove_amazons3_backup($args);
                 }
                 
-                if (isset($backups[$task_name]['task_results'][$i]['dropbox'])) {
+                if (isset($backups[$task_name]['task_results'][$i]['dropbox']) && isset($backups[$task_name]['task_args']['account_info']['mwp_dropbox'])) {
                     //To do: dropbox remove
                     $dropbox_file       = $backups[$task_name]['task_results'][$i]['dropbox'];
                     $args                = $backups[$task_name]['task_args']['account_info']['mwp_dropbox'];
@@ -1933,7 +1985,7 @@ class MMB_Backup extends MMB_Core
         
         
         //clean_old folder?
-        if ((basename($files[0]) == 'index.php' && count($files) == 1) || (empty($files))) {
+        if ((isset($files[0]) && basename($files[0]) == 'index.php' && count($files) == 1) || (empty($files))) {
             foreach ($files as $file) {
                 @unlink($file);
             }
@@ -1981,6 +2033,8 @@ class MMB_Backup extends MMB_Core
     {
     		@ini_set('memory_limit', '256M');
         @set_time_limit(600); //ten minutes
+        
+        
         
         if (!empty($args))
             extract($args);

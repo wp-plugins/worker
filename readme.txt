@@ -6,7 +6,7 @@ Requires at least: 3.0
 Tested up to: 3.3.1
 Stable tag: trunk
 
-ManageWP Worker plugin allows you to remotely manage your blogs from one dashboard.
+ManageWP Worker plugin allows you to remotely manage your WordPress sites from one dashboard.
 
 == Description ==
 
@@ -15,14 +15,15 @@ ManageWP Worker plugin allows you to remotely manage your blogs from one dashboa
 Main features:
 
 *   Secure and fast solution for managing your WordPress sites
-*   One click upgrades of WordPress, plugin and themes across all your sites
+*   One click upgrades for WordPress, plugin and themes across all your sites
 *   Schedule automatic backups of your websites (Amazon S3 and Dropbox supported)
 *   One click to access WP admin of any site
+*   Install WordPress, clone or migrate a website to another domain
 *   Bulk install themes and plugins to multiple sites at once
 *   Add sub-users (writers, staff..) to your account
 *   Bulk publish posts to multiple sites at once
 *   SEO Statistics, track your keyword rankings
-*   Install WordPress, clone or migrate a website to another domain
+*   Uptime monitoring
 *   Much, much more...
 
 Check out the [ManageWP Tour video](http://vimeo.com/22099014).
@@ -34,12 +35,12 @@ Check out [ManageWP.com](http://managewp.com/ "Manage Multiple Blogs").
 == Changelog ==  
 
 = 3.9.17 =
-* Add your favorite sites to the top bar (just drag&drop them there)
-* Entirely new website menu loaded with features
-* Manage Posts and Pages across all sites in a more efficient way
-* Support for all WPMU.org premium plugin updates
-* Complete Dropbox integration through Oauth which allows us to restore/delete Dropbox backups directly
-* We have the user guide as PDF now. [Download] (managewp.com/files/ManageWP_User_Guide.pdf)
+* New: Add your favorite sites to the Favorites  bar (just drag&drop them to the small heart on the top)
+* New: Entirely new website menu loaded with features and tools
+* New: Manage Posts and Pages across all sites in a more efficient way
+* New: Support for all WPMU.org premium plugin updates
+* New: Complete Dropbox integration through Oauth which allows us to restore/delete Dropbox backups directly
+* New: We have the user guide as PDF now. [Download] (http://managewp.com/files/ManageWP_User_Guide.zip)
 
 
 = 3.9.16 =
