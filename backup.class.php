@@ -1235,8 +1235,7 @@ class MMB_Backup extends MMB_Core
         
         if ($this->mmb_function_exists('exec')) {
             $log = @exec($command, $output, $return);
-            $this->_log($command);
-            $this->_log($return);
+            
             if ($string)
                 return $log;
             if ($rawreturn)
@@ -1659,8 +1658,6 @@ class MMB_Backup extends MMB_Core
             $endpoint = isset($as3_bucket_region) ? $as3_bucket_region : 's3.amazonaws.com';
             try{
             $s3 = new mwpS3(trim($as3_access_key), trim(str_replace(' ', '+', $as3_secure_key)), false, $endpoint);
-            $s3->putBucket($as3_bucket, mwpS3::ACL_PUBLIC_READ);
-            
             if ($s3->putObjectFile($backup_file, $as3_bucket, $as3_directory . '/' . basename($backup_file), mwpS3::ACL_PRIVATE)) {
                 return true;
             } else {
