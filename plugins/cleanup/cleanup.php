@@ -15,7 +15,10 @@ add_filter('mmb_stats_filter', 'mmb_get_extended_info');
 
 function mmb_get_extended_info($stats)
 {
-    $stats['num_revisions']     = mmb_num_revisions();
+	global $mmb_core;
+	$params = get_option('mmb_stats_filter');
+	$filter = isset($params['plugins']['cleanup']) ? $params['plugins']['cleanup'] : array();
+    $stats['num_revisions']     = mmb_num_revisions($filter['revisions']);
     //$stats['num_revisions'] = 5;
     $stats['overhead']          = mmb_handle_overhead(false);
     $stats['num_spam_comments'] = mmb_num_spam_comments();
@@ -29,13 +32,16 @@ mmb_add_action('cleanup_delete', 'cleanup_delete_worker');
 function cleanup_delete_worker($params = array())
 {
     global $mmb_core;
-    
+    $revision_params = get_option('mmb_stats_filter');
+	$revision_filter = isset($revision_params['plugins']['cleanup']) ? $revision_params['plugins']['cleanup'] : array();
+	
     $params_array = explode('_', $params['actions']);
     $return_array = array();
+	
     foreach ($params_array as $param) {
         switch ($param) {
             case 'revision':
-                if (mmb_delete_all_revisions()) {
+                if (mmb_delete_all_revisions($revision_filter['revisions'])) {
                     $return_array['revision'] = 'OK';
                 } else {
                     $return_array['revision_error'] = 'Failed, please try again';
@@ -66,12 +72,20 @@ function cleanup_delete_worker($params = array())
     mmb_response($return_array, true);
 }
 
-function mmb_num_revisions()
+function mmb_num_revisions($filter)
 {
     global $wpdb;
     $sql           = "SELECT COUNT(*) FROM $wpdb->posts WHERE post_type = 'revision'";
     $num_revisions = $wpdb->get_var($wpdb->prepare($sql));
-    return $num_revisions;
+	if(isset($filter['num_to_keep']) && !empty($filter['num_to_keep'])){
+		$num_rev = str_replace("r_","",$filter['num_to_keep']);
+		if($num_revisions < $num_rev){
+			return 0;
+		}
+    	return ($num_revisions - $num_rev);
+	}else{
+		return $num_revisions;
+	}
 }
 
 function mmb_select_all_revisions()
@@ -82,11 +96,29 @@ function mmb_select_all_revisions()
     return $revisions;
 }
 
-function mmb_delete_all_revisions()
+function mmb_delete_all_revisions($filter)
 {
-    global $wpdb;
-    $sql       = "DELETE a,b,c FROM $wpdb->posts a LEFT JOIN $wpdb->term_relationships b ON (a.ID = b.object_id) LEFT JOIN $wpdb->postmeta c ON (a.ID = c.post_id) WHERE a.post_type = 'revision'";
-    $revisions = $wpdb->query($wpdb->prepare($sql));
+    global $wpdb, $mmb_core;
+	$where = '';
+	if(isset($filter['num_to_keep']) && !empty($filter['num_to_keep'])){
+		$num_rev = str_replace("r_","",$filter['num_to_keep']);
+		$select_posts = "SELECT ID FROM $wpdb->posts WHERE post_type = 'revision' ORDER BY post_date DESC LIMIT ".$num_rev;
+		$select_posts_res = $wpdb->get_results($select_posts);
+		$notin = '';
+		$n = 0;
+		foreach($select_posts_res as $keep_post){
+			$notin.=$keep_post->ID;
+			$n++;
+			if(count($select_posts_res)>$n){
+				$notin.=',';
+			}
+		}
+		$where = " AND a.ID NOT IN (".$notin.")";
+	}
+	
+    $sql       = "DELETE a,b,c FROM $wpdb->posts a LEFT JOIN $wpdb->term_relationships b ON (a.ID = b.object_id) LEFT JOIN $wpdb->postmeta c ON (a.ID = c.post_id) WHERE a.post_type = 'revision'".$where;
+    
+	$revisions = $wpdb->query($wpdb->prepare($sql));
     
     return $revisions;
 }

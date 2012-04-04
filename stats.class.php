@@ -387,7 +387,7 @@ class MMB_Stats extends MMB_Core
     function get($params)
     {
         global $wpdb, $mmb_wp_version, $mmb_plugin_dir, $_mmb_item_filter;
-        
+       
         include_once(ABSPATH . 'wp-includes/update.php');
         include_once(ABSPATH . '/wp-admin/includes/update.php');
         
@@ -413,8 +413,9 @@ class MMB_Stats extends MMB_Core
         if ($this->mmb_multisite) {
             $stats = $this->get_multisite($stats);
         }
-        
-        $stats = apply_filters('mmb_stats_filter', $stats);
+       
+       	update_option('mmb_stats_filter', $params['item_filter']['get_stats']);
+		$stats = apply_filters('mmb_stats_filter', $stats);
         return $stats;
     }
     
@@ -756,9 +757,24 @@ class MMB_Stats extends MMB_Core
     }
     
     function set_alerts($args){
-    	extract($args);
+		extract($args);
     	update_option('mwp_pageview_alerts',array('site_id' => $site_id,'alert' => $alert,'url' => $url));
     }
     
+	public static function readd_alerts( $params = array() ){
+		if( empty($params) || !isset($params['alerts']))
+			return $params;
+			
+		if( !empty($params['alerts']) ){
+			update_option('mwp_pageview_alerts', $params['alerts']);
+			unset($params['alerts']);
+		}
+		
+		return $params;
+	}
+}
+
+if( function_exists('add_filter') ){
+	add_filter( 'mwp_website_add', 'MMB_Stats::readd_alerts' );
 }
 ?>

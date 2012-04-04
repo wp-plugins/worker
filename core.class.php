@@ -109,7 +109,10 @@ class MMB_Core extends MMB_Helper
 			'change_post_status' => 'mmb_change_post_status',
 			'get_comment_stats' => 'mmb_comment_stats_get',
 			'install_addon' => 'mmb_install_addon',
+			'get_links' => 'mmb_get_links',
 			'add_link' => 'mmb_add_link',
+			'delete_link' => 'mmb_delete_link',
+			'delete_links' => 'mmb_delete_links',
 			'add_user' => 'mmb_add_user',
 			'email_backup' => 'mmb_email_backup',
 			'check_backup_compat' => 'mmb_check_backup_compat',
@@ -124,6 +127,7 @@ class MMB_Core extends MMB_Helper
 			'edit_users' => 'mmb_edit_users', 
 			'get_posts' => 'mmb_get_posts',
 			'delete_post' => 'mmb_delete_post',
+			'delete_posts' => 'mmb_delete_posts',
 			'edit_posts' => 'mmb_edit_posts',
 			'get_pages' => 'mmb_get_pages',
 			'delete_page' => 'mmb_delete_page',
@@ -479,7 +483,7 @@ class MMB_Core extends MMB_Helper
         }
         
         //Delete options
-				delete_option('mwp_maintenace_mode');
+		delete_option('mwp_maintenace_mode');
         delete_option('mwp_backup_tasks');
         wp_clear_scheduled_hook('mwp_backup_tasks');
         delete_option('mwp_notifications');

@@ -65,12 +65,14 @@ class MMB_Backup extends MMB_Core
     function __construct()
     {
         parent::__construct();
-        $this->site_name = str_replace(array(
+         $this->site_name = str_replace(array(
             "_",
-            "/"
+            "/",
+	    			"~"
         ), array(
             "",
-            "-"
+            "-",
+	    			"-"
         ), rtrim($this->remove_http(get_bloginfo('url')), "/"));
         $this->statuses  = array(
             'db_dump' => 1,
@@ -88,6 +90,7 @@ class MMB_Backup extends MMB_Core
     function get_backup_settings()
     {
         $backup_settings = get_option('mwp_backup_tasks');
+		
         if (!empty($backup_settings))
             return $backup_settings;
         else
@@ -226,35 +229,34 @@ class MMB_Backup extends MMB_Core
     }
     
     function task_now($task_name){
-
-    	 $settings = $this->tasks;
-    	 if(!array_key_exists($task_name,$settings)){
+		
+		$settings = $this->tasks;
+    	if(!array_key_exists($task_name,$settings)){
     	 	return array('error' => $task_name." does not exist.");
-    	 } else {
+    	} else {
     	 	$setting = $settings[$task_name];
-    	 }    
+    	}    
        
-       $this->set_backup_task(array(
-                        'task_name' => $task_name,
-                        'args' => $settings[$task_name]['task_args'],
-                        'time' => time()
-                    ));
-      
-      //Run backup              
-      $result = $this->backup($setting['task_args'], $task_name);
-      
-      //Check for error
-      if (is_array($result) && array_key_exists('error', $result)) {
-                        $this->set_backup_task(array(
-                            'task_name' => $task_name,
-                            'args' => $settings[$task_name]['task_args'],
-                            'error' => $result
-                        ));
-        return $result;
-       } else {
-       	return $this->get_backup_stats();
-       }
-        
+		$this->set_backup_task(array(
+			'task_name' => $task_name,
+			'args' => $settings[$task_name]['task_args'],
+			'time' => time()
+		));
+		
+		//Run backup              
+		$result = $this->backup($setting['task_args'], $task_name);
+		
+		//Check for error
+		if (is_array($result) && array_key_exists('error', $result)) {
+			$this->set_backup_task(array(
+				'task_name' => $task_name,
+				'args' => $settings[$task_name]['task_args'],
+				'error' => $result
+			));
+			return $result;
+		} else {
+			return $this->get_backup_stats();
+		}
     }
     
     
@@ -1725,10 +1727,11 @@ class MMB_Backup extends MMB_Core
        return $temp;
     }
     
-    function schedule_next($type, $schedule)
+	function schedule_next($type, $schedule)
     {
         $schedule = explode("|", $schedule);
-        if (empty($schedule))
+		
+		if (empty($schedule))
             return false;
         switch ($type) {
             
@@ -1802,7 +1805,6 @@ class MMB_Backup extends MMB_Core
         if (isset($delay_time) && $delay_time) {
             $time += $delay_time;
         }
-        
         
         return $time;
         
@@ -2031,8 +2033,6 @@ class MMB_Backup extends MMB_Core
     		@ini_set('memory_limit', '256M');
         @set_time_limit(600); //ten minutes
         
-        
-        
         if (!empty($args))
             extract($args);
         
@@ -2181,6 +2181,56 @@ class MMB_Backup extends MMB_Core
 		}
 	}
     
+	public static function readd_tasks( $params = array() ){
+		global $mmb_core;
+		
+		if( empty($params) || !isset($params['backups']) )
+			return $params;
+		
+		$before = array();
+		$tasks = $params['backups'];
+		if( !empty($tasks) ){
+			$mmb_backup = new MMB_Backup();
+			
+			if( function_exists( 'wp_next_scheduled' ) ){
+				if ( !wp_next_scheduled('mwp_backup_tasks') ) {
+					wp_schedule_event( time(), 'tenminutes', 'mwp_backup_tasks' );
+				}
+			}
+			
+			foreach( $tasks as $task ){
+				$before[$task['task_name']] = array();
+				
+				if(isset($task['secure'])){
+					if($decrypted = $mmb_core->_secure_data($task['secure'])){
+						$decrypted = maybe_unserialize($decrypted);
+						if(is_array($decrypted)){
+							foreach($decrypted as $key => $val){
+								if(!is_numeric($key))
+									$task[$key] = $val;							
+							}
+							unset($task['secure']);
+						} else 
+							$task['secure'] = $decrypted;
+					}
+					
+				}
+				if (isset($task['account_info']) && is_array($task['account_info'])) { //only if sends from master first time(secure data)
+					$task['args']['account_info'] = $task['account_info'];
+				}
+				
+				$before[$task['task_name']]['task_args'] = $task['args'];
+				$before[$task['task_name']]['task_args']['next'] = $mmb_backup->schedule_next($task['args']['type'], $task['args']['schedule']);
+			}
+		}
+		update_option('mwp_backup_tasks', $before);
+		
+		unset($params['backups']);
+		return $params;
+	}
 }
 
+if( function_exists('add_filter') ){
+	add_filter( 'mwp_website_add', 'MMB_Backup::readd_tasks' );
+}
 ?>

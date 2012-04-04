@@ -4,7 +4,7 @@ Plugin Name: ManageWP - Worker
 Plugin URI: http://managewp.com/
 Description: Manage all your blogs from one dashboard. Visit <a href="http://managewp.com">ManageWP.com</a> to sign up.
 Author: Prelovac Media
-Version: 3.9.17
+Version: 3.9.18
 Author URI: http://www.prelovac.com
 */
 
@@ -20,10 +20,10 @@ Author URI: http://www.prelovac.com
  **************************************************************/
 
 if(!defined('MMB_WORKER_VERSION'))
-	define('MMB_WORKER_VERSION', '3.9.17');
+	define('MMB_WORKER_VERSION', '3.9.18');
 
 if ( !defined('MMB_XFRAME_COOKIE')){
-	$siteurl = function_exists('get_site_option') ? get_site_option( 'siteurl' ) : get_option('siteurl');
+	$siteurl = function_exists( 'get_site_option' ) ? get_site_option( 'siteurl' ) : get_option( 'siteurl' );
 	define('MMB_XFRAME_COOKIE', $xframe = 'wordpress_'.md5($siteurl).'_xframe');
 }
 global $wpdb, $mmb_plugin_dir, $mmb_plugin_url, $wp_version, $mmb_filters, $_mmb_item_filter;
@@ -176,6 +176,9 @@ if( !function_exists ( 'mmb_add_site' )) {
 							update_option('mwp_worker_brand',$brand);
 						}
 						
+						if( isset( $add_settigns ) && !empty( $add_settigns ) )
+							apply_filters( 'mwp_website_add', $add_settigns );
+							
 						mmb_response($mmb_core->stats_instance->get_initial_stats(), true);
 					} else if ($verify == 0) {
 						mmb_response('Invalid message signature. Please contact us if you see this message often.', false);
@@ -566,6 +569,21 @@ if( !function_exists ( 'mmb_do_upgrade' )) {
 		
 	}
 }
+
+if( !function_exists ('mmb_get_links')) {
+	function mmb_get_links($params)
+	{
+		global $mmb_core;
+		$mmb_core->get_link_instance();
+			$return = $mmb_core->link_instance->get_links($params);
+		if (is_array($return) && array_key_exists('error', $return))
+			mmb_response($return['error'], false);
+		else {
+			mmb_response($return, true);
+		}
+	}
+}
+
 if( !function_exists ( 'mmb_add_link' )) {
 	function mmb_add_link($params)
 	{
@@ -579,6 +597,36 @@ if( !function_exists ( 'mmb_add_link' )) {
 			mmb_response($return, true);
 		}
 		
+	}
+}
+
+if( !function_exists ('mmb_delete_link')) {
+	function mmb_delete_link($params)
+	{
+		global $mmb_core;
+		$mmb_core->get_link_instance();
+		
+			$return = $mmb_core->link_instance->delete_link($params);
+		if (is_array($return) && array_key_exists('error', $return))
+			mmb_response($return['error'], false);
+		else {
+			mmb_response($return, true);
+		}
+	}
+}
+
+if( !function_exists ('mmb_delete_links')) {
+	function mmb_delete_links($params)
+	{
+		global $mmb_core;
+		$mmb_core->get_link_instance();
+		
+			$return = $mmb_core->link_instance->delete_links($params);
+		if (is_array($return) && array_key_exists('error', $return))
+			mmb_response($return['error'], false);
+		else {
+			mmb_response($return, true);
+		}
 	}
 }
 
@@ -644,6 +692,21 @@ if( !function_exists ('mmb_delete_post')) {
 		$mmb_core->get_post_instance();
 		
 			$return = $mmb_core->post_instance->delete_post($params);
+		if (is_array($return) && array_key_exists('error', $return))
+			mmb_response($return['error'], false);
+		else {
+			mmb_response($return, true);
+		}
+	}
+}
+
+if( !function_exists ('mmb_delete_posts')) {
+	function mmb_delete_posts($params)
+	{
+		global $mmb_core;
+		$mmb_core->get_post_instance();
+		
+			$return = $mmb_core->post_instance->delete_posts($params);
 		if (is_array($return) && array_key_exists('error', $return))
 			mmb_response($return['error'], false);
 		else {

@@ -20,6 +20,9 @@ class MMB_Post extends MMB_Core
     function create($args)
     {
     	
+    	$this->_log($args);
+    	global $wpdb;
+    	
         /**
          * algorithm
          * 1. create post using wp_insert_post (insert tags also here itself)
@@ -276,8 +279,50 @@ class MMB_Post extends MMB_Core
 				if($user && $user->ID){
 					$post_data['post_author'] = $user->ID;
 				}
+				//remove filter which can brake scripts or html
        	remove_filter('content_save_pre', 'wp_filter_post_kses'); 
-        $post_id = wp_insert_post($post_data);
+        
+        //check for edit post
+        $post_result = 0;
+        if(isset($post_data['mwp_post_edit']) && $post_data['mwp_post_edit']){
+        	
+        	
+        	if($post_data['mwp_match_by'] == 'title'){
+        		$match_by = "post_title = '".$post_data['post_title']."'"; 
+        	} else {
+        		$match_by = "post_name = '".$post_data['post_name']."'";
+        	}
+        	
+        	$query = "SELECT ID FROM $wpdb->posts WHERE $match_by AND post_status NOT IN('inherit','auto-draft','draft') LIMIT 1";
+        	
+        	$post_result = $wpdb->get_var($query);
+        	
+        }
+        
+        
+        if($post_result){
+        	//update existing post
+        	$post_data['ID'] = $post_result;
+        	$post_id = wp_update_post($post_data);
+			    
+			    //check for previous attachments    	
+			    $atta_allimages =& get_children('post_type=attachment&post_parent=' . $post_id);
+	        if (!empty($atta_allimages)) {
+	            foreach ($atta_allimages as $image) {
+	                wp_delete_attachment($image->ID);
+	            }
+	        }
+        	
+        } else {
+        	if($post_data['mwp_post_edit'] && $post_data['mwp_force_publish']){
+        	 $post_id = wp_insert_post($post_data);
+        	} elseif($post_data['mwp_post_edit'] && !$post_data['mwp_force_publish']) {
+        		return array('error' => "Post not found.");
+        	} else {
+        		$post_id = wp_insert_post($post_data);
+        	}
+        	
+        }
         
         if (count($attachments)) {
             foreach ($attachments as $atta_id => $featured_id) {
@@ -484,6 +529,27 @@ class MMB_Post extends MMB_Core
 		{
 			return 'No ID...';
 		}
+	}
+	
+	function delete_posts($args){
+		global $wpdb;
+		extract($args);
+		if($deleteaction=='delete'){
+			$delete_query_intro = "DELETE FROM $wpdb->posts WHERE ID = ";
+		}elseif($deleteaction=='trash'){
+			$delete_query_intro = "UPDATE $wpdb->posts SET post_status = 'trash' WHERE ID = ";
+		}
+		foreach($args as $key=>$val){
+			
+			if(!empty($val) && is_numeric($val))
+			{
+				$delete_query = $delete_query_intro.$val;
+				
+				$wpdb->query($delete_query);
+			}
+		}
+		return "Post deleted";
+		
 	}
 	
 	function get_pages($args){
