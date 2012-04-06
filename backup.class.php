@@ -583,7 +583,7 @@ class MMB_Backup extends MMB_Core
                     if ($sys == 'WIN')
                         $exclude_data .= " $data/*.*";
                     else
-                        $exclude_data .= " $data/*";
+                        $exclude_data .= " '$data/*'";
                         
                         
                 } else {
