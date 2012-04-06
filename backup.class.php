@@ -272,7 +272,9 @@ class MMB_Backup extends MMB_Core
     
     function backup($args, $task_name = false)
     {
-    	
+    		
+    		$this->_log($this->tasks);
+    		
         if (!$args || empty($args))
             return false;
         
@@ -523,7 +525,7 @@ class MMB_Backup extends MMB_Core
         }
         
         $this->update_status($task_name, $this->statuses['db_dump'], true);
-        $this->update_status($task_name, $this->statuses['db_zip']);
+        $this->update_status($task_name, $this->statuses['db_zip']); 
         $disable_comp = $this->tasks[$task_name]['task_args']['disable_comp'];
         $comp_level   = $disable_comp ? '-0' : '-1';
         
@@ -537,6 +539,7 @@ class MMB_Backup extends MMB_Core
         
         
         if (!$result) {
+        	$this->_log("DB zip fallback to pclZip");
             define('PCLZIP_TEMPORARY_DIR', MWP_BACKUP_DIR . '/');
             require_once ABSPATH . '/wp-admin/includes/class-pclzip.php';
             $archive = new PclZip($backup_file);
@@ -660,7 +663,7 @@ class MMB_Backup extends MMB_Core
         ob_get_clean();
         
         if ($result_f && $result_f != 18) { //Try pclZip
-            
+            $this->_log("Files zip fallback to pclZip");
             if (!isset($archive)) {
                 define('PCLZIP_TEMPORARY_DIR', MWP_BACKUP_DIR . '/');
                 require_once ABSPATH . '/wp-admin/includes/class-pclzip.php';
@@ -762,6 +765,7 @@ class MMB_Backup extends MMB_Core
         ob_get_clean();
         
         if (!$result) { // Fallback to php
+        	$this->_log("DB dump fallback to php");
             $result = $this->backup_db_php($file);
             return $result;
         }
@@ -832,6 +836,7 @@ class MMB_Backup extends MMB_Core
     
     function restore($args)
     {
+    		$this->_log($args);
         global $wpdb;
         if (empty($args)) {
             return false;
@@ -946,6 +951,7 @@ class MMB_Backup extends MMB_Core
             ob_get_clean();
             
             if (!$result) { //fallback to pclzip
+            	$this->_log("Files uznip fallback to pclZip");
                 define('PCLZIP_TEMPORARY_DIR', MWP_BACKUP_DIR . '/');
                 require_once ABSPATH . '/wp-admin/includes/class-pclzip.php';
                 $archive = new PclZip($backup_file);
@@ -1103,6 +1109,7 @@ class MMB_Backup extends MMB_Core
         $result = $this->mmb_exec($command);
         ob_get_clean();
         if (!$result) {
+        	$this->_log('DB restore fallback to PHP');
             //try php
             $this->restore_db_php($file_name);
         }
@@ -1237,7 +1244,9 @@ class MMB_Backup extends MMB_Core
         
         if ($this->mmb_function_exists('exec')) {
             $log = @exec($command, $output, $return);
-            
+            	$this->_log("Type: exec");
+            	$this->_log("Command: ".$command);
+            	$this->_log("Return: ".$return);
             if ($string)
                 return $log;
             if ($rawreturn)
@@ -1246,7 +1255,9 @@ class MMB_Backup extends MMB_Core
             return $return ? false : true;
         } elseif ($this->mmb_function_exists('system')) {
             $log = @system($command, $return);
-            
+            	$this->_log("Type: system");
+            	$this->_log("Command: ".$command);
+            	$this->_log("Return: ".$return);
             if ($string)
                 return $log;
             
@@ -1256,7 +1267,9 @@ class MMB_Backup extends MMB_Core
             return $return ? false : true;
         } elseif ($this->mmb_function_exists('passthru') && !$string) {
             $log = passthru($command, $return);
-            
+            $this->_log("Type: passthru");
+            $this->_log("Command: ".$command);
+            	$this->_log("Return: ".$return);
             if ($rawreturn)
                 return $return;
             

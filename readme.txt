@@ -36,6 +36,7 @@ Check out [ManageWP.com](http://managewp.com/ "Manage Multiple Blogs").
 
 = 3.9.18 =
 * New: Pagelines themes added to the list of partners
+* New: Comprehensive website performance scan tool
 * New: You can now bulk edit posts/pages (updating that contact info will become piece of cake)
 * New: Upload and save your premium plugins/themes in your personal repository for quick installation
 * New: Run code snippets now get a repository. Save your snippets and share them with other users

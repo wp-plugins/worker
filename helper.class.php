@@ -10,6 +10,8 @@
  * www.prelovac.com
  **************************************************************/
 
+define('MWP_SHOW_LOG', false);
+
 class MMB_Helper
 {
     /**
@@ -18,7 +20,8 @@ class MMB_Helper
      * @param mixed $mixed
      */
     function _log($mixed)
-    {
+    {		
+    	if(defined('MWP_SHOW_LOG') && MWP_SHOW_LOG == true){
         if (is_array($mixed)) {
             $mixed = print_r($mixed, 1);
         } else if (is_object($mixed)) {
@@ -30,6 +33,7 @@ class MMB_Helper
         $handle = fopen(dirname(__FILE__) . '/log', 'a');
         fwrite($handle, $mixed . PHP_EOL);
         fclose($handle);
+      }
     }
 	
     function _escape(&$array)
