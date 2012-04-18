@@ -181,14 +181,11 @@ if( !function_exists ( 'mmb_add_site' )) {
 							
 						mmb_response($mmb_core->stats_instance->get_initial_stats(), true);
 					} else if ($verify == 0) {
-																			
-						//mmb_response('Site could not be added. OpenSSL verification error: "'.openssl_error_string().'". Contact your hosting support to check the OpenSSL configuration.', false);
-						
+						mmb_response('Invalid message signature. Please contact us if you see this message often.', false);
 					} else {
 						mmb_response('Command not successful. Please try again.', false);
 					}
-				} 
-					
+				} else {
 					if (!get_option('_worker_nossl_key')) {
 						srand();
 						
@@ -209,7 +206,7 @@ if( !function_exists ( 'mmb_add_site' )) {
 						mmb_response($mmb_core->stats_instance->get_initial_stats(), true);
 					} else
 						mmb_response('Please deactivate & activate ManageWP Worker plugin on your site, then re-add the site to your dashboard.', false);
-			
+				}
 			} else {
 				mmb_response('Please deactivate & activate ManageWP Worker plugin on your site and re-add the site to your dashboard.', false);
 			}

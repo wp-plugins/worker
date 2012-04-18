@@ -1450,9 +1450,8 @@ class MMB_Backup extends MMB_Core
             $ftp_remote_folder .= '/' . $this->site_name;
         }
         @ftp_mkdir($conn_id, $ftp_remote_folder);
-        
+       
         $upload = @ftp_put($conn_id, $ftp_remote_folder . '/' . basename($backup_file), $backup_file, FTP_BINARY);
-        
         if ($upload === false) { //Try ascii
             $upload = @ftp_put($conn_id, $ftp_remote_folder . '/' . basename($backup_file), $backup_file, FTP_ASCII);
         }
