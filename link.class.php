@@ -1,9 +1,9 @@
 <?php
 /*************************************************************
  * 
- * user.class.php
+ * link.class.php
  * 
- * Add Users
+ * Manage/Add Links
  * 
  * 
  * Copyright (c) 2011 Prelovac Media
@@ -19,7 +19,7 @@ class MMB_Link extends MMB_Core
     
     function add_link($args)
     {
-    	extract($args);
+		extract($args);
     	
     	$params['link_url'] = esc_html($url);
 			$params['link_url'] = esc_url($params['link_url']);
@@ -37,6 +37,18 @@ class MMB_Link extends MMB_Core
 					foreach($terms as $term){
 						if(in_array($term->name,$link_category)){
 							$params['link_category'][] = $term->term_id;
+							$link_category = $this->remove_element($link_category, $term->name);
+						}
+					}
+				}
+				if(!empty($link_category)){
+					foreach($link_category as $linkkey => $linkval){
+						if(!empty($linkval)){
+							$link = wp_insert_term($linkval,'link_category');
+							
+							if(isset($link['term_id']) && !empty($link['term_id'])){
+								$params['link_category'][] = $link['term_id'];
+							}
 						}
 					}
 				}
@@ -57,11 +69,20 @@ class MMB_Link extends MMB_Core
 			return $is_success ? true : array('error' => 'Failed to add link.'); 
     }
 	
+	function remove_element($arr, $val){
+		foreach ($arr as $key => $value){
+			if ($value == $val){
+				unset($arr[$key]);
+			}
+		}
+		return $arr = array_values($arr);
+	}
+	
 	function get_links($args){
 		global $wpdb;
 		
 		$where='';
-		
+		$this->_log('MORE BRE');
 		extract($args);
 		
 		if(!empty($filter_links))
