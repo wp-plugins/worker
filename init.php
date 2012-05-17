@@ -51,6 +51,47 @@ require_once("$mmb_plugin_dir/plugins/cleanup/cleanup.php");
 
 require_once("$mmb_plugin_dir/widget.class.php");
 
+if( !function_exists ( 'mmb_parse_data' )) {
+	function mmb_parse_data( $data = array() ){
+		if( empty($data) )
+			return $data;
+		
+		$data = (array) $data;
+		if( isset($data['params']) )
+			$data['params'] = mmb_filter_params( $data['params'] );
+		
+		$postkeys = array('action', 'params', 'id', 'signature' );
+		
+		if( !empty($data) ){
+			foreach($data as $key => $items){
+				if( !in_array($key, $postkeys) )
+					unset($data[$key]);
+			}
+		}
+		return $data;
+	}
+}
+
+if( !function_exists ( 'mmb_filter_params' )) {
+	function mmb_filter_params( $array = array() ){
+		
+		$filter = array( 'current_user', 'wpdb' );
+		$return = array();
+		foreach ($array as $key => $val) { 
+			if( !is_int($key) && in_array($key, $filter) )
+				continue;
+				
+			if( is_array( $val ) ) { 
+				$return[$key] = mmb_filter_params( $val );
+			} else {
+				$return[$key] = $val;
+			}
+		} 
+		
+		return $return;
+	}
+}
+
 if( !function_exists ( 'mmb_parse_request' )) {
 	function mmb_parse_request()
 	{
@@ -62,9 +103,10 @@ if( !function_exists ( 'mmb_parse_request' )) {
 		
 		global $current_user, $mmb_core, $new_actions, $wp_db_version, $wpmu_version, $_wp_using_ext_object_cache;
 		$data = base64_decode($HTTP_RAW_POST_DATA);
-		if ($data)
-			$num = @extract(unserialize($data));
-		
+		if ($data){
+			$data = mmb_parse_data( unserialize( $data ) );
+			$num = @extract( $data );
+		}
 		if (isset($action)) {
 			$_wp_using_ext_object_cache = false;
 			@set_time_limit(600);
@@ -806,7 +848,7 @@ if( !function_exists ( 'mmb_set_alerts' )) {
 		
 }
 
-if(!function_exists('mmb_more_reccurences')){
+if( !function_exists('mmb_more_reccurences') ){
 	//Backup Tasks
 	add_filter('cron_schedules', 'mmb_more_reccurences');
 	function mmb_more_reccurences($schedules) {

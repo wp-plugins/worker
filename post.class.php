@@ -655,7 +655,7 @@ FROM $wpdb->posts AS p
 INNER JOIN $wpdb->term_relationships ON ( p.ID = $wpdb->term_relationships.object_id )
 INNER JOIN $wpdb->term_taxonomy ON ( $wpdb->term_relationships.term_taxonomy_id = $wpdb->term_taxonomy.term_taxonomy_id
 AND $wpdb->term_taxonomy.taxonomy = '".$taxonomy."' )
-INNER JOIN $wpdb->terms ON ( $wpdb->term_taxonomy.term_taxonomy_id = $wpdb->terms.term_id )");
+INNER JOIN $wpdb->terms ON ( $wpdb->term_taxonomy.term_id = $wpdb->terms.term_id )");
 		
 		foreach ( $cats as $post_val )
 		{
