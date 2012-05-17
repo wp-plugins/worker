@@ -1413,7 +1413,7 @@ class MMB_Backup extends MMB_Core
                 $conn_id = ftp_ssl_connect($ftp_hostname,$port);
             } else {
                 return array(
-                    'error' => 'Your server doesn\'t support SFTP',
+                    'error' => 'FTPS disabled: Please enable ftp_ssl_connect in PHP',
                     'partial' => 1
                 );
             }
@@ -1428,7 +1428,7 @@ class MMB_Backup extends MMB_Core
                 }
             } else {
                 return array(
-                    'error' => 'Your server doesn\'t support FTP',
+                    'error' => 'FTP disabled: Please enable ftp_connect in PHP',
                     'partial' => 1
                 );
             }
