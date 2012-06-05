@@ -524,7 +524,7 @@ class MMB_Core extends MMB_Helper
             
             if (!$this->is_server_writable()) {
                 return array(
-                    'error' => 'Failed, please <a target="_blank" href="http://managewp.com/user-guide#ftp">add FTP details for automatic upgrades.</a></a>'
+                    'error' => 'Failed, please <a target="_blank" href="http://managewp.com/user-guide/faq/my-pluginsthemes-fail-to-update-or-i-receive-a-yellow-ftp-warning">add FTP details for automatic upgrades.</a>'
                 );
             }
             

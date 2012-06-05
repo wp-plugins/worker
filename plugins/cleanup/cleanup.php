@@ -217,5 +217,4 @@ function mmb_get_spam_comments()
     $spams = $wpdb->get_results($wpdb->prepare($sql));
     return $spams;
 }
-
 ?>
