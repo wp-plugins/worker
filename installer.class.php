@@ -127,7 +127,7 @@ class MMB_Installer extends MMB_Core
         
         if (!$this->is_server_writable()) {
             return array(
-                'error' => 'Failed, please <a target="_blank" href="http://managewp.com/user-guide#ftp">add FTP details</a></a>'
+                'error' => 'Failed, please <a target="_blank" href="http://managewp.com/user-guide/faq/my-pluginsthemes-fail-to-update-or-i-receive-a-yellow-ftp-warning">add FTP details</a>'
             );
         }
         
@@ -693,12 +693,14 @@ class MMB_Installer extends MMB_Core
                     if (in_array($path, $activated_plugins)) {
                         $plugins['active'][$br_a]['path'] = $path;
                         $plugins['active'][$br_a]['name'] = strip_tags($plugin['Name']);
+						$plugins['active'][$br_a]['version'] = $plugin['Version'];
                         $br_a++;
                     }
                     
                     if (!in_array($path, $activated_plugins)) {
                         $plugins['inactive'][$br_i]['path'] = $path;
                         $plugins['inactive'][$br_i]['name'] = strip_tags($plugin['Name']);
+						$plugins['inactive'][$br_i]['version'] = $plugin['Version'];
                         $br_i++;
                     }
                     
@@ -748,6 +750,7 @@ class MMB_Installer extends MMB_Core
                 if ($current_theme == $theme_name) {
                     $themes['active'][$br_a]['path']       = $theme['Template'];
                     $themes['active'][$br_a]['name']       = strip_tags($theme['Name']);
+					$themes['active'][$br_a]['version']    = $theme['Version'];
                     $themes['active'][$br_a]['stylesheet'] = $theme['Stylesheet'];
                     $br_a++;
                 }
@@ -755,6 +758,7 @@ class MMB_Installer extends MMB_Core
                 if ($current_theme != $theme_name) {
                     $themes['inactive'][$br_i]['path']       = $theme['Template'];
                     $themes['inactive'][$br_i]['name']       = strip_tags($theme['Name']);
+					$themes['inactive'][$br_i]['version']    = $theme['Version'];
                     $themes['inactive'][$br_i]['stylesheet'] = $theme['Stylesheet'];
                     $br_i++;
                 }

@@ -48,5 +48,4 @@ if(is_array($mwp_worker_brand)){
 if(!$worker_brand){
 	add_action('widgets_init', create_function('', 'return register_widget("ManageWP_Widget");'));
 }
-				
 ?>

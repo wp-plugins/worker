@@ -343,7 +343,7 @@ class MMB_Helper
         
         $current_message = $this->get_worker_message_id();
         
-        if ((int) $current_message > (int) $message_id)
+        if ((int) $current_message >= (int) $message_id)
             return array(
                 'error' => 'Invalid message recieved. Deactivate and activate the ManageWP Worker plugin on this site, then remove the website from your ManageWP account and add it again.'
             );
