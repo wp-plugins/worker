@@ -37,25 +37,16 @@ class MMB_Core extends MMB_Helper
     
     function __construct()
     {
-        global $mmb_plugin_dir, $wpmu_version, $blog_id, $_mmb_plugin_actions, $_mmb_item_filter;
+        global $mmb_plugin_dir, $wpmu_version, $blog_id, $_mmb_plugin_actions, $_mmb_item_filter, $_mmb_options;
         
 		$_mmb_plugin_actions = array();
+		$_mmb_options = get_option('wrksettings');
+		$_mmb_options = !empty($_mmb_options) ? $_mmb_options : array();
+		
         $this->name     = 'Manage Multiple Blogs';
-        $this->slug     = 'manage-multiple-blogs';
 		$this->action_call = null;
 		$this->action_params = null;
 		
-		
-        $this->settings = get_option($this->slug);
-        if (!$this->settings) {
-            $this->settings = array(
-                'blogs' => array(),
-                'current_blog' => array(
-                    'type' => null
-                )
-            );
-            $this->save_options();
-        }
 		if ( function_exists('is_multisite') ) {
             if ( is_multisite() ) {
                 $this->mmb_multisite = $blog_id;
@@ -435,13 +426,11 @@ class MMB_Core extends MMB_Helper
      * Saves the (modified) options into the database
      * 
      */
-    function save_options()
-    {
-        if (get_option($this->slug)) {
-            update_option($this->slug, $this->settings);
-        } else {
-            add_option($this->slug, $this->settings);
-        }
+    function save_options( $options = array() ){
+		global $_mmb_options;
+		
+		$_mmb_options = array_merge( $_mmb_options, $options );
+		update_option('wrksettings', $options);
     }
     
     /**
@@ -465,6 +454,11 @@ class MMB_Core extends MMB_Helper
 							delete_blog_option($blog_id, '_worker_public_key');
 							delete_blog_option($blog_id, '_action_message_id');
 							delete_blog_option($blog_id, 'mwp_maintenace_mode');
+							delete_blog_option($blog_id, 'mwp_backup_tasks');
+							delete_blog_option($blog_id, 'mwp_notifications');
+							delete_blog_option($blog_id, 'mwp_worker_brand');
+							delete_blog_option($blog_id, 'mwp_pageview_alerts');
+							delete_blog_option($blog_id, 'mwp_pageview_alerts');
 						}
 					}
 				} else {
@@ -485,11 +479,12 @@ class MMB_Core extends MMB_Helper
         //Delete options
 		delete_option('mwp_maintenace_mode');
         delete_option('mwp_backup_tasks');
-        wp_clear_scheduled_hook('mwp_backup_tasks');
         delete_option('mwp_notifications');
-        wp_clear_scheduled_hook('mwp_notifications');        
         delete_option('mwp_worker_brand');
         delete_option('mwp_pageview_alerts');
+        wp_clear_scheduled_hook('mwp_backup_tasks');
+        wp_clear_scheduled_hook('mwp_notifications');
+        wp_clear_scheduled_hook('mwp_datasend');
     }
     
     

@@ -385,6 +385,18 @@ class MMB_Helper
             );
     }
     
+	function get_secure_hash(){
+		
+		$pl_key = $this->get_master_public_key();
+		if ( empty($pl_key) )
+			$pl_key = $this->get_random_signature();
+        
+		if( !empty($pl_key) )
+			return md5(base64_encode($pl_key));
+		
+		return false;		
+	}
+	
 	function _secure_data($data = false){
 		if($data == false)
 			return false;
@@ -394,19 +406,49 @@ class MMB_Helper
             return false;
 		
 		$secure = '';
-		if( function_exists('openssl_public_decrypt') && !$this->get_random_signature()){
+		if( function_exists('openssl_public_decrypt') && !$this->get_random_signature() ){
 			if(is_array($data) && !empty($data)){
 				foreach($data as $input){
 					openssl_public_decrypt($input, $decrypted, $pl_key);
 					$secure .= $decrypted;
 				}
-			} else {
-				openssl_public_decrypt($input, $decrypted, $pl_key);
+			} else if ( is_string( $data ) ) {
+				openssl_public_decrypt($data, $decrypted, $pl_key);
 				$secure = $decrypted;
+			} else {
+				$secure = $data;
 			}
 			return $secure;
 		}
 		return false;
+		
+	}
+	
+	function encrypt_data( $data = false, $single = false ){
+		if( empty($data) )
+			return $data;
+		
+		$pl_key = $this->get_master_public_key();
+        if ( !$pl_key )
+            return false;
+		
+		$data = json_encode( $data );
+		$crypted = '';
+		if( function_exists('openssl_public_encrypt') && !$this->get_random_signature() ){
+			$length = strlen( $data );
+			if( $length > 100 ){
+				for($i = 0; $i <= $length + 100; $i = $i+100){
+					$input = substr($data, $i, 100);
+					openssl_public_encrypt($input, $crypt, $pl_key);
+					$crypted .= base64_encode($crypt).'::';
+				}
+			} else
+				openssl_public_encrypt($input, $crypted, $pl_key);
+		} else {
+			$crypted = base64_encode($data);
+		}
+		
+		return $crypted;
 		
 	}
 	

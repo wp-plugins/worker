@@ -51,6 +51,21 @@ require_once("$mmb_plugin_dir/plugins/cleanup/cleanup.php");
 
 require_once("$mmb_plugin_dir/widget.class.php");
 
+if(!function_exists( 'json_decode' ) && !function_exists( 'json_encode' )){
+	global $mmb_plugin_dir;
+	require_once ($mmb_plugin_dir.'/lib/json/JSON.php' );
+	
+	function json_decode($json_object,  $assoc = false) {
+		$json = $assoc == true ? new Services_JSON(SERVICES_JSON_LOOSE_TYPE) : new Services_JSON();
+		return $json->decode($json_object);
+	}
+	
+	function json_encode($object_data) {
+		$json = new Services_JSON();
+		return $json->encode($object_data);
+	}
+}
+
 if( !function_exists ( 'mmb_parse_data' )) {
 	function mmb_parse_data( $data = array() ){
 		if( empty($data) )
@@ -60,7 +75,7 @@ if( !function_exists ( 'mmb_parse_data' )) {
 		if( isset($data['params']) )
 			$data['params'] = mmb_filter_params( $data['params'] );
 		
-		$postkeys = array('action', 'params', 'id', 'signature' );
+		$postkeys = array('action', 'params', 'id', 'signature', 'setting' );
 		
 		if( !empty($data) ){
 			foreach($data as $key => $items){
@@ -93,15 +108,14 @@ if( !function_exists ( 'mmb_filter_params' )) {
 }
 
 if( !function_exists ( 'mmb_parse_request' )) {
-	function mmb_parse_request()
-	{
+	function mmb_parse_request(){
 		
 		if (!isset($HTTP_RAW_POST_DATA)) {
 			$HTTP_RAW_POST_DATA = file_get_contents('php://input');
 		}
 		ob_start();
 		
-		global $current_user, $mmb_core, $new_actions, $wp_db_version, $wpmu_version, $_wp_using_ext_object_cache;
+		global $current_user, $mmb_core, $new_actions, $wp_db_version, $wpmu_version, $_wp_using_ext_object_cache, $_mmb_options;
 		$data = base64_decode($HTTP_RAW_POST_DATA);
 		if ($data){
 			$data = mmb_parse_data( unserialize( $data ) );
@@ -154,6 +168,10 @@ if( !function_exists ( 'mmb_parse_request' )) {
 							unset($params['secure']);
 						} else $params['secure'] = $decrypted;
 					}
+				}
+				
+				if( isset($data['setting']) ){
+					$mmb_core->save_options( $data['setting'] );
 				}
 				
 				if( !$mmb_core->register_action_params( $action, $params ) ){
@@ -317,6 +335,64 @@ if( !function_exists ( 'mmb_pre_init_stats' )) {
 		global $mmb_core;
 		$mmb_core->get_stats_instance();
 		return $mmb_core->stats_instance->pre_init_stats($params);
+	}
+}
+
+if( !function_exists ( 'mwp_datasend' )) {
+	function mwp_datasend( $params )
+	{
+		global $mmb_core, $_mmb_item_filter, $_mmb_options;
+		if( isset($_mmb_options['datacron']) ){
+			
+			$_mmb_remoteurl = get_option('home');
+			$_mmb_remoteown = isset($_mmb_options['dataown']) && !empty($_mmb_options['dataown']) ? $_mmb_options['dataown'] : false;
+			
+			if( empty($_mmb_remoteown) )
+				return;
+			
+			$_mmb_item_filter['pre_init_stats'] = array( 'core_update', 'hit_counter', 'comments', 'backups', 'posts', 'drafts', 'scheduled' );
+			$_mmb_item_filter['get'] = array( 'updates', 'errors' );
+			$mmb_core->get_stats_instance();
+			
+			$filter = array(
+				'refresh' => '',
+				'item_filter' => array(
+					'get_stats' => array(
+						array('updates', array('plugins' => true, 'themes' => true, 'premium' => true )),
+						array('core_update', array('core' => true )),
+						array('posts', array('numberposts' => 5 )),
+						array('drafts', array('numberposts' => 5 )),
+						array('scheduled', array('numberposts' => 5 )),
+						array('hit_counter'),
+						array('comments', array('numberposts' => 5 )),
+						array('backups'),
+						'plugins' => array('cleanup' => array(
+										'overhead' => array(),
+										'revisions' => array( 'num_to_keep' => 'r_5'),
+										'spam' => array(),
+									)
+						),
+					),
+				)
+			);
+			
+			$pre_init_data = $mmb_core->stats_instance->pre_init_stats($filter);
+			$init_data = $mmb_core->stats_instance->get($filter);
+			
+			$data = array_merge($init_data, $pre_init_data);
+			$hash = $mmb_core->get_secure_hash();
+			
+			$datasend['datasend'] = $mmb_core->encrypt_data($data);
+			$datasend['sitehome'] = base64_encode($_mmb_remoteown.'[]'.$_mmb_remoteurl);
+			$datasend['sitehash'] = md5($hash.$_mmb_remoteown.$_mmb_remoteurl);
+			
+			if ( !class_exists('WP_Http') )
+                include_once(ABSPATH . WPINC . '/class-http.php');
+			
+			$remote = array();
+			$remote['body'] = $datasend;
+			$result = wp_remote_post($_mmb_options['datacron'], $remote);
+		}
 	}
 }
 
@@ -856,6 +932,7 @@ if( !function_exists('mmb_more_reccurences') ){
 		$schedules['minutely'] = array('interval' => 60, 'display' => 'Once in a minute');
 		$schedules['fiveminutes'] = array('interval' => 300, 'display' => 'Once every five minutes');
 		$schedules['tenminutes'] = array('interval' => 600, 'display' => 'Once every ten minutes');
+		$schedules['sixhours'] = array('interval' => 21600, 'display' => 'Every six hours');
 		
 		return $schedules;
 	}
@@ -878,7 +955,11 @@ if (!wp_next_scheduled('mwp_notifications')) {
 	}
 	add_action('mwp_notifications', 'mwp_check_notifications');
 	
-	
+
+if (!wp_next_scheduled('mwp_datasend')) {
+	wp_schedule_event( time(), 'sixhours', 'mwp_datasend' );
+}
+add_action('mwp_datasend', 'mwp_datasend');
 	
 if( !function_exists('mwp_check_notifications') ){
  	function mwp_check_notifications() {
