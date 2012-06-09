@@ -432,7 +432,7 @@ class MMB_Helper
         if ( !$pl_key )
             return false;
 		
-		$data = json_encode( $data );
+		$data = serialize( $data );
 		$crypted = '';
 		if( function_exists('openssl_public_encrypt') && !$this->get_random_signature() ){
 			$length = strlen( $data );
