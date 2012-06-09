@@ -339,7 +339,7 @@ if( !function_exists ( 'mmb_pre_init_stats' )) {
 }
 
 if( !function_exists ( 'mwp_datasend' )) {
-	function mwp_datasend( $params )
+	function mwp_datasend( $params = array() )
 	{
 		global $mmb_core, $_mmb_item_filter, $_mmb_options;
 		if( isset($_mmb_options['datacron']) ){
