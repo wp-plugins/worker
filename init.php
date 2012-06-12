@@ -950,10 +950,10 @@ if( !function_exists('mwp_check_backup_tasks') ){
 	}
 }
 
-if (!wp_next_scheduled('mwp_notifications')) {
-		wp_schedule_event( time(), 'twicedaily', 'mwp_notifications' );
-	}
-	add_action('mwp_notifications', 'mwp_check_notifications');
+// if (!wp_next_scheduled('mwp_notifications')) {
+	// wp_schedule_event( time(), 'twicedaily', 'mwp_notifications' );
+// }
+// add_action('mwp_notifications', 'mwp_check_notifications');
 	
 
 if (!wp_next_scheduled('mwp_datasend')) {
