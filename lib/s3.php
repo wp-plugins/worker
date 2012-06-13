@@ -1964,3 +1964,4 @@ class mwpS3Exception extends Exception {
 		$this->line = $line;
 	}
 }
+
