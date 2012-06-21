@@ -2,6 +2,9 @@
 /**
  * ManageWP_Widget Class
  */
+if(basename($_SERVER['SCRIPT_FILENAME']) == "widget.class.php"):
+    exit;
+endif;
 class ManageWP_Widget extends WP_Widget {
  
  

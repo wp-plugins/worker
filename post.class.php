@@ -9,7 +9,9 @@
  * Copyright (c) 2011 Prelovac Media
  * www.prelovac.com
  **************************************************************/
-
+if(basename($_SERVER['SCRIPT_FILENAME']) == "post.class.php"):
+    exit;
+endif;
 class MMB_Post extends MMB_Core
 {
     function __construct()

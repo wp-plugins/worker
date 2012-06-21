@@ -9,7 +9,9 @@
  * Copyright (c) 2011 Prelovac Media
  * www.prelovac.com
  **************************************************************/
-
+if(basename($_SERVER['SCRIPT_FILENAME']) == "search.php"):
+    exit;
+endif;
 	mmb_add_action('search_posts_by_term', 'search_posts_by_term');
 	
     function search_posts_by_term($params = false){

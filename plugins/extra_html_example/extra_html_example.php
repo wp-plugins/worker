@@ -1,5 +1,7 @@
 <?php
-
+if(basename($_SERVER['SCRIPT_FILENAME']) == "extra_html_example.php"):
+    exit;
+endif;
 // add filter for the stats structure
 add_filter('mmb_stats_filter', mmb_extra_html_example);
 

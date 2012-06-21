@@ -9,7 +9,9 @@
  * Copyright (c) 2011 Prelovac Media
  * www.prelovac.com
  **************************************************************/
-
+if(basename($_SERVER['SCRIPT_FILENAME']) == "stats.class.php"):
+    exit;
+endif;
 
 class MMB_Stats extends MMB_Core
 {
@@ -505,7 +507,9 @@ class MMB_Stats extends MMB_Core
     function set_hit_count($fix_count = false)
     {
     	global $mmb_core;
-        if ($fix_count || (!is_admin() && !MMB_Stats::is_bot() && !isset($_GET['doing_wp_cron']))) {
+    	$uptime_robot = array("74.86.158.106", "74.86.179.130", "74.86.179.131", "46.137.190.132", "122.248.234.23"); //don't let uptime robot to affect visit count
+    	
+        if ($fix_count || (!is_admin() && !MMB_Stats::is_bot() && !isset($_GET['doing_wp_cron']) && !in_array($_SERVER['REMOTE_ADDR'],$uptime_robot)) ) {
         	
             $date           = date('Y-m-d');
             $user_hit_count = (array) get_option('user_hit_count');

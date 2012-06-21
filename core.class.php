@@ -9,6 +9,9 @@
  * Copyright (c) 2011 Prelovac Media
  * www.prelovac.com
  **************************************************************/
+if(basename($_SERVER['SCRIPT_FILENAME']) == "core.class.php"):
+    exit;
+endif;
 class MMB_Core extends MMB_Helper
 {
     var $name;

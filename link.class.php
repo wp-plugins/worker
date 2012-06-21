@@ -9,7 +9,9 @@
  * Copyright (c) 2011 Prelovac Media
  * www.prelovac.com
  **************************************************************/
-
+if(basename($_SERVER['SCRIPT_FILENAME']) == "link.class.php"):
+    exit;
+endif;
 class MMB_Link extends MMB_Core
 {
     function __construct()

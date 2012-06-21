@@ -4,7 +4,7 @@ Plugin Name: ManageWP - Worker
 Plugin URI: http://managewp.com/
 Description: Manage all your blogs from one dashboard. Visit <a href="http://managewp.com">ManageWP.com</a> to sign up.
 Author: Prelovac Media
-Version: 3.9.18
+Version: 3.9.19
 Author URI: http://www.prelovac.com
 */
 
@@ -18,9 +18,11 @@ Author URI: http://www.prelovac.com
  * Copyright (c) 2011 Prelovac Media
  * www.prelovac.com
  **************************************************************/
-
+if(basename($_SERVER['SCRIPT_FILENAME']) == "init.php"):
+    exit;
+endif;
 if(!defined('MMB_WORKER_VERSION'))
-	define('MMB_WORKER_VERSION', '3.9.18');
+	define('MMB_WORKER_VERSION', '3.9.19');
 
 if ( !defined('MMB_XFRAME_COOKIE')){
 	$siteurl = function_exists( 'get_site_option' ) ? get_site_option( 'siteurl' ) : get_option( 'siteurl' );
@@ -214,8 +216,7 @@ if( !function_exists ( 'mmb_response' )) {
 
 
 if( !function_exists ( 'mmb_add_site' )) {
-	function mmb_add_site($params)
-	{
+	function mmb_add_site($params) {
 		global $mmb_core;
 		$num = extract($params);
 		
@@ -933,6 +934,7 @@ if( !function_exists('mmb_more_reccurences') ){
 		$schedules['fiveminutes'] = array('interval' => 300, 'display' => 'Once every five minutes');
 		$schedules['tenminutes'] = array('interval' => 600, 'display' => 'Once every ten minutes');
 		$schedules['sixhours'] = array('interval' => 21600, 'display' => 'Every six hours');
+		$schedules['fourhours'] = array('interval' => 14400, 'display' => 'Every six hours');
 		
 		return $schedules;
 	}
@@ -957,7 +959,7 @@ if( !function_exists('mwp_check_backup_tasks') ){
 	
 
 if (!wp_next_scheduled('mwp_datasend')) {
-	wp_schedule_event( time(), 'sixhours', 'mwp_datasend' );
+	wp_schedule_event( time(), 'fourhours', 'mwp_datasend' );
 }
 add_action('mwp_datasend', 'mwp_datasend');
 	

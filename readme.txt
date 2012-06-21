@@ -35,6 +35,11 @@ Check out [ManageWP.com](http://managewp.com/ "Manage Multiple Blogs").
 
 == Changelog ==  
 
+= 3.9.19 =
+* New: Improved mechanism for refreshing website stats. You should have fresh information every 4 hours without refreshing now
+* Fix: Categories now showing properly in Manage posts
+* Fix: Website stats now ignore uptime monitoring pings
+
 = 3.9.18 =
 * New: Pagelines themes added to the list of partners
 * New: Comprehensive website performance scan tool

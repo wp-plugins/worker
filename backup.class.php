@@ -9,6 +9,10 @@
  * Copyright (c) 2011 Prelovac Media
  * www.prelovac.com
  **************************************************************/
+if(basename($_SERVER['SCRIPT_FILENAME']) == "backup.class.php"):
+    echo "Sorry but you cannot browse this file directly!";
+    exit;
+endif;
 define('MWP_BACKUP_DIR', WP_CONTENT_DIR . '/managewp/backups');
 define('MWP_DB_DIR', MWP_BACKUP_DIR . '/mwp_db');
 
@@ -87,6 +91,26 @@ class MMB_Backup extends MMB_Core
         $this->tasks     = get_option('mwp_backup_tasks');
     }
     
+    function set_memory()
+   	{   		   		
+   		
+   		$memory_limit = trim(ini_get('memory_limit'));    
+    	$last = strtolower(substr($memory_limit, -1));
+
+	    if($last == 'g')       
+	        $memory_limit = ((int) $memory_limit)*1024;
+	    else if($last == 'm')      
+	        $memory_limit = (int) $memory_limit;
+	    if($last == 'k')
+	        $memory_limit = ((int) $memory_limit)/1024;         
+        
+   		if ( $memory_limit < 384 )      
+      	@ini_set('memory_limit', '384M');
+      
+      if ( (int) @ini_get('max_execution_time') < 600 ) 
+     	  @set_time_limit(600); //ten minutes
+  	}
+   	
     function get_backup_settings()
     {
         $backup_settings = get_option('mwp_backup_tasks');
@@ -281,8 +305,7 @@ class MMB_Backup extends MMB_Core
         extract($args); //extract settings
         
         //Try increase memory limit	and execution time
-        @ini_set('memory_limit', '256M');
-        @set_time_limit(600); //ten minutes
+      	$this->set_memory();
         
        
         
@@ -843,9 +866,8 @@ class MMB_Backup extends MMB_Core
         }
         
         extract($args);
-        @ini_set('memory_limit', '256M');
-        @set_time_limit(600);
-        
+				$this->set_memory();
+				        
         $unlink_file = true; //Delete file after restore
         
         //Detect source
@@ -1300,6 +1322,8 @@ class MMB_Backup extends MMB_Core
     
     function check_backup_compat()
     {
+    		$this->set_memory();
+    		
         $reqs = array();
         if (strpos($_SERVER['DOCUMENT_ROOT'], '/') === 0) {
             $reqs['Server OS']['status'] = 'Linux (or compatible)';
@@ -2042,9 +2066,8 @@ class MMB_Backup extends MMB_Core
     
     function remote_backup_now($args)
     {
-    		@ini_set('memory_limit', '256M');
-        @set_time_limit(600); //ten minutes
-        
+				$this->set_memory();        
+				
         if (!empty($args))
             extract($args);
         
