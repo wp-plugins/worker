@@ -93,6 +93,7 @@ class MMB_Backup extends MMB_Core
     
     function set_memory()
    	{   		   		
+   		$changed = array('execution_time' => 0, 'memory_limit' => 0);
    		
    		$memory_limit = trim(ini_get('memory_limit'));    
     	$last = strtolower(substr($memory_limit, -1));
@@ -104,11 +105,18 @@ class MMB_Backup extends MMB_Core
 	    if($last == 'k')
 	        $memory_limit = ((int) $memory_limit)/1024;         
         
-   		if ( $memory_limit < 384 )      
+   		if ( $memory_limit < 384 )  {    
       	@ini_set('memory_limit', '384M');
+      	$changed['memory_limit'] = 1;
+      }
       
-      if ( (int) @ini_get('max_execution_time') < 600 ) 
+      if ( (int) @ini_get('max_execution_time') < 600 ) {
      	  @set_time_limit(600); //ten minutes
+     		$changed['execution_time'] = 1;
+     	}
+     	
+     	return $changed;
+     	
   	}
    	
     function get_backup_settings()
@@ -1322,7 +1330,6 @@ class MMB_Backup extends MMB_Core
     
     function check_backup_compat()
     {
-    		$this->set_memory();
     		
         $reqs = array();
         if (strpos($_SERVER['DOCUMENT_ROOT'], '/') === 0) {
@@ -1391,6 +1398,15 @@ class MMB_Backup extends MMB_Core
         $reqs['Memory limit']['status'] = $mem_limit ? $mem_limit : 'unknown';
         $reqs['Memory limit']['pass']   = true;
         
+        $changed = $this->set_memory();
+        if($changed['execution_time']){
+        	$exec_time                        = ini_get('max_execution_time');
+        	$reqs['Execution time']['status'] .= $exec_time ? ' (will try '.$exec_time . 's)' : ' (unknown)';
+        }
+        if($changed['memory_limit']){
+        	$mem_limit                      = ini_get('memory_limit');
+        	$reqs['Memory limit']['status'] .= $mem_limit ? ' (will try '.$mem_limit.')' : ' (unknown)';
+        }
         
         return $reqs;
     }
