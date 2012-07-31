@@ -107,6 +107,10 @@ class MMB_Core extends MMB_Helper
 			'add_link' => 'mmb_add_link',
 			'delete_link' => 'mmb_delete_link',
 			'delete_links' => 'mmb_delete_links',
+			'get_comments' => 'mmb_get_comments',
+			'action_comment' => 'mmb_action_comment',
+			'bulk_action_comments' => 'mmb_bulk_action_comments',
+			'replyto_comment' => 'mmb_reply_comment',
 			'add_user' => 'mmb_add_user',
 			'email_backup' => 'mmb_email_backup',
 			'check_backup_compat' => 'mmb_check_backup_compat',
@@ -129,7 +133,8 @@ class MMB_Core extends MMB_Helper
 			'edit_plugins_themes' => 'mmb_edit_plugins_themes',
 			'worker_brand' => 'mmb_worker_brand',
 			'set_alerts' => 'mmb_set_alerts',
-			'maintenance' => 'mmb_maintenance_mode'
+			'maintenance' => 'mmb_maintenance_mode',
+			'get_dbname' => 'mmb_get_dbname'
 		);
 		
 		add_action('rightnow_end', array( &$this, 'add_right_now_info' ));       

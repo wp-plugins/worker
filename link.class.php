@@ -84,7 +84,7 @@ class MMB_Link extends MMB_Core
 		global $wpdb;
 		
 		$where='';
-		$this->_log('MORE BRE');
+
 		extract($args);
 		
 		if(!empty($filter_links))
@@ -98,7 +98,7 @@ class MMB_Link extends MMB_Core
 		$links_total = $wpdb->get_results("SELECT count(*) as total_links FROM ".$sql_query);
 		$total=$links_total[0]->total_links;
 		
-		$query_links = $wpdb->get_results("SELECT link_id, link_url, link_name, link_target, link_visible, link_rating, link_rel FROM ".$sql_query." ORDER BY link_name ASC LIMIT 250");
+		$query_links = $wpdb->get_results("SELECT link_id, link_url, link_name, link_target, link_visible, link_rating, link_rel FROM ".$sql_query." ORDER BY link_name ASC LIMIT 500");
 		$links = array();
 		foreach ( $query_links as $link_info ) 
 		{

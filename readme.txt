@@ -3,7 +3,7 @@ Contributors: freediver
 Donate link: https://www.networkforgood.org/donation/MakeDonation.aspx?ORGID2=520781390
 Tags: admin, administration, amazon, api, authentication, automatic, dashboard, dropbox, events, integration, manage, multsite, notification, performance, s3, security, seo, stats, tracking, managewp
 Requires at least: 3.0
-Tested up to: 3.4
+Tested up to: 3.4.1
 Stable tag: trunk
 
 ManageWP Worker plugin allows you to remotely manage your WordPress sites from one dashboard.
@@ -33,6 +33,11 @@ http://vimeo.com/22099014
 Check out [ManageWP.com](http://managewp.com/ "Manage Multiple Blogs").
 
 == Changelog ==  
+
+= 3.9.20 =
+* New: ManageWP iOS app compatibility
+* New: Perform security and performance test as you add websites
+* New: New comment handling screen
 
 = 3.9.19 =
 * New: Improved mechanism for refreshing website stats. You should have fresh information every 4 hours without refreshing now

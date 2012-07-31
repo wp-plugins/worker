@@ -133,7 +133,7 @@ class MMB_Backup extends MMB_Core
     {
         //$params => [$task_name, $args, $error]
         if (!empty($params)) {
-        	
+        
         	//Make sure backup cron job is set
         if (!wp_next_scheduled('mwp_backup_tasks')) {
 					wp_schedule_event( time(), 'tenminutes', 'mwp_backup_tasks' );
@@ -315,8 +315,6 @@ class MMB_Backup extends MMB_Core
         //Try increase memory limit	and execution time
       	$this->set_memory();
         
-       
-        
         //Remove old backup(s)
         $this->remove_old_backups($task_name);
         
@@ -343,7 +341,7 @@ class MMB_Backup extends MMB_Core
         if (isset($optimize_tables) && !empty($optimize_tables)) {
             $this->optimize_tables();
         }
-        
+       
         //What to backup - db or full?
         if (trim($what) == 'db') {
             //Take database backup
@@ -363,13 +361,15 @@ class MMB_Backup extends MMB_Core
                 
                 $disable_comp = $this->tasks[$task_name]['task_args']['disable_comp'];
                 $comp_level   = $disable_comp ? '-0' : '-1';
-                
+				
+                @file_put_contents(MWP_BACKUP_DIR.'/mwp_db/index.php', '');
                 chdir(MWP_BACKUP_DIR);
                 $zip     = $this->get_zip();
                 $command = "$zip -q -r $comp_level $backup_file 'mwp_db'";
                 ob_start();
                 $result = $this->mmb_exec($command);
                 ob_get_clean();
+				
                 if (!$result) { // fallback to pclzip
                     define('PCLZIP_TEMPORARY_DIR', MWP_BACKUP_DIR . '/');
                     require_once ABSPATH . '/wp-admin/includes/class-pclzip.php';
@@ -379,17 +379,20 @@ class MMB_Backup extends MMB_Core
                     } else {
                         $result = $archive->add($db_result, PCLZIP_OPT_REMOVE_PATH, MWP_BACKUP_DIR);
                     }
+					@unlink(MWP_BACKUP_DIR.'/mwp_db/index.php');
                     @unlink($db_result);
                     @rmdir(MWP_DB_DIR);
+					
                     if (!$result) {
                         return array(
                             'error' => 'Failed to zip database (pclZip - ' . $archive->error_code . '): .' . $archive->error_string
                         );
                     }
                 }
-                
+                @unlink(MWP_BACKUP_DIR.'/mwp_db/index.php');
                 @unlink($db_result);
                 @rmdir(MWP_DB_DIR);
+				
                 if (!$result) {
                     return array(
                         'error' => 'Failed to zip database.'
@@ -559,7 +562,7 @@ class MMB_Backup extends MMB_Core
         $this->update_status($task_name, $this->statuses['db_zip']); 
         $disable_comp = $this->tasks[$task_name]['task_args']['disable_comp'];
         $comp_level   = $disable_comp ? '-0' : '-1';
-        
+        @file_put_contents(MWP_BACKUP_DIR.'/mwp_db/index.php', '');
         $zip = $this->get_zip();
         //Add database file
         chdir(MWP_BACKUP_DIR);
@@ -580,7 +583,7 @@ class MMB_Backup extends MMB_Core
             } else {
                 $result_db = $archive->add($db_result, PCLZIP_OPT_REMOVE_PATH, MWP_BACKUP_DIR);
             }
-            
+            @unlink(MWP_BACKUP_DIR.'/mwp_db/index.php');
             @unlink($db_result);
             @rmdir(MWP_DB_DIR);
             
@@ -590,7 +593,7 @@ class MMB_Backup extends MMB_Core
                 );
             }
         }
-        
+        @unlink(MWP_BACKUP_DIR.'/mwp_db/index.php');
         @unlink($db_result);
         @rmdir(MWP_DB_DIR);
         
@@ -2031,6 +2034,7 @@ class MMB_Backup extends MMB_Core
             foreach ($db_files as $file) {
                 @unlink($file);
             }
+			@unlink(MWP_BACKUP_DIR.'/mwp_db/index.php');
             @rmdir(MWP_DB_DIR);
         }
         
@@ -2083,7 +2087,6 @@ class MMB_Backup extends MMB_Core
     function remote_backup_now($args)
     {
 				$this->set_memory();        
-				
         if (!empty($args))
             extract($args);
         
@@ -2123,7 +2126,7 @@ class MMB_Backup extends MMB_Core
                 $return                                 = $this->email_backup($account_info['mwp_email']);
             }
             
-            
+            @file_put_contents(MWP_BACKUP_DIR.'/mwp_db/index.php', '');
             if ($return == true && $del_host_file) {
                 @unlink($backup_file);
                 unset($tasks['Backup Now']['task_results'][count($results) - 1]['server']);

@@ -121,6 +121,7 @@ class MMB_Stats extends MMB_Core
                     $recent->ID             = $recent_post->ID;
                     $recent->post_date      = $recent_post->post_date;
                     $recent->post_title     = $recent_post->post_title;
+                    $recent->post_type      = $recent_post->post_type;
                     $recent->comment_count  = (int) $recent_post->comment_count;
                     $recent_posts[]         = $recent;
                 }
@@ -132,7 +133,7 @@ class MMB_Stats extends MMB_Core
                 foreach ((array) $posts as $id => $recent_page_published) {
                     $recent                 = new stdClass();
                     $recent->post_permalink = get_permalink($recent_page_published->ID);
-                    
+                    $recent->post_type      = $recent_page_published->post_type;
                     $recent->ID         = $recent_page_published->ID;
                     $recent->post_date  = $recent_page_published->post_date;
                     $recent->post_title = $recent_page_published->post_title;
@@ -162,6 +163,7 @@ class MMB_Stats extends MMB_Core
                 foreach ($drafts as $id => $recent_draft) {
                     $recent                 = new stdClass();
                     $recent->post_permalink = get_permalink($recent_draft->ID);
+                    $recent->post_type      = $recent_draft->post_type;
                     $recent->ID             = $recent_draft->ID;
                     $recent->post_date      = $recent_draft->post_date;
                     $recent->post_title     = $recent_draft->post_title;
@@ -176,6 +178,7 @@ class MMB_Stats extends MMB_Core
                     $recent                 = new stdClass();
                     $recent->post_permalink = get_permalink($recent_pages_draft->ID);
                     $recent->ID             = $recent_pages_draft->ID;
+                    $recent->post_type      = $recent_pages_draft->post_type;
                     $recent->post_date      = $recent_pages_draft->post_date;
                     $recent->post_title     = $recent_pages_draft->post_title;
                     
@@ -206,6 +209,7 @@ class MMB_Stats extends MMB_Core
                     $recent->post_permalink = get_permalink($scheduled->ID);
                     $recent->ID             = $scheduled->ID;
                     $recent->post_date      = $scheduled->post_date;
+                    $recent->post_type      = $scheduled->post_type;
                     $recent->post_title     = $scheduled->post_title;
                     $scheduled_posts[]      = $recent;
                 }
@@ -217,6 +221,7 @@ class MMB_Stats extends MMB_Core
                     $recent                 = new stdClass();
                     $recent->post_permalink = get_permalink($scheduled->ID);
                     $recent->ID             = $scheduled->ID;
+                    $recent->post_type      = $scheduled->post_type;
                     $recent->post_date      = $scheduled->post_date;
                     $recent->post_title     = $scheduled->post_title;
                     
@@ -483,6 +488,7 @@ class MMB_Stats extends MMB_Core
         $stats['worker_version']  = MMB_WORKER_VERSION;
         $stats['site_title']      = get_bloginfo('name');
         $stats['site_tagline']    = get_bloginfo('description');
+		$stats['db_name']    	  = $this->get_active_db();
         $stats['site_home']       = get_option('home');
         $stats['admin_url']       = admin_url();
         $stats['wp_multisite']    = $this->mmb_multisite;
@@ -503,6 +509,17 @@ class MMB_Stats extends MMB_Core
         
         return $stats;
     }
+
+	function get_active_db(){
+		global $wpdb;
+	    $sql='SELECT DATABASE() as db_name';
+
+	    $sqlresult = $wpdb->get_row($sql);
+		$active_db=$sqlresult->db_name;
+		
+	   	return $active_db;
+
+	}
     
     function set_hit_count($fix_count = false)
     {

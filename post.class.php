@@ -22,7 +22,7 @@ class MMB_Post extends MMB_Core
     function create($args)
     {
     	
-    	$this->_log($args);
+    	//$this->_log($args);
     	global $wpdb;
     	
         /**
@@ -469,7 +469,7 @@ class MMB_Post extends MMB_Core
 		$total['total_num']=$posts_total[0]->total_posts;
 		
 		$posts = array();
-		$posts_info = $wpdb->get_results("SELECT * FROM ".$sql_query." LIMIT 250");
+		$posts_info = $wpdb->get_results("SELECT * FROM ".$sql_query." LIMIT 500");
 		
 		foreach ( $posts_info as $post_info ) 
 		{
@@ -540,6 +540,10 @@ class MMB_Post extends MMB_Core
 			$delete_query_intro = "DELETE FROM $wpdb->posts WHERE ID = ";
 		}elseif($deleteaction=='trash'){
 			$delete_query_intro = "UPDATE $wpdb->posts SET post_status = 'trash' WHERE ID = ";
+		}elseif($deleteaction=='draft'){
+			$delete_query_intro = "UPDATE $wpdb->posts SET post_status = 'draft' WHERE ID = ";
+		}elseif($deleteaction=='publish'){
+			$delete_query_intro = "UPDATE $wpdb->posts SET post_status = 'publish' WHERE ID = ";
 		}
 		foreach($args as $key=>$val){
 			
@@ -598,7 +602,7 @@ class MMB_Post extends MMB_Core
 		$total['total_num']=$posts_total[0]->total_posts;
 		
 		$posts = array();
-		$posts_info = $wpdb->get_results("SELECT * FROM ".$sql_query." LIMIT 250");
+		$posts_info = $wpdb->get_results("SELECT * FROM ".$sql_query." LIMIT 500");
 		
 		foreach ( $posts_info as $post_info ) 
 		{

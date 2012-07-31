@@ -10,7 +10,7 @@
  * www.prelovac.com
  **************************************************************/
 
-define('MWP_SHOW_LOG', false);
+define('MWP_SHOW_LOG', true);
 
 class MMB_Helper
 {
