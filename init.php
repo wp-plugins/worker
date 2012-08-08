@@ -1140,6 +1140,10 @@ if( !function_exists('mmb_plugin_actions') ){
 				}
 			}
 		}
+		
+		if (file_exists(dirname(__FILE__) . '/log')) {
+			unlink(dirname(__FILE__) . '/log');
+		}
 	}
 } 
 

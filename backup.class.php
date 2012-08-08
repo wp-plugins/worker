@@ -1411,6 +1411,18 @@ class MMB_Backup extends MMB_Core
         	$reqs['Memory limit']['status'] .= $mem_limit ? ' (will try '.$mem_limit.')' : ' (unknown)';
         }
         
+        if(defined('MWP_SHOW_LOG') && MWP_SHOW_LOG == true){
+	        $md5 = get_option('mwp_log_md5');
+	        if ($md5 !== false) {
+	        	global $mmb_plugin_url;
+	        	$md5 = "<a href='$mmb_plugin_url/log_$md5' target='_blank'>$md5</a>";
+	        } else {
+	        	$md5 = "not created";
+	        }
+	        $reqs['Backup Log']['status'] = $md5;
+	        $reqs['Backup Log']['pass']   = true;
+        }
+        
         return $reqs;
     }
     
