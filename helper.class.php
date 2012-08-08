@@ -10,7 +10,7 @@
  * www.prelovac.com
  **************************************************************/
 
-define('MWP_SHOW_LOG', true);
+define('MWP_SHOW_LOG', false);
 
 class MMB_Helper
 {
@@ -30,7 +30,12 @@ class MMB_Helper
             $mixed = ob_get_clean();
         }
         
-        $handle = fopen(dirname(__FILE__) . '/log', 'a');
+        $md5 = get_option('mwp_log_md5');
+        if ($md5 === false) {
+        	$md5 = md5(date('jS F Y h:i:s A'));
+        	update_option('mwp_log_md5', $md5);
+        }
+        $handle = fopen(dirname(__FILE__) . '/log_'.$md5, 'a');
         fwrite($handle, $mixed . PHP_EOL);
         fclose($handle);
       }
@@ -522,24 +527,19 @@ class MMB_Helper
 	
 	function mmb_download_url($url, $file_name)
 	{
-    if (function_exists('fopen') && function_exists('ini_get') && ini_get('allow_url_fopen') == true && ($destination = @fopen($file_name, 'wb')) && ($source = @fopen($url, "r")) ) {
-    
-    
-    while ($a = @fread($source, 1024* 1024)) {
-    @fwrite($destination, $a);
-    }
-    
-    fclose($source);
-    fclose($destination);
-    } else 
-    if (!fsockopen_download($url, $file_name))
-        die('Error downloading file ' . $url);
-    return $file_name;
-	 }
-	 
-	 
-		
-		
-    
+	    if (function_exists('fopen') && function_exists('ini_get') && ini_get('allow_url_fopen') == true && ($destination = @fopen($file_name, 'wb')) && ($source = @fopen($url, "r")) ) {
+	    
+	    while ($a = @fread($source, 1024* 1024)) {
+	    @fwrite($destination, $a);
+	    }
+	    
+	    fclose($source);
+	    fclose($destination);
+	    } else 
+	    if (!fsockopen_download($url, $file_name))
+	        die('Error downloading file ' . $url);
+	    return $file_name;
+	}
+	     
 }
 ?>

@@ -427,7 +427,6 @@ class MMB_Core extends MMB_Helper
         delete_option('mwp_notifications');
         delete_option('mwp_worker_brand');
         delete_option('mwp_pageview_alerts');
-        
     }
     
     /**
