@@ -118,7 +118,7 @@ class MMB_Helper
 				foreach($params['item_filter'] as $_items){
 					if(!empty($_items)){
 						foreach($_items as $_item){
-							if(in_array($_item[0], $_mmb_item_filter[$key])){
+							if(isset($_item[0]) && in_array($_item[0], $_mmb_item_filter[$key])){
 								$_item[1] = isset($_item[1]) ? $_item[1] : array();
 								$return = call_user_func(array( &$call_object, 'get_'.$_item[0]), $return, $_item[1]);
 							}

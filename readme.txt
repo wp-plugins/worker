@@ -34,6 +34,9 @@ Check out [ManageWP.com](http://managewp.com/ "Manage Multiple Blogs").
 
 == Changelog ==  
 
+= 3.9.21 =
+* New: Continuous updates! Read more at http://managewp.com/continuous-updates
+
 = 3.9.20 =
 * New: ManageWP iOS app compatibility
 * New: Perform security and performance test as you add websites
