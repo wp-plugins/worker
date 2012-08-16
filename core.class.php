@@ -423,7 +423,7 @@ class MMB_Core extends MMB_Helper
             delete_option('_action_message_id');
         }
         
-        delete_option('mwp_backup_tasks');
+        //delete_option('mwp_backup_tasks');
         delete_option('mwp_notifications');
         delete_option('mwp_worker_brand');
         delete_option('mwp_pageview_alerts');
@@ -461,7 +461,7 @@ class MMB_Core extends MMB_Helper
 							delete_blog_option($blog_id, '_worker_public_key');
 							delete_blog_option($blog_id, '_action_message_id');
 							delete_blog_option($blog_id, 'mwp_maintenace_mode');
-							delete_blog_option($blog_id, 'mwp_backup_tasks');
+							//delete_blog_option($blog_id, 'mwp_backup_tasks');
 							delete_blog_option($blog_id, 'mwp_notifications');
 							delete_blog_option($blog_id, 'mwp_worker_brand');
 							delete_blog_option($blog_id, 'mwp_pageview_alerts');
@@ -485,7 +485,7 @@ class MMB_Core extends MMB_Helper
         
         //Delete options
 		delete_option('mwp_maintenace_mode');
-        delete_option('mwp_backup_tasks');
+        //delete_option('mwp_backup_tasks');
         delete_option('mwp_notifications');
         delete_option('mwp_worker_brand');
         delete_option('mwp_pageview_alerts');
