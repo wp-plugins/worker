@@ -1136,7 +1136,7 @@ class MMB_Backup extends MMB_Core
         }
         
         $brace     = (substr(PHP_OS, 0, 3) == 'WIN') ? '"' : '';
-        $command   = $brace . $paths['mysql'] . $brace . ' --host="' . DB_HOST . '" --user="' . DB_USER . '" --password="' . DB_PASSWORD . '" ' . DB_NAME . ' < ' . $brace . $file_name . $brace;
+        $command   = $brace . $paths['mysql'] . $brace . ' --host="' . DB_HOST . '" --user="' . DB_USER . '" --password="' . DB_PASSWORD . '" --default-character-set="utf8" ' . DB_NAME . ' < ' . $brace . $file_name . $brace;
         
         ob_start();
         $result = $this->mmb_exec($command);
@@ -1199,7 +1199,7 @@ class MMB_Backup extends MMB_Core
     function optimize_tables()
     {
         global $wpdb;
-        $query  = 'SHOW TABLE STATUS FROM ' . DB_NAME;
+        $query  = 'SHOW TABLES';
         $tables = $wpdb->get_results($wpdb->prepare($query), ARRAY_A);
         foreach ($tables as $table) {
             if (in_array($table['Engine'], array(

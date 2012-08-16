@@ -519,6 +519,7 @@ class MMB_Helper
     }
     
 	function is_server_writable(){
+		
 		if((!defined('FTP_HOST') || !defined('FTP_USER') || !defined('FTP_PASS')) && (get_filesystem_method(array(), false) != 'direct'))
 			return false;
 		else
