@@ -66,6 +66,7 @@ class MMB_Backup extends MMB_Core
     var $s3;
     var $ftp;
     var $dropbox;
+    var $google_drive;
     function __construct()
     {
         parent::__construct();
@@ -86,9 +87,10 @@ class MMB_Backup extends MMB_Core
             'dropbox' => 5,
             'ftp' => 6,
             'email' => 7,
+        	'google_drive' => 8,
             'finished' => 100
         );
-        $this->tasks     = get_option('mwp_backup_tasks');
+        $this->tasks = get_option('mwp_backup_tasks');
     }
     
     function set_memory()
@@ -201,10 +203,8 @@ class MMB_Backup extends MMB_Core
     }
     
     //Cron check
-    function check_backup_tasks()
-    {
-    	
-    		$this->check_cron_remove();
+    function check_backup_tasks() {
+    	$this->check_cron_remove();
         
         $settings = $this->tasks;
         if (is_array($settings) && !empty($settings)) {
@@ -219,7 +219,18 @@ class MMB_Backup extends MMB_Core
                             'site_key' => $setting['task_args']['site_key']
                         );
                         
+                        if (isset($setting['task_args']['account_info']['mwp_google_drive']['google_drive_token'])) {
+	                    	$check_data['mwp_google_drive_refresh_token'] = true;
+                        }
+                        
                         $check = $this->validate_task($check_data, $setting['task_args']['url']);
+                        
+                        $potential_token = substr($check, 8);
+                        if (substr($check, 0, 8) == 'token - ' && $potential_token != 'not found') {
+                        	$this->tasks[$task_name]['task_args']['account_info']['mwp_google_drive']['google_drive_token'] = $potential_token;
+                        	$settings[$task_name]['task_args']['account_info']['mwp_google_drive']['google_drive_token'] = $potential_token;
+                        	$setting['task_args']['account_info']['mwp_google_drive']['google_drive_token'] = $potential_token;
+                        }
                         
                     }
 
@@ -240,19 +251,20 @@ class MMB_Backup extends MMB_Core
                     	continue;
                     }
                     
-                    
-                    $result = $this->backup($setting['task_args'], $task_name);
+                	$result = $this->backup($setting['task_args'], $task_name);
                     $error  = '';
+                    
                     if (is_array($result) && array_key_exists('error', $result)) {
-                        $error = $result;
-                        $this->set_backup_task(array(
-                            'task_name' => $task_name,
-                            'args' => $settings[$task_name]['task_args'],
-                            'error' => $error
-                        ));
+                    	$error = $result;
+                    	$this->set_backup_task(array(
+                    		'task_name' => $task_name,
+                    		'args' => $settings[$task_name]['task_args'],
+                    		'error' => $error
+                    	));
                     } else {
-                        $error = '';
+                    	$error = '';
                     }
+                    
                     break; //Only one backup per cron
                 }
             }
@@ -260,8 +272,11 @@ class MMB_Backup extends MMB_Core
         
     }
     
-    function task_now($task_name){
-		
+    function task_now($task_name, $google_drive_token = false){
+		if ($google_drive_token) {
+			$this->tasks[$task_name]['task_args']['account_info']['mwp_google_drive']['google_drive_token'] = $google_drive_token;
+		}
+    	
 		$settings = $this->tasks;
     	if(!array_key_exists($task_name,$settings)){
     	 	return array('error' => $task_name." does not exist.");
@@ -298,27 +313,38 @@ class MMB_Backup extends MMB_Core
      * Backup args:
      * type -> db, full
      * what -> daily, weekly, monthly
-     * account_info -> ftp, amazons3, dropbox
+     * account_info -> ftp, amazons3, dropbox, google_drive, email
      * exclude-> array of paths to exclude from backup
      */
     
-    function backup($args, $task_name = false)
-    {
-    		
-    		$this->_log($this->tasks);
-    		
+    function backup($args, $task_name = false) {
         if (!$args || empty($args))
             return false;
         
         extract($args); //extract settings
         
+          if (!empty($account_info))
+          {
+          	$found = false;
+	          $destinations = array('mwp_ftp', 'mwp_amazon_s3', 'mwp_dropbox', 'mwp_google_drive', 'mwp_email');
+	        	foreach($destinations as $dest) {
+	        		$found = $found || (isset($account_info[$dest]));
+	        	}	            
+	          if (!$found) {
+	          	return array(
+	          		'error' => 'Remote destination is not supported, please update your client plugin.'
+	          	);
+	          }
+          }
+        
         //Try increase memory limit	and execution time
       	$this->set_memory();
         
         //Remove old backup(s)
-        $this->remove_old_backups($task_name);
-        
-        
+        $removed = $this->remove_old_backups($task_name);
+        if (is_array($removed) && isset($removed['error'])) {
+        	return $removed;
+        }
         
         $new_file_path = MWP_BACKUP_DIR;
         
@@ -452,6 +478,10 @@ class MMB_Backup extends MMB_Core
                 $paths['email'] = basename($backup_url);
             }
             
+            if (isset($backup_settings[$task_name]['task_args']['account_info']['mwp_google_drive'])) {
+            	$paths['google_drive'] = basename($backup_url);
+            }
+            
             $temp          = $backup_settings[$task_name]['task_results'];
             $temp          = array_values($temp);
             $paths['time'] = time();
@@ -470,7 +500,7 @@ class MMB_Backup extends MMB_Core
         }
         
         
-        //Additional: Email, ftp, amazon_s3, dropbox...
+        //Additional: Email, ftp, amazon_s3, google_drive, ...
         
         if ($task_name != 'Backup Now') {
             if (isset($account_info['mwp_ftp']) && !empty($account_info['mwp_ftp'])) {
@@ -530,9 +560,25 @@ class MMB_Backup extends MMB_Core
                 $this->update_status($task_name, $this->statuses['email'], true);
             }
             
+            if (isset($account_info['mwp_google_drive']) && !empty($account_info['mwp_google_drive'])) {
+            	$this->update_status($task_name, $this->statuses['google_drive']);
+            	$account_info['mwp_google_drive']['backup_file'] = $backup_file;
+            	$google_drive_result = $this->google_drive_backup($account_info['mwp_google_drive']);
+            	if ($google_drive_result !== true && $del_host_file) {
+            		@unlink($backup_file);
+            	}
+            	if (is_array($google_drive_result) && isset($google_drive_result['error'])) {
+            		return $google_drive_result;
+            	}
+            	$this->wpdb_reconnect();
+            	$this->update_status($task_name, $this->statuses['google_drive'], true);
+            }
+            
             if ($del_host_file) {
                 @unlink($backup_file);
             }
+            
+      
             
         } //end additional
         
@@ -868,16 +914,17 @@ class MMB_Backup extends MMB_Core
         
     }
     
-    function restore($args)
-    {
-    		$this->_log($args);
+    function restore($args) {
         global $wpdb;
         if (empty($args)) {
             return false;
         }
         
         extract($args);
-				$this->set_memory();
+        if (isset($google_drive_token)) {
+        	$this->tasks[$task_name]['task_args']['account_info']['mwp_google_drive']['google_drive_token'] = $google_drive_token;
+        }
+        $this->set_memory();
 				        
         $unlink_file = true; //Delete file after restore
         
@@ -919,7 +966,7 @@ class MMB_Backup extends MMB_Core
                     );
                 }
             } elseif(isset($task['task_results'][$result_id]['dropbox'])){
-            		$dropbox_file       = $task['task_results'][$result_id]['dropbox'];
+            	$dropbox_file        = $task['task_results'][$result_id]['dropbox'];
                 $args                = $task['task_args']['account_info']['mwp_dropbox'];
                 $args['backup_file'] = $dropbox_file;
                 $backup_file         = $this->get_dropbox_backup($args);
@@ -929,7 +976,23 @@ class MMB_Backup extends MMB_Core
                         'error' => 'Failed to download file from Dropbox.'
                     );
                 }
+            } elseif (isset($task['task_results'][$result_id]['google_drive'])) {
+                $google_drive_file   = $task['task_results'][$result_id]['google_drive'];
+                $args                = $task['task_args']['account_info']['mwp_google_drive'];
+                $args['backup_file'] = $google_drive_file;
+                $backup_file         = $this->get_google_drive_backup($args);
+                
+                if (is_array($backup_file) && isset($backup_file['error'])) {
+                	return array(
+                		'error' => 'Failed to download file from Google Drive, reason: ' . $backup_file['error']
+                	);
+                } elseif ($backup_file == false) {
+                    return array(
+                        'error' => 'Failed to download file from Google Drive.'
+                    );
+                }
             }
+            
             
             $what = $tasks[$task_name]['task_args']['what'];
         }
@@ -1794,6 +1857,348 @@ class MMB_Backup extends MMB_Core
        return $temp;
     }
     
+    /*
+     * Uploads current backup file to Google Drive
+     * 
+     * @param array @args arguments passed to function
+     * @arg array google_drive_token tokens passed from master
+     * @arg string google_drive_directory drive default directory for backups
+     * @arg string google_drive_site_folder 
+     */
+    function google_drive_backup($args) {
+    	extract($args);
+    	
+    	global $mmb_plugin_dir;
+    	require_once("$mmb_plugin_dir/lib/google-api-client/Google_Client.php");
+    	require_once("$mmb_plugin_dir/lib/google-api-client/contrib/Google_DriveService.php");
+    	
+    	$gdrive_client = new Google_Client();
+	    $gdrive_client->setUseObjects(true);
+	    $gdrive_client->setAccessToken($google_drive_token);
+    	
+    	$gdrive_service = new Google_DriveService($gdrive_client);
+    	
+    	try {
+	    	$about = $gdrive_service->about->get();
+	    	$root_folder_id = $about->getRootFolderId();
+    	} catch (Exception $e) {
+    		return array(
+    			'error' => $e->getMessage(),
+    		);
+    	}
+    	
+    	try {
+	    	$list_files = $gdrive_service->files->listFiles(array("q"=>"title='$google_drive_directory' and '$root_folder_id' in parents and trashed = false"));
+	    	$files = $list_files->getItems();
+    	} catch (Exception $e) {
+    		return array(
+    			'error' => $e->getMessage(),
+    		);
+    	}
+    	if (isset($files[0])) {
+    		$managewp_folder = $files[0];
+    	}
+    	
+    	if (!isset($managewp_folder)) {
+    		try {
+	    		$_managewp_folder = new Google_DriveFile();
+	    		$_managewp_folder->setTitle($google_drive_directory);
+	    		$_managewp_folder->setMimeType('application/vnd.google-apps.folder');
+	    	
+	    		if ($root_folder_id != null) {
+	    			$parent = new Google_ParentReference();
+	    			$parent->setId($root_folder_id);
+	    			$_managewp_folder->setParents(array($parent));
+	    		}
+    			
+    			$managewp_folder = $gdrive_service->files->insert($_managewp_folder, array());
+    		} catch (Exception $e) {
+    			return array(
+	    			'error' => $e->getMessage(),
+	    		);
+    		}
+    	}
+    	
+    	if ($google_drive_site_folder) {
+    		try {
+	    		$subfolder_title = $this->site_name;
+	    		$managewp_folder_id = $managewp_folder->getId();
+	    		$list_files = $gdrive_service->files->listFiles(array("q"=>"title='$subfolder_title' and '$managewp_folder_id' in parents and trashed = false"));
+	    		$files = $list_files->getItems();
+    		} catch (Exception $e) {
+    			return array(
+    				'error' => $e->getMessage(),
+    			);
+    		}
+    		if (isset($files[0])) {
+    			$backup_folder = $files[0];
+    		} else {
+    			try {
+	    			$_backup_folder = new Google_DriveFile();
+	    			$_backup_folder->setTitle($subfolder_title);
+	    			$_backup_folder->setMimeType('application/vnd.google-apps.folder');
+	    			
+	    			if (isset($managewp_folder)) {
+	    				$_backup_folder->setParents(array($managewp_folder));
+	    			}
+    				
+    				$backup_folder = $gdrive_service->files->insert($_backup_folder, array());
+    			} catch (Exception $e) {
+    				return array(
+		    			'error' => $e->getMessage(),
+		    		);
+    			}
+    		}
+    	} else {
+    		$backup_folder = $managewp_folder;
+    	}
+    	
+    	$file_path = explode('/', $backup_file);
+    	$new_file = new Google_DriveFile();
+    	$new_file->setTitle(end($file_path));
+    	$new_file->setDescription('Backup file of site: ' . $this->site_name . '.');
+    	 
+    	if ($backup_folder != null) {
+    		$new_file->setParents(array($backup_folder));
+    	}
+    	 
+    	try {
+    		$data = file_get_contents($backup_file);
+    		 
+    		$createdFile = $gdrive_service->files->insert($new_file, array(
+    			'data' => $data,
+    		));
+    	} catch (Exception $e) {
+    		return array(
+    			'error' => $e->getMessage(),
+    		);
+    	}
+    	
+    	return true;
+    }
+    
+    function remove_google_drive_backup($args) {
+    	extract($args);
+    	
+    	global $mmb_plugin_dir;
+    	require_once("$mmb_plugin_dir/lib/google-api-client/Google_Client.php");
+    	require_once("$mmb_plugin_dir/lib/google-api-client/contrib/Google_DriveService.php");
+    	
+    	try {
+	    	$gdrive_client = new Google_Client();
+	    	$gdrive_client->setUseObjects(true);
+	    	$gdrive_client->setAccessToken($google_drive_token);
+    	} catch (Exception $e) {
+			$this->_log($e->getMessage());
+    		return array(
+    			'error' => $e->getMessage(),
+    		);
+    	}
+    	 
+    	$gdrive_service = new Google_DriveService($gdrive_client);
+    	
+    	try {
+	    	$about = $gdrive_service->about->get();
+	    	$root_folder_id = $about->getRootFolderId();
+    	} catch (Exception $e) {
+    		$this->_log($e->getMessage());
+    		return array(
+    			'error' => $e->getMessage(),
+    		);
+    	}
+    	
+    	try {
+	    	$list_files = $gdrive_service->files->listFiles(array("q"=>"title='$google_drive_directory' and '$root_folder_id' in parents and trashed = false"));
+	    	$files = $list_files->getItems();
+    	} catch (Exception $e) {
+    		$this->_log($e->getMessage());
+    		return array(
+    			'error' => $e->getMessage(),
+    		);
+    	}
+    	if (isset($files[0])) {
+    		$managewp_folder = $files[0];
+    	} else {
+    		$this->_log("This file does not exist.");
+    		return array(
+    			'error' => "This file does not exist.",
+    		);
+    	}
+    	
+    	if ($google_drive_site_folder) {
+    		try {
+	    		$subfolder_title = $this->site_name;
+	    		$managewp_folder_id = $managewp_folder->getId();
+	    		$list_files = $gdrive_service->files->listFiles(array("q"=>"title='$subfolder_title' and '$managewp_folder_id' in parents and trashed = false"));
+	    		$files = $list_files->getItems();
+    		} catch (Exception $e) {
+    			$this->_log($e->getMessage());
+    			return array(
+    				'error' => $e->getMessage(),
+    			);
+    		}
+    		if (isset($files[0])) {
+    			$backup_folder = $files[0];
+    		}
+    	} else {
+    		$backup_folder = $managewp_folder;
+    	}
+    	
+    	if (isset($backup_folder)) {
+    		try {
+	    		$backup_folder_id = $backup_folder->getId();
+	    		$list_files = $gdrive_service->files->listFiles(array("q"=>"title='$backup_file' and '$backup_folder_id' in parents and trashed = false"));
+	    		$files = $list_files->getItems();;
+    		} catch (Exception $e) {
+    			$this->_log($e->getMessage());
+    			return array(
+		    		'error' => $e->getMessage(),
+		    	);
+    		}
+    		if (isset($files[0])) {
+    			try {
+    				$gdrive_service->files->delete($files[0]->getId());
+    			} catch (Exception $e) {
+    				$this->_log($e->getMessage());
+    				return array(
+		    			'error' => $e->getMessage(),
+		    		);
+    			}
+    		} else {
+    			$this->_log("This file does not exist.");
+    			return array(
+	    			'error' => "This file does not exist.",
+	    		);
+    		}
+    	} else {
+    		$this->_log("This file does not exist.");
+    		return array(
+    			'error' => "This file does not exist.",
+    		);
+    	}
+    	
+    	return true;
+    }
+    
+    function get_google_drive_backup($args) {
+    	extract($args);
+    	
+    	global $mmb_plugin_dir;
+    	require_once("$mmb_plugin_dir/lib/google-api-client/Google_Client.php");
+    	require_once("$mmb_plugin_dir/lib/google-api-client/contrib/Google_DriveService.php");
+    	
+    	try {
+	    	$gdrive_client = new Google_Client();
+	    	$gdrive_client->setUseObjects(true);
+	    	$gdrive_client->setAccessToken($google_drive_token);
+    	} catch (Exception $e) {
+			return array(
+    			'error' => $e->getMessage(),
+    		);
+    	}
+    	
+    	$gdrive_service = new Google_DriveService($gdrive_client);
+    	
+    	try {
+	    	$about = $gdrive_service->about->get();
+	    	$root_folder_id = $about->getRootFolderId();
+    	} catch (Exception $e) {
+			return array(
+    			'error' => $e->getMessage(),
+    		);
+    	}
+    	
+    	try {
+    		$list_files = $gdrive_service->files->listFiles(array("q"=>"title='$google_drive_directory' and '$root_folder_id' in parents and trashed = false"));
+    		$files = $list_files->getItems();
+    	} catch (Exception $e) {
+    		return array(
+    			'error' => $e->getMessage(),
+    		);
+    	}
+    	if (isset($files[0])) {
+    		$managewp_folder = $files[0];
+    	} else {
+    		return array(
+	    		'error' => "This file does not exist.",
+	    	);
+    	}
+    	
+    	if ($google_drive_site_folder) {
+    		try {
+	    		$subfolder_title = $this->site_name;
+	    		$managewp_folder_id = $managewp_folder->getId();
+	    		$list_files = $gdrive_service->files->listFiles(array("q"=>"title='$subfolder_title' and '$managewp_folder_id' in parents and trashed = false"));
+	    		$files = $list_files->getItems();
+    		} catch (Exception $e) {
+    			return array(
+    				'error' => $e->getMessage(),
+    			);
+    		}
+    		if (isset($files[0])) {
+    			$backup_folder = $files[0];
+    		}
+    	} else {
+    		$backup_folder = $managewp_folder;
+    	}
+    	 
+    	if (isset($backup_folder)) {
+    		try {
+	    		$backup_folder_id = $backup_folder->getId();
+	    		$list_files = $gdrive_service->files->listFiles(array("q"=>"title='$backup_file' and '$backup_folder_id' in parents and trashed = false"));
+	    		$files = $list_files->getItems();
+    		} catch (Exception $e) {
+    			return array(
+    				'error' => $e->getMessage(),
+    			);
+    		}
+    		if (isset($files[0])) {
+    			try {
+    				$download_url = $files[0]->getDownloadUrl();
+					if ($download_url) {
+						$request = new Google_HttpRequest($download_url, 'GET', null, null);
+						$http_request = Google_Client::$io->authenticatedRequest($request);
+						if ($http_request->getResponseHttpCode() == 200) {
+							$stream = $http_request->getResponseBody();
+							$local_destination = ABSPATH . 'mwp_temp_backup.zip';
+							$handle = @fopen($local_destination, 'w+');
+							$result = fwrite($handle, $stream);
+							fclose($handle);
+							if($result)
+								return $local_destination;
+							else
+								return array(
+									'error' => "Write permission error.",
+								);
+						} else {
+							return array(
+				    			'error' => "This file does not exist.",
+				    		);
+						}
+					} else {
+						return array(
+			    			'error' => "This file does not exist.",
+			    		);
+					}
+    			} catch (Exception $e) {
+    				return array(
+		    			'error' => $e->getMessage(),
+		    		);
+    			}
+    		} else {
+    			return array(
+	    			'error' => "This file does not exist.",
+	    		);
+    		}
+    	} else {
+    		return array(
+	    		'error' => "This file does not exist.",
+	    	);
+    	}
+    	
+    	return false;
+    }
+    
 	function schedule_next($type, $schedule)
     {
         $schedule = explode("|", $schedule);
@@ -1954,15 +2359,22 @@ class MMB_Backup extends MMB_Core
                 
                 if (isset($backups[$task_name]['task_results'][$i]['dropbox']) && isset($backups[$task_name]['task_args']['account_info']['mwp_dropbox'])) {
                     //To do: dropbox remove
-                    $dropbox_file       = $backups[$task_name]['task_results'][$i]['dropbox'];
+                    $dropbox_file        = $backups[$task_name]['task_results'][$i]['dropbox'];
                     $args                = $backups[$task_name]['task_args']['account_info']['mwp_dropbox'];
                     $args['backup_file'] = $dropbox_file;
                    $this->remove_dropbox_backup($args);
                 }
                 
+                if (isset($backups[$task_name]['task_results'][$i]['google_drive']) && isset($backups[$task_name]['task_args']['account_info']['mwp_google_drive'])) {
+                	$google_drive_file   = $backups[$task_name]['task_results'][$i]['google_drive'];
+                	$args                = $backups[$task_name]['task_args']['account_info']['mwp_google_drive'];
+                	$args['backup_file'] = $google_drive_file;
+                	$this->remove_google_drive_backup($args);
+                }
+                
+                
                 //Remove database backup info
                 unset($backups[$task_name]['task_results'][$i]);
-                
             } //end foreach
             
             if (is_array($backups[$task_name]['task_results']))
@@ -1972,6 +2384,8 @@ class MMB_Backup extends MMB_Core
             	
             $this->update_tasks($backups);
             //update_option('mwp_backup_tasks', $backups);
+            
+            return true;
         }
     }
     
@@ -1980,11 +2394,13 @@ class MMB_Backup extends MMB_Core
      * Args: $task_name, $result_id
      */
     
-    function delete_backup($args)
-    {
+    function delete_backup($args) {
         if (empty($args))
             return false;
         extract($args);
+        if (isset($google_drive_token)) {
+        	$this->tasks[$task_name]['task_args']['account_info']['mwp_google_drive']['google_drive_token'] = $google_drive_token;
+        }
         
         $tasks   = $this->tasks;
         $task    = $tasks[$task_name];
@@ -2011,11 +2427,19 @@ class MMB_Backup extends MMB_Core
         }
         
         if (isset($backup['dropbox'])) {
-        	$dropbox_file       = $backup['dropbox'];
+        	$dropbox_file        = $backup['dropbox'];
             $args                = $tasks[$task_name]['task_args']['account_info']['mwp_dropbox'];
             $args['backup_file'] = $dropbox_file;
             $this->remove_dropbox_backup($args);
         }
+        
+        if (isset($backup['google_drive'])) {
+        	$google_drive_file          = $backup['google_drive'];
+        	$args                       = $tasks[$task_name]['task_args']['account_info']['mwp_google_drive'];
+        	$args['backup_file']        = $google_drive_file;
+        	$this->remove_google_drive_backup($args);
+        }
+        
         
         unset($backups[$result_id]);
         
@@ -2096,9 +2520,8 @@ class MMB_Backup extends MMB_Core
     }
     
     
-    function remote_backup_now($args)
-    {
-				$this->set_memory();        
+    function remote_backup_now($args) {
+		$this->set_memory();        
         if (!empty($args))
             extract($args);
         
@@ -2116,7 +2539,7 @@ class MMB_Backup extends MMB_Core
         }
         
         if ($backup_file && file_exists($backup_file)) {
-            //FTP, Amazon S3 or Dropbox
+            //FTP, Amazon S3, Dropbox or Google Drive
             if (isset($account_info['mwp_ftp']) && !empty($account_info['mwp_ftp'])) {
                 $account_info['mwp_ftp']['backup_file'] = $backup_file;
                 $return                                 = $this->ftp_backup($account_info['mwp_ftp']);
@@ -2137,6 +2560,12 @@ class MMB_Backup extends MMB_Core
                 $account_info['mwp_email']['task_name'] = 'Backup Now';
                 $return                                 = $this->email_backup($account_info['mwp_email']);
             }
+            
+            if (isset($account_info['mwp_google_drive']) && !empty($account_info['mwp_google_drive'])) {
+            	$account_info['mwp_google_drive']['backup_file'] = $backup_file;
+            	$return                                       = $this->google_drive_backup($account_info['mwp_google_drive']);
+            }
+            
             
             @file_put_contents(MWP_BACKUP_DIR.'/mwp_db/index.php', '');
             if ($return == true && $del_host_file) {
@@ -2163,7 +2592,7 @@ class MMB_Backup extends MMB_Core
         if (!class_exists('WP_Http')) {
             include_once(ABSPATH . WPINC . '/class-http.php');
         }
-        $params         = array();
+        $params         = array('timeout'=>100);
         $params['body'] = $args;
         $result         = wp_remote_post($url, $params);
         if (is_array($result) && $result['body'] == 'mwp_delete_task') {
@@ -2175,10 +2604,27 @@ class MMB_Backup extends MMB_Core
             exit;
         } elseif(is_array($result) && $result['body'] == 'mwp_pause_task'){
         	return 'paused';
-        } 
+        } elseif(is_array($result) && substr($result['body'], 0, 8) == 'token - '){
+        	return $result['body'];
+        }
         
-        return 'ok';
+        return false;
     }
+    
+    /*function refresh_gdrive_token($args, $url)
+    {
+    	if (!class_exists('WP_Http')) {
+    		include_once(ABSPATH . WPINC . '/class-http.php');
+    	}
+    	$params         = array('timeout'=>100);
+    	$params['body'] = $args;
+    	$result         = wp_remote_post($url, $params);
+    	if(isset($result['body'])) {
+    		return $result['body'];
+    	}
+    
+    	return false;
+    }*/
     
     function update_status($task_name, $status, $completed = false)
     {
@@ -2191,6 +2637,7 @@ class MMB_Backup extends MMB_Core
         5 - Dropbox
         6 - FTP
         7 - Email
+        8 - Google Drive
         100 - Finished
         */
         if ($task_name != 'Backup Now') {

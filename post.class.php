@@ -422,6 +422,25 @@ class MMB_Post extends MMB_Core
         return $success;
     }
 	
+    /*
+     * Function which gets posts from worker depending on arguments.
+     * If FROM and TO dates are provided and range, range has bigger priority to date FROM.
+     * This means if there are less posts between FROM and TO than range provided,
+     * this function omit date from and returns last range number posts to date TO.
+     * 
+     * @param array $args arguments passed to function
+     * @arg string filter_posts search phrase for post titles
+     * @arg string mwp_get_posts_date_from date in format(Y-m-d H:i:s) when posts are publishes from
+     * @arg string mwp_get_posts_date_to date in format(Y-m-d H:i:s) when posts are publishes to
+     * @arg string mwp_get_posts_range range number of returned posts
+     * @arg string mwp_get_posts_publish on or off
+     * @arg string mwp_get_posts_pending on or off
+     * @arg string mwp_get_posts_private on or off
+     * @arg string mwp_get_posts_future on or off
+     * @arg string mwp_get_posts_draft on or off
+     * @arg string mwp_get_posts_trash on or off
+     * @return array posts related to args
+     */
 	function get_posts($args){
 		global $wpdb;
 		
@@ -459,17 +478,28 @@ class MMB_Post extends MMB_Core
 			$where.=" AND post_status IN (".implode(",",$post_array).")";
 		}
 		
+		$limit = ($mwp_get_posts_range) ? ' LIMIT ' . mysql_real_escape_string($mwp_get_posts_range) : ' LIMIT 500';
+		
 		$sql_query = "$wpdb->posts  WHERE post_status!='auto-draft' AND post_status!='inherit' AND post_type='post' ".$where." ORDER BY post_date DESC";
 		
 		$total = array();
+		$posts = array();
+		$posts_info = $wpdb->get_results("SELECT * FROM ".$sql_query.$limit);
 		$user_info = $this->getUsersIDs();
 		$post_cats=$this->getPostCats();
 		$post_tags=$this->getPostCats('post_tag');
-		$posts_total = $wpdb->get_results("SELECT count(*) as total_posts FROM ".$sql_query);
-		$total['total_num']=$posts_total[0]->total_posts;
+		$total['total_num']=count($posts_info);
 		
-		$posts = array();
-		$posts_info = $wpdb->get_results("SELECT * FROM ".$sql_query." LIMIT 500");
+		if($mwp_get_posts_range && !empty($mwp_get_posts_date_from) && !empty($mwp_get_posts_date_to) && $total['total_num'] < $mwp_get_posts_range) {
+			$sql_query = "$wpdb->posts 
+				WHERE post_status!='auto-draft' AND post_status!='inherit' AND post_type='post'  AND post_date <= '".mysql_real_escape_string($mwp_get_posts_date_to)."' 
+				ORDER BY post_date DESC
+				LIMIT " . mysql_real_escape_string($mwp_get_posts_range);
+			
+			$posts_info = $wpdb->get_results("SELECT * FROM ".$sql_query);
+			$total = array();
+			$total['total_num']=count($posts_info);
+		}
 		
 		foreach ( $posts_info as $post_info ) 
 		{
@@ -481,9 +511,11 @@ class MMB_Post extends MMB_Core
 			}
 			
 			$tags=array();
-			foreach($post_tags[$post_info->ID] as $tag_array => $tag_array_val)
-			{
-				$tags[] = array('name' => $tag_array_val);
+			if (!empty($post_tags[$post_info->ID])) {
+				foreach($post_tags[$post_info->ID] as $tag_array => $tag_array_val)
+				{
+					$tags[] = array('name' => $tag_array_val);
+				}
 			}
 			
 			$posts[]=array(
@@ -558,6 +590,25 @@ class MMB_Post extends MMB_Core
 		
 	}
 	
+	/*
+	 * Function which gets pages from worker depending on arguments.
+	 * If FROM and TO dates are provided and range, range has bigger priority to date FROM.
+	 * This means if there are less pages between FROM and TO than range provided,
+	 * this function omit date from and returns last range number pages to date TO.
+	 * 
+	 * @param array $args arguments passed to function
+     * @arg string filter_pages search phrase for page titles
+     * @arg string mwp_get_pages_date_from date in format(Y-m-d H:i:s) when pages are publishes from
+     * @arg string mwp_get_pages_date_to date in format(Y-m-d H:i:s) when pages are publishes to
+     * @arg string mwp_get_pages_range range number of returned pages
+     * @arg string mwp_get_pages_publish on or off
+     * @arg string mwp_get_pages_pending on or off
+     * @arg string mwp_get_pages_private on or off
+     * @arg string mwp_get_pages_future on or off
+     * @arg string mwp_get_pages_draft on or off
+     * @arg string mwp_get_pages_trash on or off
+     * @return array pages related to args
+	 */
 	function get_pages($args){
 		global $wpdb;
 		
@@ -594,15 +645,26 @@ class MMB_Post extends MMB_Core
 			$where.=" AND post_status IN (".implode(",",$post_array).")";
 		}
 		
+		$limit = ($mwp_get_pages_range) ? ' LIMIT ' . mysql_real_escape_string($mwp_get_pages_range) : ' LIMIT 500';
+		
 		$sql_query = "$wpdb->posts  WHERE post_status!='auto-draft' AND post_status!='inherit' AND post_type='page' ".$where.' ORDER BY post_date DESC';
 		
 		$total = array();
-		$user_info = $this->getUsersIDs();
-		$posts_total = $wpdb->get_results("SELECT count(*) as total_posts FROM ".$sql_query);
-		$total['total_num']=$posts_total[0]->total_posts;
-		
 		$posts = array();
-		$posts_info = $wpdb->get_results("SELECT * FROM ".$sql_query." LIMIT 500");
+		$posts_info = $wpdb->get_results("SELECT * FROM ".$sql_query.$limit);
+		$user_info = $this->getUsersIDs();
+		$total['total_num']=count($posts_info);
+		
+		if($mwp_get_pages_range && !empty($mwp_get_pages_date_from) && !empty($mwp_get_pages_date_to) && $total['total_num'] < $mwp_get_pages_range) {
+			$sql_query = "$wpdb->posts 
+				WHERE post_status!='auto-draft' AND post_status!='inherit' AND post_type='post'  AND post_date <= '".mysql_real_escape_string($mwp_get_pages_date_to)."' 
+				ORDER BY post_date DESC
+				LIMIT " . mysql_real_escape_string($mwp_get_pages_range);
+			
+			$posts_info = $wpdb->get_results("SELECT * FROM ".$sql_query);
+			$total = array();
+			$total['total_num']=count($posts_info);
+		}
 		
 		foreach ( $posts_info as $post_info ) 
 		{

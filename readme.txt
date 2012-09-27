@@ -16,7 +16,7 @@ Main features:
 
 *   Secure and fast solution for managing your WordPress sites
 *   One click upgrades for WordPress, plugin and themes across all your sites
-*   Schedule automatic backups of your websites (Amazon S3 and Dropbox supported)
+*   Schedule automatic backups of your websites (Amazon S3, Google Drive and Dropbox supported)
 *   One click to access WP admin of any site
 *   Install WordPress, clone or migrate a website to another domain
 *   Bulk install themes and plugins to multiple sites at once
@@ -33,6 +33,15 @@ http://vimeo.com/22099014
 Check out [ManageWP.com](http://managewp.com/ "Manage Multiple Blogs").
 
 == Changelog ==  
+
+= 3.9.22 =
+- New: Backup support for Google Drive
+- New: Keyword tracking limit increased from 5 to 20 times the website limit (ie. with 25 website account you can now track the ranking for 500 keywords!)
+- New: Support for Google Analytics API 3.0
+- New: Website preview screenshot
+- New: Ability to assign a newly added website to existing Backup tasks (under "advanced" in add website dialogue)
+- Fix: Clone tool now supports special characters and localized WP installs 
+- Fix: Backup history preserved on website re-add
 
 = 3.9.21 =
 * New: Continuous updates! Read more at http://managewp.com/continuous-updates

@@ -134,16 +134,20 @@ class MMB_Core extends MMB_Helper
 			'worker_brand' => 'mmb_worker_brand',
 			'set_alerts' => 'mmb_set_alerts',
 			'maintenance' => 'mmb_maintenance_mode',
-			'get_dbname' => 'mmb_get_dbname'
+			'get_dbname' => 'mmb_get_dbname',
 		);
 		
-		add_action('rightnow_end', array( &$this, 'add_right_now_info' ));       
+		$mwp_worker_brand = get_option("mwp_worker_brand");
+		
+		if (!$mwp_worker_brand['hide_managed_remotely']) {
+			add_action('rightnow_end', array( &$this, 'add_right_now_info' ));
+		}
+		
 		add_action('admin_init', array(&$this,'admin_actions'));   
 		add_action('init', array( &$this, 'mmb_remote_action'), 9999);
 		add_action('setup_theme', 'mmb_parse_request');
 		add_action('set_auth_cookie', array( &$this, 'mmb_set_auth_cookie'));
 		add_action('set_logged_in_cookie', array( &$this, 'mmb_set_logged_in_cookie'));
-		
     }
     
 	function mmb_remote_action(){

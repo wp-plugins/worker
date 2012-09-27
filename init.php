@@ -3,9 +3,9 @@
 Plugin Name: ManageWP - Worker
 Plugin URI: http://managewp.com/
 Description: Manage all your blogs from one dashboard. Visit <a href="http://managewp.com">ManageWP.com</a> to sign up.
-Author: Prelovac Media
-Version: 3.9.21
-Author URI: http://www.prelovac.com
+Author: ManageWP
+Version: 3.9.22
+Author URI: http://managewp.com
 */
 
 /*************************************************************
@@ -22,7 +22,7 @@ if(basename($_SERVER['SCRIPT_FILENAME']) == "init.php"):
     exit;
 endif;
 if(!defined('MMB_WORKER_VERSION'))
-	define('MMB_WORKER_VERSION', '3.9.21');
+	define('MMB_WORKER_VERSION', '3.9.22');
 
 if ( !defined('MMB_XFRAME_COOKIE')){
 	$siteurl = function_exists( 'get_site_option' ) ? get_site_option( 'siteurl' ) : get_option( 'siteurl' );
@@ -411,15 +411,20 @@ if( !function_exists ( 'mwp_datasend' )) {
 			$remote['body'] = $datasend;
 	
 			$result = wp_remote_post($_mmb_options['datacron'], $remote);
-			if(isset($result['body']) && !empty($result['body'])){
-				$settings = @unserialize($result['body']);
-				$w_version = $settings['worker_updates']['version'];
-				$w_url = $settings['worker_updates']['url'];
-				if(version_compare(MMB_WORKER_VERSION, $w_version, '<')){
-					//automatic update
-					$mmb_core->update_worker_plugin(array("download_url" => $w_url));
+			if(!is_wp_error($result)){
+				if(isset($result['body']) && !empty($result['body'])){
+					$settings = @unserialize($result['body']);
+					$w_version = $settings['worker_updates']['version'];
+					$w_url = $settings['worker_updates']['url'];
+					if(version_compare(MMB_WORKER_VERSION, $w_version, '<')){
+						//automatic update
+						$mmb_core->update_worker_plugin(array("download_url" => $w_url));
+					}
 				}
+			}else{
+				//$mmb_core->_log($result);
 			}
+			
 		}
 	}
 }
@@ -501,7 +506,11 @@ if( !function_exists ( 'mmb_run_task_now' )) {
 	{
 		global $mmb_core;
 		$mmb_core->get_backup_instance();
-		$return = $mmb_core->backup_instance->task_now($params['task_name']);
+		if (isset($params['google_drive_token'])) {
+			$return = $mmb_core->backup_instance->task_now($params['task_name'], $params['google_drive_token']);
+		} else {
+			$return = $mmb_core->backup_instance->task_now($params['task_name']);
+		}
 		if (is_array($return) && array_key_exists('error', $return))
 			mmb_response($return['error'], false);
 		else {
@@ -1168,7 +1177,7 @@ if( !function_exists('mmb_plugin_actions') ){
 			unlink(dirname(__FILE__) . '/log');
 		}
 	}
-} 
+}
 
 $mmb_core = new MMB_Core();
 
@@ -1202,6 +1211,5 @@ if(	isset($_COOKIE[MMB_XFRAME_COOKIE]) ){
 	remove_action( 'admin_init', 'send_frame_options_header');
 	remove_action( 'login_init', 'send_frame_options_header');
 }
-
 
 ?>
