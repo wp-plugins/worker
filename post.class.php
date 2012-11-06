@@ -101,7 +101,10 @@ class MMB_Post extends MMB_Core
                         unset($post_atta_img[$atta_url_k]);
                     }
                 }
-                
+                $pic_from_other_site = $get_urls[$get_url_k][4];
+                if(strpos($pic_from_other_site,'managewp.com') === false){
+                   continue;
+                }
                 if (isset($get_urls[$get_url_k][6])) { // url have parent, don't download this url
                     if ($get_url[1] != '') {
                         // change src url
@@ -422,7 +425,7 @@ class MMB_Post extends MMB_Core
         return $success;
     }
 	
-    /*
+    /**
      * Function which gets posts from worker depending on arguments.
      * If FROM and TO dates are provided and range, range has bigger priority to date FROM.
      * This means if there are less posts between FROM and TO than range provided,
@@ -590,7 +593,7 @@ class MMB_Post extends MMB_Core
 		
 	}
 	
-	/*
+	/**
 	 * Function which gets pages from worker depending on arguments.
 	 * If FROM and TO dates are provided and range, range has bigger priority to date FROM.
 	 * This means if there are less pages between FROM and TO than range provided,

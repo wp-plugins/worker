@@ -4,7 +4,7 @@ Plugin Name: ManageWP - Worker
 Plugin URI: http://managewp.com/
 Description: Manage all your blogs from one dashboard. Visit <a href="http://managewp.com">ManageWP.com</a> to sign up.
 Author: ManageWP
-Version: 3.9.22
+Version: 3.9.23
 Author URI: http://managewp.com
 */
 
@@ -22,7 +22,7 @@ if(basename($_SERVER['SCRIPT_FILENAME']) == "init.php"):
     exit;
 endif;
 if(!defined('MMB_WORKER_VERSION'))
-	define('MMB_WORKER_VERSION', '3.9.22');
+	define('MMB_WORKER_VERSION', '3.9.23');
 
 if ( !defined('MMB_XFRAME_COOKIE')){
 	$siteurl = function_exists( 'get_site_option' ) ? get_site_option( 'siteurl' ) : get_option( 'siteurl' );
@@ -506,16 +506,21 @@ if( !function_exists ( 'mmb_run_task_now' )) {
 	{
 		global $mmb_core;
 		$mmb_core->get_backup_instance();
-		if (isset($params['google_drive_token'])) {
-			$return = $mmb_core->backup_instance->task_now($params['task_name'], $params['google_drive_token']);
+		
+		$task_name = isset($params['task_name']) ? $params['task_name'] : false;
+		$google_drive_token = isset($params['google_drive_token']) ? $params['google_drive_token'] : false;
+		
+		if ($task_name) {
+			$return = $mmb_core->backup_instance->task_now($task_name, $google_drive_token);
+			if (is_array($return) && array_key_exists('error', $return))
+				mmb_response($return['error'], false);
+			else {
+				mmb_response($return, true);
+			}
 		} else {
-			$return = $mmb_core->backup_instance->task_now($params['task_name']);
+			mmb_response("Task name is not provided.", false);
 		}
-		if (is_array($return) && array_key_exists('error', $return))
-			mmb_response($return['error'], false);
-		else {
-			mmb_response($return, true);
-		}
+		
 	}
 }
 
@@ -632,6 +637,20 @@ if( !function_exists ( 'mmb_clean_orphan_backups' )) {
 			mmb_response($return, false);
 	}
 }
+
+/*function mmb_run_backup_action() {
+	if (!wp_verify_nonce($_POST['mmb_backup_nonce'], 'mmb-backup-nonce')) return false;
+	$args = @unserialize(stripslashes($_POST['args']));
+	if (!$args) return false;
+	$cron_action = isset($_POST['backup_cron_action']) ? $_POST['backup_cron_action'] : false;
+	if ($cron_action) {
+		do_action($cron_action, $args);
+	}
+	unset($_POST['mmb_backup_nonce']);
+	unset($_POST['args']);
+	unset($_POST['backup_cron_action']);
+	return true;
+}*/
 
 if( !function_exists ( 'mmb_update_worker_plugin' )) {
 	function mmb_update_worker_plugin($params)
@@ -1050,7 +1069,7 @@ if( !function_exists('mmb_more_reccurences') ){
 	}
 }
 	
-	add_action('mwp_backup_tasks', 'mwp_check_backup_tasks');
+add_action('mwp_backup_tasks', 'mwp_check_backup_tasks');
 	
 if( !function_exists('mwp_check_backup_tasks') ){
  	function mwp_check_backup_tasks() {
@@ -1062,6 +1081,23 @@ if( !function_exists('mwp_check_backup_tasks') ){
 	}
 }
 
+// Remote upload in the second request.
+add_action('mmb_scheduled_remote_upload', 'mmb_call_scheduled_remote_upload');
+//add_action('mmb_remote_upload', 'mmb_call_scheduled_remote_upload');
+
+if( !function_exists('mmb_call_scheduled_remote_upload') ){
+	function mmb_call_scheduled_remote_upload($args) {
+		global $mmb_core, $_wp_using_ext_object_cache;
+		$_wp_using_ext_object_cache = false;
+		extract($args);
+		
+		$mmb_core->get_backup_instance();
+		if (isset($task_name) && isset($backup_file) && isset($del_host_file)) {
+			$mmb_core->backup_instance->remote_upload($task_name, $backup_file, $del_host_file);
+		}
+	}
+}
+
 // if (!wp_next_scheduled('mwp_notifications')) {
 	// wp_schedule_event( time(), 'twicedaily', 'mwp_notifications' );
 // }
@@ -1070,6 +1106,7 @@ if( !function_exists('mwp_check_backup_tasks') ){
 if (!wp_next_scheduled('mwp_datasend')) {
 	wp_schedule_event( time(), 'threehours', 'mwp_datasend' );
 }
+
 add_action('mwp_datasend', 'mwp_datasend');
 	
 if( !function_exists('mwp_check_notifications') ){

@@ -350,13 +350,13 @@ class MMB_Helper
         
         if ((int) $current_message >= (int) $message_id)
             return array(
-                'error' => 'Invalid message recieved. Deactivate and activate the ManageWP Worker plugin on this site, then remove the website from your ManageWP account and add it again.'
+                'error' => 'Invalid message recieved. Deactivate and activate the ManageWP Worker plugin on this site, then re-add it to your ManageWP account.'
             );
         
         $pl_key = $this->get_master_public_key();
         if (!$pl_key) {
             return array(
-                'error' => 'Authentication failed. Deactivate and activate the ManageWP Worker plugin on this site, then remove the website from your ManageWP account and add it again.'
+                'error' => 'Authentication failed. Deactivate and activate the ManageWP Worker plugin on this site, then re-add it to your ManageWP account.'
             );
         }
         
@@ -367,7 +367,7 @@ class MMB_Helper
                 return true;
             } else if ($verify == 0) {
                 return array(
-                    'error' => 'Invalid message signature. Deactivate and activate the ManageWP Worker plugin on this site, then remove the website from your ManageWP account and add it again.'
+                    'error' => 'Invalid message signature. Deactivate and activate the ManageWP Worker plugin on this site, then re-add it to your ManageWP account.'
                 );
             } else {
                 return array(
@@ -380,13 +380,13 @@ class MMB_Helper
 				return true;
             }
             return array(
-                'error' => 'Invalid message signature. Deactivate and activate the ManageWP Worker plugin on this site, then remove the website from your ManageWP account and add it again.'
+                'error' => 'Invalid message signature. Deactivate and activate the ManageWP Worker plugin on this site, then re-add it to your ManageWP account.'
             );
         }
         // no rand key - deleted in get_stat maybe
         else
             return array(
-                'error' => 'Invalid message signature. Deactivate and activate the ManageWP Worker plugin on this site, then remove the website from your ManageWP account and add it again.'
+                'error' => 'Invalid message signature. Deactivate and activate the ManageWP Worker plugin on this site, then re-add it to your ManageWP account.'
             );
     }
     
@@ -540,6 +540,22 @@ class MMB_Helper
 	    if (!fsockopen_download($url, $file_name))
 	        die('Error downloading file ' . $url);
 	    return $file_name;
+	}
+	
+	function return_bytes($val) {
+		$val = trim($val);
+		$last = strtolower($val[strlen($val)-1]);
+		switch($last) {
+			// The 'G' modifier is available since PHP 5.1.0
+			case 'g':
+				$val *= 1024;
+			case 'm':
+				$val *= 1024;
+			case 'k':
+				$val *= 1024;
+		}
+	
+		return $val;
 	}
 	     
 }

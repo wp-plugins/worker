@@ -34,6 +34,18 @@ Check out [ManageWP.com](http://managewp.com/ "Manage Multiple Blogs").
 
 == Changelog ==  
 
+= 3.9.23 =
+- New: SEO reports can be branded and viewed by sharing an URL
+- New: Set custom database prefix for new clone destination
+- New: Automatic change all URL paths for new clone destination
+- New: Success and fail email notifications for scheduled backup tasks 
+- Fix: Improved scheduled backups for limited server resources 
+- Fix: Improved backup to Dropbox (now supporting larger backup files)
+- Fix: Handling of external images with bulk posting
+- Fix: Display plugin versions on manage plugins 
+- Fix: Deprecated get_themes function 
+- Fix: Special characters support for notes
+ 
 = 3.9.22 =
 - New: Backup support for Google Drive
 - New: Keyword tracking limit increased from 5 to 20 times the website limit (ie. with 25 website account you can now track the ranking for 500 keywords!)
@@ -182,7 +194,7 @@ Check out [ManageWP.com](http://managewp.com/ "Manage Multiple Blogs").
 = 3.8.8 =
 * New feature: Bulk add links to blogroll
 * New feature: Manual backups to email address
-* New feature: Backup requirements check (under ‘Manage Backups’)
+* New feature: Backup requirements check (under ï¿½Manage Backupsï¿½)
 * New feature: Popup menu for groups allowing to show dashboard for that group only
 * New feature: Favorite list for plugins and themes for later quick installation to multiple blogs
 * New feature: Invite friends
