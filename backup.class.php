@@ -115,7 +115,7 @@ class MMB_Backup extends MMB_Core {
    		
    		$memory_limit = trim(ini_get('memory_limit'));    
     	$last = strtolower(substr($memory_limit, -1));
-
+		
 	    if($last == 'g')       
 	        $memory_limit = ((int) $memory_limit)*1024;
 	    else if($last == 'm')      
@@ -124,12 +124,12 @@ class MMB_Backup extends MMB_Core {
 	        $memory_limit = ((int) $memory_limit)/1024;         
         
    		if ( $memory_limit < 384 )  {    
-      	@ini_set('memory_limit', '384M');
-      	$changed['memory_limit'] = 1;
-      }
-      
-      if ( (int) @ini_get('max_execution_time') < 600 ) {
-     	  @set_time_limit(600); //ten minutes
+      		@ini_set('memory_limit', '384M');
+      		$changed['memory_limit'] = 1;
+ 		}
+ 		
+		if ( (int) @ini_get('max_execution_time') < 600 ) {
+     		@set_time_limit(600); //ten minutes
      		$changed['execution_time'] = 1;
      	}
      	
@@ -159,7 +159,7 @@ class MMB_Backup extends MMB_Core {
     function set_backup_task($params) {
         //$params => [$task_name, $args, $error]
         if (!empty($params)) {
-        
+        	
         	//Make sure backup cron job is set
         	if (!wp_next_scheduled('mwp_backup_tasks')) {
 				wp_schedule_event( time(), 'tenminutes', 'mwp_backup_tasks' );
@@ -213,7 +213,6 @@ class MMB_Backup extends MMB_Core {
                 $backup_settings = $this->tasks;
                 
                 if (is_array($result) && array_key_exists('error', $result)) {
-                	//$this->send_failed_emails($task_name, $args['failed_emails'], $result['error']);
                 	$return = $result;
                 } else {
                     $return = $backup_settings[$task_name];
@@ -254,9 +253,9 @@ class MMB_Backup extends MMB_Core {
                         }
                         
                         $check = $this->validate_task($check_data, $setting['task_args']['url']);
-                        $old_worker = (MMB_WORKER_VERSION <= '3.9.22');
+                        $worker_upto_3_9_22 = (MMB_WORKER_VERSION <= '3.9.22');  // worker version is less or equals to 3.9.22
                         
-                        if ($old_worker) {
+                        if ($worker_upto_3_9_22) {
 	                        $potential_token = substr($check, 8);
 	                        if (substr($check, 0, 8) == 'token - ' && $potential_token != 'not found') {
 	                        	$this->tasks[$task_name]['task_args']['account_info']['mwp_google_drive']['google_drive_token'] = $potential_token;
@@ -265,27 +264,15 @@ class MMB_Backup extends MMB_Core {
 	                        }
                         } else {
                         	$potential_token = isset($check['google_drive_token']) ? $check['google_drive_token'] : false;
-                        	$success_emails = isset($check['success_emails']) ? $check['success_emails'] : false;
-                        	$failed_emails = isset($check['failed_emails']) ? $check['failed_emails'] : false;
                         	if ($potential_token) {
                         		$this->tasks[$task_name]['task_args']['account_info']['mwp_google_drive']['google_drive_token'] = $potential_token;
 	                        	$settings[$task_name]['task_args']['account_info']['mwp_google_drive']['google_drive_token'] = $potential_token;
 	                        	$setting['task_args']['account_info']['mwp_google_drive']['google_drive_token'] = $potential_token;
                         	}
-                        	if (isset($success_emails)) {
-                        		$this->tasks[$task_name]['task_args']['success_emails'] = $success_emails;
-                        		$settings[$task_name]['task_args']['success_emails'] = $success_emails;
-                        		$setting['task_args']['success_emails'] = $success_emails;
-                        	}
-                        	if (isset($failed_emails)) {
-                        		$this->tasks[$task_name]['task_args']['failed_emails'] = $failed_emails;
-                        		$settings[$task_name]['task_args']['failed_emails'] = $failed_emails;
-                        		$setting['task_args']['failed_emails'] = $failed_emails;
-                        	}
                         }
                         
                     }
-
+					
                     $update = array(
                         'task_name' => $task_name,
                         'args' => $settings[$task_name]['task_args']  
@@ -306,7 +293,6 @@ class MMB_Backup extends MMB_Core {
                     $error  = '';
                     
                     if (is_array($result) && array_key_exists('error', $result)) {
-                    	$this->send_failed_emails($task_name, $failed_emails, $result['error']);
                     	$error = $result;
                     	$this->set_backup_task(array(
                     		'task_name' => $task_name,
@@ -336,10 +322,6 @@ class MMB_Backup extends MMB_Core {
                     			'sslverify' => apply_filters('https_local_ssl_verify', true)
                     		);
                     		wp_remote_post($cron_url, $args);*/
-                    	} else {
-                    		$last_result = $setting['task_results'][count($setting['task_results']) - 1];
-                    		$size = $last_result['size'];
-                    		$this->send_success_emails($task_name, $success_emails, $size);
                     	}
                     }
                     
@@ -361,12 +343,6 @@ class MMB_Backup extends MMB_Core {
 		if ($google_drive_token) {
 			$this->tasks[$task_name]['task_args']['account_info']['mwp_google_drive']['google_drive_token'] = $google_drive_token;
 		}
-		/*if ($success_emails) {
-			set_transient('mmb_success_emails', $success_emails, 3600);
-		}
-		if ($failed_emails) {
-			set_transient('mmb_failed_emails', $failed_emails, 3600);
-		}*/
     	
 		$settings = $this->tasks;
     	if(!array_key_exists($task_name,$settings)){
@@ -374,7 +350,7 @@ class MMB_Backup extends MMB_Core {
     	} else {
     	 	$setting = $settings[$task_name];
     	}    
-       
+    	
 		$this->set_backup_task(array(
 			'task_name' => $task_name,
 			'args' => $settings[$task_name]['task_args'],
@@ -386,7 +362,6 @@ class MMB_Backup extends MMB_Core {
 		
 		//Check for error
 		if (is_array($result) && array_key_exists('error', $result)) {
-			//$this->send_failed_emails($task_name, $failed_emails, $result['error']);
 			$this->set_backup_task(array(
 				'task_name' => $task_name,
 				'args' => $settings[$task_name]['task_args'],
@@ -476,7 +451,13 @@ class MMB_Backup extends MMB_Core {
             	);
             }
         } elseif (trim($what) == 'full') {
-            $content_backup = $this->backup_full($task_name, $backup_file, $exclude, $include);
+            if (!$exclude) {
+            	$exclude = array();
+            }
+            if (!$include) {
+            	$include = array();
+            }
+        	$content_backup = $this->backup_full($task_name, $backup_file, $exclude, $include);
             if (is_array($content_backup) && array_key_exists('error', $content_backup)) {
             	$error_message = $content_backup['error'];
             	return array(
@@ -552,7 +533,7 @@ class MMB_Backup extends MMB_Core {
             //update_option('mwp_backup_tasks', $backup_settings);
         }
         
-        // If there are not remote destination, set up task ststus to finished
+        // If there are not remote destination, set up task status to finished
         if (@count($backup_settings[$task_name]['task_args']['account_info']) == 0) {
         	$this->update_status($task_name,$this->statuses['finished'], true);
         }
@@ -627,13 +608,17 @@ class MMB_Backup extends MMB_Core {
         
         $zip_result = $this->zip_backup($task_name, $backup_file, $exclude, $include);
         
+        if (isset($zip_result['error'])) {
+        	return $zip_result;
+        }
+        
         if (!$zip_result) {
         	$zip_archive_result = false;
         	if (class_exists("ZipArchive")) {
         		$this->_log("Files zip fallback to ZipArchive");
         		$zip_archive_result = $this->zip_archive_backup($task_name, $backup_file, $exclude, $include);
         	}
-        		
+        	
         	if (!$zip_archive_result) {
         		$this->_log("Files zip fallback to PclZip");
         		$pclzip_result = $this->pclzip_backup($task_name, $backup_file, $exclude, $include);
@@ -744,11 +729,6 @@ class MMB_Backup extends MMB_Core {
     	global $zip_errors;
     	$sys = substr(PHP_OS, 0, 3);
     	
-    	$remove = array(
-    		trim(basename(WP_CONTENT_DIR)) . "/managewp/backups",
-    		trim(basename(WP_CONTENT_DIR)) . "/" . md5('mmb-worker') . "/mwp_backups"
-    	);
-    	
     	//Exclude paths
     	$exclude_data = "-x";
     	
@@ -779,13 +759,6 @@ class MMB_Backup extends MMB_Core {
     	
     	if($exclude_file_data){
     		$exclude_file_data = "-x".$exclude_file_data;
-    	}
-    	
-    	foreach ($remove as $data) {
-    		if ($sys == 'WIN')
-    			$exclude_data .= " $data/*.*";
-    		else
-    			$exclude_data .= " '$data/*'";
     	}
     	
     	//Include paths by default
@@ -821,22 +794,29 @@ class MMB_Backup extends MMB_Core {
     	chdir(ABSPATH);
     	ob_start();
     	$command  = "$zip -q -j $comp_level $backup_file .* * $exclude_file_data";
+    	$this->_log("Executing $command");
     	$result_f = $this->mmb_exec($command, false, true);
     	if (!$result_f || $result_f == 18) { // disregard permissions error, file can't be accessed
     		$command  = "$zip -q -r $comp_level $backup_file $include_data $exclude_data";
     		$result_d = $this->mmb_exec($command, false, true);
+    		$this->_log("Executing $command");
     		if ($result_d && $result_d != 18) {
     			@unlink($backup_file);
     			if ($result_d > 0 && $result_d < 18)
     				return array(
     					'error' => 'Failed to archive files (' . $zip_errors[$result_d] . ') .'
     				);
-    			else
+    			else {
+    				if ($result_d === -1) return false;
     				return array(
     					'error' => 'Failed to archive files.'
     				);
+    			}
     		}
+    	} else {
+    		return false;
     	}
+    	
     	ob_get_clean();
     	
     	return true;
@@ -873,7 +853,7 @@ class MMB_Backup extends MMB_Core {
 		} else {
 			$result = false;
 		}
-		 
+		
 		return $result; // true if $backup_file iz zipped successfully, false if error is occured in zip process
     }
     
@@ -956,7 +936,7 @@ class MMB_Backup extends MMB_Core {
     	);
     	
     	$include = array_merge($add, $include);
-
+		
 	    $filelist = array();
 	    if ($handle = opendir(ABSPATH)) {
 	    	while (false !== ($file = readdir($handle))) {
@@ -1005,7 +985,7 @@ class MMB_Backup extends MMB_Core {
     			$this->_log("DB zip, fallback to ZipArchive");
     			$zip_archive_db_result = $this->zip_archive_backup_db($task_name, $db_result, $backup_file);
     		}
-    			
+    		
     		if (!$zip_archive_db_result) {
     			$this->_log("DB zip, fallback to PclZip");
     			$pclzip_db_result = $this->pclzip_backup_db($task_name, $backup_file);
@@ -1013,7 +993,7 @@ class MMB_Backup extends MMB_Core {
     				@unlink(MWP_BACKUP_DIR.'/mwp_db/index.php');
     				@unlink($db_result);
     				@rmdir(MWP_DB_DIR);
-    			
+    				
     				return array(
     					'error' => 'Failed to zip database. pclZip error (' . $archive->error_code . '): .' . $archive->error_string
     				);
@@ -1159,7 +1139,7 @@ class MMB_Backup extends MMB_Core {
         	$this->tasks[$task_name]['task_args']['account_info']['mwp_google_drive']['google_drive_token'] = $google_drive_token;
         }
         $this->set_memory();
-		        
+		  
         $unlink_file = true; //Delete file after restore
         
         //Detect source
@@ -1184,6 +1164,7 @@ class MMB_Backup extends MMB_Core {
                 $args                = $task['task_args']['account_info']['mwp_ftp'];
                 $args['backup_file'] = $ftp_file;
                 $backup_file         = $this->get_ftp_backup($args);
+                
                 if ($backup_file == false) {
                     return array(
                         'error' => 'Failed to download file from FTP.'
@@ -1194,6 +1175,7 @@ class MMB_Backup extends MMB_Core {
                 $args                = $task['task_args']['account_info']['mwp_amazon_s3'];
                 $args['backup_file'] = $amazons3_file;
                 $backup_file         = $this->get_amazons3_backup($args);
+                
                 if ($backup_file == false) {
                     return array(
                         'error' => 'Failed to download file from Amazon S3.'
@@ -1583,7 +1565,7 @@ class MMB_Backup extends MMB_Core {
      * @param 	string 			$command	external command to execute
      * @param 	bool[optional] 	$string		return as a system output string (default: false)
      * @param 	bool[optional] 	$rawreturn	return as a status of executed command
-     * @return 	bool|int|string				output depends on parameters $string and $rawreturn
+     * @return 	bool|int|string				output depends on parameters $string and $rawreturn, -1 if no one execute function is enabled
      */
     function mmb_exec($command, $string = false, $rawreturn = false) {
         if ($command == '')
@@ -1625,7 +1607,7 @@ class MMB_Backup extends MMB_Core {
         
         if ($rawreturn)
         	return -1;
-        	
+        
         return false;
     }
     
@@ -1783,7 +1765,6 @@ class MMB_Backup extends MMB_Core {
             );
         }
         return true;
-        
     }
     
     /**
@@ -1838,13 +1819,13 @@ class MMB_Backup extends MMB_Core {
         if($ftp_passive){
 			@ftp_pasv($conn_id,true);
 		}
-				
+			
         @ftp_mkdir($conn_id, $ftp_remote_folder);
         if ($ftp_site_folder) {
             $ftp_remote_folder .= '/' . $this->site_name;
         }
         @ftp_mkdir($conn_id, $ftp_remote_folder);
-       
+    	
         $upload = @ftp_put($conn_id, $ftp_remote_folder . '/' . basename($backup_file), $backup_file, FTP_BINARY);
         if ($upload === false) { //Try ascii
             $upload = @ftp_put($conn_id, $ftp_remote_folder . '/' . basename($backup_file), $backup_file, FTP_ASCII);
@@ -1891,7 +1872,7 @@ class MMB_Backup extends MMB_Core {
             if($ftp_passive){
 				@ftp_pasv($conn_id,true);
 			}
-						
+					
             $delete = ftp_delete($conn_id, $ftp_remote_folder . '/' . $backup_file);
             
             ftp_close($conn_id);
@@ -1916,7 +1897,7 @@ class MMB_Backup extends MMB_Core {
         $port = $ftp_port ? $ftp_port : 21; //default port is 21
         if ($ftp_ssl && function_exists('ftp_ssl_connect')) {
             $conn_id = ftp_ssl_connect($ftp_hostname,$port);
-            
+          
         } else if (function_exists('ftp_connect')) {
             $conn_id = ftp_connect($ftp_hostname,$port);
             if ($conn_id === false) {
@@ -2197,8 +2178,6 @@ class MMB_Backup extends MMB_Core {
     function google_drive_backup($args) {
     	extract($args);
     	
-    	$this->_log($args);
-    	
     	global $mmb_plugin_dir;
     	require_once("$mmb_plugin_dir/lib/google-api-client/Google_Client.php");
     	require_once("$mmb_plugin_dir/lib/google-api-client/contrib/Google_DriveService.php");
@@ -2235,7 +2214,7 @@ class MMB_Backup extends MMB_Core {
 	    		$_managewp_folder = new Google_DriveFile();
 	    		$_managewp_folder->setTitle($google_drive_directory);
 	    		$_managewp_folder->setMimeType('application/vnd.google-apps.folder');
-	    	
+	    		
 	    		if ($root_folder_id != null) {
 	    			$parent = new Google_ParentReference();
 	    			$parent->setId($root_folder_id);
@@ -2346,7 +2325,7 @@ class MMB_Backup extends MMB_Core {
     			'error' => $e->getMessage(),
     		);*/
     	}
-    	 
+    	
     	$gdrive_service = new Google_DriveService($gdrive_client);
     	
     	try {
@@ -2503,7 +2482,7 @@ class MMB_Backup extends MMB_Core {
     	} else {
     		$backup_folder = $managewp_folder;
     	}
-    	 
+    	
     	if (isset($backup_folder)) {
     		try {
 	    		$backup_folder_id = $backup_folder->getId();
@@ -2574,9 +2553,7 @@ class MMB_Backup extends MMB_Core {
 		if (empty($schedule))
             return false;
         switch ($type) {
-            
             case 'daily':
-                
                 if (isset($schedule[1]) && $schedule[1]) {
                     $delay_time = $schedule[1] * 60;
                 }
@@ -2588,7 +2565,6 @@ class MMB_Backup extends MMB_Core {
                 else
                     $time = mktime($schedule_hour, 0, 0, date("m"), date("d"), date("Y"));
                 break;
-            
             
             case 'weekly':
                 if (isset($schedule[2]) && $schedule[2]) {
@@ -2604,7 +2580,6 @@ class MMB_Backup extends MMB_Core {
                 else
                     $weekday_offset = $schedule_weekday - $current_weekday;
                 
-                
                 if (!$weekday_offset) { //today is scheduled weekday
                     if ($current_hour >= $schedule_hour)
                         $time = mktime($schedule_hour, 0, 0, date("m"), date("d") + 7, date("Y"));
@@ -2613,7 +2588,6 @@ class MMB_Backup extends MMB_Core {
                 } else {
                     $time = mktime($schedule_hour, 0, 0, date("m"), date("d") + $weekday_offset, date("Y"));
                 }
-                
                 break;
             	
             case 'monthly':
@@ -2638,6 +2612,7 @@ class MMB_Backup extends MMB_Core {
                 }
                 
                 break;
+            
             default:
                 break;
         }
@@ -2652,7 +2627,7 @@ class MMB_Backup extends MMB_Core {
     /**
      * Parse task arguments for info on master.
      * 
-     * @return mixed	associative array with stats for every backup task
+     * @return mixed	associative array with stats for every backup task or error if backup is manually deleted on server
      */
     function get_backup_stats() {
         $stats = array();
@@ -2662,8 +2637,10 @@ class MMB_Backup extends MMB_Core {
                 if (is_array($info['task_results']) && !empty($info['task_results'])) {
                     foreach ($info['task_results'] as $key => $result) {
                         if (isset($result['server']) && !isset($result['error'])) {
-                            if (!file_exists($result['server']['file_path'])) {
-                                $info['task_results'][$key]['error'] = 'Backup created but manually removed from server.';
+                            if (isset($result['server']['file_path']) && !$info['task_args']['del_host_file']) {
+	                        	if (!file_exists($result['server']['file_path'])) {
+	                                $info['task_results'][$key]['error'] = 'Backup created but manually removed from server.';
+	                            }
                             }
                         }
                     }
@@ -2699,7 +2676,6 @@ class MMB_Backup extends MMB_Core {
      * @return	bool|void			true if there are backups for deletion, void if not
      */
     function remove_old_backups($task_name) {
-    		
         //Check for previous failed backups first
         $this->cleanup();
         
@@ -2740,7 +2716,7 @@ class MMB_Backup extends MMB_Core {
                     $dropbox_file        = $backups[$task_name]['task_results'][$i]['dropbox'];
                     $args                = $backups[$task_name]['task_args']['account_info']['mwp_dropbox'];
                     $args['backup_file'] = $dropbox_file;
-                   $this->remove_dropbox_backup($args);
+                	$this->remove_dropbox_backup($args);
                 }
                 
                 if (isset($backups[$task_name]['task_results'][$i]['google_drive']) && isset($backups[$task_name]['task_args']['account_info']['mwp_google_drive'])) {
@@ -2758,9 +2734,8 @@ class MMB_Backup extends MMB_Core {
             	$backups[$task_name]['task_results'] = array_values($backups[$task_name]['task_results']);
             else
             	$backups[$task_name]['task_results']=array();
-            	
+            
             $this->update_tasks($backups);
-            //update_option('mwp_backup_tasks', $backups);
             
             return true;
         }
@@ -2832,7 +2807,6 @@ class MMB_Backup extends MMB_Core {
         $this->update_tasks($tasks);
         //update_option('mwp_backup_tasks', $tasks);
         return true;
-        
     }
     
     /**
@@ -2858,7 +2832,6 @@ class MMB_Backup extends MMB_Core {
             @rmdir(MWP_DB_DIR);
         }
         
-        
         //clean_old folder?
         if ((isset($files[0]) && basename($files[0]) == 'index.php' && count($files) == 1) || (empty($files))) {
             foreach ($files as $file) {
@@ -2867,7 +2840,6 @@ class MMB_Backup extends MMB_Core {
             @rmdir(WP_CONTENT_DIR . '/' . md5('mmb-worker') . '/mwp_backups');
             @rmdir(WP_CONTENT_DIR . '/' . md5('mmb-worker'));
         }
-        
         
         foreach ($new as $b) {
             $files[] = $b;
@@ -2919,72 +2891,72 @@ class MMB_Backup extends MMB_Core {
         if (!empty($task)) {
             extract($task['task_args']);
         }
-
+		
         $results = $task['task_results'];
         
         if (is_array($results) && count($results)) {
             $backup_file = $results[count($results) - 1]['server']['file_path'];
-            $size = $results[count($results) - 1]['size'];
-            if (!$del_host_file) {
-            	$file_url = $results[count($results) - 1]['server']['file_url'];
-            }
         }
         
         if ($backup_file && file_exists($backup_file)) {
             //FTP, Amazon S3, Dropbox or Google Drive
             if (isset($account_info['mwp_ftp']) && !empty($account_info['mwp_ftp'])) {
-                $account_info['mwp_ftp']['backup_file'] = $backup_file;
+            	$this->update_status($task_name, $this->statuses['ftp']);
+            	$account_info['mwp_ftp']['backup_file'] = $backup_file;
                 $return                                 = $this->ftp_backup($account_info['mwp_ftp']);
-                
                 if (!(is_array($return) && isset($return['error']))) {
+                	$this->update_status($task_name, $this->statuses['ftp'], true);
                 	$this->update_status($task_name,$this->statuses['finished'], true);
                 }
             }
             
             if (isset($account_info['mwp_amazon_s3']) && !empty($account_info['mwp_amazon_s3'])) {
-                $account_info['mwp_amazon_s3']['backup_file'] = $backup_file;
+            	$this->update_status($task_name, $this->statuses['s3']);
+            	$account_info['mwp_amazon_s3']['backup_file'] = $backup_file;
                 $return                                       = $this->amazons3_backup($account_info['mwp_amazon_s3']);
-                
                 if (!(is_array($return) && isset($return['error']))) {
+                	$this->update_status($task_name, $this->statuses['s3'], true);
                 	$this->update_status($task_name,$this->statuses['finished'], true);
                 }
             }
             
             if (isset($account_info['mwp_dropbox']) && !empty($account_info['mwp_dropbox'])) {
-                $account_info['mwp_dropbox']['backup_file'] = $backup_file;
+            	$this->update_status($task_name, $this->statuses['dropbox']);
+            	$account_info['mwp_dropbox']['backup_file'] = $backup_file;
                 $return                                     = $this->dropbox_backup($account_info['mwp_dropbox']);
-                
                 if (!(is_array($return) && isset($return['error']))) {
+                	$this->update_status($task_name, $this->statuses['dropbox'], true);
                 	$this->update_status($task_name,$this->statuses['finished'], true);
                 }
             }
             
             if (isset($account_info['mwp_email']) && !empty($account_info['mwp_email'])) {
-                $account_info['mwp_email']['file_path'] = $backup_file;
-                $account_info['mwp_email']['task_name'] = 'Backup Now';
+            	$this->update_status($task_name, $this->statuses['email']);
+            	$account_info['mwp_email']['file_path'] = $backup_file;
                 $return                                 = $this->email_backup($account_info['mwp_email']);
-                
                 if (!(is_array($return) && isset($return['error']))) {
+                	$this->update_status($task_name, $this->statuses['email'], true);
                 	$this->update_status($task_name,$this->statuses['finished'], true);
                 }
             }
             
             if (isset($account_info['mwp_google_drive']) && !empty($account_info['mwp_google_drive'])) {
+            	$this->update_status($task_name, $this->statuses['google_drive']);
             	$account_info['mwp_google_drive']['backup_file'] = $backup_file;
             	$return                                       = $this->google_drive_backup($account_info['mwp_google_drive']);
-            	
             	if (!(is_array($return) && isset($return['error']))) {
+            		$this->update_status($task_name, $this->statuses['google_drive'], true);
             		$this->update_status($task_name,$this->statuses['finished'], true);
             	}
             }
             
+            $tasks = $this->tasks;
             @file_put_contents(MWP_BACKUP_DIR.'/mwp_db/index.php', '');
             if ($return == true && $del_host_file) {
                 @unlink($backup_file);
-                unset($tasks[$task_name]['task_results'][count($results) - 1]['server']);
-                $this->update_tasks($tasks);
-                //update_option('mwp_backup_tasks', $tasks);
-            } 
+                unset($tasks[$task_name]['task_results'][count($tasks[$task_name]['task_results']) - 1]['server']);
+            }
+            $this->update_tasks($tasks);
         } else {
             $return = array(
                 'error' => 'Backup file not found on your server. Please try again.'
@@ -3011,13 +2983,12 @@ class MMB_Backup extends MMB_Core {
             include_once(ABSPATH . WPINC . '/class-http.php');
         }
         
-        $old_worker = (MMB_WORKER_VERSION <= '3.9.22');
-        
+        $worker_upto_3_9_22 = (MMB_WORKER_VERSION <= '3.9.22'); // worker version is less or equals to 3.9.22
         $params         = array('timeout'=>100);
         $params['body'] = $args;
         $result         = wp_remote_post($url, $params);
         
-        if ($old_worker) {
+        if ($worker_upto_3_9_22) {
 	        if (is_array($result) && $result['body'] == 'mwp_delete_task') {
 	            //$tasks = $this->get_backup_settings();
 	            $tasks = $this->tasks;
@@ -3207,8 +3178,6 @@ class MMB_Backup extends MMB_Core {
 	 * @return	void
 	 */
 	function remote_upload($task_name, $backup_file, $del_host_file) {
-		$success_emails = false;
-		$failed_emails = false;
 		$this->set_memory();
 		
 		$tasks = $this->tasks;
@@ -3217,34 +3186,20 @@ class MMB_Backup extends MMB_Core {
         if (!empty($task)) {
             extract($task['task_args']);
         }
-        
-        $last_task_result = $task['task_results'][count($task['task_results']) - 1];
-        $size = $last_task_result['size'];
-        if (!$del_host_file) {
-        	$file_url = $last_task_result['server']['file_url'];
-        }
-	
+		
 		if (isset($account_info['mwp_ftp']) && !empty($account_info['mwp_ftp'])) {
 			$this->update_status($task_name, $this->statuses['ftp']);
 			$account_info['mwp_ftp']['backup_file'] = $backup_file;
-			
 			$ftp_result     = $this->ftp_backup($account_info['mwp_ftp']);
-			
 			if ($ftp_result !== true && $del_host_file) {
 				@unlink($backup_file);
 			}
-	
-			if (is_array($ftp_result) && isset($ftp_result['error'])) {
-				$error_message = 'Problem Description (upload to FTP failed.)';
-				$this->send_failed_emails($task_name, $failed_emails, $error_message);
-			} else {
+			if (!(is_array($ftp_result) && isset($ftp_result['error']))) {
+				$this->update_status($task_name, $this->statuses['ftp'], true);
 				$this->update_status($task_name,$this->statuses['finished'], true);
-				$this->send_success_emails($task_name, $success_emails, $size, "FTP", $file_url);
 			}
-			$this->wpdb_reconnect();
-			$this->update_status($task_name, $this->statuses['ftp'], true);
 		}
-	
+		
 		if (isset($account_info['mwp_amazon_s3']) && !empty($account_info['mwp_amazon_s3'])) {
 			$this->update_status($task_name, $this->statuses['s3']);
 			$account_info['mwp_amazon_s3']['backup_file'] = $backup_file;
@@ -3252,17 +3207,12 @@ class MMB_Backup extends MMB_Core {
 			if ($amazons3_result !== true && $del_host_file) {
 				@unlink($backup_file);
 			}
-			if (is_array($amazons3_result) && isset($amazons3_result['error'])) {
-				$error_message = 'Problem Description (upload to Amazon S3 failed.)';
-				$this->send_failed_emails($task_name, $failed_emails, $error_message);
-			} else {
+			if (!(is_array($amazons3_result) && isset($amazons3_result['error']))) {
+				$this->update_status($task_name, $this->statuses['s3'], true);
 				$this->update_status($task_name,$this->statuses['finished'], true);
-				$this->send_success_emails($task_name, $success_emails, $size, "Amazon S3", $file_url);
 			}
-			$this->wpdb_reconnect();
-			$this->update_status($task_name, $this->statuses['s3'], true);
 		}
-	
+		
 		if (isset($account_info['mwp_dropbox']) && !empty($account_info['mwp_dropbox'])) {
 			$this->update_status($task_name, $this->statuses['dropbox']);
 			$account_info['mwp_dropbox']['backup_file'] = $backup_file;
@@ -3270,34 +3220,23 @@ class MMB_Backup extends MMB_Core {
 			if ($dropbox_result !== true && $del_host_file) {
 				@unlink($backup_file);
 			}
-	
-			if (is_array($dropbox_result) && isset($dropbox_result['error'])) {
-				$error_message = 'Problem Description (upload to Dropbox failed.)';
-				$this->send_failed_emails($task_name, $failed_emails, $error_message);
-			} else {
+			if (!(is_array($dropbox_result) && isset($dropbox_result['error']))) {
+				$this->update_status($task_name, $this->statuses['dropbox'], true);
 				$this->update_status($task_name,$this->statuses['finished'], true);
-				$this->send_success_emails($task_name, $success_emails, $size, "Dropbox", $file_url);
 			}
-			$this->wpdb_reconnect();
-			$this->update_status($task_name, $this->statuses['dropbox'], true);
 		}
-	
+		
 		if (isset($account_info['mwp_email']) && !empty($account_info['mwp_email'])) {
 			$this->update_status($task_name, $this->statuses['email']);
 			$account_info['mwp_email']['task_name'] = $task_name;
 			$account_info['mwp_email']['file_path'] = $backup_file;
-	
 			$email_result = $this->email_backup($account_info['mwp_email']);
-			if (is_array($email_result) && isset($email_result['error'])) {
-				$error_message = 'Problem Description (upload to Email failed.)';
-				$this->send_failed_emails($task_name, $failed_emails, $error_message);
-			} else {
+			if (!(is_array($email_result) && isset($email_result['error']))) {
+				$this->update_status($task_name, $this->statuses['email'], true);
 				$this->update_status($task_name,$this->statuses['finished'], true);
-				$this->send_success_emails($task_name, $success_emails, $size, "Email", $file_url);
 			}
-			$this->update_status($task_name, $this->statuses['email'], true);
 		}
-	
+		
 		if (isset($account_info['mwp_google_drive']) && !empty($account_info['mwp_google_drive'])) {
 			$this->update_status($task_name, $this->statuses['google_drive']);
 			$account_info['mwp_google_drive']['backup_file'] = $backup_file;
@@ -3305,75 +3244,21 @@ class MMB_Backup extends MMB_Core {
 			if ($google_drive_result !== true && $del_host_file) {
 				@unlink($backup_file);
 			}
-			if (is_array($google_drive_result) && isset($google_drive_result['error'])) {
-				$error_message = 'Problem Description (upload to Google Drive failed.)';
-				$this->send_failed_emails($task_name, $failed_emails, $error_message);
-			} else {
+			if (!(is_array($google_drive_result) && isset($google_drive_result['error']))) {
+				$this->update_status($task_name, $this->statuses['google_drive'], true);
 				$this->update_status($task_name,$this->statuses['finished'], true);
-				$this->send_success_emails($task_name, $success_emails, $size, "Google Drive", $file_url);
 			}
-			$this->wpdb_reconnect();
-			$this->update_status($task_name, $this->statuses['google_drive'], true);
 		}
-	
+		
+		$tasks = $this->tasks;
+		@file_put_contents(MWP_BACKUP_DIR.'/mwp_db/index.php', '');
 		if ($del_host_file) {
 			@unlink($backup_file);
 			unset($tasks[$task_name]['task_results'][count($tasks[$task_name]['task_results']) - 1]['server']);
-			$this->update_tasks($tasks);
 		}
+		$this->update_tasks($tasks);
 	}
 	
-	/**
-	 * Sends emails to email addresses in csv format defined on master, if sheduled task was not successful.
-	 * 
-	 * @param 	string 	$task_name 		name of backup task
-	 * @param 	array 	$failed_emails	array of emails to send
-	 * @param 	string 	$error_message	error message specific to this situation
-	 * @return	void
-	 */
-	function send_failed_emails($task_name, $failed_emails, $error_message) {
-		$headers  = "From: ManageWP <no-reply@managewp.com>\r\n";
-		$headers .= "Reply-To: no-reply@managewp.com\r\n";
-		$headers .= 'Content-type: text/html; charset=iso-8859-1' . "\r\n";
-		$url = site_url();
-		$subject = 'Failed backup notification - ' . $url;
-		$message = "We'd like to inform you that the scheduled backup of $url has failed to complete for backup task $task_name. [$error_message]";
-		
-		if (!empty($failed_emails)) {
-			foreach ($failed_emails as $email) {
-				wp_mail($email, $subject, $message, $headers);
-			}
-		}
-	}
-	
-	/**
-	 * Sends emails to email addresses in csv format defined on master, if sheduled task was successful.
-	 *
-	 * @param 	string 	$task_name 		name of backup task
-	 * @param 	array 	$success_emails	array of emails to send
-	 * @param 	string 	$size			size of archive file
-	 * @param	string	$service		remote destination string
-	 * @param	bool	$url			does email have url to backup file or not
-	 * @return	void
-	 */
-	function send_success_emails($task_name, $success_emails, $size, $service, $file_url = false) {
-		$headers  = "From: ManageWP <no-reply@managewp.com>\r\n";
-		$headers .= "Reply-To: no-reply@managewp.com\r\n";
-		$headers .= 'Content-type: text/html; charset=iso-8859-1' . "\r\n";
-		$url = site_url();
-		$subject = 'Successful backup notification - ' . $url;
-		if ($file_url) {
-			$message = "Scheduled backup of $url has successfully completed. File archive size $size, stored on your server and $service. Click <a href='$file_url'>here</a> to Download the backup file.";
-		} else {
-			$message = "Scheduled backup of $url has successfully completed. File archive size $size, stored on your server and $service.";
-		}
-		
-		if (!empty($success_emails)) {
-			foreach ($success_emails as $email) {
-				wp_mail($email, $subject, $message, $headers);
-			}
-		}
-	}
 }
 
 if( function_exists('add_filter') ) {
@@ -3389,11 +3274,15 @@ if(!function_exists('get_all_files_from_dir')) {
 	 * @return 	array 				List of all files in folder $path, exclude all files in $exclude array
 	 */
 	function get_all_files_from_dir($path, $exclude = array()) {
+		if ($path[strlen($path) - 1] === "/") $path = substr($path, 0, -1);
 		global $directory_tree, $ignore_array;
 		$directory_tree = array();
-		$ignore_array = $exclude;
-		$ignore_array[] = '.';
-		$ignore_array[] = '..';
+		foreach ($exclude as $file) {
+			if (!in_array($file, array('.', '..'))) {
+				if ($file[0] === "/") $path = substr($file, 1);
+				$ignore_array[] = "$path/$file";
+			}
+		}
 		get_all_files_from_dir_recursive($path);
 		return $directory_tree;
 	}
@@ -3409,16 +3298,19 @@ if (!function_exists('get_all_files_from_dir_recursive')) {
 	 * @return 	void
 	 */
 	function get_all_files_from_dir_recursive($path) {
+		if ($path[strlen($path) - 1] === "/") $path = substr($path, 0, -1);
 		global $directory_tree, $ignore_array;
 		$directory_tree_temp = array();
 		$dh = @opendir($path);
-	
+		
 		while (false !== ($file = @readdir($dh))) {
-			if (!in_array($file, $ignore_array)) {
-				if (!is_dir("$path/$file")) {
-					$directory_tree[] = "$path/$file";
-				} else {
-					get_all_files_from_dir_recursive("$path/$file");
+			if (!in_array($file, array('.', '..'))) {
+				if (!in_array("$path/$file", $ignore_array)) {
+					if (!is_dir("$path/$file")) {
+						$directory_tree[] = "$path/$file";
+					} else {
+						get_all_files_from_dir_recursive("$path/$file");
+					}
 				}
 			}
 		}
