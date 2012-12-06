@@ -22,7 +22,7 @@ if(basename($_SERVER['SCRIPT_FILENAME']) == "init.php"):
     exit;
 endif;
 if(!defined('MMB_WORKER_VERSION'))
-	define('MMB_WORKER_VERSION', '3.9.23');
+	define('MMB_WORKER_VERSION', '3.9.24');
 
 if ( !defined('MMB_XFRAME_COOKIE')){
 	$siteurl = function_exists( 'get_site_option' ) ? get_site_option( 'siteurl' ) : get_option( 'siteurl' );
@@ -247,14 +247,14 @@ if( !function_exists ( 'mmb_add_site' )) {
 						$mmb_core->set_master_public_key($public_key);
 						$mmb_core->set_worker_message_id($id);
 						$mmb_core->get_stats_instance();
-						if(is_array($notifications) && !empty($notifications)){
+						if(isset($notifications) && is_array($notifications) && !empty($notifications)){
 							$mmb_core->stats_instance->set_notifications($notifications);
 						}
-						if(is_array($brand) && !empty($brand)){
-							update_option('mwp_worker_brand',$brand);
+						if(isset($brand) && is_array($brand) && !empty($brand)){
+							update_option('mwp_worker_brand', $brand);
 						}
 						
-						if( isset( $add_settigns ) && !empty( $add_settigns ) )
+						if( isset( $add_settigns ) && is_array($add_settigns) && !empty( $add_settigns ) )
 							apply_filters( 'mwp_website_add', $add_settigns );
 							
 						mmb_response($mmb_core->stats_instance->get_initial_stats(), true);
@@ -570,6 +570,7 @@ if( !function_exists ( 'mmb_scheduled_backup' )) {
 	{
 		global $mmb_core;
 		$mmb_core->get_backup_instance();
+		$params["time"] = time();
 		$return = $mmb_core->backup_instance->set_backup_task($params);
 		mmb_response($return, $return);
 	}
@@ -651,6 +652,17 @@ if( !function_exists ( 'mmb_clean_orphan_backups' )) {
 	unset($_POST['backup_cron_action']);
 	return true;
 }*/
+
+add_filter( 'mwp_website_add', 'mmb_readd_backup_task' );
+
+if (!function_exists('mmb_readd_backup_task')) {
+	function mmb_readd_backup_task($params = array()) {
+		global $mmb_core;
+		$backup_instance = $mmb_core->get_backup_instance();
+		$settings = $backup_instance->readd_tasks($params);
+		return $settings;
+	}
+}
 
 if( !function_exists ( 'mmb_update_worker_plugin' )) {
 	function mmb_update_worker_plugin($params)
@@ -1089,11 +1101,10 @@ if( !function_exists('mmb_call_scheduled_remote_upload') ){
 	function mmb_call_scheduled_remote_upload($args) {
 		global $mmb_core, $_wp_using_ext_object_cache;
 		$_wp_using_ext_object_cache = false;
-		extract($args);
 		
 		$mmb_core->get_backup_instance();
-		if (isset($task_name) && isset($backup_file) && isset($del_host_file)) {
-			$mmb_core->backup_instance->remote_upload($task_name, $backup_file, $del_host_file);
+		if (isset($args['task_name'])) {
+			$mmb_core->backup_instance->remote_backup_now($args);
 		}
 	}
 }

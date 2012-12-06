@@ -230,7 +230,7 @@ class MMB_Helper
 		global $wpdb;
 		$option_name = '_site_transient_'. $option_name;
 		
-		$result = $wpdb->get_var( $wpdb->prepare("SELECT `meta_value` FROM `{$wpdb->sitemeta}` WHERE meta_key = '{$option_name}' AND `site_id` = '{$this->mmb_multisite}' ")); 
+		$result = $wpdb->get_var( $wpdb->prepare("SELECT `meta_value` FROM `{$wpdb->sitemeta}` WHERE meta_key = %s AND `site_id` = %s", $option_name, $this->mmb_multisite)); 
 		$result = maybe_unserialize($result);
 		return $result;
 	}

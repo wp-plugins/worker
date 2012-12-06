@@ -198,7 +198,7 @@ class MMB_Backup extends MMB_Core {
                 }
             }
             
-            if ($time) { //set next result time before backup
+            if (isset($time) && $time) { //set next result time before backup
                 if (is_array($before[$task_name]['task_results'])) {
                     $before[$task_name]['task_results'] = array_values($before[$task_name]['task_results']);
                 }
@@ -300,12 +300,12 @@ class MMB_Backup extends MMB_Core {
                     		'error' => $error
                     	));
                     } else {
-                    	$setting = $this->tasks[$task_name];
+                    	//$setting = $this->tasks[$task_name];
                     	if (@count($setting['task_args']['account_info'])) {
-                    		$last_result = $setting['task_results'][count($setting['task_results']) - 1];
+                    		/*$last_result = $setting['task_results'][count($setting['task_results']) - 1];
                     		$backup_file = $last_result['server']['file_path'];
-                    		$del_host_file = $setting['task_args']['del_host_file'];
-                    		wp_schedule_single_event(time(), 'mmb_scheduled_remote_upload', array('args' => array('task_name' => $task_name, 'backup_file' => $backup_file, 'del_host_file' => $del_host_file)));
+                    		$del_host_file = $setting['task_args']['del_host_file'];*/
+                    		wp_schedule_single_event(time(), 'mmb_scheduled_remote_upload', array('args' => array('task_name' => $task_name)));
                     		//spawn_cron(time() + 150);
                     		//wp_remote_post(site_url('index.php'), array( 'timeout' => 0.01, 'blocking' => false, 'sslverify' => apply_filters( 'https_local_ssl_verify', true ) ));
                     		//update_option('_transient_doing_cron', 0);
@@ -535,7 +535,7 @@ class MMB_Backup extends MMB_Core {
         
         // If there are not remote destination, set up task status to finished
         if (@count($backup_settings[$task_name]['task_args']['account_info']) == 0) {
-        	$this->update_status($task_name,$this->statuses['finished'], true);
+        	$this->update_status($task_name, $this->statuses['finished'], true);
         }
         
         return true;
@@ -1065,15 +1065,17 @@ class MMB_Backup extends MMB_Core {
      * @param 	string	$file	absolute path to file in which dump should be placed
      * @return	string|array	path to dump file if successful, or an array with error message if is failed
      */
-    function backup_db_php($file) {
+	function backup_db_php($file) {
         global $wpdb;
         $tables = $wpdb->get_results('SHOW TABLES', ARRAY_N);
         foreach ($tables as $table) {
             //drop existing table
             $dump_data    = "DROP TABLE IF EXISTS $table[0];";
+            file_put_contents($file, $dump_data, FILE_APPEND);
             //create table
             $create_table = $wpdb->get_row("SHOW CREATE TABLE $table[0]", ARRAY_N);
-            $dump_data .= "\n\n" . $create_table[1] . ";\n\n";
+            $dump_data = "\n\n" . $create_table[1] . ";\n\n";
+            file_put_contents($file, $dump_data, FILE_APPEND);
             
             $count = $wpdb->get_var("SELECT count(*) FROM $table[0]");
             if ($count > 100)
@@ -1088,7 +1090,7 @@ class MMB_Backup extends MMB_Core {
                 if (is_array($rows)) {
                     foreach ($rows as $row) {
                         //insert single row
-                        $dump_data .= "INSERT INTO $table[0] VALUES(";
+                        $dump_data = "INSERT INTO $table[0] VALUES(";
                         $num_values = count($row);
                         $j          = 1;
                         foreach ($row as $value) {
@@ -1099,13 +1101,14 @@ class MMB_Backup extends MMB_Core {
                             unset($value);
                         }
                         $dump_data .= ");\n";
+                        file_put_contents($file, $dump_data, FILE_APPEND);
                     }
                 }
             }
-            $dump_data .= "\n\n\n";
+            $dump_data = "\n\n\n";
+            file_put_contents($file, $dump_data, FILE_APPEND);
             
             unset($rows);
-            file_put_contents($file, $dump_data, FILE_APPEND);
             unset($dump_data);
         }
         
@@ -1314,42 +1317,44 @@ class MMB_Backup extends MMB_Core {
             
             //Replace options
             $query = "SELECT option_value FROM " . $new_table_prefix . "options WHERE option_name = 'home'";
-            $old   = $wpdb->get_var($wpdb->prepare($query));
+            $old   = $wpdb->get_var($query);
             $old   = rtrim($old, "/");
-            $query = "UPDATE " . $new_table_prefix . "options SET option_value = '$home' WHERE option_name = 'home'";
-            $wpdb->query($wpdb->prepare($query));
-            $query = "UPDATE " . $new_table_prefix . "options  SET option_value = '$home' WHERE option_name = 'siteurl'";
-            $wpdb->query($wpdb->prepare($query));
+            $query = "UPDATE " . $new_table_prefix . "options SET option_value = %s WHERE option_name = 'home'";
+            $wpdb->query($wpdb->prepare($query, $home));
+            $query = "UPDATE " . $new_table_prefix . "options  SET option_value = %s WHERE option_name = 'siteurl'";
+            $wpdb->query($wpdb->prepare($query, $home));
             //Replace content urls
-            $query = "UPDATE " . $new_table_prefix . "posts SET post_content = REPLACE (post_content, '$old','$home') WHERE post_content REGEXP 'src=\"(.*)$old(.*)\"' OR post_content REGEXP 'href=\"(.*)$old(.*)\"'";
-            $wpdb->query($wpdb->prepare($query));
+            $regexp1 = 'src="(.*)$old(.*)"';
+            $regexp2 = 'href="(.*)$old(.*)"';
+            $query = "UPDATE " . $new_table_prefix . "posts SET post_content = REPLACE (post_content, %s,%s) WHERE post_content REGEXP %s OR post_content REGEXP %s";
+            $wpdb->query($wpdb->prepare($query, array($old, $home, $regexp1, $regexp2)));
             
             if (trim($new_password)) {
                 $new_password = wp_hash_password($new_password);
             }
             if (!trim($clone_from_url) && !trim($mwp_clone)) {
                 if ($new_user && $new_password) {
-                    $query = "UPDATE " . $new_table_prefix . "users SET user_login = '$new_user', user_pass = '$new_password' WHERE user_login = '$old_user'";
-                    $wpdb->query($wpdb->prepare($query));
+                    $query = "UPDATE " . $new_table_prefix . "users SET user_login = %s, user_pass = %s WHERE user_login = '$old_user'";
+                    $wpdb->query($wpdb->prepare($query, $new_user, $new_password));
                 }
             } else {
                 if ($clone_from_url) {
                     if ($new_user && $new_password) {
-                        $query = "UPDATE " . $new_table_prefix . "users SET user_pass = '$new_password' WHERE user_login = '$new_user'";
-                        $wpdb->query($wpdb->prepare($query));
+                        $query = "UPDATE " . $new_table_prefix . "users SET user_pass = %s WHERE user_login = %s";
+                        $wpdb->query($wpdb->prepare($query, $new_password, $new_user));
                     }
                 }
                 
                 if ($mwp_clone) {
                     if ($admin_email) {
                         //Clean Install
-                        $query = "UPDATE " . $new_table_prefix . "options SET option_value = '$admin_email' WHERE option_name = 'admin_email'";
-                        $wpdb->query($wpdb->prepare($query));
+                        $query = "UPDATE " . $new_table_prefix . "options SET option_value = %s WHERE option_name = 'admin_email'";
+                        $wpdb->query($wpdb->prepare($query, $admin_email));
                         $query     = "SELECT * FROM " . $new_table_prefix . "users LIMIT 1";
                         $temp_user = $wpdb->get_row($query);
                         if (!empty($temp_user)) {
-                            $query = "UPDATE " . $new_table_prefix . "users SET user_email='$admin_email', user_login = '$new_user', user_pass = '$new_password' WHERE user_login = '$temp_user->user_login'";
-                            $wpdb->query($wpdb->prepare($query));
+                            $query = "UPDATE " . $new_table_prefix . "users SET user_email=%s, user_login = %s, user_pass = %s WHERE user_login = %s";
+                            $wpdb->query($wpdb->prepare($query, $admin_email, $new_user, $new_password, $temp_user->user_login));
                         }
                         
                     }
@@ -1359,14 +1364,14 @@ class MMB_Backup extends MMB_Core {
             if (is_array($clone_options) && !empty($clone_options)) {
                 foreach ($clone_options as $key => $option) {
                     if (!empty($key)) {
-                        $query = "SELECT option_value FROM " . $new_table_prefix . "options WHERE option_name = '$key'";
-                        $res   = $wpdb->get_var($query);
+                        $query = "SELECT option_value FROM " . $new_table_prefix . "options WHERE option_name = %s";
+                        $res   = $wpdb->get_var($wpdb->prepare($query, $key));
                         if ($res == false) {
-                            $query = "INSERT INTO " . $new_table_prefix . "options  (option_value,option_name) VALUES('$option','$key')";
-                            $wpdb->query($wpdb->prepare($query));
+                            $query = "INSERT INTO " . $new_table_prefix . "options  (option_value,option_name) VALUES(%s,%s)";
+                            $wpdb->query($wpdb->prepare($query, $option, $key));
                         } else {
-                            $query = "UPDATE " . $new_table_prefix . "options  SET option_value = '$option' WHERE option_name = '$key'";
-                            $wpdb->query($wpdb->prepare($query));
+                            $query = "UPDATE " . $new_table_prefix . "options  SET option_value = %s WHERE option_name = %s";
+                            $wpdb->query($wpdb->prepare($query, $option, $key));
                         }
                     }
                 }
@@ -1374,7 +1379,7 @@ class MMB_Backup extends MMB_Core {
             
             //Remove hit count
             $query = "DELETE FROM " . $new_table_prefix . "options WHERE option_name = 'user_hit_count'";
-           	$wpdb->query($wpdb->prepare($query));
+           	$wpdb->query($query);
             
             //Check for .htaccess permalinks update
             $this->replace_htaccess($home);
@@ -1382,7 +1387,7 @@ class MMB_Backup extends MMB_Core {
         	//restore worker options
             if (is_array($restore_options) && !empty($restore_options)) {
                 foreach ($restore_options as $key => $option) {
-                	update_option($key,$option);
+                	update_option($key, $option);
                 }
             }
         }
@@ -1486,7 +1491,7 @@ class MMB_Backup extends MMB_Core {
     function optimize_tables() {
         global $wpdb;
         $query  = 'SHOW TABLES';
-        $tables = $wpdb->get_results($wpdb->prepare($query), ARRAY_A);
+        $tables = $wpdb->get_results($query, ARRAY_A);
         foreach ($tables as $table) {
             if (in_array($table['Engine'], array(
                 'MyISAM',
@@ -1776,6 +1781,9 @@ class MMB_Backup extends MMB_Core {
      * [ftp_hostname] -> ftp hostname of remote host
      * [ftp_remote_folder] -> folder on remote site which backup file should be upload to
      * [ftp_site_folder] -> subfolder with site name in ftp_remote_folder which backup file should be upload to
+     * [ftp_passive] -> passive mode or not
+     * [ftp_ssl] -> ssl or not
+     * [ftp_port] -> number of port for ssl protocol
      * [backup_file] -> absolute path of backup file on local server
      * @return 	bool|array		true is successful, array with error message if not
      */
@@ -1786,6 +1794,12 @@ class MMB_Backup extends MMB_Core {
         if ($ftp_ssl) {
             if (function_exists('ftp_ssl_connect')) {
                 $conn_id = ftp_ssl_connect($ftp_hostname,$port);
+                if ($conn_id === false) {
+                	return array(
+                			'error' => 'Failed to connect to ' . $ftp_hostname,
+                			'partial' => 1
+                	);
+                }
             } else {
                 return array(
                     'error' => 'FTPS disabled: Please enable ftp_ssl_connect in PHP',
@@ -1827,10 +1841,11 @@ class MMB_Backup extends MMB_Core {
         @ftp_mkdir($conn_id, $ftp_remote_folder);
     	
         $upload = @ftp_put($conn_id, $ftp_remote_folder . '/' . basename($backup_file), $backup_file, FTP_BINARY);
+        
         if ($upload === false) { //Try ascii
             $upload = @ftp_put($conn_id, $ftp_remote_folder . '/' . basename($backup_file), $backup_file, FTP_ASCII);
         }
-        ftp_close($conn_id);
+        @ftp_close($conn_id);
         
         if ($upload === false) {
             return array(
@@ -2078,8 +2093,7 @@ class MMB_Backup extends MMB_Core {
 	            if ($s3->putObjectFile($backup_file, $as3_bucket, $as3_directory . '/' . basename($backup_file), mwpS3::ACL_PRIVATE)) {
 	                return true;
 	            } else {
-	            	
-	                return array(
+	            	return array(
 	                    'error' => 'Failed to upload to Amazon S3. Please check your details and set upload/delete permissions on your bucket.',
 	                    'partial' => 1
 	                );
@@ -2834,15 +2848,19 @@ class MMB_Backup extends MMB_Core {
         
         //clean_old folder?
         if ((isset($files[0]) && basename($files[0]) == 'index.php' && count($files) == 1) || (empty($files))) {
-            foreach ($files as $file) {
-                @unlink($file);
+            if (!empty($files)) {
+        		foreach ($files as $file) {
+                	@unlink($file);
+            	}
             }
             @rmdir(WP_CONTENT_DIR . '/' . md5('mmb-worker') . '/mwp_backups');
             @rmdir(WP_CONTENT_DIR . '/' . md5('mmb-worker'));
         }
         
-        foreach ($new as $b) {
-            $files[] = $b;
+        if (!empty($new)) {
+        	foreach ($new as $b) {
+            	$files[] = $b;
+        	}
         }
         $deleted = array();
         
@@ -2904,9 +2922,11 @@ class MMB_Backup extends MMB_Core {
             	$this->update_status($task_name, $this->statuses['ftp']);
             	$account_info['mwp_ftp']['backup_file'] = $backup_file;
                 $return                                 = $this->ftp_backup($account_info['mwp_ftp']);
+                $this->wpdb_reconnect();
+                
                 if (!(is_array($return) && isset($return['error']))) {
                 	$this->update_status($task_name, $this->statuses['ftp'], true);
-                	$this->update_status($task_name,$this->statuses['finished'], true);
+                	$this->update_status($task_name, $this->statuses['finished'], true);
                 }
             }
             
@@ -2914,9 +2934,11 @@ class MMB_Backup extends MMB_Core {
             	$this->update_status($task_name, $this->statuses['s3']);
             	$account_info['mwp_amazon_s3']['backup_file'] = $backup_file;
                 $return                                       = $this->amazons3_backup($account_info['mwp_amazon_s3']);
+                $this->wpdb_reconnect();
+                
                 if (!(is_array($return) && isset($return['error']))) {
                 	$this->update_status($task_name, $this->statuses['s3'], true);
-                	$this->update_status($task_name,$this->statuses['finished'], true);
+                	$this->update_status($task_name, $this->statuses['finished'], true);
                 }
             }
             
@@ -2924,19 +2946,24 @@ class MMB_Backup extends MMB_Core {
             	$this->update_status($task_name, $this->statuses['dropbox']);
             	$account_info['mwp_dropbox']['backup_file'] = $backup_file;
                 $return                                     = $this->dropbox_backup($account_info['mwp_dropbox']);
+                $this->wpdb_reconnect();
+                
                 if (!(is_array($return) && isset($return['error']))) {
                 	$this->update_status($task_name, $this->statuses['dropbox'], true);
-                	$this->update_status($task_name,$this->statuses['finished'], true);
+                	$this->update_status($task_name, $this->statuses['finished'], true);
                 }
             }
             
             if (isset($account_info['mwp_email']) && !empty($account_info['mwp_email'])) {
             	$this->update_status($task_name, $this->statuses['email']);
+            	$account_info['mwp_email']['task_name'] = $task_name;
             	$account_info['mwp_email']['file_path'] = $backup_file;
                 $return                                 = $this->email_backup($account_info['mwp_email']);
+                $this->wpdb_reconnect();
+                
                 if (!(is_array($return) && isset($return['error']))) {
                 	$this->update_status($task_name, $this->statuses['email'], true);
-                	$this->update_status($task_name,$this->statuses['finished'], true);
+                	$this->update_status($task_name, $this->statuses['finished'], true);
                 }
             }
             
@@ -2944,9 +2971,11 @@ class MMB_Backup extends MMB_Core {
             	$this->update_status($task_name, $this->statuses['google_drive']);
             	$account_info['mwp_google_drive']['backup_file'] = $backup_file;
             	$return                                       = $this->google_drive_backup($account_info['mwp_google_drive']);
+            	$this->wpdb_reconnect();
+            	
             	if (!(is_array($return) && isset($return['error']))) {
             		$this->update_status($task_name, $this->statuses['google_drive'], true);
-            		$this->update_status($task_name,$this->statuses['finished'], true);
+            		$this->update_status($task_name, $this->statuses['finished'], true);
             	}
             }
             
@@ -3116,12 +3145,12 @@ class MMB_Backup extends MMB_Core {
 	}
     
 	/**
-	 * Readd tasks on new website add.
+	 * Re-add tasks on website re-add.
 	 * 
 	 * @param 	array 	$params	arguments passed to function
 	 * @return 	array			$params without backups
 	 */
-	public static function readd_tasks($params = array()) {
+	public function readd_tasks($params = array()) {
 		global $mmb_core;
 		
 		if( empty($params) || !isset($params['backups']) )
@@ -3169,101 +3198,11 @@ class MMB_Backup extends MMB_Core {
 		return $params;
 	}
 	
-	/**
-	 * Upload to remote destination in the second step for scheduled backup run by cron.
-	 * 
-	 * @param 	string 	$task_name		name of backup task
-	 * @param 	string 	$backup_file	absolute path of local backup archive
-	 * @param 	bool 	$del_host_file	should be deleted local backup archive or not
-	 * @return	void
-	 */
-	function remote_upload($task_name, $backup_file, $del_host_file) {
-		$this->set_memory();
-		
-		$tasks = $this->tasks;
-        $task  = $tasks[$task_name];
-        
-        if (!empty($task)) {
-            extract($task['task_args']);
-        }
-		
-		if (isset($account_info['mwp_ftp']) && !empty($account_info['mwp_ftp'])) {
-			$this->update_status($task_name, $this->statuses['ftp']);
-			$account_info['mwp_ftp']['backup_file'] = $backup_file;
-			$ftp_result     = $this->ftp_backup($account_info['mwp_ftp']);
-			if ($ftp_result !== true && $del_host_file) {
-				@unlink($backup_file);
-			}
-			if (!(is_array($ftp_result) && isset($ftp_result['error']))) {
-				$this->update_status($task_name, $this->statuses['ftp'], true);
-				$this->update_status($task_name,$this->statuses['finished'], true);
-			}
-		}
-		
-		if (isset($account_info['mwp_amazon_s3']) && !empty($account_info['mwp_amazon_s3'])) {
-			$this->update_status($task_name, $this->statuses['s3']);
-			$account_info['mwp_amazon_s3']['backup_file'] = $backup_file;
-			$amazons3_result      = $this->amazons3_backup($account_info['mwp_amazon_s3']);
-			if ($amazons3_result !== true && $del_host_file) {
-				@unlink($backup_file);
-			}
-			if (!(is_array($amazons3_result) && isset($amazons3_result['error']))) {
-				$this->update_status($task_name, $this->statuses['s3'], true);
-				$this->update_status($task_name,$this->statuses['finished'], true);
-			}
-		}
-		
-		if (isset($account_info['mwp_dropbox']) && !empty($account_info['mwp_dropbox'])) {
-			$this->update_status($task_name, $this->statuses['dropbox']);
-			$account_info['mwp_dropbox']['backup_file'] = $backup_file;
-			$dropbox_result     = $this->dropbox_backup($account_info['mwp_dropbox']);
-			if ($dropbox_result !== true && $del_host_file) {
-				@unlink($backup_file);
-			}
-			if (!(is_array($dropbox_result) && isset($dropbox_result['error']))) {
-				$this->update_status($task_name, $this->statuses['dropbox'], true);
-				$this->update_status($task_name,$this->statuses['finished'], true);
-			}
-		}
-		
-		if (isset($account_info['mwp_email']) && !empty($account_info['mwp_email'])) {
-			$this->update_status($task_name, $this->statuses['email']);
-			$account_info['mwp_email']['task_name'] = $task_name;
-			$account_info['mwp_email']['file_path'] = $backup_file;
-			$email_result = $this->email_backup($account_info['mwp_email']);
-			if (!(is_array($email_result) && isset($email_result['error']))) {
-				$this->update_status($task_name, $this->statuses['email'], true);
-				$this->update_status($task_name,$this->statuses['finished'], true);
-			}
-		}
-		
-		if (isset($account_info['mwp_google_drive']) && !empty($account_info['mwp_google_drive'])) {
-			$this->update_status($task_name, $this->statuses['google_drive']);
-			$account_info['mwp_google_drive']['backup_file'] = $backup_file;
-			$google_drive_result = $this->google_drive_backup($account_info['mwp_google_drive']);
-			if ($google_drive_result !== true && $del_host_file) {
-				@unlink($backup_file);
-			}
-			if (!(is_array($google_drive_result) && isset($google_drive_result['error']))) {
-				$this->update_status($task_name, $this->statuses['google_drive'], true);
-				$this->update_status($task_name,$this->statuses['finished'], true);
-			}
-		}
-		
-		$tasks = $this->tasks;
-		@file_put_contents(MWP_BACKUP_DIR.'/mwp_db/index.php', '');
-		if ($del_host_file) {
-			@unlink($backup_file);
-			unset($tasks[$task_name]['task_results'][count($tasks[$task_name]['task_results']) - 1]['server']);
-		}
-		$this->update_tasks($tasks);
-	}
-	
 }
 
-if( function_exists('add_filter') ) {
+/*if( function_exists('add_filter') ) {
 	add_filter( 'mwp_website_add', 'MMB_Backup::readd_tasks' );
-}
+}*/
 
 if(!function_exists('get_all_files_from_dir')) {
 	/**
@@ -3317,4 +3256,5 @@ if (!function_exists('get_all_files_from_dir_recursive')) {
 		@closedir($dh);
 	}
 }
+
 ?>

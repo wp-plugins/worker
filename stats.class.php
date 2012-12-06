@@ -430,7 +430,7 @@ class MMB_Stats extends MMB_Core
     {
         global $current_user, $wpdb;
         $user_blogs = get_blogs_of_user( $current_user->ID );
-		$network_blogs = $wpdb->get_results( $wpdb->prepare("select `blog_id`, `site_id` from `{$wpdb->blogs}`") );
+		$network_blogs = $wpdb->get_results( "select `blog_id`, `site_id` from `{$wpdb->blogs}`" );
 		if ($this->network_admin_install == '1' && is_super_admin()) {
 			if (!empty($network_blogs)) {
                 $blogs = array();
