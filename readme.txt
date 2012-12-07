@@ -3,7 +3,7 @@ Contributors: freediver
 Donate link: https://www.networkforgood.org/donation/MakeDonation.aspx?ORGID2=520781390
 Tags: admin, administration, amazon, api, authentication, automatic, dashboard, dropbox, events, integration, manage, multsite, notification, performance, s3, security, seo, stats, tracking, managewp
 Requires at least: 3.0
-Tested up to: 3.4.1
+Tested up to: 3.5
 Stable tag: trunk
 
 ManageWP Worker plugin allows you to remotely manage your WordPress sites from one dashboard.
@@ -33,6 +33,12 @@ http://vimeo.com/22099014
 Check out [ManageWP.com](http://managewp.com/ "Manage Multiple Blogs").
 
 == Changelog ==  
+
+= 3.9.24 =
+- New: Better support for large database dumps
+- Fix: PHP notice for WordPress 3.5
+- Fix: Support for automatic backup reports
+- Fix: Incorrect backup result message for S3 large files 
 
 = 3.9.23 =
 - New: SEO reports can be branded and viewed by sharing an URL

@@ -1334,8 +1334,8 @@ class MMB_Backup extends MMB_Core {
             }
             if (!trim($clone_from_url) && !trim($mwp_clone)) {
                 if ($new_user && $new_password) {
-                    $query = "UPDATE " . $new_table_prefix . "users SET user_login = %s, user_pass = %s WHERE user_login = '$old_user'";
-                    $wpdb->query($wpdb->prepare($query, $new_user, $new_password));
+                    $query = "UPDATE " . $new_table_prefix . "users SET user_login = %s, user_pass = %s WHERE user_login = %s";
+                    $wpdb->query($wpdb->prepare($query, $new_user, $new_password, $old_user));
                 }
             } else {
                 if ($clone_from_url) {

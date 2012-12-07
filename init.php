@@ -4,7 +4,7 @@ Plugin Name: ManageWP - Worker
 Plugin URI: http://managewp.com/
 Description: Manage all your blogs from one dashboard. Visit <a href="http://managewp.com">ManageWP.com</a> to sign up.
 Author: ManageWP
-Version: 3.9.23
+Version: 3.9.24
 Author URI: http://managewp.com
 */
 
