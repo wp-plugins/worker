@@ -255,6 +255,9 @@ class MMB_Backup extends MMB_Core {
                         $check = $this->validate_task($check_data, $setting['task_args']['url']);
                         $worker_upto_3_9_22 = (MMB_WORKER_VERSION <= '3.9.22');  // worker version is less or equals to 3.9.22
                         
+                        // This is the patch done in worker 3.9.22 because old worked provided message in the following format:
+                        // token - not found or token - {...json...}
+                        // The new message is a serialized string with google_drive_token or message.
                         if ($worker_upto_3_9_22) {
 	                        $potential_token = substr($check, 8);
 	                        if (substr($check, 0, 8) == 'token - ' && $potential_token != 'not found') {
@@ -278,7 +281,7 @@ class MMB_Backup extends MMB_Core {
                         'args' => $settings[$task_name]['task_args']  
                     );
                     
-                    if($check != 'paused'){
+                    if ($check != 'paused') {
                     	$update['time'] = time();
                     }
                     
@@ -300,28 +303,26 @@ class MMB_Backup extends MMB_Core {
                     		'error' => $error
                     	));
                     } else {
-                    	//$setting = $this->tasks[$task_name];
                     	if (@count($setting['task_args']['account_info'])) {
-                    		/*$last_result = $setting['task_results'][count($setting['task_results']) - 1];
-                    		$backup_file = $last_result['server']['file_path'];
-                    		$del_host_file = $setting['task_args']['del_host_file'];*/
-                    		wp_schedule_single_event(time(), 'mmb_scheduled_remote_upload', array('args' => array('task_name' => $task_name)));
-                    		//spawn_cron(time() + 150);
-                    		//wp_remote_post(site_url('index.php'), array( 'timeout' => 0.01, 'blocking' => false, 'sslverify' => apply_filters( 'https_local_ssl_verify', true ) ));
-                    		//update_option('_transient_doing_cron', 0);
-                    		/*$nonce = substr(wp_hash(wp_nonce_tick() . 'mmb-backup-nonce' . 0, 'nonce'), -12, 10);
-                    		 $cron_url = site_url('index.php');
+                    		// Old way through sheduling.
+                    		// wp_schedule_single_event(time(), 'mmb_scheduled_remote_upload', array('args' => array('task_name' => $task_name)));
+                    		$nonce = substr(wp_hash(wp_nonce_tick() . 'mmb-backup-nonce' . 0, 'nonce'), -12, 10);
+                    		$cron_url = site_url('index.php');
+                    		$backup_file = $this->tasks[$task_name]['task_results'][count($this->tasks[$task_name]['task_results']) - 1]['server']['file_url'];
+                    		$del_host_file = $this->tasks[$task_name]['task_args']['del_host_file'];
+                    		$public_key = get_option('_worker_public_key');
                     		$args = array(
                     			'body' => array(
                     				'backup_cron_action' => 'mmb_remote_upload',
                     				'args' => json_encode(array('task_name' => $task_name, 'backup_file' => $backup_file, 'del_host_file' => $del_host_file)),
                     				'mmb_backup_nonce' => $nonce,
+                    				'public_key' => $public_key,
                     			),
                     			'timeout' => 0.01,
                     			'blocking' => false,
                     			'sslverify' => apply_filters('https_local_ssl_verify', true)
                     		);
-                    		wp_remote_post($cron_url, $args);*/
+                    		wp_remote_post($cron_url, $args);
                     	}
                     }
                     
@@ -378,8 +379,8 @@ class MMB_Backup extends MMB_Core {
      * All backups are compressed by zip and placed in wp-content/managewp/backups folder.
      *
      * @param	string					$args			arguments passed from master 
-     * [type] -> db, full,
-     * [what] -> daily, weekly, monthly,
+     * [type] -> db, full
+     * [what] -> daily, weekly, monthly
      * [account_info] -> remote destinations ftp, amazons3, dropbox, google_drive, email with their parameters
      * [include] -> array of folders from site root which are included to backup (wp-admin, wp-content, wp-includes are default)
      * [exclude] -> array of files of folders to exclude, relative to site's root
@@ -734,6 +735,7 @@ class MMB_Backup extends MMB_Core {
     	
     	$exclude_file_data = '';
     	
+    	// TODO: Prevent to $exclude include blank string '', beacuse zip 12 error will be occured.
     	if (!empty($exclude)) {
     		foreach ($exclude as $data) {
     			if (is_dir(ABSPATH . $data)) {

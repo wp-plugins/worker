@@ -145,7 +145,7 @@ class MMB_Core extends MMB_Helper
 		
 		add_action('admin_init', array(&$this,'admin_actions'));   
 		add_action('init', array( &$this, 'mmb_remote_action'), 9999);
-		//add_action('setup_theme', 'mmb_run_backup_action', 1);
+		add_action('setup_theme', 'mmb_run_backup_action', 1);
 		add_action('setup_theme', 'mmb_parse_request');
 		add_action('set_auth_cookie', array( &$this, 'mmb_set_auth_cookie'));
 		add_action('set_logged_in_cookie', array( &$this, 'mmb_set_logged_in_cookie'));
