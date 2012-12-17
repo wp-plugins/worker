@@ -565,12 +565,12 @@ if( !function_exists ( 'mmb_get_backup_req' )) {
 	}
 }
 
+// Fires when Backup Now, or some backup task is saved.
 if( !function_exists ( 'mmb_scheduled_backup' )) {
 	function mmb_scheduled_backup($params)
 	{
 		global $mmb_core;
 		$mmb_core->get_backup_instance();
-		$params["time"] = time();
 		$return = $mmb_core->backup_instance->set_backup_task($params);
 		mmb_response($return, $return);
 	}
@@ -639,19 +639,22 @@ if( !function_exists ( 'mmb_clean_orphan_backups' )) {
 	}
 }
 
-/*function mmb_run_backup_action() {
+function mmb_run_backup_action() {
 	if (!wp_verify_nonce($_POST['mmb_backup_nonce'], 'mmb-backup-nonce')) return false;
-	$args = @unserialize(stripslashes($_POST['args']));
+	$public_key = get_option('_worker_public_key');
+	if ($public_key !== $_POST['public_key']) return false;
+	$args = @json_decode(stripslashes($_POST['args']), true);
 	if (!$args) return false;
 	$cron_action = isset($_POST['backup_cron_action']) ? $_POST['backup_cron_action'] : false;
 	if ($cron_action) {
 		do_action($cron_action, $args);
 	}
+	//unset($_POST['public_key']);
 	unset($_POST['mmb_backup_nonce']);
 	unset($_POST['args']);
 	unset($_POST['backup_cron_action']);
 	return true;
-}*/
+}
 
 add_filter( 'mwp_website_add', 'mmb_readd_backup_task' );
 
@@ -1094,8 +1097,8 @@ if( !function_exists('mwp_check_backup_tasks') ){
 }
 
 // Remote upload in the second request.
-add_action('mmb_scheduled_remote_upload', 'mmb_call_scheduled_remote_upload');
-//add_action('mmb_remote_upload', 'mmb_call_scheduled_remote_upload');
+// add_action('mmb_scheduled_remote_upload', 'mmb_call_scheduled_remote_upload');
+add_action('mmb_remote_upload', 'mmb_call_scheduled_remote_upload');
 
 if( !function_exists('mmb_call_scheduled_remote_upload') ){
 	function mmb_call_scheduled_remote_upload($args) {
