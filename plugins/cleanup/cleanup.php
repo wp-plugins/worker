@@ -142,7 +142,7 @@ function mmb_handle_overhead($clear = false)
     $total_gain = 0;
 	$table_string = '';
     foreach ($tables as $table) {
-        if (in_array($table['Engine'], array(
+        if (isset($table['Engine']) && in_array($table['Engine'], array(
             'MyISAM',
             'ISAM',
             'HEAP',
@@ -164,7 +164,7 @@ function mmb_handle_overhead($clear = false)
                     $table_string .= $table['Name'] . ",";
                 }
             }
-        } elseif ($table['Engine'] == 'InnoDB') {
+        } elseif (isset($table['Engine']) && $table['Engine'] == 'InnoDB') {
             //$total_gain +=  $table['Data_free'] > 100*1024*1024 ? $table['Data_free'] / 1024 : 0;
         }
     }
