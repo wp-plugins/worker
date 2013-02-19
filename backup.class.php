@@ -253,6 +253,9 @@ class MMB_Backup extends MMB_Core {
                         }
                         
                         $check = $this->validate_task($check_data, $setting['task_args']['url']);
+                        if($check == 'paused' || $check == 'deleted'){
+                            continue;
+                        }
                         $worker_upto_3_9_22 = (MMB_WORKER_VERSION <= '3.9.22');  // worker version is less or equals to 3.9.22
                         
                         // This is the patch done in worker 3.9.22 because old worked provided message in the following format:
@@ -287,10 +290,6 @@ class MMB_Backup extends MMB_Core {
                     
                     //Update task with next schedule
                     $this->set_backup_task($update);
-                    
-                    if($check == 'paused'){
-                    	continue;
-                    }
                     
                 	$result = $this->backup($setting['task_args'], $task_name);
                     $error  = '';
@@ -3023,9 +3022,10 @@ class MMB_Backup extends MMB_Core {
 	        if (is_array($result) && $result['body'] == 'mwp_delete_task') {
 	            //$tasks = $this->get_backup_settings();
 	            $tasks = $this->tasks;
+                unset($tasks[$args['task_name']]);
 	            $this->update_tasks($tasks);
 	            $this->cleanup();
-	            exit;
+	            return 'deleted';
 	        } elseif(is_array($result) && $result['body'] == 'mwp_pause_task'){
 	        	return 'paused';
 	        } elseif(is_array($result) && substr($result['body'], 0, 8) == 'token - '){
@@ -3036,9 +3036,10 @@ class MMB_Backup extends MMB_Core {
         		$response = unserialize($result['body']);
         		if ($response['message'] == 'mwp_delete_task') {
         			$tasks = $this->tasks;
+                    unset($tasks[$args['task_name']]);
         			$this->update_tasks($tasks);
         			$this->cleanup();
-        			exit;
+                    return 'deleted';
         		} elseif ($response['message'] == 'mwp_pause_task') {
         			return 'paused';
         		} elseif ($response['message'] == 'mwp_do_task') {
