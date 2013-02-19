@@ -3,7 +3,7 @@ Contributors: freediver
 Donate link: https://www.networkforgood.org/donation/MakeDonation.aspx?ORGID2=520781390
 Tags: admin, administration, amazon, api, authentication, automatic, dashboard, dropbox, events, integration, manage, multsite, notification, performance, s3, security, seo, stats, tracking, managewp
 Requires at least: 3.0
-Tested up to: 3.5
+Tested up to: 3.5.1
 Stable tag: trunk
 
 ManageWP Worker plugin allows you to remotely manage your WordPress sites from one dashboard.

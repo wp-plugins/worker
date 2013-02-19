@@ -375,7 +375,7 @@ class MMB_Helper
                 );
             }
         } else if ($this->get_random_signature()) {
-            if (md5($data . $this->get_random_signature()) == $signature) {
+            if (md5($data . $this->get_random_signature()) === $signature) {
                 $message_id = $this->set_worker_message_id($message_id);
 				return true;
             }
