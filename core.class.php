@@ -132,7 +132,6 @@ class MMB_Core extends MMB_Helper
 			'get_plugins_themes' => 'mmb_get_plugins_themes',
 			'edit_plugins_themes' => 'mmb_edit_plugins_themes',
 			'worker_brand' => 'mmb_worker_brand',
-			'set_alerts' => 'mmb_set_alerts',
 			'maintenance' => 'mmb_maintenance_mode',
 			'get_dbname' => 'mmb_get_dbname',
 		);

@@ -2,9 +2,9 @@
 /* 
 Plugin Name: ManageWP - Worker
 Plugin URI: http://managewp.com/
-Description: Manage all your blogs from one dashboard. Visit <a href="http://managewp.com">ManageWP.com</a> to sign up.
+Description: Manage Multiple WordPress sites from one dashboard. Visit <a href="https://managewp.com">ManageWP.com</a> to sign up.
 Author: ManageWP
-Version: 3.9.24
+Version: 3.9.25
 Author URI: http://managewp.com
 */
 
@@ -22,7 +22,7 @@ if(basename($_SERVER['SCRIPT_FILENAME']) == "init.php"):
     exit;
 endif;
 if(!defined('MMB_WORKER_VERSION'))
-	define('MMB_WORKER_VERSION', '3.9.24');
+	define('MMB_WORKER_VERSION', '3.9.25');
 
 if ( !defined('MMB_XFRAME_COOKIE')){
 	$siteurl = function_exists( 'get_site_option' ) ? get_site_option( 'siteurl' ) : get_option( 'siteurl' );
@@ -145,7 +145,7 @@ if( !function_exists ( 'mmb_parse_request' )) {
 			@set_time_limit(600);
 			
 			if (!$mmb_core->check_if_user_exists($params['username']))
-				mmb_response('Username <b>' . $params['username'] . '</b> does not have administrator capabilities. Enter the correct username in the site options.', false);
+				mmb_response('Username <b>' . $params['username'] . '</b> does not have administrator capabilities. Please check the Admin username.', false);
 			
 			if ($action == 'add_site') {
 				mmb_add_site($params);
@@ -246,6 +246,9 @@ if( !function_exists ( 'mmb_add_site' )) {
 					if ($verify == 1) {
 						$mmb_core->set_master_public_key($public_key);
 						$mmb_core->set_worker_message_id($id);
+						
+						
+		 
 						$mmb_core->get_stats_instance();
 						if(isset($notifications) && is_array($notifications) && !empty($notifications)){
 							$mmb_core->stats_instance->set_notifications($notifications);
@@ -275,6 +278,8 @@ if( !function_exists ( 'mmb_add_site' )) {
 						$mmb_core->set_random_signature($random_key);
 						$mmb_core->set_worker_message_id($id);
 						$mmb_core->set_master_public_key($public_key);
+						
+						
 						$mmb_core->get_stats_instance();						
 						if(is_array($notifications) && !empty($notifications)){
 							$mmb_core->stats_instance->set_notifications($notifications);
@@ -286,10 +291,10 @@ if( !function_exists ( 'mmb_add_site' )) {
 						
 						mmb_response($mmb_core->stats_instance->get_initial_stats(), true);
 					} else
-						mmb_response('Please deactivate & activate ManageWP Worker plugin on your site, then re-add the site to your dashboard.', false);
+						mmb_response('Handshake not successful. Please deactivate, then activate ManageWP Worker plugin on your site, and re-add this site to your dashboard.', false);
 			
 			} else {
-				mmb_response('Please deactivate & activate ManageWP Worker plugin on your site and re-add the site to your dashboard.', false);
+				mmb_response('Handshake not successful. Please deactivate, then activate ManageWP Worker plugin on your site, and re-add this site to your dashboard.', false);
 			}
 		} else {
 			mmb_response('Invalid parameters received. Please try again.', false);
@@ -373,7 +378,7 @@ if( !function_exists ( 'mwp_datasend' )) {
 			$mmb_core->get_stats_instance();
 			
 			$filter = array(
-				'refresh' => '',
+				'refresh' => 'transient',
 				'item_filter' => array(
 					'get_stats' => array(
 						array('updates', array('plugins' => true, 'themes' => true, 'premium' => true )),
@@ -403,7 +408,6 @@ if( !function_exists ( 'mwp_datasend' )) {
 			$datasend['datasend'] = $mmb_core->encrypt_data($data);
 			$datasend['sitehome'] = base64_encode($_mmb_remoteown.'[]'.$_mmb_remoteurl);
 			$datasend['sitehash'] = md5($hash.$_mmb_remoteown.$_mmb_remoteurl);
-			
 			if ( !class_exists('WP_Http') )
                 include_once(ABSPATH . WPINC . '/class-http.php');
 			
@@ -414,12 +418,19 @@ if( !function_exists ( 'mwp_datasend' )) {
 			if(!is_wp_error($result)){
 				if(isset($result['body']) && !empty($result['body'])){
 					$settings = @unserialize($result['body']);
+					/* rebrand worker or set default */
+					$brand = '';
+					if($settings['worker_brand']){
+						$brand = $settings['worker_brand'];
+					}
+					update_option("mwp_worker_brand",$brand);
+					/* change worker version */
 					$w_version = $settings['worker_updates']['version'];
 					$w_url = $settings['worker_updates']['url'];
 					if(version_compare(MMB_WORKER_VERSION, $w_version, '<')){
 						//automatic update
 						$mmb_core->update_worker_plugin(array("download_url" => $w_url));
-					}
+					}					
 				}
 			}else{
 				//$mmb_core->_log($result);
@@ -1044,16 +1055,6 @@ if( !function_exists ( 'mmb_set_notifications' )) {
 	}
 }
 
-if( !function_exists ( 'mmb_set_alerts' )) {
-	function mmb_set_alerts($params)
-	{
-		global $mmb_core;
-			$mmb_core->get_stats_instance();
-			$return = $mmb_core->stats_instance->set_alerts($params);
-			mmb_response(true, true);
-	}
-		
-}
 if( !function_exists ('mmb_get_dbname')) {
 	function mmb_get_dbname($params)
 	{

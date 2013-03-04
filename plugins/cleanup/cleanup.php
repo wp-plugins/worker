@@ -133,11 +133,12 @@ function mmb_delete_all_revisions($filter)
 
 function mmb_handle_overhead($clear = false)
 {
+
     global $wpdb, $mmb_core;
     $tot_data   = 0;
     $tot_idx    = 0;
     $tot_all    = 0;
-    $query      = 'SHOW TABLES';
+    $query      = 'SHOW TABLE STATUS';
     $tables     = $wpdb->get_results($query, ARRAY_A);
     $total_gain = 0;
 	$table_string = '';
@@ -168,7 +169,7 @@ function mmb_handle_overhead($clear = false)
             //$total_gain +=  $table['Data_free'] > 100*1024*1024 ? $table['Data_free'] / 1024 : 0;
         }
     }
-    
+
     if ($clear) {
         $table_string = substr($table_string, 0, strlen($table_string) - 1); //remove last ,
         
@@ -182,6 +183,7 @@ function mmb_handle_overhead($clear = false)
     } else
         return round($total_gain, 3);
 }
+
 
 
 

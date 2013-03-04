@@ -585,9 +585,12 @@ class MMB_Backup extends MMB_Core {
 					@unlink(MWP_BACKUP_DIR.'/mwp_db/index.php');
 					@unlink($db_result);
 					@rmdir(MWP_DB_DIR);
-					 
+
+                    if($archive->error_code!=''){
+                        $archive->error_code = 'pclZip error ('.$archive->error_code . '): .';
+                    }
 					return array(
-						'error' => 'Failed to zip database. pclZip error (' . $archive->error_code . '): .' . $archive->error_string
+						'error' => 'Failed to zip database. ' . $archive->error_code . $archive->error_string
 					);
 				}
 			}

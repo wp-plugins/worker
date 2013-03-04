@@ -453,7 +453,7 @@ class MMB_Post extends MMB_Core
 		
 		if(!empty($filter_posts))
  		{ 
-  			$where.=" AND post_title LIKE '%".mysql_real_escape_string($filter_posts)."%'";
+            $where.=" AND (post_title LIKE '%".mysql_real_escape_string($filter_posts)."%' OR post_content LIKE '%".mysql_real_escape_string($filter_posts)."%')";
 	 	}
  
 		if(!empty($mwp_get_posts_date_from) && !empty($mwp_get_posts_date_to))

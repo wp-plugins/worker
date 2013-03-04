@@ -1,7 +1,7 @@
 === ManageWP Worker ===
 Contributors: freediver
 Donate link: https://www.networkforgood.org/donation/MakeDonation.aspx?ORGID2=520781390
-Tags: admin, administration, amazon, api, authentication, automatic, dashboard, dropbox, events, integration, manage, multsite, notification, performance, s3, security, seo, stats, tracking, managewp
+Tags: admin, analytics, administration, amazon, api, google drive, authentication, automatic, dashboard, dropbox, events, integration, manage, multsite, notification, performance, s3, security, seo, stats, tracking, managewp
 Requires at least: 3.0
 Tested up to: 3.5.1
 Stable tag: trunk
@@ -10,21 +10,20 @@ ManageWP Worker plugin allows you to remotely manage your WordPress sites from o
 
 == Description ==
 
-[ManageWP](http://managewp.com/ "Manage Multiple Blogs") is a revolutionary plugin that helps users manage multiple WordPress blogs from one dashboard.
+[ManageWP](https://managewp.com/ "Manage Multiple Blogs") is a revolutionary plugin that helps users manage multiple WordPress blogs from one dashboard.
 
 Main features:
 
-*   Secure and fast solution for managing your WordPress sites
+*   Secure and fast solution for managing multiple WordPress sites
 *   One click upgrades for WordPress, plugin and themes across all your sites
 *   Schedule automatic backups of your websites (Amazon S3, Google Drive and Dropbox supported)
 *   One click to access WP admin of any site
 *   Install WordPress, clone or migrate a website to another domain
 *   Bulk install themes and plugins to multiple sites at once
 *   Add sub-users (writers, staff..) to your account
-*   Bulk publish posts to multiple sites at once
 *   SEO Statistics, track your keyword rankings
-*   Uptime monitoring
-*   Much, much more...
+*   Uptime monitoring - receive an SMS notification ifyour site goes down
+*   Bulk publish posts to multiple sites at once
 
 Check out the [ManageWP Tour video](http://vimeo.com/22099014).
 
@@ -33,6 +32,12 @@ http://vimeo.com/22099014
 Check out [ManageWP.com](http://managewp.com/ "Manage Multiple Blogs").
 
 == Changelog ==  
+
+= 3.9.25 =
+- New: Improved Worker branding feature 
+- Fix: Traffic alerts feature was not functioning properly
+- Fix: Backup information was sometimes incorrectly displayed
+- Fix: DB Table overhead was not shown on the dashboard
 
 = 3.9.24 =
 - New: Better support for large database dumps
@@ -238,7 +243,6 @@ Check out [ManageWP.com](http://managewp.com/ "Manage Multiple Blogs").
 * No passwords required
 * Improved clone/backup
 
-
 = 3.6.3 =  
 * Initial public release
 
@@ -246,11 +250,11 @@ Check out [ManageWP.com](http://managewp.com/ "Manage Multiple Blogs").
 
 1. Upload the plugin folder to your /wp-content/plugins/ folder
 2. Go to the Plugins page and activate ManageWP Worker
-3. Visit [ManageWP.com](http://managewp.com/ "Manage Multiple Blogs"), sign up and add your site
+3. Visit [ManageWP.com](https://managewp.com/ "ManageWP"), sign up and add your site
 
 Alternately
 
-1. Visit [ManageWP.com](http://managewp.com/ "Manage Multiple Blogs"), sign up and add your site
+1. Visit [ManageWP.com](https://managewp.com/ "Manage Multiple WordPress Sites"), sign up and add your site
 2. ManageWP will warn you the worker plugin is not installed and offer a link for quick installation
 
 == Screenshots ==
@@ -278,4 +282,4 @@ Make sure you use the latest version of the worker plugin on the site you are tr
 
 = I have problems installing new plugins or upgrading WordPress through ManageWP =
 
-ManageWP Worker relies on properly set file permissions on your server. See the [user guide](http://managewp.com/user-guide#ftp "ManageWP user guide") for more tips.
+ManageWP Worker relies on properly set file permissions on your server. See the [user guide](https://managewp.com/user-guide#ftp "ManageWP user guide") for more tips.
