@@ -137,8 +137,8 @@ class MMB_Core extends MMB_Helper
 		);
 		
 		$mwp_worker_brand = get_option("mwp_worker_brand");
-		
-		if (!$mwp_worker_brand['hide_managed_remotely']) {
+		//!$mwp_worker_brand['hide_managed_remotely']
+		if ($mwp_worker_brand == false || (is_array($mwp_worker_brand) && !array_key_exists('hide_managed_remotely', $mwp_worker_brand))) {
 			add_action('rightnow_end', array( &$this, 'add_right_now_info' ));
 		}
 		
