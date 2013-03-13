@@ -25,9 +25,9 @@ Main features:
 *   Uptime monitoring - receive an SMS notification ifyour site goes down
 *   Bulk publish posts to multiple sites at once
 
-Check out the [ManageWP Tour video](http://vimeo.com/22099014).
+Check out the [ManageWP Tour video](http://vimeo.com/61268162).
 
-http://vimeo.com/22099014
+http://vimeo.com/61268162
 
 Check out [ManageWP.com](http://managewp.com/ "Manage Multiple Blogs").
 
