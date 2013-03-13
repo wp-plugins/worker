@@ -46,21 +46,21 @@ function cleanup_delete_worker($params = array())
                 if (mmb_delete_all_revisions($revision_filter['revisions'])) {
                     $return_array['revision'] = 'OK';
                 } else {
-                    $return_array['revision_error'] = 'Failed, please try again';
+                    $return_array['revision_error'] = 'OK, nothing to do';
                 }
                 break;
             case 'overhead':
                 if (mmb_handle_overhead(true)) {
                     $return_array['overhead'] = 'OK';
                 } else {
-                    $return_array['overhead_error'] = 'Failed, please try again';
+                    $return_array['overhead_error'] = 'OK, nothing to do';
                 }
                 break;
             case 'comment':
                 if (mmb_delete_spam_comments()) {
                     $return_array['comment'] = 'OK';
                 } else {
-                    $return_array['comment_error'] = 'Failed, please try again';
+                    $return_array['comment_error'] = 'OK, nothing to do';
                 }
                 break;
             default:
