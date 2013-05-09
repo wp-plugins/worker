@@ -384,6 +384,9 @@ class MMB_Installer extends MMB_Core
 				if(isset($current->checked[$plugin])){
 					$versions[$current->checked[$plugin]] = $plugin;
 				}
+                if ( !isset( $current->response[ $plugin ] ) ) {
+                    unset($plugins[$plugin]);
+                }
 			}
 		}
         $return = array();
@@ -489,7 +492,7 @@ class MMB_Installer extends MMB_Core
             return array(
                 'error' => 'No premium files for upgrade.'
             );
-        
+
         $upgrader = false;
         $pr_update = array();
         $themes = array();
@@ -524,7 +527,7 @@ class MMB_Installer extends MMB_Core
 			
 			// try default wordpress upgrader
 			if(!empty($plugins)){
-				$updateplugins = $this->upgrade_plugins(array_keys($plugins));
+				$updateplugins = $this->upgrade_plugins(array_values($plugins));
 				if(!empty($updateplugins) && isset($updateplugins['upgraded'])){
 					foreach ($premium_update as $key => $update) {
 						$update = array_change_key_case($update, CASE_LOWER);

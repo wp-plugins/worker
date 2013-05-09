@@ -148,6 +148,8 @@ if( !function_exists ( 'mmb_parse_request' )) {
 				mmb_response('Username <b>' . $params['username'] . '</b> does not have administrator capabilities. Please check the Admin username.', false);
 			
 			if ($action == 'add_site') {
+                $userspec =  get_user_by('login',$params['username']);
+                wp_set_current_user($userspec->ID);
 				mmb_add_site($params);
 				mmb_response('You should never see this.', false);
 			}
