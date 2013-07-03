@@ -32,6 +32,14 @@ http://vimeo.com/61268162
 Check out [ManageWP.com](http://managewp.com/ "Manage Multiple Blogs").
 
 == Changelog ==  
+= 3.9.26 =
+- New: Improved branding feature
+- New: Disable Plugin and Theme changes for your clients
+- New: Support Page for non-Admin Users
+- New: Manage biographical info of user
+- Fix: Restore backup action keeps all backup tasks and backups
+- Fix: Add/delete post action uses WordPress hook
+- Fix: Delete user action was not functioning properly
 
 = 3.9.25 =
 - New: Improved Worker branding feature 

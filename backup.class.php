@@ -1140,7 +1140,6 @@ class MMB_Backup extends MMB_Core {
         if (empty($args)) {
             return false;
         }
-        
         extract($args);
         if (isset($google_drive_token)) {
         	$this->tasks[$task_name]['task_args']['account_info']['mwp_google_drive']['google_drive_token'] = $google_drive_token;
@@ -1227,7 +1226,10 @@ class MMB_Backup extends MMB_Core {
                 if (!copy(ABSPATH . 'wp-config.php', ABSPATH . 'mwp-temp-wp-config.php')) {
                     @unlink($backup_file);
                     return array(
-                        'error' => 'Error creating wp-config. Please check your write permissions.'
+                        'error' => 'Error creating wp-config file.
+                                    Please check if your WordPress installation folder has correct permissions to allow  writing files.
+                                    In most cases permissions should be 755 but occasionally it\'s required to put 777.
+                                    If you are unsure on how to do this yourself, you can ask your hosting provider for help.'
                     );
                 }
                 
@@ -1254,6 +1256,7 @@ class MMB_Backup extends MMB_Core {
             	$restore_options['mwp_notifications'] = get_option('mwp_notifications');
             	$restore_options['mwp_pageview_alerts'] = get_option('mwp_pageview_alerts');
             	$restore_options['user_hit_count'] = get_option('user_hit_count');
+                $restore_options['mwp_backup_tasks'] = get_option('mwp_backup_tasks');
             }
             
             chdir(ABSPATH);
@@ -1384,14 +1387,18 @@ class MMB_Backup extends MMB_Core {
             //Remove hit count
             $query = "DELETE FROM " . $new_table_prefix . "options WHERE option_name = 'user_hit_count'";
            	$wpdb->query($query);
-            
+
+            //Restore previous backups
+
+            $wpdb->query("UPDATE " . $new_table_prefix . "options SET option_value = ".serialize($current_tasks_tmp)." WHERE option_name = 'mwp_backup_tasks'");
+
             //Check for .htaccess permalinks update
             $this->replace_htaccess($home);
         } else {
         	//restore worker options
             if (is_array($restore_options) && !empty($restore_options)) {
                 foreach ($restore_options as $key => $option) {
-                	update_option($key, $option);
+                    $result = $wpdb->update( $wpdb->options, array( 'option_value' => maybe_serialize($option) ), array( 'option_name' => $key ) );
                 }
             }
         }

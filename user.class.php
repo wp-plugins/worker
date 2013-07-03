@@ -61,6 +61,9 @@ class MMB_User extends MMB_Core
 			$args = array();
 			$args['include'] = $include;
 			$args['fields'] = 'all_with_meta';
+            if(!empty($username_filter)){
+                $args['search'] = $username_filter;
+            }
 			$temp_users = get_users($args);
 			$user = array();
 			foreach ((array)$temp_users as $temp){
@@ -150,6 +153,12 @@ class MMB_User extends MMB_Core
 		    	 		$result = array('error' => 'No role provided.');
 		    	 	}
 		    			break;
+                    case 'change-description':
+                        $userdata = array();
+                        $userdata['ID'] = $user_obj->ID;
+                        $userdata['description'] = trim( $change_description );
+                        $result = wp_update_user($userdata);
+                        break;
 		    		case 'delete-user':
 		    			if($user != $username){
 			    			if(!$this->last_admin($user_obj)){

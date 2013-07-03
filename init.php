@@ -4,7 +4,7 @@ Plugin Name: ManageWP - Worker
 Plugin URI: http://managewp.com/
 Description: Manage Multiple WordPress sites from one dashboard. Visit <a href="https://managewp.com">ManageWP.com</a> to sign up.
 Author: ManageWP
-Version: 3.9.25
+Version: 3.9.26
 Author URI: http://managewp.com
 */
 
@@ -927,12 +927,20 @@ if( !function_exists ('mmb_get_users')) {
 
 if( !function_exists ('mmb_edit_users')) {
 	function mmb_edit_users($params)
-	{
-		global $mmb_core;
-		$mmb_core->get_user_instance();
-		$return = $mmb_core->user_instance->edit_users($params);
-		mmb_response($return, true);
-	}
+    {
+        global $mmb_core;
+        $mmb_core->get_user_instance();
+        $users = $mmb_core->user_instance->edit_users($params);
+        $response = 'User updated.';
+        $check_error = false;
+        foreach ($users as $username => $user) {
+            $check_error = array_key_exists('error', $user);
+            if($check_error){
+                $response = $username.': '.$user['error'];
+            }
+        }
+        mmb_response($response, !$check_error);
+    }
 }
 
 if( !function_exists ('mmb_get_posts')) {
@@ -1266,5 +1274,33 @@ if(	isset($_COOKIE[MMB_XFRAME_COOKIE]) ){
 	remove_action( 'admin_init', 'send_frame_options_header');
 	remove_action( 'login_init', 'send_frame_options_header');
 }
+function mwp_error_handler($errno, $errstr, $errfile, $errline, $errcontext)
+{
+    $errorId = 'mwp_error_' . md5($errfile . $errline);
+    $error = sprintf("%s\nError [%s]: %s\nIn file: %s:%s", date('Y-m-d H:i:s'), $errno, $errstr, $errfile, $errline);
+    set_transient($errorId, $error, 3600);
+}
 
-?>
+function mwp_fatal_error_handler()
+{
+    $isError = false;
+    if ($error = error_get_last()) {
+        switch ($error['type']) {
+            case E_ERROR:
+            case E_CORE_ERROR:
+            case E_COMPILE_ERROR:
+            case E_USER_ERROR:
+                $isError = true;
+                break;
+        }
+    }
+    if ($isError) {
+        mwp_error_handler($error['type'], $error['message'], $error['file'], $error['line'], array());
+    }
+}
+
+
+if (!empty($_COOKIE['mwp_debug'])) {
+    set_error_handler('mwp_error_handler');
+    register_shutdown_function('mwp_fatal_error_handler');
+}

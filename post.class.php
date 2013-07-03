@@ -418,8 +418,10 @@ class MMB_Post extends MMB_Core
     	$success = false; 
     	
     	if(in_array($status, array('draft', 'publish', 'trash'))){
-			$sql = "update ".$wpdb->prefix."posts set post_status  = '$status' where ID = '$post_id'";
-			$success = $wpdb->query($sql);
+            $edited_status = array('ID' => $post_id,
+                'post_status' => $status
+            );
+            $success = wp_update_post($edited_status);
     	}
 
         return $success;
@@ -545,21 +547,17 @@ class MMB_Post extends MMB_Core
  	}
 	
 	function delete_post($args){
-		global $wpdb;
 		if(!empty($args['post_id']) && !empty($args['action']))
 		{
-			if($args['action']=='delete')
-			{
-				$delete_query = "UPDATE $wpdb->posts SET post_status = 'trash' WHERE ID = ".$args['post_id'];
-			}
-			else if($args['action']=='delete_perm'){
-				$delete_query = "DELETE FROM $wpdb->posts WHERE ID = ".$args['post_id'];
-			}
-			else if($args['action']=='delete_restore'){
-				$delete_query = "UPDATE $wpdb->posts SET post_status = 'publish' WHERE ID = ".$args['post_id'];
-			}
-			$wpdb->get_results($delete_query);
-		
+            if($args['action']=='delete' || $args['action']=='delete_restore'){
+                $action = ($args['action'] == 'delete') ? 'delete' : 'publish';
+                $edited_status = array('ID' => $args['post_id'],
+                    'post_status' => $action
+                );
+                $success = wp_update_post($edited_status);
+            }else if($args['action']=='delete_perm'){
+                $success = wp_delete_post($args['post_id'], true);
+            }
 			return 'Post deleted.';
 		}
 		else
@@ -569,26 +567,23 @@ class MMB_Post extends MMB_Core
 	}
 	
 	function delete_posts($args){
-		global $wpdb;
 		extract($args);
-		if($deleteaction=='delete'){
-			$delete_query_intro = "DELETE FROM $wpdb->posts WHERE ID = ";
-		}elseif($deleteaction=='trash'){
-			$delete_query_intro = "UPDATE $wpdb->posts SET post_status = 'trash' WHERE ID = ";
-		}elseif($deleteaction=='draft'){
-			$delete_query_intro = "UPDATE $wpdb->posts SET post_status = 'draft' WHERE ID = ";
-		}elseif($deleteaction=='publish'){
-			$delete_query_intro = "UPDATE $wpdb->posts SET post_status = 'publish' WHERE ID = ";
-		}
-		foreach($args as $key=>$val){
-			
-			if(!empty($val) && is_numeric($val))
-			{
-				$delete_query = $delete_query_intro.$val;
-				
-				$wpdb->query($delete_query);
-			}
-		}
+        if($deleteaction == 'trash' || $deleteaction == 'draft' || $deleteaction == 'publish'){
+            foreach($args as $key=>$val){
+                if(!empty($val) && is_numeric($val)){
+                    $edited_status = array('ID' => $val,
+                        'post_status' => $deleteaction
+                    );
+                    $success = wp_update_post($edited_status);
+                }
+            }
+        }elseif($deleteaction == 'delete'){
+            foreach($args as $key=>$val){
+                if(!empty($val) && is_numeric($val)){
+                    $success = wp_delete_post($val, true);
+                }
+            }
+        }
 		return "Post deleted";
 		
 	}

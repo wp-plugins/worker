@@ -141,7 +141,16 @@ class MMB_Core extends MMB_Helper
 		if ($mwp_worker_brand == false || (is_array($mwp_worker_brand) && !array_key_exists('hide_managed_remotely', $mwp_worker_brand))) {
 			add_action('rightnow_end', array( &$this, 'add_right_now_info' ));
 		}
-		
+        if ($mwp_worker_brand != false && is_array($mwp_worker_brand) &&  isset($mwp_worker_brand['text_for_client']) && ($mwp_worker_brand['email_or_link'] != 0)) {
+            add_action('init', array($this, 'enqueue_scripts'));
+            add_action('init', array($this, 'enqueue_styles'));
+            add_action('admin_menu', array($this, 'add_support_page'));
+            add_action('admin_head', array($this, 'support_page_script'));
+            add_action('admin_footer', array($this, 'support_page_dialog'));
+            add_action('admin_init', array($this, 'send_email_to_admin'));
+        }
+        add_action( 'plugins_loaded', array( &$this, 'dissalow_text_editor' ) );
+
 		add_action('admin_init', array(&$this,'admin_actions'));   
 		add_action('init', array( &$this, 'mmb_remote_action'), 9999);
 		add_action('setup_theme', 'mmb_run_backup_action', 1);
@@ -222,11 +231,197 @@ class MMB_Core extends MMB_Helper
      */
     function add_right_now_info()
     {
-        echo '<div class="mmb-slave-info">
-            <p>This site can be managed remotely.</p>
-        </div>';
+        $mwp_worker_brand = get_option('mwp_worker_brand');
+        echo '<div class="mmb-slave-info">';
+        if($mwp_worker_brand && isset($mwp_worker_brand['remotely_managed_text'])){
+            /*$url = isset($mwp_worker_brand['author_url']) ? $mwp_worker_brand['author_url'] : null;
+            if($url) {
+                $scheme = parse_url($mwp_worker_brand['author_url'], PHP_URL_SCHEME);
+                if(empty($scheme)) {
+                    $url = 'http://' . $url;
+                }
+            }
+            if($url) {
+                $managedBy = '<a target="_blank" href="'.htmlspecialchars($url).'">'
+                    .htmlspecialchars($mwp_worker_brand['author'])
+                    .'</a>';
+            } else {
+                $managedBy = htmlspecialchars($mwp_worker_brand['author']);
+            }
+            echo sprintf('<p>This site is managed by %s.</p>', $managedBy);*/
+            echo '<p>'.$mwp_worker_brand['remotely_managed_text'].'</p>';
+        }else{
+            echo '<p>This site can be managed remotely.</p>';
+        }
+        echo   '</div>';
     }
-    
+
+    function enqueue_scripts()
+    {
+        wp_enqueue_script('jquery');
+        wp_enqueue_script('jquery-ui-core');
+        wp_enqueue_script('jquery-ui-dialog');
+    }
+
+    function enqueue_styles()
+    {
+        wp_enqueue_style('wp-jquery-ui');
+        wp_enqueue_style('jquery-style', 'http://ajax.googleapis.com/ajax/libs/jqueryui/1.10.3/themes/smoothness/jquery-ui.css');
+    }
+
+    function send_email_to_admin(){
+        if(!isset($_POST['support_mwp_message'])) {
+            return;
+        }
+        global $current_user;
+        if (empty($_POST['support_mwp_message'])) {
+            $this->mwp_send_ajax_response(false, "Please enter a message.");
+        }
+        $mwp_worker_brand = get_option('mwp_worker_brand');
+        if(empty($mwp_worker_brand['admin_email'])) {
+            $this->mwp_send_ajax_response(false, "Unable to send email to admin.");
+        }
+        $subject = 'New ticket for site '.get_bloginfo('url');
+        $message = <<<EOF
+Hi,
+User with a username {$current_user->user_login} has a new question:
+{$_POST['support_mwp_message']}
+EOF;
+        $has_been_sent = wp_mail($mwp_worker_brand['admin_email'], $subject, $message);
+        if(!$has_been_sent) {
+            $this->mwp_send_ajax_response(false, "Unable to send email. Please try again.");
+        }
+        $this->mwp_send_ajax_response(true, "Message successfully sent.");
+    }
+
+    function mwp_send_ajax_response($success = true, $message = '')
+    {
+        $response = json_encode(array(
+            'success' => $success,
+            'message' => $message,
+        ));
+        print $response;
+        exit;
+    }
+
+    function support_page_dialog()
+    {
+    $mwp_worker_brand = get_option('mwp_worker_brand');
+    if($mwp_worker_brand && isset($mwp_worker_brand['text_for_client']) && ($mwp_worker_brand['text_for_client'] != ''))
+    {
+        $notification_text = $mwp_worker_brand['text_for_client'];
+    }
+    ?>
+    <div id="support_dialog" style="display: none;">
+    <div>
+        <p><?php echo $notification_text; ?></p>
+    </div>
+    <div style="margin: 19px 0 0;">
+        <?php
+        if($mwp_worker_brand['email_or_link'] == 1)
+        {
+        ?>
+        <form method="post" id="support_form">
+            <textarea name="support_mwp_message" id="support_message" style="width:500px;height:150px;display:block;margin-left:auto;margin-right:auto;"></textarea>
+            <button type="submit" class="button-primary" style="display:block;margin:20px auto 7px auto;border:1px solid #a1a1a1;padding:0px 31px;border-radius: 4px;">Send</button>
+        </form>
+        <div id="support_response_id" style="margin-top: 14px"></div>
+        <style>
+            .ui-widget-overlay {
+                background-repeat: repeat;
+            }
+        </style>
+    </div>
+    <?php
+    }
+    else
+    {
+    }
+    echo '</div>';
+    }
+
+    function support_page_script()
+    {
+        ?>
+        <script type="text/javascript">
+            jQuery(document).ready(function ($) {
+                var $dialog = $('#support_dialog');
+                var $form = $('#support_form');
+                var $messageContainer = $('#support_response_id');
+                $form.submit(function (e) {
+                    e.preventDefault();
+                    var data = $(this).serialize();
+                    $.ajax({
+                        type: "POST",
+                        url: 'index.php',
+                        dataType: 'json',
+                        data: data,
+                        success: function (data, textStatus, jqXHR) {
+                            if(data.success) {
+                                $form.slideUp();
+                            }
+                            $messageContainer.html(data.message);
+                        },
+                        error: function (jqXHR, textStatus, errorThrown){
+                            $messageContainer.html('An error occurred, please try again.');
+                        }
+                    });
+                });
+                $('.toplevel_page_mwp-support').click(function (e) {
+                    e.preventDefault();
+                    $form.show();
+                    $messageContainer.empty();
+                    $dialog.dialog({
+                        draggable: false,
+                        resizable: false,
+                        modal: true,
+                        width: '530px',
+                        height: 'auto',
+                        title: 'Contact Support',
+                        close: function(){
+                            $('#support_response_id').html('');
+                            $( this ).dialog( "destroy" );
+                        }
+                    });
+                });
+            });
+        </script>
+    <?php
+    }
+
+    /**
+     * Add Support page on Top Menu
+     *
+     */
+    function add_support_page()
+    {
+        $mwp_worker_brand = get_option('mwp_worker_brand');
+        if ($mwp_worker_brand && isset($mwp_worker_brand['text_for_client']) && ($mwp_worker_brand['text_for_client'] != '')) {
+            add_menu_page(__('Support', 'wp-support'), __('Support', 'wp-support'), 'read', 'mwp-support', array(&$this, 'support_function'), '');
+        }
+    }
+
+    /**
+     * Support page handler
+     *
+     */
+    function support_function()
+    {
+    }
+
+
+/**
+     * Remove editor from plugins&themes submenu page
+     *
+     */
+    function dissalow_text_editor(){
+        $mwp_worker_brand = get_option('mwp_worker_brand');
+        if($mwp_worker_brand && isset($mwp_worker_brand['dissalow_edit']) && ($mwp_worker_brand['dissalow_edit'] == 'checked')){
+            define('DISALLOW_FILE_EDIT',true);
+            define('DISALLOW_FILE_MODS',true);
+        }
+    }
+
     /**
      * Get parent blog options
      * 
