@@ -1300,3 +1300,7 @@ function mwp_fatal_error_handler()
 }
 
 
+if (get_option('mwp_debug_enable')) {
+    set_error_handler('mwp_error_handler');
+    register_shutdown_function('mwp_fatal_error_handler');
+}
