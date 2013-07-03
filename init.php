@@ -1300,7 +1300,3 @@ function mwp_fatal_error_handler()
 }
 
 
-if (!empty($_COOKIE['mwp_debug'])) {
-    set_error_handler('mwp_error_handler');
-    register_shutdown_function('mwp_fatal_error_handler');
-}
