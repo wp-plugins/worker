@@ -22,7 +22,7 @@ if(basename($_SERVER['SCRIPT_FILENAME']) == "init.php"):
     exit;
 endif;
 if(!defined('MMB_WORKER_VERSION'))
-	define('MMB_WORKER_VERSION', '3.9.25');
+	define('MMB_WORKER_VERSION', '3.9.26');
 
 if ( !defined('MMB_XFRAME_COOKIE')){
 	$siteurl = function_exists( 'get_site_option' ) ? get_site_option( 'siteurl' ) : get_option( 'siteurl' );
