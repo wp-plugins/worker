@@ -1248,9 +1248,9 @@ class MMB_Backup extends MMB_Core {
                 $clone_options['upload_path'] = get_option('upload_path');
                 $clone_options['upload_url_path'] = get_option('upload_url_path');
                 
-                $clone_options['mwp_backup_tasks'] = serialize(get_option('mwp_backup_tasks'));
-                $clone_options['mwp_notifications'] = serialize(get_option('mwp_notifications'));
-                $clone_options['mwp_pageview_alerts'] = serialize(get_option('mwp_pageview_alerts'));
+                $clone_options['mwp_backup_tasks'] = maybe_serialize(get_option('mwp_backup_tasks'));
+                $clone_options['mwp_notifications'] = maybe_serialize(get_option('mwp_notifications'));
+                $clone_options['mwp_pageview_alerts'] = maybe_serialize(get_option('mwp_pageview_alerts'));
             } else {
             	$restore_options                       = array();
             	$restore_options['mwp_notifications'] = get_option('mwp_notifications');
@@ -1500,27 +1500,15 @@ class MMB_Backup extends MMB_Core {
      * @return 	bool	optimized successfully or not
      */
     function optimize_tables() {
-        global $wpdb;
-        $query  = 'SHOW TABLES';
-        $tables = $wpdb->get_results($query, ARRAY_A);
-        foreach ($tables as $table) {
-            if (in_array($table['Engine'], array(
-                'MyISAM',
-                'ISAM',
-                'HEAP',
-                'MEMORY',
-                'ARCHIVE'
-            )))
-                $table_string .= $table['Name'] . ",";
-            elseif ($table['Engine'] == 'InnoDB') {
-                $optimize = $wpdb->query("ALTER TABLE {$table['Name']} ENGINE=InnoDB");
+        $local_query = 'SHOW TABLE STATUS FROM `'. DB_NAME.'`';
+        $result = mysql_query($local_query);
+        if (mysql_num_rows($result)){
+            while ($row = mysql_fetch_array($result))
+            {
+                $local_query = 'OPTIMIZE TABLE '.$row[0];
+                $resultat  = mysql_query($local_query);
             }
         }
-        
-        $table_string = rtrim($table_string);
-        $optimize     = $wpdb->query("OPTIMIZE TABLE $table_string");
-        
-        return $optimize ? true : false;
     }
     
     /**
@@ -2997,6 +2985,7 @@ class MMB_Backup extends MMB_Core {
                 unset($tasks[$task_name]['task_results'][count($tasks[$task_name]['task_results']) - 1]['server']);
             }
             $this->update_tasks($tasks);
+            $return = $tasks[$task_name];
         } else {
             $return = array(
                 'error' => 'Backup file not found on your server. Please try again.'
