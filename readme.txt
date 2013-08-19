@@ -3,14 +3,14 @@ Contributors: freediver
 Donate link: https://www.networkforgood.org/donation/MakeDonation.aspx?ORGID2=520781390
 Tags: admin, analytics, administration, amazon, api, google drive, authentication, automatic, dashboard, dropbox, events, integration, manage, multsite, notification, performance, s3, security, seo, stats, tracking, managewp
 Requires at least: 3.0
-Tested up to: 3.5.1
+Tested up to: 3.6
 Stable tag: trunk
 
 ManageWP Worker plugin allows you to remotely manage your WordPress sites from one dashboard.
 
 == Description ==
 
-[ManageWP](https://managewp.com/ "Manage Multiple Blogs") is a revolutionary plugin that helps users manage multiple WordPress blogs from one dashboard.
+[ManageWP](https://managewp.com/ "Manage Multiple Blogs") is a revolutionary service that automates the management of multiple WordPress websites.
 
 Main features:
 

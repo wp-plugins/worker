@@ -116,99 +116,101 @@ if( !function_exists ( 'hex2bin' )) {
   		return $r;
   	}
 }
-if( !function_exists ( 'mmb_parse_request' )) {
-	function mmb_parse_request(){
-		
-		if (!isset($HTTP_RAW_POST_DATA)) {
-			$HTTP_RAW_POST_DATA = file_get_contents('php://input');
-		}
-		ob_start();
-		
-		global $current_user, $mmb_core, $new_actions, $wp_db_version, $wpmu_version, $_wp_using_ext_object_cache, $_mmb_options;
-		/*$data = array();
-		if(substr($HTTP_RAW_POST_DATA, 0, 15) == "mwp_a=managewp&"){
-			$HTTP_RAW_POST_DATA = str_replace("mwp_a=managewp&", "", $HTTP_RAW_POST_DATA);
-			parse_str($HTTP_RAW_POST_DATA, $data);
-		}*/
-		if(substr($HTTP_RAW_POST_DATA, 0, 7) == "action="){
-			$HTTP_RAW_POST_DATA = str_replace("action=", "", $HTTP_RAW_POST_DATA);
-		}
-		$data = base64_decode($HTTP_RAW_POST_DATA);
-		if ($data){
-			$data = mmb_parse_data(  @unserialize($data)  );
-			$num = @extract( $data );
-			//$signature = base64_decode($signature);
-		}
-		
-		if (isset($action)) {
-			$_wp_using_ext_object_cache = false;
-			@set_time_limit(600);
-			
-			if (!$mmb_core->check_if_user_exists($params['username']))
-				mmb_response('Username <b>' . $params['username'] . '</b> does not have administrator capabilities. Please check the Admin username.', false);
-			
-			if ($action == 'add_site') {
-                $userspec =  get_user_by('login',$params['username']);
-                wp_set_current_user($userspec->ID);
-				mmb_add_site($params);
-				mmb_response('You should never see this.', false);
-			}
+if( !function_exists('mmb_authenticate')) {
+    function mmb_authenticate() {
+        global $_mwp_data, $_mwp_auth, $mmb_core;
+        if (!isset($HTTP_RAW_POST_DATA)) {
+            $HTTP_RAW_POST_DATA = file_get_contents('php://input');
+        }
+        if(substr($HTTP_RAW_POST_DATA, 0, 7) == "action="){
+            $HTTP_RAW_POST_DATA = str_replace("action=", "", $HTTP_RAW_POST_DATA);
+        }
+        $_mwp_data = base64_decode($HTTP_RAW_POST_DATA);
+        if (!$_mwp_data){
+            return;
+        }
+        $_mwp_data = mmb_parse_data(  @unserialize($_mwp_data)  );
 
-			$auth = $mmb_core->authenticate_message($action . $id, $signature, $id);
-			if ($auth === true) {
-				
-				if(isset($params['username']) && !is_user_logged_in()){
-					$user = function_exists('get_user_by') ? get_user_by('login', $params['username']) : get_userdatabylogin( $params['username'] );
-					wp_set_current_user($user->ID);
-				}
-				
-				/* in case database upgrade required, do database backup and perform upgrade ( wordpress wp_upgrade() function ) */
-				if( strlen(trim($wp_db_version)) && !defined('ACX_PLUGIN_DIR') ){
-					if ( get_option('db_version') != $wp_db_version ) {
-						/* in multisite network, please update database manualy */
-						if (empty($wpmu_version) || (function_exists('is_multisite') && !is_multisite())){
-							if( ! function_exists('wp_upgrade'))
-								include_once(ABSPATH.'wp-admin/includes/upgrade.php');
-							
-							ob_clean();
-							@wp_upgrade();
-							@do_action('after_db_upgrade');
-							ob_end_clean();
-						}
-					}
-				}
-				
-				if(isset($params['secure'])){
-					if($decrypted = $mmb_core->_secure_data($params['secure'])){
-						$decrypted = maybe_unserialize($decrypted);
-						if(is_array($decrypted)){
-							foreach($decrypted as $key => $val){
-								if(!is_numeric($key))
-									$params[$key] = $val;							
-							}
-							unset($params['secure']);
-						} else $params['secure'] = $decrypted;
-					}
-				}
-				
-				if( isset($data['setting']) ){
-					$mmb_core->save_options( $data['setting'] );
-				}
-				
-				if( !$mmb_core->register_action_params( $action, $params ) ){
-					global $_mmb_plugin_actions;					
-					$_mmb_plugin_actions[$action] = $params;
-				}
-				
-					
-			} else {
-				mmb_response($auth['error'], false);
-			}
-		} else {
-			MMB_Stats::set_hit_count();
-		}
-		ob_end_clean();
-	}
+        if(empty($_mwp_data['action'])) {
+            return;
+        }
+
+        if (!$mmb_core->check_if_user_exists($_mwp_data['params']['username'])) {
+            mmb_response('Username <b>' . $_mwp_data['params']['username'] . '</b> does not have administrator capabilities. Please check the Admin username.', false);
+        }
+
+        if($_mwp_data['action'] === 'add_site') {
+            $_mwp_auth = true;
+        } else {
+            $_mwp_auth = $mmb_core->authenticate_message($_mwp_data['action'] . $_mwp_data['id'], $_mwp_data['signature'], $_mwp_data['id']);
+        }
+
+        if($_mwp_auth !== true) {
+            mmb_response($_mwp_auth['error'], false);
+        }
+
+        if(isset($_mwp_data['params']['username']) && !is_user_logged_in()){
+            $user = function_exists('get_user_by') ? get_user_by('login', $_mwp_data['params']['username']) : get_userdatabylogin( $_mwp_data['params']['username'] );
+            wp_set_current_user($user->ID);
+        }
+    }
+}
+
+if( !function_exists ( 'mmb_parse_request' )) {
+    function mmb_parse_request(){
+        global $mmb_core, $wp_db_version, $wpmu_version, $_wp_using_ext_object_cache, $_mwp_data, $_mwp_auth;
+        if(empty($_mwp_auth)) {
+            MMB_Stats::set_hit_count();
+            return;
+        }
+        ob_start();
+        $_wp_using_ext_object_cache = false;
+        @set_time_limit(600);
+
+        if ($_mwp_data['action'] === 'add_site') {
+            mmb_add_site($_mwp_data['params']);
+            mmb_response('You should never see this.', false);
+        }
+
+        /* in case database upgrade required, do database backup and perform upgrade ( wordpress wp_upgrade() function ) */
+        if( strlen(trim($wp_db_version)) && !defined('ACX_PLUGIN_DIR') ){
+            if ( get_option('db_version') != $wp_db_version ) {
+                /* in multisite network, please update database manualy */
+                if (empty($wpmu_version) || (function_exists('is_multisite') && !is_multisite())){
+                    if( ! function_exists('wp_upgrade'))
+                        include_once(ABSPATH.'wp-admin/includes/upgrade.php');
+
+                    ob_clean();
+                    @wp_upgrade();
+                    @do_action('after_db_upgrade');
+                    ob_end_clean();
+                }
+            }
+        }
+
+        if(isset($_mwp_data['params']['secure'])){
+            if($decrypted = $mmb_core->_secure_data($_mwp_data['params']['secure'])){
+                $decrypted = maybe_unserialize($decrypted);
+                if(is_array($decrypted)){
+                    foreach($decrypted as $key => $val){
+                        if(!is_numeric($key))
+                            $_mwp_data['params'][$key] = $val;
+                    }
+                    unset($_mwp_data['params']['secure']);
+                } else $_mwp_data['params']['secure'] = $decrypted;
+            }
+        }
+
+        if( isset($_mwp_data['setting']) ){
+            $mmb_core->save_options( $_mwp_data['setting'] );
+        }
+
+        if( !$mmb_core->register_action_params( $_mwp_data['action'], $_mwp_data['params'] ) ){
+            global $_mmb_plugin_actions;
+            $_mmb_plugin_actions[$_mwp_data['action']] = $_mwp_data['params'];
+        }
+        ob_end_clean();
+    }
 }
 /* Main response function */
 if( !function_exists ( 'mmb_response' )) {
