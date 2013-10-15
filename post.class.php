@@ -525,7 +525,7 @@ class MMB_Post extends MMB_Core
 			
 			$posts[]=array(
 				'post_id'=>$post_info->ID, 
-				'post_title'=>$post_info->post_title, 
+				'post_title'=>htmlspecialchars($post_info->post_title),
 				'post_name'=>$post_info->post_name,
 				'post_author'=>array('author_id'=>$post_info->post_author, 'author_name'=>$user_info[$post_info->post_author]), 
 				'post_date'=>$post_info->post_date,
@@ -669,7 +669,7 @@ class MMB_Post extends MMB_Core
 			
 			$posts[]=array(
 				'post_id'=>$post_info->ID, 
-				'post_title'=>$post_info->post_title, 
+				'post_title'=>htmlspecialchars($post_info->post_title),
 				'post_name'=>$post_info->post_name,
 				'post_author'=>array('author_id'=>$post_info->post_author, 'author_name'=>$user_info[$post_info->post_author]), 
 				'post_date'=>$post_info->post_date,

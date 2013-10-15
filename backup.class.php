@@ -799,6 +799,10 @@ class MMB_Backup extends MMB_Core {
     	ob_start();
     	$command  = "$zip -q -j $comp_level $backup_file .* * $exclude_file_data";
     	$this->_log("Executing $command");
+        if($exclude_data==="-x")
+        {
+            $exclude_data="";
+        }
     	$result_f = $this->mmb_exec($command, false, true);
     	if (!$result_f || $result_f == 18) { // disregard permissions error, file can't be accessed
     		$command  = "$zip -q -r $comp_level $backup_file $include_data $exclude_data";
@@ -1044,7 +1048,38 @@ class MMB_Backup extends MMB_Core {
         global $wpdb;
         $paths   = $this->check_mysql_paths();
         $brace   = (substr(PHP_OS, 0, 3) == 'WIN') ? '"' : '';
-        $command = $brace . $paths['mysqldump'] . $brace . ' --force --host="' . DB_HOST . '" --user="' . DB_USER . '" --password="' . DB_PASSWORD . '" --add-drop-table --skip-lock-tables "' . DB_NAME . '" > ' . $brace . $file . $brace;
+        //should use --result-file=file_name instead of >
+        $host = '--host="';
+        $hostname = '';
+        $socketname = '';
+        if(strpos(DB_HOST,':')!==false)
+        {
+            $host_sock = split(':',DB_HOST);
+            $hostname = $host_sock[0];
+            $socketname = $host_sock[1];
+            $port = intval($host_sock[1]);
+            if($port===0){
+                $command = "%s --force --host=%s --socket=%s --user=%s --password=%s --add-drop-table --skip-lock-tables %s --result-file=%s";
+                $command = sprintf($command, $paths['mysqldump'], escapeshellarg($hostname), escapeshellarg($socketname), escapeshellarg(DB_USER), escapeshellarg(DB_PASSWORD), escapeshellarg(DB_NAME),escapeshellarg($file));
+
+            }
+            else
+            {
+                $command = "%s --force --host=%s --port=%s --user=%s --password=%s --add-drop-table --skip-lock-tables %s --result-file=%s";
+                $command = sprintf($command, $paths['mysqldump'], escapeshellarg($hostname),escapeshellarg($port), escapeshellarg(DB_USER), escapeshellarg(DB_PASSWORD), escapeshellarg(DB_NAME),escapeshellarg($file));
+
+            }
+            //$command = sprintf($command, $paths['mysqldump'], escapeshellarg($hostname), escapeshellarg($socketname), escapeshellarg(DB_USER), escapeshellarg(DB_PASSWORD), escapeshellarg(DB_NAME),escapeshellarg($file));
+        }
+        else
+        {
+            $hostname = DB_HOST;
+            $command = "%s --force --host=%s --user=%s --password=%s --add-drop-table --skip-lock-tables %s --result-file=%s";
+            $command = sprintf($command, $paths['mysqldump'], escapeshellarg($hostname), escapeshellarg(DB_USER), escapeshellarg(DB_PASSWORD), escapeshellarg(DB_NAME),escapeshellarg($file));
+        }
+
+
+        //$command = $brace . $paths['mysqldump'] . $brace . ' --force --host="' . DB_HOST . '" --user="' . DB_USER . '" --password="' . DB_PASSWORD . '" --add-drop-table --skip-lock-tables "' . DB_NAME . '" > ' . $brace . $file . $brace;
         ob_start();
         $result = $this->mmb_exec($command);
         ob_get_clean();
@@ -2116,8 +2151,10 @@ class MMB_Backup extends MMB_Core {
                 'partial' => 1
             );
         }
+
     }
-    
+
+
     /**
      * Deletes backup file from Amazon S3.
      *
