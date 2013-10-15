@@ -839,4 +839,3 @@ class MMB_Stats extends MMB_Core
 if (function_exists('add_filter')) {
     add_filter('mwp_website_add', 'MMB_Stats::readd_alerts');
 }
-?>

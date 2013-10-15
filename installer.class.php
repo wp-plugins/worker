@@ -543,22 +543,22 @@ class MMB_Installer extends MMB_Core
 				}
 			}
 			
-			if(!empty($themes)){
-				$updatethemes = $this->upgrade_themes(array_keys($themes));
-				if(!empty($updatethemes) && isset($updatethemes['upgraded'])){
-					foreach ($premium_update as $key => $update) {
-						$update = array_change_key_case($update, CASE_LOWER);
-						foreach($updatethemes['upgraded'] as $template => $upgrade){
-							if( isset($update['template']) && $update['template'] == $template) {
-								if( $upgrade == 1 )
-									unset($premium_update[$key]);
-								
-								$pr_update['themes']['upgraded'][md5($update['name'])] = $upgrade;
-							}
-						}
-					}
-				}
-			}
+//			if(!empty($themes)){
+//				$updatethemes = $this->upgrade_themes(array_keys($themes));
+//				if(!empty($updatethemes) && isset($updatethemes['upgraded'])){
+//					foreach ($premium_update as $key => $update) {
+//						$update = array_change_key_case($update, CASE_LOWER);
+//						foreach($updatethemes['upgraded'] as $template => $upgrade){
+//							if( isset($update['template']) && $update['template'] == $template) {
+//								if( $upgrade == 1 )
+//									unset($premium_update[$key]);
+//
+//								$pr_update['themes']['upgraded'][md5($update['name'])] = $upgrade;
+//							}
+//						}
+//					}
+//				}
+//			}
 			
 			//try direct install with overwrite
 			if(!empty($premium_update)){
