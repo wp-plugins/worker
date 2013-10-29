@@ -558,7 +558,7 @@ class MMB_Stats extends MMB_Core
         
     }
     
-    function set_hit_count($fix_count = false)
+    static function set_hit_count($fix_count = false)
     {
         global $mmb_core;
         $uptime_robot = array(
@@ -633,7 +633,7 @@ class MMB_Stats extends MMB_Core
     }
 
     
-    function is_bot()
+    static function is_bot()
     {
         $agent = $_SERVER['HTTP_USER_AGENT'];
         

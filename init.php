@@ -4,7 +4,7 @@ Plugin Name: ManageWP - Worker
 Plugin URI: http://managewp.com/
 Description: Manage Multiple WordPress sites from one dashboard. Visit <a href="https://managewp.com">ManageWP.com</a> to sign up.
 Author: ManageWP
-Version: 3.9.26
+Version: 3.9.27
 Author URI: http://managewp.com
 */
 
@@ -22,7 +22,7 @@ if(basename($_SERVER['SCRIPT_FILENAME']) == "init.php"):
     exit;
 endif;
 if(!defined('MMB_WORKER_VERSION'))
-	define('MMB_WORKER_VERSION', '3.9.26');
+	define('MMB_WORKER_VERSION', '3.9.27');
 
 if ( !defined('MMB_XFRAME_COOKIE')){
 	$siteurl = function_exists( 'get_site_option' ) ? get_site_option( 'siteurl' ) : get_option( 'siteurl' );
