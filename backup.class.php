@@ -16,9 +16,8 @@ endif;
 define('MWP_BACKUP_DIR', WP_CONTENT_DIR . '/managewp/backups');
 define('MWP_DB_DIR', MWP_BACKUP_DIR . '/mwp_db');
 
-set_include_path(get_include_path() . PATH_SEPARATOR . 'lib/PHPSecLib');
-
-include('lib/PHPSecLib/Net/SFTP.php');
+set_include_path(get_include_path() . PATH_SEPARATOR . dirname(__FILE__).'/lib/PHPSecLib');
+require_once ('Net/SFTP.php');
 
 $zip_errors = array(
     'No error',
@@ -1556,15 +1555,28 @@ class MMB_Backup extends MMB_Core {
      * @return 	bool	optimized successfully or not
      */
     function optimize_tables() {
-        $local_query = 'SHOW TABLE STATUS FROM `'. DB_NAME.'`';
-        $result = mysql_query($local_query);
-        if (mysql_num_rows($result)){
-            while ($row = mysql_fetch_array($result))
-            {
-                $local_query = 'OPTIMIZE TABLE '.$row[0];
-                $resultat  = mysql_query($local_query);
+        global $wpdb;
+        $query  = 'SHOW TABLES';
+        $tables = $wpdb->get_results($query, ARRAY_A);
+        foreach ($tables as $table) {
+            if (in_array($table['Engine'], array(
+                'MyISAM',
+                'ISAM',
+                'HEAP',
+                'MEMORY',
+                'ARCHIVE'
+            )))
+                $table_string .= $table['Name'] . ",";
+            elseif ($table['Engine'] == 'InnoDB') {
+                $optimize = $wpdb->query("ALTER TABLE {$table['Name']} ENGINE=InnoDB");
             }
         }
+
+        $table_string = rtrim($table_string);
+        $optimize     = $wpdb->query("OPTIMIZE TABLE $table_string");
+
+        return $optimize ? true : false;
+
     }
 
     /**
@@ -1844,28 +1856,43 @@ class MMB_Backup extends MMB_Core {
      */
     function sftp_backup($args) {
         extract($args);
-
+     //   file_put_contents("sftp_log.txt","sftp_backup",FILE_APPEND);
         $port = $sftp_port ? $sftp_port : 22; //default port is 22
+        //   file_put_contents("sftp_log.txt","sftp port:".$sftp_port,FILE_APPEND);
         $sftp_hostname = $sftp_hostname?$sftp_hostname:"";
+        //    file_put_contents("sftp_log.txt","sftp host:".$sftp_hostname,FILE_APPEND);
         $sftp_username = $sftp_username?$sftp_username:"";
+        //   file_put_contents("sftp_log.txt","sftp user:".$sftp_username,FILE_APPEND);
         $sftp_password = $sftp_password?$sftp_password:"";
+        //     file_put_contents("sftp_log.txt","sftp pass:".$sftp_password,FILE_APPEND);
+        //      file_put_contents("sftp_log.txt","Creating NetSFTP",FILE_APPEND);
         $sftp = new Net_SFTP($sftp_hostname);
+        //       file_put_contents("sftp_log.txt","Created NetSFTP",FILE_APPEND);
         $remote = $sftp_remote_folder ? trim($sftp_remote_folder,"/")."/" : '';
         if (!$sftp->login($sftp_username, $sftp_password)) {
+                  file_put_contents("sftp_log.txt","sftp login failed in sftp_backup",FILE_APPEND);
             return array(
                 'error' => 'SFTP login failed for ' . $sftp_username . ', ' . $sftp_password,
                 'partial' => 1
             );
         }
+        file_put_contents("sftp_log.txt","making remote dir",FILE_APPEND);
         $sftp->mkdir($remote);
+        file_put_contents("sftp_log.txt","made remote dir",FILE_APPEND);
         if ($sftp_site_folder) {
             $remote .= '/' . $this->site_name;
         }
+        $sftp->mkdir($remote);
+        file_put_contents("sftp_log.txt","making {$sftp_remote_folder} dir",FILE_APPEND);
         $sftp->mkdir($sftp_remote_folder);
+        file_put_contents("sftp_log.txt","made {$sftp_remote_folder} dir",FILE_APPEND);
+        file_put_contents("sftp_log.txt","starting upload",FILE_APPEND);
         $upload = $sftp->put( $remote.'/' . basename($backup_file),$backup_file, NET_SFTP_LOCAL_FILE);
+        file_put_contents("sftp_log.txt","finish upload",FILE_APPEND);
         $sftp->disconnect();
 
         if ($upload === false) {
+            file_put_contents("sftp_log.txt","sftp upload failed",FILE_APPEND);
             return array(
                 'error' => 'Failed to upload file to SFTP. Please check your specified path.',
                 'partial' => 1
@@ -2012,18 +2039,20 @@ class MMB_Backup extends MMB_Core {
      */
     function remove_sftp_backup($args) {
         extract($args);
-
+        file_put_contents("sftp_log.txt","sftp remove_sftp_backup",FILE_APPEND);
         $port = $sftp_port ? $sftp_port : 22; //default port is 21
         $sftp_hostname = $sftp_hostname?$sftp_hostname:"";
         $sftp_username = $sftp_username?$sftp_username:"";
         $sftp_password = $sftp_password?$sftp_password:"";
         $sftp = new Net_SFTP($sftp_hostname);
         if (!$sftp->login($sftp_username, $sftp_password)) {
+            file_put_contents("sftp_log.txt","sftp login failed in remove_sftp_backup",FILE_APPEND);
             return false;
         }
-        $remote = $sftp_remote_folder ? trim($sftp_remote_folder,"/")."/" : '';
+        $remote = $sftp_remote_folder ? trim($sftp_remote_folder,"/")."/" :'';
 // copies filename.local to filename.remote on the SFTP server
-        $upload = $sftp->delete( $remote . '/' . $backup_file);
+        if(isset($backup_file) && isset($remote) && $backup_file!=="")
+            $upload = $sftp->delete( $remote . '/' . $backup_file);
         $sftp->disconnect();
     }
 
@@ -2092,12 +2121,16 @@ class MMB_Backup extends MMB_Core {
      */
     function get_sftp_backup($args) {
         extract($args);
+        file_put_contents("sftp_log.txt","get_sftp_backup",FILE_APPEND);
 
         $port = $sftp_port ? $sftp_port : 22; //default port is 21        $sftp_hostname = $sftp_hostname?$sftp_hostname:"";
+        file_put_contents("sftp_log.txt","sftp port:".$sftp_port,FILE_APPEND);
         $sftp_username = $sftp_username?$sftp_username:"";
         $sftp_password = $sftp_password?$sftp_password:"";
+        file_put_contents("sftp_log.txt","sftp host:".$sftp_hostname.";username:".$sftp_username.";password:".$sftp_password,FILE_APPEND);
         $sftp = new Net_SFTP($sftp_hostname);
         if (!$sftp->login($sftp_username, $sftp_password)) {
+            file_put_contents("sftp_log.txt","sftp login failed in get_sftp_backup",FILE_APPEND);
             return false;
         }
         $remote = $sftp_remote_folder ? trim($sftp_remote_folder,"/")."/" : '';
@@ -2110,6 +2143,7 @@ class MMB_Backup extends MMB_Core {
         $get = $sftp->get($remote . '/' . $backup_file,$temp);
         $sftp->disconnect();
         if ($get === false) {
+            file_put_contents("sftp_log.txt","sftp get failed in get_sftp_backup",FILE_APPEND);
             return false;
         }
 
@@ -3186,7 +3220,6 @@ class MMB_Backup extends MMB_Core {
                 unset($tasks[$task_name]['task_results'][count($tasks[$task_name]['task_results']) - 1]['server']);
             }
             $this->update_tasks($tasks);
-            $return = $tasks[$task_name];
         } else {
             $return = array(
                 'error' => 'Backup file not found on your server. Please try again.'
