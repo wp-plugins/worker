@@ -23,18 +23,18 @@ $zip_errors = array(
     'No error',
     'No error',
     'Unexpected end of zip file',
-    'A generic error in the zipfile format was detected.',
+    'A generic error in the zipfile format was detected',
     'zip was unable to allocate itself memory',
     'A severe error in the zipfile format was detected',
     'Entry too large to be split with zipsplit',
     'Invalid comment format',
     'zip -T failed or out of memory',
     'The user aborted zip prematurely',
-    'zip encountered an error while using a temp file',
+    'zip encountered an error while using a temp file. Please check if there is enough disk space',
     'Read or seek error',
     'zip has nothing to do',
     'Missing or empty zip file',
-    'Error writing to a file',
+    'Error writing to a file. Please check if there is enough disk space',
     'zip was unable to create a file to write to',
     'bad command line parameters',
     'no error',
@@ -115,7 +115,7 @@ class MMB_Backup extends MMB_Core {
      */
     function set_memory() {
         $changed = array('execution_time' => 0, 'memory_limit' => 0);
-
+   		@ignore_user_abort(true);
         $memory_limit = trim(ini_get('memory_limit'));
         $last = strtolower(substr($memory_limit, -1));
 
@@ -131,8 +131,9 @@ class MMB_Backup extends MMB_Core {
             $changed['memory_limit'] = 1;
         }
 
-        if ( (int) @ini_get('max_execution_time') < 600 ) {
-            @set_time_limit(600); //ten minutes
+      if ( (int) @ini_get('max_execution_time') < 1200 ) {
+     	  	@ini_set('max_execution_time', 1200);
+			@set_time_limit(1200); 
             $changed['execution_time'] = 1;
         }
 
@@ -294,6 +295,11 @@ class MMB_Backup extends MMB_Core {
                     //Update task with next schedule
                     $this->set_backup_task($update);
 
+                    if($check == 'paused'){
+                    	continue;
+                    }
+                    
+                    
                     $result = $this->backup($setting['task_args'], $task_name);
                     $error  = '';
 
@@ -368,7 +374,7 @@ class MMB_Backup extends MMB_Core {
             $this->set_backup_task(array(
                 'task_name' => $task_name,
                 'args' => $settings[$task_name]['task_args'],
-                'error' => $result
+                            'error' => $result['error']
             ));
             return $result;
         } else {
@@ -423,9 +429,8 @@ class MMB_Backup extends MMB_Core {
 
         if (!file_exists($new_file_path)) {
             if (!mkdir($new_file_path, 0755, true))
-                $error_message = 'Permission denied, make sure you have write permission to wp-content folder.';
-            return array(
-                'error' => $error_message
+                return array(
+                    'error' => 'Permission denied, make sure you have write permissions to the wp-content folder.'
             );
         }
 
@@ -480,9 +485,9 @@ class MMB_Backup extends MMB_Core {
             $duration        = round($end_compress - $begin_compress, 2);
 
             if ($size > 1000) {
-                $paths['size'] = ceil($size / 1024) . "mb";
+                $paths['size'] = ceil($size / 1024) . "MB";
             } else {
-                $paths['size'] = $size . 'kb';
+                $paths['size'] = $size . 'KB';
             }
 
             $paths['duration'] = $duration . 's';
@@ -523,7 +528,7 @@ class MMB_Backup extends MMB_Core {
             }
 
             $temp          = $backup_settings[$task_name]['task_results'];
-            $temp          = array_values($temp);
+            $temp          = @array_values($temp);
             $paths['time'] = time();
 
             if ($task_name != 'Backup Now') {
@@ -608,7 +613,9 @@ class MMB_Backup extends MMB_Core {
 
         $remove = array(
             trim(basename(WP_CONTENT_DIR)) . "/managewp/backups",
-            trim(basename(WP_CONTENT_DIR)) . "/" . md5('mmb-worker') . "/mwp_backups"
+            trim(basename(WP_CONTENT_DIR)) . "/" . md5('mmb-worker') . "/mwp_backups",
+            trim(basename(WP_CONTENT_DIR)) . "/cache",
+	    trim(basename(WP_CONTENT_DIR)) . "/w3tc",
         );
         $exclude = array_merge($exclude, $remove);
 
@@ -787,8 +794,10 @@ class MMB_Backup extends MMB_Core {
     	}
     	
     	//Additional includes?
-    	if (!empty($include)) {
+    	if (!empty($include) && is_array($include)) {
     		foreach ($include as $data) {
+				if(empty($data))
+				continue;
     			if ($data) {
     				if ($sys == 'WIN')
     					$include_data .= " $data/*.*";

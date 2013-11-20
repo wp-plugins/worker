@@ -4,7 +4,7 @@ Plugin Name: ManageWP - Worker
 Plugin URI: http://managewp.com/
 Description: Manage Multiple WordPress sites from one dashboard. Visit <a href="https://managewp.com">ManageWP.com</a> to sign up.
 Author: ManageWP
-Version: 3.9.27
+Version: 3.9.28
 Author URI: http://managewp.com
 */
 
@@ -22,7 +22,7 @@ if(basename($_SERVER['SCRIPT_FILENAME']) == "init.php"):
     exit;
 endif;
 if(!defined('MMB_WORKER_VERSION'))
-	define('MMB_WORKER_VERSION', '3.9.27');
+	define('MMB_WORKER_VERSION', '3.9.28');
 
 if ( !defined('MMB_XFRAME_COOKIE')){
 	$siteurl = function_exists( 'get_site_option' ) ? get_site_option( 'siteurl' ) : get_option( 'siteurl' );
@@ -31,7 +31,6 @@ if ( !defined('MMB_XFRAME_COOKIE')){
 global $wpdb, $mmb_plugin_dir, $mmb_plugin_url, $wp_version, $mmb_filters, $_mmb_item_filter;
 if (version_compare(PHP_VERSION, '5.0.0', '<')) // min version 5 supported
     exit("<p>ManageWP Worker plugin requires PHP 5 or higher.</p>");
-
 
 $mmb_wp_version = $wp_version;
 $mmb_plugin_dir = WP_PLUGIN_DIR . '/' . basename(dirname(__FILE__));
@@ -152,6 +151,8 @@ if( !function_exists('mmb_authenticate')) {
         if(isset($_mwp_data['params']['username']) && !is_user_logged_in()){
             $user = function_exists('get_user_by') ? get_user_by('login', $_mwp_data['params']['username']) : get_userdatabylogin( $_mwp_data['params']['username'] );
             wp_set_current_user($user->ID);
+            if(@getenv('IS_WPE'))
+                wp_set_auth_cookie($user->ID);
         }
     }
 }
@@ -990,6 +991,8 @@ if( !function_exists ('mmb_delete_posts')) {
 	}
 }
 
+
+
 if( !function_exists ('mmb_edit_posts')) {
 	function mmb_edit_posts($params)
 	{
@@ -1104,7 +1107,6 @@ if( !function_exists('mwp_check_backup_tasks') ){
  	function mwp_check_backup_tasks() {
 		global $mmb_core, $_wp_using_ext_object_cache;
 		$_wp_using_ext_object_cache = false;
-		
 		$mmb_core->get_backup_instance();
 		$mmb_core->backup_instance->check_backup_tasks();
 	}
@@ -1157,6 +1159,14 @@ if( !function_exists('mmb_get_plugins_themes') ){
 	}
 }
 
+
+if( !function_exists('mmb_get_autoupdate_plugins_themes') ){
+    function mmb_get_autoupdate_plugins_themes($params) {
+        $return = MWP_Updater::getSettings($params);
+        mmb_response($return, true);
+    }
+}
+
 if( !function_exists('mmb_edit_plugins_themes') ){
  	function mmb_edit_plugins_themes($params) {
 		global $mmb_core;
@@ -1164,6 +1174,13 @@ if( !function_exists('mmb_edit_plugins_themes') ){
 		$return = $mmb_core->installer_instance->edit($params);
 		mmb_response($return, true);
 	}
+}
+
+if( !function_exists('mmb_edit_autoupdate_plugins_themes') ){
+    function mmb_edit_autoupdate_plugins_themes($params) {
+        $return = MWP_Updater::setSettings($params);
+        mmb_response($return, true);
+    }
 }
 
 if( !function_exists('mmb_worker_brand')){
@@ -1248,6 +1265,9 @@ $mmb_core = new MMB_Core();
 
 if(isset($_GET['auto_login']))
 	$mmb_core->automatic_login();	
+
+require_once dirname(__FILE__) . '/updater.php';
+MWP_Updater::register();
 
 if (function_exists('register_activation_hook'))
     register_activation_hook( __FILE__ , array( $mmb_core, 'install' ));

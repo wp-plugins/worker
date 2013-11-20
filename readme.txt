@@ -33,8 +33,14 @@ Check out [ManageWP.com](http://managewp.com/ "Manage Multiple Blogs").
 
 == Changelog ==  
 
+= 3.9.28 =
+- New: Control Wordpress Automatic Background Updates for plugins and themes!
+- Fix: Tweaks to SFTP support for backups and clone
+- Fix: Enhancements to Backup and Branding features
+
+
 = 3.9.27 =
-- New: SFTP support for backups and clone
+- New: SFTP support for backups and clone!
 - Fix: Database dump for backup tasks with defined socket path or port number in wp-config.php 
 - Fix: Optimize Wordpress tables before backup
 - Fix: Compatibility with Better WP Security 

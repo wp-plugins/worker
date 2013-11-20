@@ -122,7 +122,7 @@ class MMB_Core extends MMB_Helper
 			'set_notifications' => 'mmb_set_notifications',
 			'clean_orphan_backups' => 'mmb_clean_orphan_backups',
 			'get_users' => 'mmb_get_users',
-			'edit_users' => 'mmb_edit_users', 
+			'edit_users' => 'mmb_edit_users',
 			'get_posts' => 'mmb_get_posts',
 			'delete_post' => 'mmb_delete_post',
 			'delete_posts' => 'mmb_delete_posts',
@@ -134,6 +134,8 @@ class MMB_Core extends MMB_Helper
 			'worker_brand' => 'mmb_worker_brand',
 			'maintenance' => 'mmb_maintenance_mode',
 			'get_dbname' => 'mmb_get_dbname',
+            'get_autoupdate_plugins_themes' => 'mmb_get_autoupdate_plugins_themes',
+            'edit_autoupdate_plugins_themes' => 'mmb_edit_autoupdate_plugins_themes',
 		);
 		
 		$mwp_worker_brand = get_option("mwp_worker_brand");
@@ -328,6 +330,9 @@ EOF;
         </form>
         <div id="support_response_id" style="margin-top: 14px"></div>
         <style>
+            .ui-widget-content{
+                z-index: 300002;
+            }
             .ui-widget-overlay {
                 background-repeat: repeat;
             }
