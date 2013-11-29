@@ -44,7 +44,7 @@ class Dropbox {
 		if (!is_readable($file) or !is_file($file))
 			throw new DropboxException("Error: File \"$file\" is not readable or doesn't exist.");
         $filesize=filesize($file);
-        if ($filesize<150000000) {  //chunk transfer on bigger uploads <150MB
+        if ($filesize<(1024*1024*50)) {  //chunk transfer on bigger uploads <50MB
             $filehandle = fopen($file,'r');
             $url = self::API_CONTENT_URL.self::API_VERSION_URL.'files_put/'.$this->root.'/'.trim($path, '/');
             $output = $this->request($url, array('overwrite' => ($overwrite)? 'true' : 'false'), 'PUT', $filehandle, $filesize);
@@ -63,7 +63,7 @@ class Dropbox {
         $uploadid=null;
         $offset=0;
         $ProgressFunction=null;
-        while ($data=fread($file_handle,4194304)) {  //4194304 = 4MB
+        while ($data=fread($file_handle,(1024*1024*30))) {  // 30MB chunk size
             $chunkHandle = fopen('php://memory', 'rw');
             fwrite($chunkHandle,$data);
             rewind($chunkHandle);

@@ -1074,13 +1074,13 @@ class MMB_Backup extends MMB_Core {
             $socketname = $host_sock[1];
             $port = intval($host_sock[1]);
             if($port===0){
-                $command = "%s --force --host=%s --socket=%s --user=%s --password=%s --add-drop-table --skip-lock-tables %s --result-file=%s";
+                $command = "%s --force --host=%s --socket=%s --user=%s --password=%s --add-drop-table --lines-terminated-by=0x0d0a --skip-lock-tables %s --result-file=%s";
                 $command = sprintf($command, $paths['mysqldump'], escapeshellarg($hostname), escapeshellarg($socketname), escapeshellarg(DB_USER), escapeshellarg(DB_PASSWORD), escapeshellarg(DB_NAME),escapeshellarg($file));
 
             }
             else
             {
-                $command = "%s --force --host=%s --port=%s --user=%s --password=%s --add-drop-table --skip-lock-tables %s --result-file=%s";
+                $command = "%s --force --host=%s --port=%s --user=%s --password=%s --add-drop-table --lines-terminated-by=0x0d0a --skip-lock-tables %s --result-file=%s";
                 $command = sprintf($command, $paths['mysqldump'], escapeshellarg($hostname),escapeshellarg($port), escapeshellarg(DB_USER), escapeshellarg(DB_PASSWORD), escapeshellarg(DB_NAME),escapeshellarg($file));
 
             }
@@ -1089,7 +1089,7 @@ class MMB_Backup extends MMB_Core {
         else
         {
             $hostname = DB_HOST;
-            $command = "%s --force --host=%s --user=%s --password=%s --add-drop-table --skip-lock-tables %s --result-file=%s";
+            $command = "%s --force --host=%s --user=%s --password=%s --add-drop-table --lines-terminated-by=0x0d0a --skip-lock-tables %s --result-file=%s";
             $command = sprintf($command, $paths['mysqldump'], escapeshellarg($hostname), escapeshellarg(DB_USER), escapeshellarg(DB_PASSWORD), escapeshellarg(DB_NAME),escapeshellarg($file));
         }
 
