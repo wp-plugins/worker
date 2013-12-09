@@ -1,11 +1,11 @@
 <?php
 /*************************************************************
- * 
- * 
- * 
+ *
+ *
+ *
  * ManageWP Worker Plugin
- * 
- * 
+ *
+ *
  * Copyright (c) 2011 Prelovac Media
  * www.prelovac.com
  **************************************************************/
@@ -17,9 +17,9 @@ add_filter('mmb_stats_filter', 'mmb_get_extended_info');
 
 function mmb_get_extended_info($stats)
 {
-	global $mmb_core;
-	$params = get_option('mmb_stats_filter');
-	$filter = isset($params['plugins']['cleanup']) ? $params['plugins']['cleanup'] : array();
+    global $mmb_core;
+    $params = get_option('mmb_stats_filter');
+    $filter = isset($params['plugins']['cleanup']) ? $params['plugins']['cleanup'] : array();
     $stats['num_revisions']     = mmb_num_revisions($filter['revisions']);
     //$stats['num_revisions'] = 5;
     $stats['overhead']          = mmb_handle_overhead(false);
@@ -35,11 +35,11 @@ function cleanup_delete_worker($params = array())
 {
     global $mmb_core;
     $revision_params = get_option('mmb_stats_filter');
-	$revision_filter = isset($revision_params['plugins']['cleanup']) ? $revision_params['plugins']['cleanup'] : array();
-	
+    $revision_filter = isset($revision_params['plugins']['cleanup']) ? $revision_params['plugins']['cleanup'] : array();
+
     $params_array = explode('_', $params['actions']);
     $return_array = array();
-	
+
     foreach ($params_array as $param) {
         switch ($param) {
             case 'revision':
@@ -66,11 +66,11 @@ function cleanup_delete_worker($params = array())
             default:
                 break;
         }
-        
+
     }
-    
+
     unset($params);
-    
+
     mmb_response($return_array, true);
 }
 
@@ -79,15 +79,15 @@ function mmb_num_revisions($filter)
     global $wpdb;
     $sql           = "SELECT COUNT(*) FROM $wpdb->posts WHERE post_type = 'revision'";
     $num_revisions = $wpdb->get_var($sql);
-	if(isset($filter['num_to_keep']) && !empty($filter['num_to_keep'])){
-		$num_rev = str_replace("r_","",$filter['num_to_keep']);
-		if($num_revisions < $num_rev){
-			return 0;
-		}
-    	return ($num_revisions - $num_rev);
-	}else{
-		return $num_revisions;
-	}
+    if(isset($filter['num_to_keep']) && !empty($filter['num_to_keep'])){
+        $num_rev = str_replace("r_","",$filter['num_to_keep']);
+        if($num_revisions < $num_rev){
+            return 0;
+        }
+        return ($num_revisions - $num_rev);
+    }else{
+        return $num_revisions;
+    }
 }
 
 function mmb_select_all_revisions()
@@ -101,27 +101,27 @@ function mmb_select_all_revisions()
 function mmb_delete_all_revisions($filter)
 {
     global $wpdb, $mmb_core;
-	$where = '';
-	if(isset($filter['num_to_keep']) && !empty($filter['num_to_keep'])){
-		$num_rev = str_replace("r_","",$filter['num_to_keep']);
-		$select_posts = "SELECT ID FROM $wpdb->posts WHERE post_type = 'revision' ORDER BY post_date DESC LIMIT ".$num_rev;
-		$select_posts_res = $wpdb->get_results($select_posts);
-		$notin = '';
-		$n = 0;
-		foreach($select_posts_res as $keep_post){
-			$notin.=$keep_post->ID;
-			$n++;
-			if(count($select_posts_res)>$n){
-				$notin.=',';
-			}
-		}
-		$where = " AND a.ID NOT IN (".$notin.")";
-	}
-	
+    $where = '';
+    if(isset($filter['num_to_keep']) && !empty($filter['num_to_keep'])){
+        $num_rev = str_replace("r_","",$filter['num_to_keep']);
+        $select_posts = "SELECT ID FROM $wpdb->posts WHERE post_type = 'revision' ORDER BY post_date DESC LIMIT ".$num_rev;
+        $select_posts_res = $wpdb->get_results($select_posts);
+        $notin = '';
+        $n = 0;
+        foreach($select_posts_res as $keep_post){
+            $notin.=$keep_post->ID;
+            $n++;
+            if(count($select_posts_res)>$n){
+                $notin.=',';
+            }
+        }
+        $where = " AND a.ID NOT IN (".$notin.")";
+    }
+
     $sql       = "DELETE a,b,c FROM $wpdb->posts a LEFT JOIN $wpdb->term_relationships b ON (a.ID = b.object_id) LEFT JOIN $wpdb->postmeta c ON (a.ID = c.post_id) WHERE a.post_type = 'revision'".$where;
-    
-	$revisions = $wpdb->query($sql);
-    
+
+    $revisions = $wpdb->query($sql);
+
     return $revisions;
 }
 
@@ -138,18 +138,19 @@ function mmb_handle_overhead($clear = false)
     $tot_data   = 0;
     $tot_idx    = 0;
     $tot_all    = 0;
-    $query      = 'SHOW TABLES';
+    $query      = 'SHOW TABLE STATUS';
     $tables     = $wpdb->get_results($query, ARRAY_A);
     $total_gain = 0;
-	$table_string = '';
+    $table_string = '';
     foreach ($tables as $table) {
         if (isset($table['Engine']) && in_array($table['Engine'], array(
-            'MyISAM',
-            'ISAM',
-            'HEAP',
-            'MEMORY',
-            'ARCHIVE'
-        ))) {
+                'MyISAM',
+                'ISAM',
+                'HEAP',
+                'MEMORY',
+                'ARCHIVE',
+                //          'InnoDB'
+            ))) {
             if ($wpdb->base_prefix != $wpdb->prefix) {
                 if (preg_match('/^' . $wpdb->prefix . '*/Ui', $table['Name'])) {
                     if ($table['Data_free'] > 0) {
@@ -166,19 +167,27 @@ function mmb_handle_overhead($clear = false)
                 }
             }
         } elseif (isset($table['Engine']) && $table['Engine'] == 'InnoDB') {
+            $innodb_file_per_table = $wpdb->get_results("SHOW VARIABLES LIKE 'innodb_file_per_table'");
+            if($innodb_file_per_table[0]->Value==="ON")
+            {
+                if ($table['Data_free'] > 0) {
+                    $total_gain += $table['Data_free'] / 1024;
+                    $table_string .= $table['Name'] . ",";
+                }
+            }
             //$total_gain +=  $table['Data_free'] > 100*1024*1024 ? $table['Data_free'] / 1024 : 0;
         }
     }
 
     if ($clear) {
         $table_string = substr($table_string, 0, strlen($table_string) - 1); //remove last ,
-        
+
         $table_string = rtrim($table_string);
-        
+
         $query = "OPTIMIZE TABLE $table_string";
-        
+
         $optimize = $wpdb->query($query);
-        
+
         return $optimize === FALSE ? false : true;
     } else
         return round($total_gain, 3);

@@ -723,9 +723,9 @@ class MMB_Backup extends MMB_Core {
         $zip = new PclZip($backup_file);
 
         if ($disable_comp) {
-            $result = $zip->add(MWP_BACKUP_DIR, PCLZIP_OPT_REMOVE_PATH, MWP_BACKUP_DIR, PCLZIP_OPT_NO_COMPRESSION) !== 0;
+            $result = $zip->add(MWP_BACKUP_DIR."/mwp_db/", PCLZIP_OPT_REMOVE_PATH, MWP_BACKUP_DIR, PCLZIP_OPT_NO_COMPRESSION) !== 0;
         } else {
-            $result = $zip->add(MWP_BACKUP_DIR, PCLZIP_OPT_REMOVE_PATH, MWP_BACKUP_DIR) !== 0;
+            $result = $zip->add(MWP_BACKUP_DIR."/mwp_db/", PCLZIP_OPT_REMOVE_PATH, MWP_BACKUP_DIR) !== 0;
         }
 
         return $result;
@@ -1044,7 +1044,7 @@ class MMB_Backup extends MMB_Core {
         if (!file_exists($db_folder)) {
             if (!mkdir($db_folder, 0755, true))
                 return array(
-                    'error' => 'Error creating database backup folder (' . $db_folder . '). Make sure you have corrrect write permissions.'
+                    'error' => 'Error creating database backup folder (' . $db_folder . '). Make sure you have correct write permissions.'
                 );
         }
 
@@ -1074,13 +1074,13 @@ class MMB_Backup extends MMB_Core {
             $socketname = $host_sock[1];
             $port = intval($host_sock[1]);
             if($port===0){
-                $command = "%s --force --host=%s --socket=%s --user=%s --password=%s --add-drop-table --lines-terminated-by=0x0d0a --skip-lock-tables %s --result-file=%s";
+                $command = "%s --force --host=%s --socket=%s --user=%s --password=%s --add-drop-table --skip-lock-tables %s --result-file=%s";
                 $command = sprintf($command, $paths['mysqldump'], escapeshellarg($hostname), escapeshellarg($socketname), escapeshellarg(DB_USER), escapeshellarg(DB_PASSWORD), escapeshellarg(DB_NAME),escapeshellarg($file));
 
             }
             else
             {
-                $command = "%s --force --host=%s --port=%s --user=%s --password=%s --add-drop-table --lines-terminated-by=0x0d0a --skip-lock-tables %s --result-file=%s";
+                $command = "%s --force --host=%s --port=%s --user=%s --password=%s --add-drop-table --skip-lock-tables %s --result-file=%s";
                 $command = sprintf($command, $paths['mysqldump'], escapeshellarg($hostname),escapeshellarg($port), escapeshellarg(DB_USER), escapeshellarg(DB_PASSWORD), escapeshellarg(DB_NAME),escapeshellarg($file));
 
             }
@@ -1089,7 +1089,7 @@ class MMB_Backup extends MMB_Core {
         else
         {
             $hostname = DB_HOST;
-            $command = "%s --force --host=%s --user=%s --password=%s --add-drop-table --lines-terminated-by=0x0d0a --skip-lock-tables %s --result-file=%s";
+            $command = "%s --force --host=%s --user=%s --password=%s --add-drop-table --skip-lock-tables %s --result-file=%s";
             $command = sprintf($command, $paths['mysqldump'], escapeshellarg($hostname), escapeshellarg(DB_USER), escapeshellarg(DB_PASSWORD), escapeshellarg(DB_NAME),escapeshellarg($file));
         }
 
@@ -1565,7 +1565,7 @@ class MMB_Backup extends MMB_Core {
      */
     function optimize_tables() {
         global $wpdb;
-        $query  = 'SHOW TABLES';
+        $query  = 'SHOW TABLE STATUS';
         $tables = $wpdb->get_results($query, ARRAY_A);
         foreach ($tables as $table) {
             if (in_array($table['Engine'], array(
