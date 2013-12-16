@@ -210,8 +210,13 @@ class MMB_Core extends MMB_Helper
      */
     function network_admin_notice()
     {
-        echo '<div class="error" style="text-align: center;"><p style="color: red; font-size: 14px; font-weight: bold;">Attention !</p><p>
-	  	Please add this site and your network blogs, with your network adminstrator username, to your <a target="_blank" href="http://managewp.com/wp-admin">ManageWP.com</a> account now to remove this notice or "Network Deactivate" the Worker plugin to avoid <a target="_blank" href="http://managewp.com/user-guide/security">security issues</a>.
+        global $status, $page, $s;
+        $context = $status;
+        $plugin =  'worker/init.php';
+        $nonce = wp_create_nonce('deactivate-plugin_' . $plugin);
+        $actions = 'plugins.php?action=deactivate&amp;plugin='.urlencode($plugin).'&amp;plugin_status=' . $context . '&amp;paged=' . $page.'&amp;s=' . $s. '&amp;_wpnonce=' .$nonce ;
+        echo '<div class="error" style="text-align: center;"><p style="color: red; font-size: 14px; font-weight: bold;">ManageWP Notice</p><p>
+	  	Please <a href="https://managewp.com" target="_blank">add this site and your network blogs</a>, with your network administrator username, to your ManageWP account. <a target="_blank" href="https://managewp.com/features">What is ManageWP?</a> <br ><br > Otherwise, click to <a href="'.$actions.'">deactivate ManageWP plugin</a></em>.
 	  	</p></div>';
     }
 
@@ -222,13 +227,13 @@ class MMB_Core extends MMB_Helper
      */
     function admin_notice()
     {
-        global $status, $page, $s, $totals;
+        global $status, $page, $s;
         $context = $status;
         $plugin =  'worker/init.php';
         $nonce = wp_create_nonce('deactivate-plugin_' . $plugin);
         $actions = 'plugins.php?action=deactivate&amp;plugin='.urlencode($plugin).'&amp;plugin_status=' . $context . '&amp;paged=' . $page.'&amp;s=' . $s. '&amp;_wpnonce=' .$nonce ;
         echo '<div class="error" style="text-align: center;"><p style="color: red; font-size: 14px; font-weight: bold;">ManageWP Notice</p><p>
-	  	Please <a href="https://managewp.com" target="_blank">add this site</a> to your ManageWP account. <a target="_blank" href="https://managewp.com/features">What is ManageWP?</a> <br ><br ><em>Otherwise, click to <a href="'.$actions.'">deactivate ManageWP plugin</em>.
+	  	Please <a href="https://managewp.com" target="_blank">add this site</a> to your ManageWP account. <a target="_blank" href="https://managewp.com/features">What is ManageWP?</a> <br ><br ><em>Otherwise, click to <a href="'.$actions.'">deactivate ManageWP plugin</a></em>.
 	  	</p></div>';
     }
 
