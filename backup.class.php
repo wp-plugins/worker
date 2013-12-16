@@ -3356,6 +3356,11 @@ class MMB_Backup extends MMB_Core {
             @mysql_close($wpdb->dbh);
             $wpdb = new wpdb( DB_USER, DB_PASSWORD, DB_NAME, DB_HOST );
             wp_set_wpdb_vars();
+            if (function_exists('is_multisite')) {
+                if (is_multisite()) {
+                    $wpdb->set_blog_id(get_current_blog_id());
+                }
+            }
         }
     }
 
