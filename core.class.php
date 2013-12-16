@@ -232,8 +232,13 @@ class MMB_Core extends MMB_Helper
         $plugin =  'worker/init.php';
         $nonce = wp_create_nonce('deactivate-plugin_' . $plugin);
         $actions = 'plugins.php?action=deactivate&amp;plugin='.urlencode($plugin).'&amp;plugin_status=' . $context . '&amp;paged=' . $page.'&amp;s=' . $s. '&amp;_wpnonce=' .$nonce ;
+        $deactivation =  'click to <a href="'.$actions.'">deactivate ManageWP plugin</a>';
+        if($this->mmb_multisite && $this->network_admin_install != '1'){
+                $deactivation = "deactivate ManageWP plugin";
+        }
         echo '<div class="error" style="text-align: center;"><p style="color: red; font-size: 14px; font-weight: bold;">ManageWP Notice</p><p>
-	  	Please <a href="https://managewp.com" target="_blank">add this site</a> to your ManageWP account. <a target="_blank" href="https://managewp.com/features">What is ManageWP?</a> <br ><br ><em>Otherwise, click to <a href="'.$actions.'">deactivate ManageWP plugin</a></em>.
+	  	Please <a href="https://managewp.com" target="_blank">add this site</a> to your ManageWP account. <a target="_blank" href="https://managewp.com/features">What is ManageWP?</a> <br ><br >
+	  	<em>Otherwise, '.$deactivation.'</em>.
 	  	</p></div>';
     }
 
