@@ -140,6 +140,7 @@ if( !function_exists('mmb_authenticate')) {
 
         if($_mwp_data['action'] === 'add_site') {
             $_mwp_auth = true;
+            return;
         } else {
             $_mwp_auth = $mmb_core->authenticate_message($_mwp_data['action'] . $_mwp_data['id'], $_mwp_data['signature'], $_mwp_data['id']);
         }

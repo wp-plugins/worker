@@ -1211,6 +1211,7 @@ class MMB_Backup extends MMB_Core {
             $what = 'full';
         } else {
             $tasks = $this->tasks;
+            $task_name = stripslashes($task_name);
             $task  = $tasks[$task_name];
             if (isset($task['task_results'][$result_id]['server'])) {
                 $backup_file = $task['task_results'][$result_id]['server']['file_path'];
@@ -2993,11 +2994,13 @@ class MMB_Backup extends MMB_Core {
         if (empty($args))
             return false;
         extract($args);
+        $task_name = stripslashes($task_name);
         if (isset($google_drive_token)) {
             $this->tasks[$task_name]['task_args']['account_info']['mwp_google_drive']['google_drive_token'] = $google_drive_token;
         }
 
         $tasks   = $this->tasks;
+
         $task    = $tasks[$task_name];
         $backups = $task['task_results'];
         $backup  = $backups[$result_id];
@@ -3135,6 +3138,7 @@ class MMB_Backup extends MMB_Core {
             extract($args);
 
         $tasks = $this->tasks;
+        $task_name = stripslashes($task_name);
         $task  = $tasks[$task_name];
 
         if (!empty($task)) {
