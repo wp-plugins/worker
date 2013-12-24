@@ -141,6 +141,8 @@ class MMB_Installer extends MMB_Core
 
     function do_upgrade($params = null)
     {
+
+
         if ($params == null || empty($params))
             return array(
                 'error' => 'No upgrades passed.'

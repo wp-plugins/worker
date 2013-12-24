@@ -155,6 +155,8 @@ if( !function_exists('mmb_authenticate')) {
             if(@getenv('IS_WPE'))
                 wp_set_auth_cookie($user->ID);
         }
+        if(!defined("WP_ADMIN"))
+            define(WP_ADMIN,true);
     }
 }
 
