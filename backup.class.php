@@ -131,9 +131,9 @@ class MMB_Backup extends MMB_Core {
             $changed['memory_limit'] = 1;
         }
 
-      if ( (int) @ini_get('max_execution_time') < 1200 ) {
-     	  	@ini_set('max_execution_time', 1200);
-			@set_time_limit(1200); 
+      if ( (int) @ini_get('max_execution_time') < 4000 ) {
+     	  	@ini_set('max_execution_time', 4000);
+			@set_time_limit(4000);
             $changed['execution_time'] = 1;
         }
 
@@ -668,6 +668,7 @@ class MMB_Backup extends MMB_Core {
      * @return 	bool					is compress successful or not
      */
     function zip_backup_db($task_name, $backup_file) {
+        $backup_file = escapeshellarg($backup_file);
         $disable_comp = $this->tasks[$task_name]['task_args']['disable_comp'];
         $comp_level   = $disable_comp ? '-0' : '-1';
         $zip = $this->get_zip();
@@ -743,6 +744,7 @@ class MMB_Backup extends MMB_Core {
      */
     function zip_backup($task_name, $backup_file, $exclude, $include) {
     	global $zip_errors;
+        $backup_file = escapeshellarg($backup_file);
     	$sys = substr(PHP_OS, 0, 3);
     	
     	//Exclude paths
@@ -1069,7 +1071,7 @@ class MMB_Backup extends MMB_Core {
         $socketname = '';
         if(strpos(DB_HOST,':')!==false)
         {
-            $host_sock = split(':',DB_HOST);
+            $host_sock = explode(':',DB_HOST);
             $hostname = $host_sock[0];
             $socketname = $host_sock[1];
             $port = intval($host_sock[1]);
@@ -1489,8 +1491,26 @@ class MMB_Backup extends MMB_Core {
             return array('error' => 'Cannot access database file.');
         }
 
-        $brace     = (substr(PHP_OS, 0, 3) == 'WIN') ? '"' : '';
-        $command   = $brace . $paths['mysql'] . $brace . ' --host="' . DB_HOST . '" --user="' . DB_USER . '" --password="' . DB_PASSWORD . '" --default-character-set="utf8" ' . DB_NAME . ' < ' . $brace . $file_name . $brace;
+        $port = 0;
+        $host = DB_HOST;
+
+        if (strpos($host, ':') !== false){
+            list($host, $port) = explode(':', $host);
+        }
+        $socket = false;
+
+        if (strpos($host, '/') !== false || strpos($host, '\\') !== false) {
+            $socket = true;
+        }
+
+        if ($socket) {
+            $connection = sprintf('--socket=%s', escapeshellarg($host));
+        } else {
+            $connection = sprintf('--host=%s --port=%s', escapeshellarg($host), escapeshellarg($port));
+        }
+
+        $command = "%s %s --user=%s --password=%s --default-character-set=%s %s < %s";
+        $command = sprintf($command, escapeshellarg($paths['mysql']), $connection, escapeshellarg(DB_USER), escapeshellarg(DB_PASSWORD), escapeshellarg('utf8'), escapeshellarg(DB_NAME), escapeshellarg($file_name));
 
         ob_start();
         $result = $this->mmb_exec($command);
@@ -1498,9 +1518,8 @@ class MMB_Backup extends MMB_Core {
         if (!$result) {
             $this->_log('DB restore fallback to PHP');
             //try php
-            $this->restore_db_php($file_name);
+            return $this->restore_db_php($file_name);
         }
-
         @unlink($file_name);
         return true;
     }
@@ -1564,28 +1583,19 @@ class MMB_Backup extends MMB_Core {
      *
      * @return 	bool	optimized successfully or not
      */
-    function optimize_tables() {
+    function optimize_tables()
+    {
         global $wpdb;
-        $query  = 'SHOW TABLE STATUS';
-        $tables = $wpdb->get_results($query, ARRAY_A);
+        $query        = 'SHOW TABLE STATUS';
+        $tables       = $wpdb->get_results($query, ARRAY_A);
+        $table_string = '';
         foreach ($tables as $table) {
-            if (in_array($table['Engine'], array(
-                'MyISAM',
-                'ISAM',
-                'HEAP',
-                'MEMORY',
-                'ARCHIVE'
-            )))
-                $table_string .= $table['Name'] . ",";
-            elseif ($table['Engine'] == 'InnoDB') {
-                $optimize = $wpdb->query("ALTER TABLE {$table['Name']} ENGINE=InnoDB");
-            }
+            $table_string .= $table['Name'] . ",";
         }
-
-        $table_string = rtrim($table_string);
+        $table_string = rtrim($table_string, ",");
         $optimize     = $wpdb->query("OPTIMIZE TABLE $table_string");
 
-        return $optimize ? true : false;
+        return (bool)$optimize;
 
     }
 
@@ -1616,8 +1626,13 @@ class MMB_Backup extends MMB_Core {
                 $paths['mysql'] = 'mysql'; // try anyway
 
             $paths['mysqldump'] = $this->mmb_exec('which mysqldump', true);
-            if (empty($paths['mysqldump']))
+            if (empty($paths['mysqldump'])){
                 $paths['mysqldump'] = 'mysqldump'; // try anyway
+                $baseDir = $wpdb->get_var('select @@basedir');
+                if ($baseDir) {
+                    $paths['mysqldump'] = $baseDir.'/bin/mysqldump';
+                }
+            }
         }
 
         return $paths;
@@ -1876,7 +1891,7 @@ class MMB_Backup extends MMB_Core {
         $sftp_password = $sftp_password?$sftp_password:"";
         //     file_put_contents("sftp_log.txt","sftp pass:".$sftp_password,FILE_APPEND);
         //      file_put_contents("sftp_log.txt","Creating NetSFTP",FILE_APPEND);
-        $sftp = new Net_SFTP($sftp_hostname);
+        $sftp = new Net_SFTP($sftp_hostname,$port);
         //       file_put_contents("sftp_log.txt","Created NetSFTP",FILE_APPEND);
         $remote = $sftp_remote_folder ? trim($sftp_remote_folder,"/")."/" : '';
         if (!$sftp->login($sftp_username, $sftp_password)) {
@@ -2054,7 +2069,7 @@ class MMB_Backup extends MMB_Core {
         $sftp_hostname = $sftp_hostname?$sftp_hostname:"";
         $sftp_username = $sftp_username?$sftp_username:"";
         $sftp_password = $sftp_password?$sftp_password:"";
-        $sftp = new Net_SFTP($sftp_hostname);
+        $sftp = new Net_SFTP($sftp_hostname,$port);
         if (!$sftp->login($sftp_username, $sftp_password)) {
             file_put_contents("sftp_log.txt","sftp login failed in remove_sftp_backup",FILE_APPEND);
             return false;
@@ -2138,7 +2153,7 @@ class MMB_Backup extends MMB_Core {
         $sftp_username = $sftp_username?$sftp_username:"";
         $sftp_password = $sftp_password?$sftp_password:"";
         file_put_contents("sftp_log.txt","sftp host:".$sftp_hostname.";username:".$sftp_username.";password:".$sftp_password,FILE_APPEND);
-        $sftp = new Net_SFTP($sftp_hostname);
+        $sftp = new Net_SFTP($sftp_hostname,$port);
         if (!$sftp->login($sftp_username, $sftp_password)) {
             file_put_contents("sftp_log.txt","sftp login failed in get_sftp_backup",FILE_APPEND);
             return false;
@@ -3510,5 +3525,3 @@ if (!function_exists('get_all_files_from_dir_recursive')) {
         @closedir($dh);
     }
 }
-
-?>

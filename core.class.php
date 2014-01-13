@@ -27,6 +27,7 @@ class MMB_Core extends MMB_Helper
     var $search_instance;
     var $links_instance;
     var $user_instance;
+    var $security_instance;
     var $backup_instance;
     var $installer_instance;
     var $mmb_multisite;
@@ -134,8 +135,19 @@ class MMB_Core extends MMB_Helper
 			'worker_brand' => 'mmb_worker_brand',
 			'maintenance' => 'mmb_maintenance_mode',
 			'get_dbname' => 'mmb_get_dbname',
+            'security_check' => 'mbb_security_check',
+            'security_fix_folder_listing'=> 'mbb_security_fix_folder_listing',
+            'security_fix_php_reporting'=> 'mbb_security_fix_php_reporting',
+            'security_fix_database_reporting'=> 'mbb_security_fix_database_reporting',
+            'security_fix_wp_version'=> 'mbb_security_fix_wp_version',
+            'security_fix_admin_username'=>'mbb_security_fix_admin_username',
+            'security_fix_htaccess_permission'=>'mbb_security_fix_htaccess_permission',
+            'security_fix_scripts_styles'=>'mbb_security_fix_scripts_styles',
+            'security_fix_file_permission'=>'mbb_security_fix_file_permission',
+            'security_fix_all' =>'mbb_security_fix_all',
             'get_autoupdate_plugins_themes' => 'mmb_get_autoupdate_plugins_themes',
             'edit_autoupdate_plugins_themes' => 'mmb_edit_autoupdate_plugins_themes',
+
 		);
 
 		$mwp_worker_brand = get_option("mwp_worker_brand");
@@ -160,6 +172,8 @@ class MMB_Core extends MMB_Helper
 		add_action('setup_theme', 'mmb_parse_request');
 		add_action('set_auth_cookie', array( &$this, 'mmb_set_auth_cookie'));
 		add_action('set_logged_in_cookie', array( &$this, 'mmb_set_logged_in_cookie'));
+
+
     }
 
 	function mmb_remote_action(){
@@ -547,6 +561,19 @@ EOF;
 
         return $this->user_instance;
     }
+    /**
+     * Gets an instance of Security
+     *
+     */
+    function get_security_instance()
+    {
+        if (!isset($this->security_instance)) {
+            $this->security_instance = new MMB_Security();
+        }
+
+        return $this->security_instance;
+    }
+    
 
     /**
      * Gets an instance of stats class

@@ -45,6 +45,7 @@ require_once("$mmb_plugin_dir/backup.class.php");
 require_once("$mmb_plugin_dir/installer.class.php");
 require_once("$mmb_plugin_dir/link.class.php");
 require_once("$mmb_plugin_dir/user.class.php");
+require_once("$mmb_plugin_dir/security.class.php");
 require_once("$mmb_plugin_dir/api.php");
 
 require_once("$mmb_plugin_dir/plugins/search/search.php");
@@ -169,7 +170,7 @@ if( !function_exists ( 'mmb_parse_request' )) {
         }
         ob_start();
         $_wp_using_ext_object_cache = false;
-        @set_time_limit(600);
+        @set_time_limit(1200);
 
         if ($_mwp_data['action'] === 'add_site') {
             mmb_add_site($_mwp_data['params']);
@@ -917,6 +918,163 @@ if( !function_exists ( 'mmb_add_user' )) {
 	}
 }
 
+if( !function_exists ( 'mbb_security_check' )) {
+    function mbb_security_check($params)
+    {
+        global $mmb_core;
+        $mmb_core->get_security_instance();
+        $return = $mmb_core->security_instance->security_check($params);
+        if (is_array($return) && array_key_exists('error', $return))
+            mmb_response($return['error'], false);
+        else {
+            mmb_response($return, true);
+        }
+
+    }
+}
+
+if( !function_exists ( 'mbb_security_fix_folder_listing' )) {
+    function mbb_security_fix_folder_listing($params)
+    {
+        global $mmb_core;
+        $mmb_core->get_security_instance();
+        $return = $mmb_core->security_instance->security_fix_dir_listing($params);
+        if (is_array($return) && array_key_exists('error', $return))
+            mmb_response($return['error'], false);
+        else {
+            mmb_response($return, true);
+        }
+
+    }
+}
+
+if( !function_exists ( 'mbb_security_fix_php_reporting' )) {
+    function mbb_security_fix_php_reporting($params)
+    {
+        global $mmb_core;
+        $mmb_core->get_security_instance();
+        $return = $mmb_core->security_instance->security_fix_php_reporting($params);
+        if (is_array($return) && array_key_exists('error', $return))
+            mmb_response($return['error'], false);
+        else {
+            mmb_response($return, true);
+        }
+
+    }
+}
+
+if( !function_exists ( 'mbb_security_fix_database_reporting' )) {
+    function mbb_security_fix_database_reporting($params)
+    {
+        global $mmb_core;
+        $mmb_core->get_security_instance();
+        $return = $mmb_core->security_instance->security_fix_database_reporting($params);
+        if (is_array($return) && array_key_exists('error', $return))
+            mmb_response($return['error'], false);
+        else {
+            mmb_response($return, true);
+        }
+
+    }
+}
+
+//security_fix_wp_version
+
+if( !function_exists ( 'mbb_security_fix_wp_version' )) {
+    function mbb_security_fix_wp_version($params)
+    {
+        global $mmb_core;
+        $mmb_core->get_security_instance();
+        $return = $mmb_core->security_instance->security_fix_wp_version($params);
+        if (is_array($return) && array_key_exists('error', $return))
+            mmb_response($return['error'], false);
+        else {
+            mmb_response($return, true);
+        }
+
+    }
+}
+
+//mbb_security_fix_admin_username
+
+if( !function_exists ( 'mbb_security_fix_admin_username' )) {
+    function mbb_security_fix_admin_username($params)
+    {
+        global $mmb_core;
+        $mmb_core->get_security_instance();
+        $return = $mmb_core->security_instance->security_fix_admin_username($params);
+        if (is_array($return) && array_key_exists('error', $return))
+            mmb_response($return['error'], false);
+        else {
+            mmb_response($return, true);
+        }
+
+    }
+}
+
+if( !function_exists ( 'mbb_security_fix_scripts_styles' )) {
+    function mbb_security_fix_scripts_styles($params)
+    {
+        global $mmb_core;
+        $mmb_core->get_security_instance();
+        $return = $mmb_core->security_instance->security_fix_scripts_styles($params);
+        if (is_array($return) && array_key_exists('error', $return))
+            mmb_response($return['error'], false);
+        else {
+            mmb_response($return, true);
+        }
+
+    }
+}
+
+//mbb_security_fix_file_permission
+if( !function_exists ( 'mbb_security_fix_file_permission' )) {
+    function mbb_security_fix_file_permission($params)
+    {
+        global $mmb_core;
+        $mmb_core->get_security_instance();
+        $return = $mmb_core->security_instance->security_fix_permissions($params);
+        if (is_array($return) && array_key_exists('error', $return))
+            mmb_response($return['error'], false);
+        else {
+            mmb_response($return, true);
+        }
+
+    }
+}
+
+//mbb_security_fix_all
+if( !function_exists ( 'mbb_security_fix_all' )) {
+    function mbb_security_fix_all($params)
+    {
+        global $mmb_core;
+        $mmb_core->get_security_instance();
+        $return = $mmb_core->security_instance->security_fix_all($params);
+        if (is_array($return) && array_key_exists('error', $return))
+            mmb_response($return['error'], false);
+        else {
+            mmb_response($return, true);
+        }
+    }
+}
+
+//mbb_security_fix_htaccess_permission
+
+if( !function_exists ( 'mbb_security_fix_htaccess_permission' )) {
+    function mbb_security_fix_htaccess_permission($params)
+    {
+        global $mmb_core;
+        $mmb_core->get_security_instance();
+        $return = $mmb_core->security_instance->security_fix_htaccess_permission($params);
+        if (is_array($return) && array_key_exists('error', $return))
+            mmb_response($return['error'], false);
+        else {
+            mmb_response($return, true);
+        }
+
+    }
+}
+
 if( !function_exists ('mmb_get_users')) {
 	function mmb_get_users($params)
 	{
@@ -1328,4 +1486,35 @@ function mwp_fatal_error_handler()
 if (get_option('mwp_debug_enable')) {
     set_error_handler('mwp_error_handler');
     register_shutdown_function('mwp_fatal_error_handler');
+}
+
+if (get_option('mwp_remove_php_reporting') == 'T')
+{
+    @error_reporting(0);
+    @ini_set('display_errors', 'off');
+    @ini_set('display_startup_errors', "off");
+}
+
+if (get_option('mwp_remove_wp_version') == 'T')
+{
+    remove_action('wp_head', 'wp_generator');
+    remove_filter('wp_head', 'wp_generator');
+}
+if (get_option('managewp_remove_styles_version') == 'T')
+{
+    global $wp_styles;
+    if (!is_a($wp_styles, 'WP_Styles'))
+        return;
+
+    foreach ($wp_styles->registered as $handle => $style)
+        $wp_styles->registered[$handle]->ver = null;
+}
+if (get_option('managewp_remove_scripts_version') == 'T')
+{
+    global $wp_scripts;
+    if (!is_a($wp_scripts, 'WP_Scripts'))
+        return;
+
+    foreach ($wp_scripts->registered as $handle => $script)
+        $wp_scripts->registered[$handle]->ver = null;
 }
