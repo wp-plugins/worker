@@ -35,7 +35,12 @@ if (version_compare(PHP_VERSION, '5.2.0', '<')) // min version 5 supported
     exit("<p>ManageWP Worker plugin requires PHP 5.2 or higher.</p>");
 }
 
-spl_autoload_register('mwp_autoload');
+if (version_compare(PHP_VERSION, '5.3', '<')) {
+    spl_autoload_register('mwp_autoload');
+} else {
+    // The prepend parameter was added in PHP 5.3.0
+    spl_autoload_register('mwp_autoload', true, true);
+}
 
 // Will register the logger as the error handler.
 mwp_logger();

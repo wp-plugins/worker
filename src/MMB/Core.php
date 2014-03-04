@@ -717,6 +717,7 @@ EOF;
             @include_once ABSPATH.'wp-admin/includes/template.php';
             @include_once ABSPATH.'wp-admin/includes/class-wp-upgrader.php';
             @include_once ABSPATH.'wp-admin/includes/screen.php';
+            @include_once ABSPATH.'wp-admin/includes/plugin.php';
 
             if (!$this->is_server_writable()) {
                 return array(
