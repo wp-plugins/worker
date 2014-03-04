@@ -29,8 +29,8 @@ class MWP_Configuration_Service
         if (!self::$configuration) {
             $configuration = get_option("mwp_worker_configuration");
 
-            if (empty($configuration) && file_exists(__DIR__."/../../worker.json")) {
-                $json          = file_get_contents(__DIR__."/../../worker.json");
+            if (empty($configuration) && file_exists(dirname(__FILE__)."/../../../worker.json")) {
+                $json          = file_get_contents(dirname(__FILE__)."/../../../worker.json");
                 $configuration = json_decode($json, true);
                 update_option("mwp_worker_configuration", $configuration);
             }
