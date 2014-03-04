@@ -54,7 +54,9 @@ class MMB_Container
             $handlers   = array();
 
             if (!empty($this->parameters['log_file'])) {
-                $handlers[] = new Monolog_Handler_StreamHandler(fopen(dirname(__FILE__).'/'.$this->parameters['log_file'], 'a'));
+                $fileHandler = new Monolog_Handler_StreamHandler(fopen(dirname(dirname(dirname(__FILE__))).'/'.$this->parameters['log_file'], 'a'));
+                $fileHandler->setFormatter(new Monolog_Formatter_HtmlFormatter());
+                $handlers[] = $fileHandler;
             } elseif (!empty($this->parameters['gelf_server'])) {
                 $publisher  = new Gelf_Publisher($this->parameters['gelf_server'], $this->parameters['gelf_port'] ? $this->parameters['gelf_port'] : Gelf_Publisher::GRAYLOG2_DEFAULT_PORT);
                 $handlers[] = new Monolog_Handler_LegacyGelfHandler($publisher);
