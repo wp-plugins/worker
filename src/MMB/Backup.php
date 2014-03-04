@@ -3408,7 +3408,7 @@ class MMB_Backup extends MMB_Core
             );
         }
 
-        return false;
+        return $downloadLocation;
     }
 
     /**

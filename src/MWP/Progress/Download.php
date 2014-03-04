@@ -14,7 +14,7 @@ class MWP_Progress_Download extends MWP_Progress_Abstract
 
     public function __construct($threshold, Monolog_Psr_LoggerInterface $logger)
     {
-        $this->$this->logger = $logger;
+        $this->logger = $logger;
     }
 
     public function callback(&$curl, $downloadSize, $downloadedSize, $uploadSize, $uploadedSize = 0)
