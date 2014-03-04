@@ -253,15 +253,15 @@ class MMB_Installer extends MMB_Core
                 );
             }
 
-            if ($updated->response == "development" && $current->response == "upgrade") {
+            if ($updated->response == "development" && $current['response'] == "upgrade") {
                 return array(
                     'error' => '<font color="#900">Unexpected error. Please upgrade manually.</font>'
                 );
             } else {
-                if ($updated->response == $current->response || ($updated->response == "upgrade" && $current->response == "development")) {
-                    if ($updated->locale != $current->locale) {
+                if ($updated->response == $current['response'] || ($updated->response == "upgrade" && $current['response'] == "development")) {
+                    if ($updated->locale != $current['locale']) {
                         foreach ($updates as $update) {
-                            if ($update->locale == $current->locale) {
+                            if ($update->locale == $current['locale']) {
                                 $current_update = $update;
                                 break;
                             }
