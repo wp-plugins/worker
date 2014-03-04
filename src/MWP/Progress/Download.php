@@ -17,10 +17,17 @@ class MWP_Progress_Download extends MWP_Progress_Abstract
         $this->$this->logger = $logger;
     }
 
-    public function callback(&$curl, $downloadSize, $downloadedSize, $uploadSize, $uploadedSize)
+    public function callback(&$curl, $downloadSize, $downloadedSize, $uploadSize, $uploadedSize = 0)
     {
         if (!$this->yieldCallback()) {
             return;
+        }
+
+        if (func_num_args() < 5) {
+            $uploadedSize   = $uploadSize;
+            $uploadSize     = $downloadedSize;
+            $downloadedSize = $downloadSize;
+            $downloadSize   = $curl;
         }
 
         $currentProgress    = $downloadedSize;

@@ -24,13 +24,20 @@ class MWP_Progress_Upload extends MWP_Progress_Abstract
         $this->logger = $logger;
     }
 
-    public function callback(&$curl, $downloadSize, $downloadedSize, $uploadSize, $uploadedSize)
+    public function callback(&$curl, $downloadSize, $downloadedSize, $uploadSize, $uploadedSize = 0)
     {
         if (!$this->yieldCallback()) {
             return;
         }
 
-        $offset             = $this->calculateOffset($curl);
+        if (func_num_args() < 5) {
+            $uploadedSize   = $uploadSize;
+            $uploadSize     = $downloadedSize;
+            $downloadedSize = $downloadSize;
+            $downloadSize   = $curl;
+        }
+
+        $offset             = is_resource($curl) ? $this->calculateOffset($curl) : 0;
         $currentProgress    = $uploadedSize + $offset;
         $speed              = $this->formatBytes(($currentProgress - $this->lastProgress) / $this->getThreshold());
         $this->lastProgress = $currentProgress;
