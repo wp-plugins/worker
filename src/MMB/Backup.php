@@ -1838,8 +1838,7 @@ class MMB_Backup extends MMB_Core
         $zip            = mwp_container()->getExecutableFinder()->find('zip', 'zip');
         $processBuilder = Symfony_Process_ProcessBuilder::create()
             ->setWorkingDirectory(untrailingslashit(ABSPATH))
-            ->setPrefix($zip)
-            ->add('--version');
+            ->setPrefix($zip);
         try {
             $process = $processBuilder->getProcess();
             $process->run();
