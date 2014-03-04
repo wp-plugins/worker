@@ -613,7 +613,7 @@ class MMB_Backup extends MMB_Core
         $this->update_status($task_name, $this->statuses['db_zip'], true);
         $this->update_status($task_name, $this->statuses['files_zip']);
 
-        if (function_exists('proc_open')) {
+        if (function_exists('proc_open') && $this->zipExists()) {
             $zip_result = $this->zip_backup($task_name, $backup_file, $exclude, $include);
         } else {
             $zip_result = false;
@@ -1176,8 +1176,9 @@ class MMB_Backup extends MMB_Core
         }
         $socket = false;
 
-        if (strpos($host, '/') !== false || strpos($host, '\\') !== false) {
+        if (strpos(DB_HOST, '/') !== false || strpos(DB_HOST, '\\') !== false) {
             $socket = true;
+            $host = end(explode(':', DB_HOST));
         }
 
         if ($socket) {
@@ -1479,6 +1480,10 @@ class MMB_Backup extends MMB_Core
                     throw new Exception('Failed to download file from Google Drive.');
                 }
             }
+        }
+
+        if (is_array($backupFile) && isset($backupFile['error'])) {
+            throw new Exception('Error restoring: '.$backupFile['error']);
         }
 
         if (!($backupFile && file_exists($backupFile))) {
@@ -2787,7 +2792,7 @@ class MMB_Backup extends MMB_Core
             $dropbox->getFile($file, $fh);
             $result = fclose($fh);
 
-            if ($result) {
+            if (!$result) {
                 throw new Exception('Unable to close file handle.');
             }
         } catch (Exception $e) {
