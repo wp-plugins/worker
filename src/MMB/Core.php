@@ -615,8 +615,8 @@ EOF;
         delete_option('mwp_pageview_alerts');
         delete_option('mwp_worker_configuration');
 
-        if (file_exists(__DIR__."/../../worker.json")) {
-            $configuration     = file_get_contents(__DIR__."/../../worker.json");
+        if (file_exists(dirname(__FILE__)."/../../worker.json")) {
+            $configuration     = file_get_contents(dirname(__FILE__)."/../../worker.json");
             $jsonConfiguration = json_decode($configuration, true);
             update_option("mwp_worker_configuration", $jsonConfiguration);
         }

@@ -598,7 +598,7 @@ if (!function_exists('mwp_datasend')) {
                         $rsa     = new Crypt_RSA();
                         $keyName = $configuration->getKeyName();
                         $rsa->setSignatureMode(CRYPT_RSA_SIGNATURE_PKCS1);
-                        $rsa->loadKey(file_get_contents(__DIR__."/publickeys/$keyName.pub")); // public key
+                        $rsa->loadKey(file_get_contents(dirname(__FILE__)."/publickeys/$keyName.pub")); // public key
                         $signature = base64_decode($settings['mwp_worker_configuration_signature']);
                         if ($rsa->verify(json_encode($settings['mwp_worker_configuration']), $signature)) {
                             $configuration = new MWP_Configuration_Conf($settings['mwp_worker_configuration']);
