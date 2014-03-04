@@ -1854,36 +1854,6 @@ if (isset($_COOKIE[MMB_XFRAME_COOKIE])) {
     remove_action('admin_init', 'send_frame_options_header');
     remove_action('login_init', 'send_frame_options_header');
 }
-function mwp_error_handler($errno, $errstr, $errfile, $errline, $errcontext)
-{
-    $errorId = 'mwp_error_'.md5($errfile.$errline);
-    $error   = sprintf("%s\nError [%s]: %s\nIn file: %s:%s", date('Y-m-d H:i:s'), $errno, $errstr, $errfile, $errline);
-    set_transient($errorId, $error, 3600);
-}
-
-function mwp_fatal_error_handler()
-{
-    $isError = false;
-    if ($error = error_get_last()) {
-        switch ($error['type']) {
-            case E_ERROR:
-            case E_CORE_ERROR:
-            case E_COMPILE_ERROR:
-            case E_USER_ERROR:
-                $isError = true;
-                break;
-        }
-    }
-    if ($isError) {
-        mwp_error_handler($error['type'], $error['message'], $error['file'], $error['line'], array());
-    }
-}
-
-
-if (get_option('mwp_debug_enable')) {
-    set_error_handler('mwp_error_handler');
-    register_shutdown_function('mwp_fatal_error_handler');
-}
 
 if (get_option('mwp_remove_php_reporting') == 'T') {
     @error_reporting(0);
