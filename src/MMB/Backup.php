@@ -1049,7 +1049,7 @@ class MMB_Backup extends MMB_Core
         $filelist = array();
         if ($handle = opendir(ABSPATH)) {
             while (false !== ($file = readdir($handle))) {
-                if (is_dir($file) && file_exists(ABSPATH.$file) && !(in_array($file, $include))) {
+                if ($file !== '..' && is_dir($file) && file_exists(ABSPATH.$file) && !(in_array($file, $include))) {
                     $exclude[] = $file;
                 }
             }
