@@ -112,11 +112,12 @@ class MMB_Post extends MMB_Core
                 }
 
                 $no_thumb = '';
-                if (preg_match('/-\d{3}x\d{3}\.[a-zA-Z0-9]{3,4}$/', $get_url[4])) {
+                /*if (preg_match('/-\d{3}x\d{3}\.[a-zA-Z0-9]{3,4}$/', $get_url[4])) {
                     $no_thumb = preg_replace('/-\d{3}x\d{3}\.[a-zA-Z0-9]{3,4}$/', '.'.$get_url[5], $get_url[4]);
                 } else {
                     $no_thumb = $get_url[4];
-                }
+                }*/
+                $no_thumb = $get_url[4];
 
                 if (isset($upload['error']) && !empty($upload['error'])) {
                     return array('error' => $upload['error']);
