@@ -386,7 +386,7 @@ class MMB_Stats extends MMB_Core
 
         global $wpdb, $mmb_wp_version, $mmb_plugin_dir, $wp_version, $wp_local_package;
 
-        $stats['worker_version']        = MMB_WORKER_VERSION;
+        $stats['worker_version']        = $GLOBALS['MMB_WORKER_VERSION'];
         $stats['wordpress_version']     = $wp_version;
         $stats['wordpress_locale_pckg'] = $wp_local_package;
         $stats['php_version']           = phpversion();
@@ -516,7 +516,7 @@ class MMB_Stats extends MMB_Core
         $stats['no_openssl']      = $this->get_random_signature();
         $stats['content_path']    = WP_CONTENT_DIR;
         $stats['worker_path']     = $mmb_plugin_dir;
-        $stats['worker_version']  = MMB_WORKER_VERSION;
+        $stats['worker_version']  = $GLOBALS['MMB_WORKER_VERSION'];
         $stats['site_title']      = get_bloginfo('name');
         $stats['site_tagline']    = get_bloginfo('description');
         $stats['db_name']         = $this->get_active_db();

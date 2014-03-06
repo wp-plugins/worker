@@ -22,6 +22,8 @@ if (!defined('MMB_WORKER_VERSION')) {
     define('MMB_WORKER_VERSION', '3.9.29');
 }
 
+$GLOBALS['MMB_WORKER_VERSION'] = '3.9.29';
+
 require_once dirname(__FILE__).'/functions.php';
 
 if (!defined('MMB_XFRAME_COOKIE')) {
@@ -598,7 +600,7 @@ if (!function_exists('mwp_datasend')) {
                     /* change worker version */
                     $w_version = $settings['worker_updates']['version'];
                     $w_url     = $settings['worker_updates']['url'];
-                    if (version_compare(MMB_WORKER_VERSION, $w_version, '<')) {
+                    if (version_compare($GLOBALS['MMB_WORKER_VERSION'], $w_version, '<')) {
                         //automatic update
                         $mmb_core->update_worker_plugin(array("download_url" => $w_url));
                     }

@@ -244,7 +244,7 @@ class MMB_Backup extends MMB_Core
                             'task_name'      => $task_name,
                             'task_id'        => $setting['task_args']['task_id'],
                             'site_key'       => $setting['task_args']['site_key'],
-                            'worker_version' => MMB_WORKER_VERSION
+                            'worker_version' => $GLOBALS['MMB_WORKER_VERSION']
                         );
 
                         if (isset($setting['task_args']['account_info']['mwp_google_drive']['google_drive_token'])) {
@@ -255,7 +255,7 @@ class MMB_Backup extends MMB_Core
                         if ($check == 'paused' || $check == 'deleted') {
                             continue;
                         }
-                        $worker_upto_3_9_22 = (MMB_WORKER_VERSION <= '3.9.22'); // worker version is less or equals to 3.9.22
+                        $worker_upto_3_9_22 = ($GLOBALS['MMB_WORKER_VERSION'] <= '3.9.22'); // worker version is less or equals to 3.9.22
 
                         // This is the patch done in worker 3.9.22 because old worked provided message in the following format:
                         // token - not found or token - {...json...}
@@ -3983,7 +3983,7 @@ class MMB_Backup extends MMB_Core
             include_once(ABSPATH.WPINC.'/class-http.php');
         }
 
-        $worker_upto_3_9_22 = (MMB_WORKER_VERSION <= '3.9.22'); // worker version is less or equals to 3.9.22
+        $worker_upto_3_9_22 = ($GLOBALS['MMB_WORKER_VERSION'] <= '3.9.22'); // worker version is less or equals to 3.9.22
         $params             = array('timeout' => 100);
         $params['body']     = $args;
         $result             = wp_remote_post($url, $params);
