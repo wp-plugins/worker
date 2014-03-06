@@ -1,4 +1,5 @@
 <?php
+
 /*
  * Copyright 2010 Google Inc.
  *
@@ -17,24 +18,24 @@
 
 class Google_ApiService
 {
-  public $version;
-  public $servicePath;
-  public $availableScopes;
-  public $resource;
-  private $client;
+    public $version;
+    public $servicePath;
+    public $availableScopes;
+    public $resource;
+    private $client;
 
-  public function __construct(Google_ApiClient $client)
-  {
-    $this->client = $client;
-  }
+    public function __construct(Google_ApiClient $client)
+    {
+        $this->client = $client;
+    }
 
-  /**
-   * Return the associated Google_ApiClient class.
-   *
-*@return Google_ApiClient
-   */
-  public function getClient()
-  {
-    return $this->client;
-  }
+    /**
+     * Return the associated Google_ApiClient class.
+     *
+     * @return Google_ApiClient
+     */
+    public function getClient()
+    {
+        return $this->client;
+    }
 }

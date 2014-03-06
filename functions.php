@@ -43,6 +43,9 @@ function mwp_logger()
 
         return $mwp_logger;
     }
+    if ($mwp_logger instanceof Monolog_Logger) {
+        return $mwp_logger;
+    }
     if ($mwp_logger === null) {
         $mwp_logger = true;
         $logger     = mwp_container()->getLogger();
@@ -489,4 +492,17 @@ function mmb_get_spam_comments()
     $spams = $wpdb->get_results($sql);
 
     return $spams;
+}
+
+function fix_woothemes_compatibility()
+{
+    if (isset($GLOBALS['woocommerce_wpml']->dependencies)) {
+        remove_action('wp_ajax_wcml_fix_strings_language', array($GLOBALS['woocommerce_wpml']->dependencies, 'fix_strings_language'));
+        remove_action('init', array($GLOBALS['woocommerce_wpml']->dependencies, 'check_wpml_config'), 100);
+    }
+}
+
+function fix_press_permit_core_compatibility()
+{
+    remove_action('init', '_pp_act_on_init', 50);
 }

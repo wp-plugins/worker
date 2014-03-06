@@ -31,101 +31,102 @@
  */
 class Google_Service_Oauth2 extends Google_ApiService
 {
-  /** Know your basic profile info and list of people in your circles.. */
-  const PLUS_LOGIN = "https://www.googleapis.com/auth/plus.login";
-  /** Know who you are on Google. */
-  const PLUS_ME = "https://www.googleapis.com/auth/plus.me";
-  /** View your email address. */
-  const USERINFO_EMAIL = "https://www.googleapis.com/auth/userinfo.email";
-  /** View basic information about your account. */
-  const USERINFO_PROFILE = "https://www.googleapis.com/auth/userinfo.profile";
+    /** Know your basic profile info and list of people in your circles.. */
+    const PLUS_LOGIN = "https://www.googleapis.com/auth/plus.login";
+    /** Know who you are on Google. */
+    const PLUS_ME = "https://www.googleapis.com/auth/plus.me";
+    /** View your email address. */
+    const USERINFO_EMAIL = "https://www.googleapis.com/auth/userinfo.email";
+    /** View basic information about your account. */
+    const USERINFO_PROFILE = "https://www.googleapis.com/auth/userinfo.profile";
 
-  public $userinfo;
-  public $userinfo_v2_me;
-  private $base_methods;
+    public $userinfo;
+    public $userinfo_v2_me;
+    private $base_methods;
 
-  /**
-   * Constructs the internal representation of the Oauth2 service.
+    /**
+     * Constructs the internal representation of the Oauth2 service.
+     *
+     * @param Google_ApiClient $client
+     */
+    public function __construct(Google_ApiClient $client)
+    {
+        parent::__construct($client);
+        $this->servicePath = '';
+        $this->version     = 'v2';
+        $this->serviceName = 'oauth2';
 
-   *
-*@param Google_ApiClient $client
-   */
-  public function __construct(Google_ApiClient $client)
-  {
-    parent::__construct($client);
-    $this->servicePath = '';
-    $this->version = 'v2';
-    $this->serviceName = 'oauth2';
-
-    $this->userinfo = new Google_Service_Oauth2_Userinfo_Resource(
-        $this,
-        $this->serviceName,
-        'userinfo',
-        array(
-          'methods' => array(
-            'get' => array(
-              'path' => 'oauth2/v2/userinfo',
-              'httpMethod' => 'GET',
-              'parameters' => array(),
-            ),
+        $this->userinfo       = new Google_Service_Oauth2_Userinfo_Resource(
+          $this,
+          $this->serviceName,
+          'userinfo',
+          array(
+            'methods' => array(
+              'get' => array(
+                'path'       => 'oauth2/v2/userinfo',
+                'httpMethod' => 'GET',
+                'parameters' => array(),
+              ),
+            )
           )
-        )
-    );
-    $this->userinfo_v2_me = new Google_Service_Oauth2_UserinfoV2Me_Resource(
-        $this,
-        $this->serviceName,
-        'me',
-        array(
-          'methods' => array(
-            'get' => array(
-              'path' => 'userinfo/v2/me',
-              'httpMethod' => 'GET',
-              'parameters' => array(),
-            ),
+        );
+        $this->userinfo_v2_me = new Google_Service_Oauth2_UserinfoV2Me_Resource(
+          $this,
+          $this->serviceName,
+          'me',
+          array(
+            'methods' => array(
+              'get' => array(
+                'path'       => 'userinfo/v2/me',
+                'httpMethod' => 'GET',
+                'parameters' => array(),
+              ),
+            )
           )
-        )
-    );
-    $this->base_methods = new Google_Service_Resource(
-        $this,
-        $this->serviceName,
-        '',
-        array(
-          'methods' => array(
-            'tokeninfo' => array(
-              'path' => 'oauth2/v2/tokeninfo',
-              'httpMethod' => 'POST',
-              'parameters' => array(
-                'access_token' => array(
-                  'location' => 'query',
-                  'type' => 'string',
-                ),
-                'id_token' => array(
-                  'location' => 'query',
-                  'type' => 'string',
+        );
+        $this->base_methods   = new Google_Service_Resource(
+          $this,
+          $this->serviceName,
+          '',
+          array(
+            'methods' => array(
+              'tokeninfo' => array(
+                'path'       => 'oauth2/v2/tokeninfo',
+                'httpMethod' => 'POST',
+                'parameters' => array(
+                  'access_token' => array(
+                    'location' => 'query',
+                    'type'     => 'string',
+                  ),
+                  'id_token'     => array(
+                    'location' => 'query',
+                    'type'     => 'string',
+                  ),
                 ),
               ),
-            ),
+            )
           )
-        )
-    );
-  }
-  /**
-   * (tokeninfo)
-   *
-   * @param array $optParams Optional parameters.
-   *
-   * @opt_param string accessToken
-   *
-   * @opt_param string idToken
-   *
-   * @return Google_Service_Oauth2_Tokeninfo
-   */
-  public function tokeninfo($optParams = array())
-  {
-    $params = array();
-    $params = array_merge($params, $optParams);
-    return $this->base_methods->call('tokeninfo', array($params), "Google_Service_Oauth2_Tokeninfo");
-  }
+        );
+    }
+
+    /**
+     * (tokeninfo)
+     *
+     * @param array $optParams Optional parameters.
+     *
+     * @opt_param string accessToken
+     *
+     * @opt_param string idToken
+     *
+     * @return Google_Service_Oauth2_Tokeninfo
+     */
+    public function tokeninfo($optParams = array())
+    {
+        $params = array();
+        $params = array_merge($params, $optParams);
+
+        return $this->base_methods->call('tokeninfo', array($params), "Google_Service_Oauth2_Tokeninfo");
+    }
 }
 
 
@@ -140,18 +141,20 @@ class Google_Service_Oauth2 extends Google_ApiService
 class Google_Service_Oauth2_Userinfo_Resource extends Google_Service_Resource
 {
 
-  /**
-   * (userinfo.get)
-   *
-   * @param array $optParams Optional parameters.
-   * @return Google_Service_Oauth2_Userinfoplus
-   */
-  public function get($optParams = array())
-  {
-    $params = array();
-    $params = array_merge($params, $optParams);
-    return $this->call('get', array($params), "Google_Service_Oauth2_Userinfoplus");
-  }
+    /**
+     * (userinfo.get)
+     *
+     * @param array $optParams Optional parameters.
+     *
+     * @return Google_Service_Oauth2_Userinfoplus
+     */
+    public function get($optParams = array())
+    {
+        $params = array();
+        $params = array_merge($params, $optParams);
+
+        return $this->call('get', array($params), "Google_Service_Oauth2_Userinfoplus");
+    }
 }
 
 /**
@@ -178,236 +181,236 @@ class Google_Service_Oauth2_UserinfoV2_Resource extends Google_Service_Resource
 class Google_Service_Oauth2_UserinfoV2Me_Resource extends Google_Service_Resource
 {
 
-  /**
-   * (me.get)
-   *
-   * @param array $optParams Optional parameters.
-   * @return Google_Service_Oauth2_Userinfoplus
-   */
-  public function get($optParams = array())
-  {
-    $params = array();
-    $params = array_merge($params, $optParams);
-    return $this->call('get', array($params), "Google_Service_Oauth2_Userinfoplus");
-  }
+    /**
+     * (me.get)
+     *
+     * @param array $optParams Optional parameters.
+     *
+     * @return Google_Service_Oauth2_Userinfoplus
+     */
+    public function get($optParams = array())
+    {
+        $params = array();
+        $params = array_merge($params, $optParams);
+
+        return $this->call('get', array($params), "Google_Service_Oauth2_Userinfoplus");
+    }
 }
-
-
 
 
 class Google_Service_Oauth2_Tokeninfo extends Google_ApiModel
 {
-  public $accessType;
-  public $audience;
-  public $email;
-  public $expiresIn;
-  public $issuedTo;
-  public $scope;
-  public $userId;
-  public $verifiedEmail;
+    public $accessType;
+    public $audience;
+    public $email;
+    public $expiresIn;
+    public $issuedTo;
+    public $scope;
+    public $userId;
+    public $verifiedEmail;
 
-  public function setAccessType($accessType)
-  {
-    $this->accessType = $accessType;
-  }
+    public function setAccessType($accessType)
+    {
+        $this->accessType = $accessType;
+    }
 
-  public function getAccessType()
-  {
-    return $this->accessType;
-  }
+    public function getAccessType()
+    {
+        return $this->accessType;
+    }
 
-  public function setAudience($audience)
-  {
-    $this->audience = $audience;
-  }
+    public function setAudience($audience)
+    {
+        $this->audience = $audience;
+    }
 
-  public function getAudience()
-  {
-    return $this->audience;
-  }
+    public function getAudience()
+    {
+        return $this->audience;
+    }
 
-  public function setEmail($email)
-  {
-    $this->email = $email;
-  }
+    public function setEmail($email)
+    {
+        $this->email = $email;
+    }
 
-  public function getEmail()
-  {
-    return $this->email;
-  }
+    public function getEmail()
+    {
+        return $this->email;
+    }
 
-  public function setExpiresIn($expiresIn)
-  {
-    $this->expiresIn = $expiresIn;
-  }
+    public function setExpiresIn($expiresIn)
+    {
+        $this->expiresIn = $expiresIn;
+    }
 
-  public function getExpiresIn()
-  {
-    return $this->expiresIn;
-  }
+    public function getExpiresIn()
+    {
+        return $this->expiresIn;
+    }
 
-  public function setIssuedTo($issuedTo)
-  {
-    $this->issuedTo = $issuedTo;
-  }
+    public function setIssuedTo($issuedTo)
+    {
+        $this->issuedTo = $issuedTo;
+    }
 
-  public function getIssuedTo()
-  {
-    return $this->issuedTo;
-  }
+    public function getIssuedTo()
+    {
+        return $this->issuedTo;
+    }
 
-  public function setScope($scope)
-  {
-    $this->scope = $scope;
-  }
+    public function setScope($scope)
+    {
+        $this->scope = $scope;
+    }
 
-  public function getScope()
-  {
-    return $this->scope;
-  }
+    public function getScope()
+    {
+        return $this->scope;
+    }
 
-  public function setUserId($userId)
-  {
-    $this->userId = $userId;
-  }
+    public function setUserId($userId)
+    {
+        $this->userId = $userId;
+    }
 
-  public function getUserId()
-  {
-    return $this->userId;
-  }
+    public function getUserId()
+    {
+        return $this->userId;
+    }
 
-  public function setVerifiedEmail($verifiedEmail)
-  {
-    $this->verifiedEmail = $verifiedEmail;
-  }
+    public function setVerifiedEmail($verifiedEmail)
+    {
+        $this->verifiedEmail = $verifiedEmail;
+    }
 
-  public function getVerifiedEmail()
-  {
-    return $this->verifiedEmail;
-  }
+    public function getVerifiedEmail()
+    {
+        return $this->verifiedEmail;
+    }
 }
 
 class Google_Service_Oauth2_Userinfoplus extends Google_ApiModel
 {
-  public $email;
-  public $familyName;
-  public $gender;
-  public $givenName;
-  public $hd;
-  public $id;
-  public $link;
-  public $locale;
-  public $name;
-  public $picture;
-  public $verifiedEmail;
+    public $email;
+    public $familyName;
+    public $gender;
+    public $givenName;
+    public $hd;
+    public $id;
+    public $link;
+    public $locale;
+    public $name;
+    public $picture;
+    public $verifiedEmail;
 
-  public function setEmail($email)
-  {
-    $this->email = $email;
-  }
+    public function setEmail($email)
+    {
+        $this->email = $email;
+    }
 
-  public function getEmail()
-  {
-    return $this->email;
-  }
+    public function getEmail()
+    {
+        return $this->email;
+    }
 
-  public function setFamilyName($familyName)
-  {
-    $this->familyName = $familyName;
-  }
+    public function setFamilyName($familyName)
+    {
+        $this->familyName = $familyName;
+    }
 
-  public function getFamilyName()
-  {
-    return $this->familyName;
-  }
+    public function getFamilyName()
+    {
+        return $this->familyName;
+    }
 
-  public function setGender($gender)
-  {
-    $this->gender = $gender;
-  }
+    public function setGender($gender)
+    {
+        $this->gender = $gender;
+    }
 
-  public function getGender()
-  {
-    return $this->gender;
-  }
+    public function getGender()
+    {
+        return $this->gender;
+    }
 
-  public function setGivenName($givenName)
-  {
-    $this->givenName = $givenName;
-  }
+    public function setGivenName($givenName)
+    {
+        $this->givenName = $givenName;
+    }
 
-  public function getGivenName()
-  {
-    return $this->givenName;
-  }
+    public function getGivenName()
+    {
+        return $this->givenName;
+    }
 
-  public function setHd($hd)
-  {
-    $this->hd = $hd;
-  }
+    public function setHd($hd)
+    {
+        $this->hd = $hd;
+    }
 
-  public function getHd()
-  {
-    return $this->hd;
-  }
+    public function getHd()
+    {
+        return $this->hd;
+    }
 
-  public function setId($id)
-  {
-    $this->id = $id;
-  }
+    public function setId($id)
+    {
+        $this->id = $id;
+    }
 
-  public function getId()
-  {
-    return $this->id;
-  }
+    public function getId()
+    {
+        return $this->id;
+    }
 
-  public function setLink($link)
-  {
-    $this->link = $link;
-  }
+    public function setLink($link)
+    {
+        $this->link = $link;
+    }
 
-  public function getLink()
-  {
-    return $this->link;
-  }
+    public function getLink()
+    {
+        return $this->link;
+    }
 
-  public function setLocale($locale)
-  {
-    $this->locale = $locale;
-  }
+    public function setLocale($locale)
+    {
+        $this->locale = $locale;
+    }
 
-  public function getLocale()
-  {
-    return $this->locale;
-  }
+    public function getLocale()
+    {
+        return $this->locale;
+    }
 
-  public function setName($name)
-  {
-    $this->name = $name;
-  }
+    public function setName($name)
+    {
+        $this->name = $name;
+    }
 
-  public function getName()
-  {
-    return $this->name;
-  }
+    public function getName()
+    {
+        return $this->name;
+    }
 
-  public function setPicture($picture)
-  {
-    $this->picture = $picture;
-  }
+    public function setPicture($picture)
+    {
+        $this->picture = $picture;
+    }
 
-  public function getPicture()
-  {
-    return $this->picture;
-  }
+    public function getPicture()
+    {
+        return $this->picture;
+    }
 
-  public function setVerifiedEmail($verifiedEmail)
-  {
-    $this->verifiedEmail = $verifiedEmail;
-  }
+    public function setVerifiedEmail($verifiedEmail)
+    {
+        $this->verifiedEmail = $verifiedEmail;
+    }
 
-  public function getVerifiedEmail()
-  {
-    return $this->verifiedEmail;
-  }
+    public function getVerifiedEmail()
+    {
+        return $this->verifiedEmail;
+    }
 }

@@ -1147,6 +1147,10 @@ class MMB_Backup extends MMB_Core
 
     function file_get_size($file)
     {
+        if (!extension_loaded('bcmath')) {
+            return filesize($file);
+        }
+
         //open file
         $fh = fopen($file, "r");
         //declare some variables
@@ -1217,7 +1221,7 @@ class MMB_Backup extends MMB_Core
 
         if (strpos(DB_HOST, '/') !== false || strpos(DB_HOST, '\\') !== false) {
             $socket = true;
-            $host = end(explode(':', DB_HOST));
+            $host   = end(explode(':', DB_HOST));
         }
 
         if ($socket) {
@@ -1289,15 +1293,19 @@ class MMB_Backup extends MMB_Core
             }
         }
 
-        mwp_logger()->info('Database dumping process finished, file size is {backup_size}', array(
-            'backup_size' => mwp_format_bytes($this->file_get_size($file)),
-        ));
 
         if (filesize($file) === 0) {
             unlink($file);
+            mwp_logger()->error('Database dumping process failed with unknown reason', array(
+                'database_file' => $file,
+            ));
 
             return false;
         } else {
+            mwp_logger()->info('Database dumping process finished, file size is {backup_size}', array(
+                'backup_size' => mwp_format_bytes(filesize($file)),
+            ));
+
             return $file;
         }
     }
@@ -1444,11 +1452,15 @@ class MMB_Backup extends MMB_Core
             try {
                 $this->restore_db_php($fileName);
             } catch (Exception $e) {
+                @unlink($filePath.'/index.php');
+                @rmdir($filePath);
                 return array(
                     'error' => $e->getMessage(),
                 );
             }
         }
+        @unlink($filePath.'/index.php');
+        @rmdir($filePath);
         mwp_logger()->info('Restore successfully completed');
         /* Replace options and content urls */
         $this->replaceOptionsAndUrls($params['overwrite'], $params['new_user'], $params['new_password'], $params['old_user'], $params['clone_from_url'], $params['admin_email'], $params['mwp_clone'], $oldCredentialsAndOptions, $home, $params['current_tasks_tmp']);
@@ -1766,11 +1778,13 @@ class MMB_Backup extends MMB_Core
                 throw new Symfony_Process_Exception_ProcessFailedException($process);
             }
         } catch (Symfony_Process_Exception_ProcessFailedException $e) {
+            unlink($fileName);
             mwp_logger()->error('Database import process failed', array(
                 'process' => $e->getProcess(),
             ));
             throw $e;
         } catch (Exception $e) {
+            unlink($fileName);
             mwp_logger()->error('Error while trying to execute database import process', array(
                 'exception' => $e,
             ));
@@ -1809,6 +1823,7 @@ class MMB_Backup extends MMB_Core
                 // Perform the query
                 $result = $wpdb->query($current_query);
                 if ($result === false) {
+                    @unlink($file_name);
                     throw new Exception('Error restoring database by php functions');
                 }
                 // Reset temp variable to empty
@@ -1977,9 +1992,9 @@ class MMB_Backup extends MMB_Core
             $reqs['PHP Version']['pass'] = true;
         } else {
             $reqs['PHP Version']['status'] = '';
-            $reqs['PHP Version']['info'] = PHP_VERSION;
-            $reqs['PHP Version']['pass'] = false;
-            $pass                        = false;
+            $reqs['PHP Version']['info']   = PHP_VERSION;
+            $reqs['PHP Version']['pass']   = false;
+            $pass                          = false;
         }
 
         if (ini_get('safe_mode')) {
@@ -2062,13 +2077,13 @@ class MMB_Backup extends MMB_Core
             $reqs['Curl']['status'] = 'exists';
             $reqs['Curl']['pass']   = true;
         }
-        $exec_time                        = ini_get('max_execution_time');
-        $exec_unlimited                   = ($exec_time === '0');
+        $exec_time                            = ini_get('max_execution_time');
+        $exec_unlimited                       = ($exec_time === '0');
         $reqs['PHP Execution time']['status'] = ($exec_unlimited ? 'unlimited' : ($exec_time ? $exec_time."s" : 'unknown'));
         $reqs['PHP Execution time']['pass']   = true;
 
-        $mem_limit                      = ini_get('memory_limit');
-        $mem_limit                      = mwp_format_memory_limit($mem_limit);
+        $mem_limit                          = ini_get('memory_limit');
+        $mem_limit                          = mwp_format_memory_limit($mem_limit);
         $reqs['PHP Memory limit']['status'] = $mem_limit ? $mem_limit : 'unknown';
         $reqs['PHP Memory limit']['pass']   = true;
 

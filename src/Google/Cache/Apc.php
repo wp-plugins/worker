@@ -14,8 +14,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
- 
-
 
 
 /**
@@ -28,46 +26,49 @@
  */
 class Google_Cache_Apc extends Google_Cache_Abstract
 {
-  public function __construct(Google_ApiClient $client)
-  {
-    if (! function_exists('apc_add') ) {
-      throw new Google_Cache_Exception("Apc functions not available");
+    public function __construct(Google_ApiClient $client)
+    {
+        if (!function_exists('apc_add')) {
+            throw new Google_Cache_Exception("Apc functions not available");
+        }
     }
-  }
 
-   /**
-   * @inheritDoc
-   */
-  public function get($key, $expiration = false)
-  {
-    $ret = apc_fetch($key);
-    if ($ret === false) {
-      return false;
-    }
-    if (is_numeric($expiration) && (time() - $ret['time'] > $expiration)) {
-      $this->delete($key);
-      return false;
-    }
-    return $ret['data'];
-  }
+    /**
+     * @inheritDoc
+     */
+    public function get($key, $expiration = false)
+    {
+        $ret = apc_fetch($key);
+        if ($ret === false) {
+            return false;
+        }
+        if (is_numeric($expiration) && (time() - $ret['time'] > $expiration)) {
+            $this->delete($key);
 
-  /**
-   * @inheritDoc
-   */
-  public function set($key, $value)
-  {
-    $rc = apc_store($key, array('time' => time(), 'data' => $value));
-    if ($rc == false) {
-      throw new Google_Cache_Exception("Couldn't store data");
-    }
-  }
+            return false;
+        }
 
-  /**
-   * @inheritDoc
-   * @param String $key
-   */
-  public function delete($key)
-  {
-    apc_delete($key);
-  }
+        return $ret['data'];
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function set($key, $value)
+    {
+        $rc = apc_store($key, array('time' => time(), 'data' => $value));
+        if ($rc == false) {
+            throw new Google_Cache_Exception("Couldn't store data");
+        }
+    }
+
+    /**
+     * @inheritDoc
+     *
+     * @param String $key
+     */
+    public function delete($key)
+    {
+        apc_delete($key);
+    }
 }

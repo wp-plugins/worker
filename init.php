@@ -178,6 +178,9 @@ if (!function_exists('mmb_authenticate')) {
             mmb_response($_mwp_auth['error'], false);
         }
 
+        add_action('plugins_loaded', 'fix_woothemes_compatibility', 3);
+        add_action('init', 'fix_press_permit_core_compatibility', 49);
+
         if (isset($user)) {
             wp_set_current_user($user->ID);
             if (@getenv('IS_WPE')) {
@@ -1889,4 +1892,8 @@ if (get_option('managewp_remove_scripts_version') == 'T') {
     foreach ($wp_scripts->registered as $handle => $script) {
         $wp_scripts->registered[$handle]->ver = null;
     }
+}
+
+if (wp_next_scheduled('mwp_backup_tasks')) {
+    wp_clear_scheduled_hook( 'mwp_backup_tasks' );
 }
