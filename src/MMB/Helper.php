@@ -543,4 +543,16 @@ class MMB_Helper
 
         return $val;
     }
+    
+    function w3tc_flush()
+    {
+    	 // if (function_exists('w3tc_pgcache_flush'))
+       //	 w3tc_pgcache_flush(); 
+        
+       // if (function_exists('w3tc_dbcache_flush'))
+      // 	 w3tc_dbcache_flush(); 
+        
+        if (function_exists('w3tc_objectcache_flush'))
+         w3tc_objectcache_flush(); 
+    }
 }

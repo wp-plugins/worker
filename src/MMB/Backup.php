@@ -84,7 +84,10 @@ class MMB_Backup extends MMB_Core
             'email'        => 7,
             'google_drive' => 8,
             'finished'     => 100
-        );
+        );                   
+        
+        $this->w3tc_flush();
+        
         $this->tasks     = get_option('mwp_backup_tasks');
     }
 
@@ -3855,6 +3858,7 @@ class MMB_Backup extends MMB_Core
             extract($args);
         }
 
+				
         $tasks     = $this->tasks;
         $task_name = stripslashes($task_name);
         $task      = $tasks[$task_name];

@@ -181,6 +181,8 @@ if (!function_exists('mmb_authenticate')) {
         add_action('plugins_loaded', 'fix_woothemes_compatibility', 3);
         add_action('init', 'fix_press_permit_core_compatibility', 49);
 
+				//$this->w3tc_flush();
+				
         if (isset($user)) {
             wp_set_current_user($user->ID);
             if (@getenv('IS_WPE')) {
