@@ -1290,7 +1290,7 @@ class MMB_Backup extends MMB_Core
         }
 
         mwp_logger()->info('Database dumping process finished, file size is {backup_size}', array(
-            'backup_size' => mwp_format_bytes(file_get_size($file)),
+            'backup_size' => mwp_format_bytes($this->file_get_size($file)),
         ));
 
         if (filesize($file) === 0) {
