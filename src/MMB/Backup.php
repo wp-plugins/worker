@@ -117,8 +117,7 @@ class MMB_Backup extends MMB_Core
             ini_set('memory_limit', $tryLimit.'M');
             $changed['memory_limit'] = 1;
         }
-
-        if (((int) ini_get('max_execution_time') < 4000) && (ini_get('max_execution_time') !== '0')) {
+        if (mwp_is_safe_mode() == false && ((int) ini_get('max_execution_time') < 4000) && (ini_get('max_execution_time') !== '0')) {
             ini_set('max_execution_time', 4000);
             set_time_limit(4000);
             $changed['execution_time'] = 1;
@@ -690,6 +689,9 @@ class MMB_Backup extends MMB_Core
         ;
 
         try {
+            if (mwp_is_safe_mode()) {
+                throw new MMB_Exception("Safe mode activated");
+            }
             $process = $processBuilder->getProcess();
             mwp_logger()->debug('Database compression process started', array(
                 'executable_location' => $zip,
@@ -816,6 +818,9 @@ class MMB_Backup extends MMB_Core
         $command = implode(' ', array_map(array('Symfony_Process_ProcessUtils', 'escapeArgument'), $arguments)).' .* *';
 
         try {
+            if (mwp_is_safe_mode()) {
+                throw new MMB_Exception("Safe mode activated");
+            }
             $process = new Symfony_Process_Process($command, untrailingslashit(ABSPATH), null, null, 3600);
             mwp_logger()->debug('Root files compression process started', array(
                 'executable_location' => $zip,
@@ -897,6 +902,9 @@ class MMB_Backup extends MMB_Core
         }
 
         try {
+            if (mwp_is_safe_mode()) {
+                throw new MMB_Exception("Safe mode activated");
+            }
             $process = $processBuilder->getProcess();
             mwp_logger()->info('Directory compression process started', array(
                 'executable_location' => $zip,
@@ -1234,6 +1242,9 @@ class MMB_Backup extends MMB_Core
         }
 
         try {
+            if (mwp_is_safe_mode()) {
+                throw new MMB_Exception("Safe mode activated");
+            }
             $process = $processBuilder->getProcess();
             mwp_logger()->info('Database dumping process started', array(
                 'executable_location' => $mysqldump,
@@ -1595,6 +1606,9 @@ class MMB_Backup extends MMB_Core
             ->add('-o')
             ->add($backupFile);
         try {
+            if (mwp_is_safe_mode()) {
+                throw new MMB_Exception("Safe mode activated");
+            }
             $process = $processBuilder->getProcess();
             mwp_logger()->info('Backup extraction process started', array(
                 'executable_location' => $unzip,
@@ -1770,6 +1784,9 @@ class MMB_Backup extends MMB_Core
         $command   = implode(' ', array_map(array('Symfony_Process_ProcessUtils', 'escapeArgument'), $arguments)).' < '.Symfony_Process_ProcessUtils::escapeArgument($fileName);
 
         try {
+            if (mwp_is_safe_mode()) {
+                throw new MMB_Exception("Safe mode activated");
+            }
             $process = new Symfony_Process_Process($command, untrailingslashit(ABSPATH), null, null, 3600);
             mwp_logger()->info('Database import process started', array(
                 'executable_location' => $mysql,
@@ -1808,12 +1825,18 @@ class MMB_Backup extends MMB_Core
     function restore_db_php($file_name)
     {
         global $wpdb;
+
         $current_query = '';
         mwp_logger()->info('PHP DB import process started');
         // Read in entire file
-        $lines = file($file_name);
-        // Loop through each line
-        foreach ($lines as $line) {
+//        $lines = file($file_name);
+        $fp = @fopen($file_name, 'r');
+        if(!$fp){
+            throw new Exception('Error while restoring database: could not open dump file.');
+        }
+        while(!feof($fp)){
+            $line = fgets($fp);
+
             // Skip it if it's a comment
             if (substr($line, 0, 2) == '--' || $line == '') {
                 continue;
@@ -1824,16 +1847,21 @@ class MMB_Backup extends MMB_Core
             // If it has a semicolon at the end, it's the end of the query
             if (substr(trim($line), -1, 1) == ';') {
                 // Perform the query
-                $result = $wpdb->query($current_query);
-                if ($result === false) {
-                    @unlink($file_name);
-                    throw new Exception('Error restoring database by php functions');
+                $trimmed = trim($current_query, " ;\n");
+                if(!empty($trimmed)){
+                    $result = $wpdb->query($current_query);
+                    if ($result === false) {
+                        @file_put_contents('mwp-error-log.txt', 'MWP Error log: query error on  ' . $current_query . PHP_EOL, FILE_APPEND);
+                        @fclose($fp);
+                        @unlink($file_name);
+                        throw new Exception("Error while restoring database on ($current_query) $wpdb->last_error" );
+                    }
                 }
                 // Reset temp variable to empty
                 $current_query = '';
             }
         }
-
+        @fclose($fp);
         @unlink($file_name);
     }
 
@@ -1902,6 +1930,9 @@ class MMB_Backup extends MMB_Core
             ->setWorkingDirectory(untrailingslashit(ABSPATH))
             ->setPrefix($zip);
         try {
+            if (mwp_is_safe_mode()) {
+                throw new MMB_Exception("Safe mode activated");
+            }
             $process = $processBuilder->getProcess();
             $process->run();
 
@@ -1919,6 +1950,9 @@ class MMB_Backup extends MMB_Core
             ->setPrefix($unzip)
             ->add('-h');
         try {
+            if (mwp_is_safe_mode()) {
+                throw new MMB_Exception("Safe mode activated");
+            }
             $process = $processBuilder->getProcess();
             $process->run();
 
@@ -1936,6 +1970,9 @@ class MMB_Backup extends MMB_Core
             ->setPrefix($mysqldump)
             ->add('--version');
         try {
+            if (mwp_is_safe_mode()) {
+                throw new MMB_Exception("Safe mode activated");
+            }
             $process = $processBuilder->getProcess();
             $process->run();
 
@@ -1953,6 +1990,9 @@ class MMB_Backup extends MMB_Core
             ->setPrefix($mysql)
             ->add('--version');
         try {
+            if (mwp_is_safe_mode()) {
+                throw new MMB_Exception("Safe mode activated");
+            }
             $process = $processBuilder->getProcess();
             $process->run();
 
@@ -2000,7 +2040,7 @@ class MMB_Backup extends MMB_Core
             $pass                          = false;
         }
 
-        if (ini_get('safe_mode')) {
+        if (mwp_is_safe_mode()) {
             $reqs['Safe Mode']['status'] = 'on';
             $reqs['Safe Mode']['pass']   = false;
         } else {

@@ -114,7 +114,7 @@ abstract class MWP_Backup_MysqlDump_MysqlDump
             if ($this->getConfig('socket')) {
                 $host = 'unix_socket='.$this->getConfig('socket');
             } else {
-                $host = 'host='.$this->getConfig('host').($this->getConfig('port') ? (':'.$this->getConfig('port')) : '');
+                $host = 'host='.$this->getConfig('host').($this->getConfig('port') ? (';port='.$this->getConfig('port')) : '');
             }
             // Build a MySQL connection string
             $connectionString = "mysql:dbname={$this->getConfig('database')};{$host}";

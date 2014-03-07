@@ -2,7 +2,7 @@
 /* 
 Plugin Name: ManageWP - Worker
 Plugin URI: http://managewp.com/
-Description: Manage Multiple WordPress sites from one dashboard. Visit <a href="https://managewp.com">ManageWP.com</a> to sign up.
+Description: ManageWP Worker plugin allows you to manage your WordPress sites from one dashboard. Visit <a href="https://managewp.com">ManageWP.com</a> for more information.
 Author: ManageWP
 Version: 3.9.29
 Author URI: http://managewp.com
@@ -191,9 +191,11 @@ if (!function_exists('mmb_authenticate')) {
                 wp_set_auth_cookie($user->ID);
             }
         }
-        if (!defined('WP_ADMIN')) {
+        
+        
+        /*if (!defined('WP_ADMIN')) {
             define('WP_ADMIN', true);
-        }
+        }*/
     }
 }
 

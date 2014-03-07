@@ -10,7 +10,7 @@ ManageWP Worker plugin allows you to remotely manage your WordPress sites from o
 
 == Description ==
 
-[ManageWP](https://managewp.com/ "Manage Multiple Blogs") is a revolutionary service that automates the management of multiple WordPress websites.
+[ManageWP](https://managewp.com/ "Manage Multiple Blogs") is a revolutionary service that automates the management of multiple WordPress websites. ManageWP Worker Plugin allows your site to communicate with the service, and is needed in order to enjoy all these features:
 
 Main features:
 

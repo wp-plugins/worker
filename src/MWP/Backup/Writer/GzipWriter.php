@@ -15,6 +15,9 @@ class MWP_Backup_Writer_GzipWriter implements MWP_Backup_Writer_WriterInterface
     public function open()
     {
         $this->file = gzopen($this->getFilename(), $this->getMode());
+        if($this->file === false){
+            throw new MWP_Backup_Exception("Could not open file: $this->getFilename()");
+        }
 
         return $this;
     }

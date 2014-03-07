@@ -506,3 +506,13 @@ function fix_press_permit_core_compatibility()
 {
     remove_action('init', '_pp_act_on_init', 50);
 }
+
+function mwp_is_safe_mode()
+{
+    $value = ini_get("safe_mode");
+    if ((int) $value == 1 || strtolower($value) === "on") {
+        return true;
+    }
+
+    return false;
+}
