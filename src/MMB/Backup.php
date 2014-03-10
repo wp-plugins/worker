@@ -3626,7 +3626,7 @@ class MMB_Backup extends MMB_Core
                     }
                 }
                 if (is_array($info['task_results'])) {
-                    $stats[$task_name] = array_values($info['task_results']);
+                    $stats[$task_name] = $info['task_results'];
                 }
             }
         }
