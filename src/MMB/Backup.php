@@ -117,7 +117,7 @@ class MMB_Backup extends MMB_Core
             ini_set('memory_limit', $tryLimit.'M');
             $changed['memory_limit'] = 1;
         }
-        if (mwp_is_safe_mode() == false && ((int) ini_get('max_execution_time') < 4000) && (ini_get('max_execution_time') !== '0')) {
+        if (!mwp_is_safe_mode() && ((int) ini_get('max_execution_time') < 4000) && (ini_get('max_execution_time') !== '0')) {
             ini_set('max_execution_time', 4000);
             set_time_limit(4000);
             $changed['execution_time'] = 1;
@@ -689,7 +689,7 @@ class MMB_Backup extends MMB_Core
         ;
 
         try {
-            if (mwp_is_safe_mode()) {
+            if (!mwp_is_shell_available()) {
                 throw new MMB_Exception("Safe mode activated");
             }
             $process = $processBuilder->getProcess();
@@ -818,7 +818,7 @@ class MMB_Backup extends MMB_Core
         $command = implode(' ', array_map(array('Symfony_Process_ProcessUtils', 'escapeArgument'), $arguments)).' .* *';
 
         try {
-            if (mwp_is_safe_mode()) {
+            if (!mwp_is_shell_available()) {
                 throw new MMB_Exception("Safe mode activated");
             }
             $process = new Symfony_Process_Process($command, untrailingslashit(ABSPATH), null, null, 3600);
@@ -902,7 +902,7 @@ class MMB_Backup extends MMB_Core
         }
 
         try {
-            if (mwp_is_safe_mode()) {
+            if (!mwp_is_shell_available()) {
                 throw new MMB_Exception("Safe mode activated");
             }
             $process = $processBuilder->getProcess();
@@ -1242,7 +1242,7 @@ class MMB_Backup extends MMB_Core
         }
 
         try {
-            if (mwp_is_safe_mode()) {
+            if (!mwp_is_shell_available()) {
                 throw new MMB_Exception("Safe mode activated");
             }
             $process = $processBuilder->getProcess();
@@ -1606,7 +1606,7 @@ class MMB_Backup extends MMB_Core
             ->add('-o')
             ->add($backupFile);
         try {
-            if (mwp_is_safe_mode()) {
+            if (!mwp_is_shell_available()) {
                 throw new MMB_Exception("Safe mode activated");
             }
             $process = $processBuilder->getProcess();
@@ -1784,7 +1784,7 @@ class MMB_Backup extends MMB_Core
         $command   = implode(' ', array_map(array('Symfony_Process_ProcessUtils', 'escapeArgument'), $arguments)).' < '.Symfony_Process_ProcessUtils::escapeArgument($fileName);
 
         try {
-            if (mwp_is_safe_mode()) {
+            if (!mwp_is_shell_available()) {
                 throw new MMB_Exception("Safe mode activated");
             }
             $process = new Symfony_Process_Process($command, untrailingslashit(ABSPATH), null, null, 3600);
@@ -1916,7 +1916,7 @@ class MMB_Backup extends MMB_Core
      */
     function procOpenExists()
     {
-        if ($this->mmb_function_exists('proc_open')) {
+        if ($this->mmb_function_exists('proc_open') && $this->mmb_function_exists('escapeshellarg')) {
             return true;
         }
 
@@ -1930,7 +1930,7 @@ class MMB_Backup extends MMB_Core
             ->setWorkingDirectory(untrailingslashit(ABSPATH))
             ->setPrefix($zip);
         try {
-            if (mwp_is_safe_mode()) {
+            if (!mwp_is_shell_available()) {
                 throw new MMB_Exception("Safe mode activated");
             }
             $process = $processBuilder->getProcess();
@@ -1950,7 +1950,7 @@ class MMB_Backup extends MMB_Core
             ->setPrefix($unzip)
             ->add('-h');
         try {
-            if (mwp_is_safe_mode()) {
+            if (!mwp_is_shell_available()) {
                 throw new MMB_Exception("Safe mode activated");
             }
             $process = $processBuilder->getProcess();
@@ -1970,7 +1970,7 @@ class MMB_Backup extends MMB_Core
             ->setPrefix($mysqldump)
             ->add('--version');
         try {
-            if (mwp_is_safe_mode()) {
+            if (!mwp_is_shell_available()) {
                 throw new MMB_Exception("Safe mode activated");
             }
             $process = $processBuilder->getProcess();
@@ -1990,7 +1990,7 @@ class MMB_Backup extends MMB_Core
             ->setPrefix($mysql)
             ->add('--version');
         try {
-            if (mwp_is_safe_mode()) {
+            if (!mwp_is_shell_available()) {
                 throw new MMB_Exception("Safe mode activated");
             }
             $process = $processBuilder->getProcess();
@@ -2071,7 +2071,6 @@ class MMB_Backup extends MMB_Core
         $reqs['Execute Function']['pass']   = true;
         if (!$this->procOpenExists()) {
             $reqs['Execute Function']['status'] = "not found";
-            $reqs['Execute Function']['info']   = "(we'll use PHP replacement)";
             $reqs['Execute Function']['pass']   = false;
         }
 

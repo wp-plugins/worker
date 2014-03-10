@@ -494,17 +494,16 @@ function mmb_get_spam_comments()
     return $spams;
 }
 
-function fix_woothemes_compatibility()
+function mwp_is_shell_available()
 {
-    if (isset($GLOBALS['woocommerce_wpml']->dependencies)) {
-        remove_action('wp_ajax_wcml_fix_strings_language', array($GLOBALS['woocommerce_wpml']->dependencies, 'fix_strings_language'));
-        remove_action('init', array($GLOBALS['woocommerce_wpml']->dependencies, 'check_wpml_config'), 100);
+    if (mwp_is_safe_mode()) {
+        return false;
     }
-}
+    if (!function_exists('proc_open') || function_exists('escapeshellarg')) {
+        return false;
+    }
 
-function fix_press_permit_core_compatibility()
-{
-    remove_action('init', '_pp_act_on_init', 50);
+    return true;
 }
 
 function mwp_is_safe_mode()
