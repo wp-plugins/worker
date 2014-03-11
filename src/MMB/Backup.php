@@ -1764,13 +1764,14 @@ class MMB_Backup extends MMB_Core
         $port = 0;
         $host = DB_HOST;
 
-        if (strpos($host, ':') !== false) {
-            list($host, $port) = explode(':', $host);
+        if (strpos(DB_HOST, ':') !== false) {
+            list($host, $port) = explode(':', DB_HOST);
         }
         $socket = false;
 
-        if (strpos($host, '/') !== false || strpos($host, '\\') !== false) {
+        if (strpos(DB_HOST, '/') !== false || strpos(DB_HOST, '\\') !== false) {
             $socket = true;
+            $host   = end(explode(':', DB_HOST));
         }
 
         if ($socket) {
@@ -1832,7 +1833,9 @@ class MMB_Backup extends MMB_Core
 //        $lines = file($file_name);
         $fp = @fopen($file_name, 'r');
         if(!$fp){
-            throw new Exception('Error while restoring database: could not open dump file.');
+            $time = date('l jS \of F Y h:i:s A', time());
+            @file_put_contents('clone_error.log', $time . ': Error while restoring database: could not open dump file  ' . $file_name . PHP_EOL, FILE_APPEND);
+            throw new Exception("Error while restoring database: could not open dump file ($file_name)");
         }
         while(!feof($fp)){
             $line = fgets($fp);
