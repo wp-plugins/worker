@@ -1435,24 +1435,47 @@ class MMB_Backup extends MMB_Core
         }
 
         if ($unzipFailed) {
-            try {
-                /* Fallback to PclZip Module */
-                $this->pclUnzipIt($backupFile);
-            } catch (Exception $e) {
-                $this->deleteTempBackupFile($backupFile, $deleteBackupAfterRestore);
+            $zipUnarchiveFailed = false;
+            if(class_exists('ZipArchive')){
+                try {
+                    $zipArchive = new ZipArchive();
+                    $open = $zipArchive->open($backupFile);
+                    if($open === true){
+                        $extracted = $zipArchive->extractTo(untrailingslashit(ABSPATH));
+                        if(!$extracted){
+                            $zipUnarchiveFailed = true;
+                        } else {
+                        }
+                    } else {
+                        $zipUnarchiveFailed = true;
+                    }
+                } catch(Exception $ex){
+                    $zipUnarchiveFailed = true;
+                }
+            }
 
-                return array(
-                    'error' => $e->getMessage(),
-                );
+            if($zipUnarchiveFailed){
+                try {
+                    /* Fallback to PclZip Module */
+                    $this->pclUnzipIt($backupFile);
+                } catch (Exception $e) {
+                    $this->deleteTempBackupFile($backupFile, $deleteBackupAfterRestore);
+
+                    return array(
+                        'error' => $e->getMessage(),
+                    );
+                }
             }
         }
         $this->deleteTempBackupFile($backupFile, $deleteBackupAfterRestore);
         $filePath = ABSPATH.'mwp_db';
+
         @chmod($filePath, 0755);
         $fileName = glob($filePath.'/*.sql');
         $fileName = $fileName[0];
 
         $restoreDbFailed = false;
+
         try {
             $this->restore_db($fileName);
         } catch (Exception $e) {
@@ -1799,13 +1822,13 @@ class MMB_Backup extends MMB_Core
                 throw new Symfony_Process_Exception_ProcessFailedException($process);
             }
         } catch (Symfony_Process_Exception_ProcessFailedException $e) {
-            unlink($fileName);
+            //unlink($fileName);
             mwp_logger()->error('Database import process failed', array(
                 'process' => $e->getProcess(),
             ));
             throw $e;
         } catch (Exception $e) {
-            unlink($fileName);
+            //unlink($fileName);
             mwp_logger()->error('Error while trying to execute database import process', array(
                 'exception' => $e,
             ));
@@ -1833,9 +1856,7 @@ class MMB_Backup extends MMB_Core
 //        $lines = file($file_name);
         $fp = @fopen($file_name, 'r');
         if(!$fp){
-            $time = date('l jS \of F Y h:i:s A', time());
-            @file_put_contents('clone_error.log', $time . ': Error while restoring database: could not open dump file  ' . $file_name . PHP_EOL, FILE_APPEND);
-            throw new Exception("Error while restoring database: could not open dump file ($file_name)");
+            throw new Exception("Failed restoring database: could not open dump file ($file_name)");
         }
         while(!feof($fp)){
             $line = fgets($fp);
@@ -1854,7 +1875,6 @@ class MMB_Backup extends MMB_Core
                 if(!empty($trimmed)){
                     $result = $wpdb->query($current_query);
                     if ($result === false) {
-                        @file_put_contents('mwp-error-log.txt', 'MWP Error log: query error on  ' . $current_query . PHP_EOL, FILE_APPEND);
                         @fclose($fp);
                         @unlink($file_name);
                         throw new Exception("Error while restoring database on ($current_query) $wpdb->last_error" );
