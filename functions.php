@@ -499,7 +499,7 @@ function mwp_is_shell_available()
     if (mwp_is_safe_mode()) {
         return false;
     }
-    if (!function_exists('proc_open') || function_exists('escapeshellarg')) {
+    if (!function_exists('proc_open') || !function_exists('escapeshellarg')) {
         return false;
     }
 

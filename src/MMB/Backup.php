@@ -577,12 +577,12 @@ class MMB_Backup extends MMB_Core
         if (!$zip_db_result) {
             $zip_archive_db_result = false;
             if (class_exists("ZipArchive")) {
-                $this->_log("DB zip, fallback to ZipArchive");
+                mwp_logger()->debug('DB zip, fallback to ZipArchive');
                 $zip_archive_db_result = $this->zip_archive_backup_db($task_name, $db_result, $backup_file);
             }
 
             if (!$zip_archive_db_result) {
-                $this->_log("DB zip, fallback to PclZip");
+                mwp_logger()->debug('DB zip, fallback to PclZip');
                 $pclzip_db_result = $this->pclzip_backup_db($task_name, $backup_file);
                 if (!$pclzip_db_result) {
                     @unlink(MWP_BACKUP_DIR.'/mwp_db/index.php');
@@ -628,12 +628,12 @@ class MMB_Backup extends MMB_Core
         if (!$zip_result) {
             $zip_archive_result = false;
             if (class_exists("ZipArchive")) {
-                $this->_log("Files zip fallback to ZipArchive");
+                mwp_logger()->debug('Files zip fallback to ZipArchive');
                 $zip_archive_result = $this->zip_archive_backup($task_name, $backup_file, $exclude, $include);
             }
 
             if (!$zip_archive_result) {
-                $this->_log("Files zip fallback to PclZip");
+                mwp_logger()->debug('Files zip fallback to PclZip');
                 $pclzip_result = $this->pclzip_backup($task_name, $backup_file, $exclude, $include);
                 if (!$pclzip_result) {
                     @unlink(MWP_BACKUP_DIR.'/mwp_db/index.php');
@@ -739,7 +739,11 @@ class MMB_Backup extends MMB_Core
         } else {
             $result = false;
         }
-
+        if($result){
+            mwp_logger()->info('ZipArchive database compression process finished');
+        }else{
+            mwp_logger()->error('Error while trying to zip DB with ZipArchive');
+        }
         return $result; // true if $backup_file iz zipped successfully, false if error is occured in zip process
     }
 
@@ -950,14 +954,14 @@ class MMB_Backup extends MMB_Core
         $filelist     = $this->get_backup_files($exclude, $include);
         $disable_comp = $this->tasks[$task_name]['task_args']['disable_comp'];
         if (!$disable_comp) {
-            $this->_log("Compression is not supported by ZipArchive");
+            mwp_logger()->warning('Compression is not supported by ZipArchive');
         }
 
         $zip = new ZipArchive();
         if ($overwrite) {
-            $result = $zip->open($backup_file, ZipArchive::OVERWRITE); // Tries to open $backup_file for acrhiving
+            $result = $zip->open($backup_file, ZipArchive::OVERWRITE); // Tries to open $backup_file for archiving
         } else {
-            $result = $zip->open($backup_file); // Tries to open $backup_file for acrhiving
+            $result = $zip->open($backup_file); // Tries to open $backup_file for archiving
         }
         if ($result === true) {
             foreach ($filelist as $file) {
@@ -967,7 +971,11 @@ class MMB_Backup extends MMB_Core
         } else {
             $result = false;
         }
-
+        if($result){
+            mwp_logger()->info('ZipArchive files compression process finished');
+        }else{
+            mwp_logger()->error('Error while trying to zip files with ZipArchive');
+        }
         return $result; // true if $backup_file iz zipped successfully, false if error is occured in zip process
     }
 
@@ -1435,26 +1443,6 @@ class MMB_Backup extends MMB_Core
         }
 
         if ($unzipFailed) {
-            $zipUnarchiveFailed = false;
-            if(class_exists('ZipArchive')){
-                try {
-                    $zipArchive = new ZipArchive();
-                    $open = $zipArchive->open($backupFile);
-                    if($open === true){
-                        $extracted = $zipArchive->extractTo(untrailingslashit(ABSPATH));
-                        if(!$extracted){
-                            $zipUnarchiveFailed = true;
-                        } else {
-                        }
-                    } else {
-                        $zipUnarchiveFailed = true;
-                    }
-                } catch(Exception $ex){
-                    $zipUnarchiveFailed = true;
-                }
-            }
-
-            if($zipUnarchiveFailed){
                 try {
                     /* Fallback to PclZip Module */
                     $this->pclUnzipIt($backupFile);
@@ -1465,8 +1453,8 @@ class MMB_Backup extends MMB_Core
                         'error' => $e->getMessage(),
                     );
                 }
-            }
         }
+
         $this->deleteTempBackupFile($backupFile, $deleteBackupAfterRestore);
         $filePath = ABSPATH.'mwp_db';
 
@@ -1495,6 +1483,8 @@ class MMB_Backup extends MMB_Core
                     'error' => $e->getMessage(),
                 );
             }
+        } else {
+            @unlink($fileName);
         }
         @unlink($filePath.'/index.php');
         @rmdir($filePath);
@@ -1835,7 +1825,7 @@ class MMB_Backup extends MMB_Core
             throw $e;
         }
         mwp_logger()->info('Database import process finished');
-        unlink($fileName);
+//        unlink($fileName);
     }
 
 
