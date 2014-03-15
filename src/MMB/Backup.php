@@ -821,11 +821,11 @@ class MMB_Backup extends MMB_Core
             }
         }
 
-        if ($fileExclusions) {
-            $arguments[] = '-x';
-            $arguments   = array_merge($arguments, $fileExclusions);
-        }
         $command = implode(' ', array_map(array('Symfony_Process_ProcessUtils', 'escapeArgument'), $arguments)).' .* ./*';
+
+        if ($fileExclusions) {
+            $command .= ' '.implode(' ', array_map(array('Symfony_Process_ProcessUtils', 'escapeArgument'), array_merge(array('-x'), $fileExclusions)));
+        }
 
         try {
             if (!mwp_is_shell_available()) {
