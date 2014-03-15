@@ -697,7 +697,13 @@ class MMB_Backup extends MMB_Core
                 'executable_location' => $zip,
                 'command_line'        => $process->getCommandLine(),
             ));
-            $process->run();
+            $process->start();
+            while ($process->isRunning()) {
+                sleep(1);
+                echo ".";
+                flush();
+                mwp_logger()->debug('Compressing...');
+            }
 
             if (!$process->isSuccessful()) {
                 throw new Symfony_Process_Exception_ProcessFailedException($process);
@@ -808,7 +814,7 @@ class MMB_Backup extends MMB_Core
     {
         $zip            = mwp_container()->getExecutableFinder()->find('zip', 'zip');
         $arguments      = array($zip, '-q', '-j', '-'.$compressionLevel, $backupFile);
-        $fileExclusions = array();
+        $fileExclusions = array('../');
         foreach ($exclude as $exclusion) {
             if (is_file(ABSPATH.$exclusion)) {
                 $fileExclusions[] = $exclusion;
@@ -819,7 +825,7 @@ class MMB_Backup extends MMB_Core
             $arguments[] = '-x';
             $arguments   = array_merge($arguments, $fileExclusions);
         }
-        $command = implode(' ', array_map(array('Symfony_Process_ProcessUtils', 'escapeArgument'), $arguments)).' .* *';
+        $command = implode(' ', array_map(array('Symfony_Process_ProcessUtils', 'escapeArgument'), $arguments)).' .* ./*';
 
         try {
             if (!mwp_is_shell_available()) {
@@ -830,7 +836,13 @@ class MMB_Backup extends MMB_Core
                 'executable_location' => $zip,
                 'command_line'        => $process->getCommandLine(),
             ));
-            $process->run();
+            $process->start();
+            while ($process->isRunning()) {
+                sleep(1);
+                echo ".";
+                flush();
+                mwp_logger()->debug('Compressing...');
+            }
 
             if ($process->isSuccessful()) {
                 mwp_logger()->info('Root files compression process finished');
