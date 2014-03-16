@@ -2446,23 +2446,27 @@ class MMB_Backup extends MMB_Core
             $errorCatcher->register('ftp_nlist');
             $dirList = ftp_nlist($ftp, $currentPath);
             $errorCatcher->unRegister();
-            $currentPath .= $directory.'/';
+            $currentPath .= $directory;
 
             if ($dirList === false) {
                 throw new Exception($this->ftpErrorMessage(sprintf('Unable to list FTP directory content (directory: "%s").', $currentPath), $errorCatcher->yieldErrorMessage()));
             }
 
-            $dirExists = in_array(rtrim($currentPath, '/'), $dirList);
+            $dirList = array_map('basename', $dirList);
+
+            $dirExists = in_array($directory, $dirList);
 
             if (!$dirExists) {
                 $errorCatcher->register('ftp_mkdir');
-                $dirMade = ftp_mkdir($ftp, rtrim($currentPath, '/'));
+                $dirMade = ftp_mkdir($ftp, $currentPath);
                 $errorCatcher->unRegister();
 
                 if (!$dirMade) {
-                    throw new Exception($this->ftpErrorMessage(sprintf('Unable to make directory %s.', rtrim($currentPath, '/')), $errorCatcher->yieldErrorMessage()));
+                    throw new Exception($this->ftpErrorMessage(sprintf('Unable to make directory %s.', $currentPath), $errorCatcher->yieldErrorMessage()));
                 }
             }
+
+            $currentPath .= '/';
         }
     }
 
