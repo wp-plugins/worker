@@ -509,9 +509,9 @@ function mwp_is_shell_available()
 function mwp_is_safe_mode()
 {
     $value = ini_get("safe_mode");
-    if ((int) $value == 1 || strtolower($value) === "on") {
-        return true;
+    if ((int) $value === 0 || strtolower($value) === "off") {
+        return false;
     }
 
-    return false;
+    return true;
 }

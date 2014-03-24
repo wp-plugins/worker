@@ -44,6 +44,8 @@ class MWP_Progress_Upload extends MWP_Progress_Abstract
 
         $progress = round($currentProgress / $this->fileSize * 100, 2);
 
+        echo ".";
+        flush();
         $this->logger->info(
           'Upload progress: {progress}% (speed: {speed}/s)',
           array(

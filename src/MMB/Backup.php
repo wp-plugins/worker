@@ -690,7 +690,7 @@ class MMB_Backup extends MMB_Core
 
         try {
             if (!mwp_is_shell_available()) {
-                throw new MMB_Exception("Safe mode activated");
+                throw new MMB_Exception("Shell is not available");
             }
             $process = $processBuilder->getProcess();
             mwp_logger()->debug('Database compression process started', array(
@@ -829,7 +829,7 @@ class MMB_Backup extends MMB_Core
 
         try {
             if (!mwp_is_shell_available()) {
-                throw new MMB_Exception("Safe mode activated");
+                throw new MMB_Exception("Shell is not available");
             }
             $process = new Symfony_Process_Process($command, untrailingslashit(ABSPATH), null, null, 3600);
             mwp_logger()->debug('Root files compression process started', array(
@@ -919,14 +919,20 @@ class MMB_Backup extends MMB_Core
 
         try {
             if (!mwp_is_shell_available()) {
-                throw new MMB_Exception("Safe mode activated");
+                throw new MMB_Exception("Shell is not available");
             }
             $process = $processBuilder->getProcess();
             mwp_logger()->info('Directory compression process started', array(
                 'executable_location' => $zip,
                 'command_line'        => $process->getCommandLine(),
             ));
-            $process->run();
+            $process->start();
+            while ($process->isRunning()) {
+                sleep(1);
+                echo ".";
+                flush();
+                mwp_logger()->debug('Compressing...');
+            }
 
             if ($process->isSuccessful()) {
                 mwp_logger()->info('Directory compression process successfully completed');
@@ -1263,7 +1269,7 @@ class MMB_Backup extends MMB_Core
 
         try {
             if (!mwp_is_shell_available()) {
-                throw new MMB_Exception("Safe mode activated");
+                throw new MMB_Exception("Shell is not available");
             }
             $process = $processBuilder->getProcess();
             mwp_logger()->info('Database dumping process started', array(
@@ -1632,7 +1638,7 @@ class MMB_Backup extends MMB_Core
             ->add($backupFile);
         try {
             if (!mwp_is_shell_available()) {
-                throw new MMB_Exception("Safe mode activated");
+                throw new MMB_Exception("Shell is not available");
             }
             $process = $processBuilder->getProcess();
             mwp_logger()->info('Backup extraction process started', array(
@@ -1811,7 +1817,7 @@ class MMB_Backup extends MMB_Core
 
         try {
             if (!mwp_is_shell_available()) {
-                throw new MMB_Exception("Safe mode activated");
+                throw new MMB_Exception("Shell is not available");
             }
             $process = new Symfony_Process_Process($command, untrailingslashit(ABSPATH), null, null, 3600);
             mwp_logger()->info('Database import process started', array(
@@ -1956,7 +1962,7 @@ class MMB_Backup extends MMB_Core
             ->setPrefix($zip);
         try {
             if (!mwp_is_shell_available()) {
-                throw new MMB_Exception("Safe mode activated");
+                throw new MMB_Exception("Shell is not available");
             }
             $process = $processBuilder->getProcess();
             $process->run();
@@ -1976,7 +1982,7 @@ class MMB_Backup extends MMB_Core
             ->add('-h');
         try {
             if (!mwp_is_shell_available()) {
-                throw new MMB_Exception("Safe mode activated");
+                throw new MMB_Exception("Shell is not available");
             }
             $process = $processBuilder->getProcess();
             $process->run();
@@ -1996,7 +2002,7 @@ class MMB_Backup extends MMB_Core
             ->add('--version');
         try {
             if (!mwp_is_shell_available()) {
-                throw new MMB_Exception("Safe mode activated");
+                throw new MMB_Exception("Shell is not available");
             }
             $process = $processBuilder->getProcess();
             $process->run();
@@ -2016,7 +2022,7 @@ class MMB_Backup extends MMB_Core
             ->add('--version');
         try {
             if (!mwp_is_shell_available()) {
-                throw new MMB_Exception("Safe mode activated");
+                throw new MMB_Exception("Shell is not available");
             }
             $process = $processBuilder->getProcess();
             $process->run();
@@ -2164,6 +2170,12 @@ class MMB_Backup extends MMB_Core
             $mem_limit = mwp_format_memory_limit($mem_limit);
             $reqs['PHP Memory limit']['status'] .= $mem_limit ? ' (will try '.$mem_limit.')' : ' (unknown)';
         }
+
+        $reqs['Worker Version']['status'] = $GLOBALS['MMB_WORKER_VERSION'];
+        $reqs['Worker Version']['pass']   = true;
+
+        $reqs['Worker Revision']['status'] = $GLOBALS['MMB_WORKER_REVISION'];
+        $reqs['Worker Revision']['pass']   = true;
 
         return $reqs;
     }
@@ -3254,6 +3266,8 @@ class MMB_Backup extends MMB_Core
                     'speed'    => mwp_format_bytes(($uploaded - $lastProgress) / $elapsed),
                 ));
                 $lastProgress = $uploaded;
+                echo ".";
+                flush();
             }
             $uploaded += $newChunkSize;
             $status = $media->nextChunk($chunk);

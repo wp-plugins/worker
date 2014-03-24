@@ -387,6 +387,7 @@ class MMB_Stats extends MMB_Core
         global $wpdb, $mmb_wp_version, $mmb_plugin_dir, $wp_version, $wp_local_package;
 
         $stats['worker_version']        = $GLOBALS['MMB_WORKER_VERSION'];
+        $stats['worker_revision']       = $GLOBALS['MMB_WORKER_REVISION'];
         $stats['wordpress_version']     = $wp_version;
         $stats['wordpress_locale_pckg'] = $wp_local_package;
         $stats['php_version']           = phpversion();
