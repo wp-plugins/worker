@@ -9,8 +9,34 @@ function mwp_autoload($class)
         || substr($class, 0, 4) === 'MWP_'
         || substr($class, 0, 4) === 'MMB_'
         || substr($class, 0, 3) === 'S3_'
-        || substr($class, 0, 7) === 'Google_'
     ) {
+        $file = dirname(__FILE__).'/src/'.str_replace('_', '/', $class).'.php';
+        if (file_exists($file)) {
+            include_once $file;
+        }
+    }
+}
+
+function mwp_register_autoload_google()
+{
+    static $registered;
+
+    if ($registered) {
+        return;
+    } else {
+        $registered = true;
+    }
+
+    if (version_compare(PHP_VERSION, '5.3', '<')) {
+        spl_autoload_register('mwp_autoload_google');
+    } else {
+        spl_autoload_register('mwp_autoload_google', true, true);
+    }
+}
+
+function mwp_autoload_google($class)
+{
+    if (substr($class, 0, 7) === 'Google_') {
         $file = dirname(__FILE__).'/src/'.str_replace('_', '/', $class).'.php';
         if (file_exists($file)) {
             include_once $file;

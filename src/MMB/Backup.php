@@ -814,14 +814,22 @@ class MMB_Backup extends MMB_Core
     {
         $zip            = mwp_container()->getExecutableFinder()->find('zip', 'zip');
         $arguments      = array($zip, '-q', '-j', '-'.$compressionLevel, $backupFile);
-        $fileExclusions = array('../');
+        $fileExclusions = array('../', 'error_log');
         foreach ($exclude as $exclusion) {
             if (is_file(ABSPATH.$exclusion)) {
                 $fileExclusions[] = $exclusion;
             }
         }
 
-        $command = implode(' ', array_map(array('Symfony_Process_ProcessUtils', 'escapeArgument'), $arguments)).' .* ./*';
+        $parentWpConfig = '';
+        if (!file_exists(ABSPATH . 'wp-config.php')
+            && file_exists(dirname(ABSPATH) . '/wp-config.php')
+            && !file_exists(dirname(ABSPATH) . '/wp-settings.php')
+        ) {
+            $parentWpConfig = '../wp-config.php';
+        }
+
+        $command = implode(' ', array_map(array('Symfony_Process_ProcessUtils', 'escapeArgument'), $arguments)). " .* ./* $parentWpConfig";
 
         if ($fileExclusions) {
             $command .= ' '.implode(' ', array_map(array('Symfony_Process_ProcessUtils', 'escapeArgument'), array_merge(array('-x'), $fileExclusions)));
@@ -880,11 +888,20 @@ class MMB_Backup extends MMB_Core
             ->add($backupFile)
             ->add('.');
 
+        $uploadDir = wp_upload_dir();
+
         $inclusions = array(
             WPINC,
             basename(WP_CONTENT_DIR),
             'wp-admin',
         );
+
+        $path = wp_upload_dir();
+        $path = $path['path'];
+        if(strpos($path, WP_CONTENT_DIR) === false && strpos($path, ABSPATH) === 0){
+            $inclusions[] = ltrim(substr($path, strlen(ABSPATH)), ' /');
+        }
+
         $include    = array_merge($include, $inclusions);
         $include    = array_map('untrailingslashit', $include);
         foreach ($include as $inclusion) {
@@ -983,7 +1000,8 @@ class MMB_Backup extends MMB_Core
         }
         if ($result === true) {
             foreach ($filelist as $file) {
-                $result = $result && $zip->addFile($file, sprintf("%s", str_replace(ABSPATH, '', $file))); // Tries to add a new file to $backup_file
+                $pathInZip = strpos($file, ABSPATH) === false ? basename($file) : str_replace(ABSPATH, '', $file);
+                $result = $result && $zip->addFile($file, $pathInZip); // Tries to add a new file to $backup_file
             }
             $result = $result && $zip->close(); // Tries to close $backup_file
         } else {
@@ -1016,8 +1034,21 @@ class MMB_Backup extends MMB_Core
         $add = array(
             trim(WPINC),
             trim(basename(WP_CONTENT_DIR)),
-            "wp-admin"
+            'wp-admin'
         );
+
+        if (!file_exists(ABSPATH . 'wp-config.php')
+            && file_exists(dirname(ABSPATH) . '/wp-config.php')
+            && !file_exists(dirname(ABSPATH) . '/wp-settings.php')
+        ) {
+            $include[] = '../wp-config.php';
+        }
+
+        $path = wp_upload_dir();
+        $path = $path['path'];
+        if(strpos($path, WP_CONTENT_DIR) === false && strpos($path, ABSPATH) === 0){
+            $add[] = ltrim(substr($path, strlen(ABSPATH)), ' /');
+        }
 
         $include_data = array();
         if (!empty($include)) {
@@ -1092,8 +1123,26 @@ class MMB_Backup extends MMB_Core
             }
             closedir($handle);
         }
+        $exclude[] = 'error_log';
 
         $filelist = get_all_files_from_dir(ABSPATH, $exclude);
+
+        if (!file_exists(ABSPATH . 'wp-config.php')
+            && file_exists(dirname(ABSPATH) . '/wp-config.php')
+            && !file_exists(dirname(ABSPATH) . '/wp-settings.php')
+        ) {
+            $filelist[] = dirname(ABSPATH) .'/wp-config.php';
+        }
+
+        $path = wp_upload_dir();
+        $path = $path['path'];
+        if(strpos($path, WP_CONTENT_DIR) === false && strpos($path, ABSPATH) === 0){
+            $mediaDir = ABSPATH . ltrim(substr($path, strlen(ABSPATH)), ' /');
+            if(is_dir($mediaDir)){
+                $allMediaFiles = get_all_files_from_dir($mediaDir);
+                $filelist = array_merge($filelist, $allMediaFiles);
+            }
+        }
 
         return $filelist;
     }
@@ -3121,6 +3170,7 @@ class MMB_Backup extends MMB_Core
      */
     function google_drive_backup($args)
     {
+        mwp_register_autoload_google();
         $googleClient = new Google_ApiClient();
         $googleClient->setAccessToken($args['google_drive_token']);
 
@@ -3304,6 +3354,7 @@ class MMB_Backup extends MMB_Core
      */
     function remove_google_drive_backup($args)
     {
+        mwp_register_autoload_google();
         mwp_logger()->info('Removing Google Drive backup file', array(
             'google_drive_directory'   => $args['google_drive_directory'],
             'google_drive_site_folder' => $args['google_drive_site_folder'],
@@ -3407,6 +3458,7 @@ class MMB_Backup extends MMB_Core
      */
     function get_google_drive_backup($args)
     {
+        mwp_register_autoload_google();
         $googleClient = new Google_ApiClient();
         $googleClient->setAccessToken($args['google_drive_token']);
         $driveService = new Google_Service_Drive($googleClient);
@@ -4430,7 +4482,7 @@ if (!function_exists('get_all_files_from_dir_recursive')) {
 
         while (false !== ($file = @readdir($dh))) {
             if (!in_array($file, array('.', '..'))) {
-                if (!in_array("$path/$file", $ignore_array)) {
+                if (empty($ignore_array) || !in_array("$path/$file", $ignore_array)) {
                     if (!is_dir("$path/$file")) {
                         $directory_tree[] = "$path/$file";
                     } else {

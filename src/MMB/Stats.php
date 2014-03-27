@@ -300,51 +300,45 @@ class MMB_Stats extends MMB_Core
 
     function get_errors($stats, $options = array())
     {
-        $period    = isset($options['days']) ? (int) $options['days'] * 86400 : 86400;
-        $maxerrors = isset($options['max']) ? (int) $options['max'] : 20;
-        $errors    = array();
+        $period     = isset($options['days']) ? (int) $options['days'] * 86400 : 86400;
+        $maxerrors  = isset($options['max']) ? (int) $options['max'] : 100;
+        $last_bytes = isset($options['last_bytes']) ? (int) $options['last_bytes'] : 20480; //20KB
+        $errors     = array();
         if (isset($options['get']) && $options['get'] == true) {
             if (function_exists('ini_get')) {
                 $logpath = ini_get('error_log');
                 if (!empty($logpath) && file_exists($logpath)) {
-                    $logfile = @fopen($logpath, 'r');
-                    if ($logfile && filesize($logpath) > 0) {
-                        $maxlines = 1;
-                        $linesize = -4096;
-                        $lines    = array();
-                        $line     = true;
-                        while ($line !== false) {
-                            if (fseek($logfile, ($maxlines * $linesize), SEEK_END) !== -1) {
-                                $maxlines++;
-                                if ($line) {
-                                    $line = fread($logfile, ($linesize * -1)).$line;
-
-                                    foreach ((array) preg_split("/(\r|\n|\r\n)/U", $line) as $l) {
-                                        preg_match('/\[(.*)\]/Ui', $l, $match);
-                                        if (!empty($match)) {
-                                            $key = str_replace($match[0], '', $l);
-                                            if (!isset($errors[$key])) {
-                                                $errors[$key] = 1;
-                                            } else {
-                                                $errors[$key] = $errors[$key] + 1;
-                                            }
-
-                                            if ((strtotime($match[1]) < ((int) time() - $period)) || count($errors) >= $maxerrors) {
-                                                $line = false;
-                                                break;
-                                            }
-                                        }
-                                    }
+                    $logfile  = @fopen($logpath, 'r');
+                    $filesize = @filesize($logpath);
+                    $read_start = 0;
+                    if (is_resource($logfile) && $filesize > 0) {
+                        if ($filesize > $last_bytes) {
+                            $read_start = $filesize - $last_bytes;
+                        }
+                        fseek($logfile, $read_start, SEEK_SET);
+                        while (!feof($logfile)) {
+                            $line = fgets($logfile);
+                            preg_match('/\[(.*)\]/Ui', $line, $match);
+                            if (!empty($match) && (strtotime($match[1]) > ((int) time() - $period))) {
+                                $key = str_replace($match[0], '', $line);
+                                if (!isset($errors[$key])) {
+                                    $errors[$key] = 1;
+                                } else {
+                                    $errors[$key] = $errors[$key] + 1;
                                 }
-                            } else {
-                                break;
+                                if (count($errors) >= $maxerrors) {
+                                    break;
+                                }
                             }
                         }
+                    }
+                    if (is_resource($logfile)) {
+                        fclose($logfile);
                     }
                     if (!empty($errors)) {
                         $stats['errors']  = $errors;
                         $stats['logpath'] = $logpath;
-                        $stats['logsize'] = @filesize($logpath);
+                        $stats['logsize'] = $filesize;
                     }
                 }
             }
@@ -667,7 +661,7 @@ class MMB_Stats extends MMB_Core
 
     static function is_bot()
     {
-        $agent = $_SERVER['HTTP_USER_AGENT'];
+        $agent = isset($_SERVER['HTTP_USER_AGENT']) ? $_SERVER['HTTP_USER_AGENT'] : '' ;
 
         if ($agent == '') {
             return false;
