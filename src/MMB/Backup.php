@@ -84,11 +84,11 @@ class MMB_Backup extends MMB_Core
             'email'        => 7,
             'google_drive' => 8,
             'finished'     => 100
-        );                   
-        
+        );
+
         $this->w3tc_flush();
-        
-        $this->tasks     = get_option('mwp_backup_tasks');
+
+        $this->tasks = get_option('mwp_backup_tasks');
     }
 
     /**
@@ -745,11 +745,12 @@ class MMB_Backup extends MMB_Core
         } else {
             $result = false;
         }
-        if($result){
+        if ($result) {
             mwp_logger()->info('ZipArchive database compression process finished');
-        }else{
+        } else {
             mwp_logger()->error('Error while trying to zip DB with ZipArchive');
         }
+
         return $result; // true if $backup_file iz zipped successfully, false if error is occured in zip process
     }
 
@@ -822,14 +823,14 @@ class MMB_Backup extends MMB_Core
         }
 
         $parentWpConfig = '';
-        if (!file_exists(ABSPATH . 'wp-config.php')
-            && file_exists(dirname(ABSPATH) . '/wp-config.php')
-            && !file_exists(dirname(ABSPATH) . '/wp-settings.php')
+        if (!file_exists(ABSPATH.'wp-config.php')
+            && file_exists(dirname(ABSPATH).'/wp-config.php')
+            && !file_exists(dirname(ABSPATH).'/wp-settings.php')
         ) {
             $parentWpConfig = '../wp-config.php';
         }
 
-        $command = implode(' ', array_map(array('Symfony_Process_ProcessUtils', 'escapeArgument'), $arguments)). " .* ./* $parentWpConfig";
+        $command = implode(' ', array_map(array('Symfony_Process_ProcessUtils', 'escapeArgument'), $arguments))." .* ./* $parentWpConfig";
 
         if ($fileExclusions) {
             $command .= ' '.implode(' ', array_map(array('Symfony_Process_ProcessUtils', 'escapeArgument'), array_merge(array('-x'), $fileExclusions)));
@@ -898,12 +899,12 @@ class MMB_Backup extends MMB_Core
 
         $path = wp_upload_dir();
         $path = $path['path'];
-        if(strpos($path, WP_CONTENT_DIR) === false && strpos($path, ABSPATH) === 0){
+        if (strpos($path, WP_CONTENT_DIR) === false && strpos($path, ABSPATH) === 0) {
             $inclusions[] = ltrim(substr($path, strlen(ABSPATH)), ' /');
         }
 
-        $include    = array_merge($include, $inclusions);
-        $include    = array_map('untrailingslashit', $include);
+        $include = array_merge($include, $inclusions);
+        $include = array_map('untrailingslashit', $include);
         foreach ($include as $inclusion) {
             if (is_dir(ABSPATH.$inclusion)) {
                 $inclusions[] = $inclusion.'/*';
@@ -1001,17 +1002,18 @@ class MMB_Backup extends MMB_Core
         if ($result === true) {
             foreach ($filelist as $file) {
                 $pathInZip = strpos($file, ABSPATH) === false ? basename($file) : str_replace(ABSPATH, '', $file);
-                $result = $result && $zip->addFile($file, $pathInZip); // Tries to add a new file to $backup_file
+                $result    = $result && $zip->addFile($file, $pathInZip); // Tries to add a new file to $backup_file
             }
             $result = $result && $zip->close(); // Tries to close $backup_file
         } else {
             $result = false;
         }
-        if($result){
+        if ($result) {
             mwp_logger()->info('ZipArchive files compression process finished');
-        }else{
+        } else {
             mwp_logger()->error('Error while trying to zip files with ZipArchive');
         }
+
         return $result; // true if $backup_file iz zipped successfully, false if error is occured in zip process
     }
 
@@ -1037,16 +1039,16 @@ class MMB_Backup extends MMB_Core
             'wp-admin'
         );
 
-        if (!file_exists(ABSPATH . 'wp-config.php')
-            && file_exists(dirname(ABSPATH) . '/wp-config.php')
-            && !file_exists(dirname(ABSPATH) . '/wp-settings.php')
+        if (!file_exists(ABSPATH.'wp-config.php')
+            && file_exists(dirname(ABSPATH).'/wp-config.php')
+            && !file_exists(dirname(ABSPATH).'/wp-settings.php')
         ) {
             $include[] = '../wp-config.php';
         }
 
         $path = wp_upload_dir();
         $path = $path['path'];
-        if(strpos($path, WP_CONTENT_DIR) === false && strpos($path, ABSPATH) === 0){
+        if (strpos($path, WP_CONTENT_DIR) === false && strpos($path, ABSPATH) === 0) {
             $add[] = ltrim(substr($path, strlen(ABSPATH)), ' /');
         }
 
@@ -1127,20 +1129,20 @@ class MMB_Backup extends MMB_Core
 
         $filelist = get_all_files_from_dir(ABSPATH, $exclude);
 
-        if (!file_exists(ABSPATH . 'wp-config.php')
-            && file_exists(dirname(ABSPATH) . '/wp-config.php')
-            && !file_exists(dirname(ABSPATH) . '/wp-settings.php')
+        if (!file_exists(ABSPATH.'wp-config.php')
+            && file_exists(dirname(ABSPATH).'/wp-config.php')
+            && !file_exists(dirname(ABSPATH).'/wp-settings.php')
         ) {
-            $filelist[] = dirname(ABSPATH) .'/wp-config.php';
+            $filelist[] = dirname(ABSPATH).'/wp-config.php';
         }
 
         $path = wp_upload_dir();
         $path = $path['path'];
-        if(strpos($path, WP_CONTENT_DIR) === false && strpos($path, ABSPATH) === 0){
-            $mediaDir = ABSPATH . ltrim(substr($path, strlen(ABSPATH)), ' /');
-            if(is_dir($mediaDir)){
+        if (strpos($path, WP_CONTENT_DIR) === false && strpos($path, ABSPATH) === 0) {
+            $mediaDir = ABSPATH.ltrim(substr($path, strlen(ABSPATH)), ' /');
+            if (is_dir($mediaDir)) {
                 $allMediaFiles = get_all_files_from_dir($mediaDir);
-                $filelist = array_merge($filelist, $allMediaFiles);
+                $filelist      = array_merge($filelist, $allMediaFiles);
             }
         }
 
@@ -1395,6 +1397,8 @@ class MMB_Backup extends MMB_Core
                 'backup_size' => mwp_format_bytes(filesize($file)),
             ));
 
+            file_put_contents(dirname($file).'/info.json', json_encode(array('table-prefix' => $GLOBALS['wpdb']->prefix, 'site-url' => get_option('siteurl'))));
+
             return $file;
         }
     }
@@ -1510,16 +1514,16 @@ class MMB_Backup extends MMB_Core
         }
 
         if ($unzipFailed) {
-                try {
-                    /* Fallback to PclZip Module */
-                    $this->pclUnzipIt($backupFile);
-                } catch (Exception $e) {
-                    $this->deleteTempBackupFile($backupFile, $deleteBackupAfterRestore);
+            try {
+                /* Fallback to PclZip Module */
+                $this->pclUnzipIt($backupFile);
+            } catch (Exception $e) {
+                $this->deleteTempBackupFile($backupFile, $deleteBackupAfterRestore);
 
-                    return array(
-                        'error' => $e->getMessage(),
-                    );
-                }
+                return array(
+                    'error' => $e->getMessage(),
+                );
+            }
         }
 
         $this->deleteTempBackupFile($backupFile, $deleteBackupAfterRestore);
@@ -1545,7 +1549,9 @@ class MMB_Backup extends MMB_Core
                 $this->restore_db_php($fileName);
             } catch (Exception $e) {
                 @unlink($filePath.'/index.php');
+                @unlink($filePath.'/info.json');
                 @rmdir($filePath);
+
                 return array(
                     'error' => $e->getMessage(),
                 );
@@ -1912,10 +1918,10 @@ class MMB_Backup extends MMB_Core
         // Read in entire file
 //        $lines = file($file_name);
         $fp = @fopen($file_name, 'r');
-        if(!$fp){
+        if (!$fp) {
             throw new Exception("Failed restoring database: could not open dump file ($file_name)");
         }
-        while(!feof($fp)){
+        while (!feof($fp)) {
             $line = fgets($fp);
 
             // Skip it if it's a comment
@@ -1929,12 +1935,12 @@ class MMB_Backup extends MMB_Core
             if (substr(trim($line), -1, 1) == ';') {
                 // Perform the query
                 $trimmed = trim($current_query, " ;\n");
-                if(!empty($trimmed)){
+                if (!empty($trimmed)) {
                     $result = $wpdb->query($current_query);
                     if ($result === false) {
                         @fclose($fp);
                         @unlink($file_name);
-                        throw new Exception("Error while restoring database on ($current_query) $wpdb->last_error" );
+                        throw new Exception("Error while restoring database on ($current_query) $wpdb->last_error");
                     }
                 }
                 // Reset temp variable to empty
@@ -3929,6 +3935,7 @@ class MMB_Backup extends MMB_Core
                 @unlink($file);
             }
             @unlink(MWP_BACKUP_DIR.'/mwp_db/index.php');
+            @unlink(MWP_BACKUP_DIR.'/mwp_db/info.json');
             @rmdir(MWP_DB_DIR);
         }
 
@@ -3992,7 +3999,7 @@ class MMB_Backup extends MMB_Core
             extract($args);
         }
 
-				
+
         $tasks     = $this->tasks;
         $task_name = stripslashes($task_name);
         $task      = $tasks[$task_name];

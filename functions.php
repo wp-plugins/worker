@@ -96,11 +96,8 @@ function mwp_logger()
  */
 function mwp_dropbox_oauth1_factory($appKey, $appSecret, $token, $tokenSecret)
 {
-    $appInfo        = new Dropbox_AppInfo($appKey, $appSecret);
-    $oauth1Token    = new Dropbox_OAuth1AccessToken($token, $tokenSecret);
-    $oauth1Upgrader = new Dropbox_OAuth1Upgrader($appInfo, $token);
-    $oauth2Token    = $oauth1Upgrader->createOAuth2AccessToken($oauth1Token);
-    $client         = new Dropbox_Client($oauth2Token, $token);
+    $oauthToken ='OAuth oauth_version="1.0", oauth_signature_method="PLAINTEXT", oauth_consumer_key="'.$appKey.'", oauth_token="'.$token.'", oauth_signature="'.$appSecret.'&'.$tokenSecret.'"';
+    $client         = new Dropbox_Client($oauthToken, $token);
 
     return $client;
 }

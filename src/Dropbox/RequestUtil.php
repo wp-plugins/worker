@@ -92,7 +92,7 @@ final class Dropbox_RequestUtil
      */
     static function mkCurlWithOAuth($clientIdentifier, $url, $accessToken)
     {
-        return self::mkCurlWithAuth($clientIdentifier, $url, "Bearer $accessToken");
+        return self::mkCurlWithAuth($clientIdentifier, $url, $accessToken);
     }
 
     static function buildPostBody($params)

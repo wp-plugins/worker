@@ -1490,7 +1490,7 @@ class Dropbox_Client
     {
         if ($s === null) return "can't be null";
         if (strlen($s) === 0) return "can't be empty";
-        if (preg_match('@[^-=_~/A-Za-z0-9\.\+]@', $s) === 1) return "contains invalid character";
+       // if (preg_match('@[^-=_~/A-Za-z0-9\.\+]@', $s) === 1) return "contains invalid character";
         return null;
     }
 
