@@ -517,12 +517,31 @@ function mmb_get_spam_comments()
     return $spams;
 }
 
+function mwp_is_nio_shell_available()
+{
+    static $check;
+    if(isset($check)){
+        return $check;
+    }
+    try {
+        $process = new Symfony_Process_Process("cd .", dirname(__FILE__), array(), null, 1);
+        $process->run();
+        $check = $process->isSuccessful();
+    } catch (Exception $e) {
+        $check = false;
+    }
+    return $check;
+}
+
 function mwp_is_shell_available()
 {
     if (mwp_is_safe_mode()) {
         return false;
     }
     if (!function_exists('proc_open') || !function_exists('escapeshellarg')) {
+        return false;
+    }
+    if (!mwp_is_nio_shell_available()) {
         return false;
     }
 

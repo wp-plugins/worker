@@ -21,7 +21,7 @@ class Symfony_Process_PhpExecutableFinder
 
     public function __construct()
     {
-        $this->executableFinder = new \Symfony_Process_ExecutableFinder();
+        $this->executableFinder = new Symfony_Process_ExecutableFinder();
     }
 
     /**

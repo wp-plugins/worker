@@ -1,11 +1,12 @@
 <?php
-/* 
+/*
 Plugin Name: ManageWP - Worker
-Plugin URI: http://managewp.com/
+Plugin URI: https://managewp.com
 Description: ManageWP Worker plugin allows you to manage your WordPress sites from one dashboard. Visit <a href="https://managewp.com">ManageWP.com</a> for more information.
-Author: ManageWP
 Version: 3.9.29
-Author URI: http://managewp.com
+Author: ManageWP
+Author URI: https://managewp.com
+License: GPL2
 */
 
 /*************************************************************
@@ -23,7 +24,7 @@ if (!defined('MMB_WORKER_VERSION')) {
 }
 
 $GLOBALS['MMB_WORKER_VERSION'] = '3.9.29';
-$GLOBALS['MMB_WORKER_REVISION'] = '2014-04-02 00:00:00';
+$GLOBALS['MMB_WORKER_REVISION'] = '2014-05-16 00:00:00';
 
 require_once dirname(__FILE__).'/functions.php';
 
@@ -794,16 +795,16 @@ if (!function_exists("mwp_std_to_array")) {
         } else {
             $objArr = $obj;
         }
-        foreach ($objArr as &$element) {
-            if ($element instanceof stdClass) {
-                mwp_std_to_array($element);
-                $element = (array) $element;
+        if (!empty($objArr)) {
+            foreach ($objArr as &$element) {
+                if ($element instanceof stdClass || is_array($element)) {
+                    $element = mwp_std_to_array($element);
+                }
             }
+            $objArr = (array) $objArr;
         }
-        $objArr = (array) $objArr;
 
         return $objArr;
-
     }
 }
 
@@ -1040,29 +1041,28 @@ if (!function_exists('mmb_clean_orphan_backups')) {
     }
 }
 
-function mmb_run_backup_action()
+function mmb_run_forked_action()
 {
-    if (isset($_POST['mmb_backup_nonce'])) {
-        if (!wp_verify_nonce($_POST['mmb_backup_nonce'], 'mmb-backup-nonce')) {
-            return false;
-        }
+    if (!isset($_POST['mmb_fork_nonce']) || (isset($_POST['mmb_fork_nonce']) && !wp_verify_nonce($_POST['mmb_fork_nonce'], 'mmb-fork-nonce'))) {
+        return false;
     }
+
     $public_key = get_option('_worker_public_key');
     if (!isset($_POST['public_key']) || $public_key !== $_POST['public_key']) {
         return false;
     }
     $args = @json_decode(stripslashes($_POST['args']), true);
-    if (!$args) {
+    if (!isset($args)) {
         return false;
     }
-    $cron_action = isset($_POST['backup_cron_action']) ? $_POST['backup_cron_action'] : false;
+    $cron_action = isset($_POST['mwp_forked_action']) ? $_POST['mwp_forked_action'] : false;
     if ($cron_action) {
         do_action($cron_action, $args);
     }
     //unset($_POST['public_key']);
-    unset($_POST['mmb_backup_nonce']);
+    unset($_POST['mmb_fork_nonce']);
     unset($_POST['args']);
-    unset($_POST['backup_cron_action']);
+    unset($_POST['mwp_forked_action']);
 
     return true;
 }

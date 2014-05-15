@@ -386,6 +386,7 @@ class MMB_Stats extends MMB_Core
         $stats['wordpress_locale_pckg'] = $wp_local_package;
         $stats['php_version']           = phpversion();
         $stats['mysql_version']         = $wpdb->db_version();
+        $stats['server_functionality']  = $this->get_backup_instance()->getServerInformationForStats();
         $stats['wp_multisite']          = $this->mmb_multisite;
         $stats['network_install']       = $this->network_admin_install;
 

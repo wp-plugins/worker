@@ -87,7 +87,7 @@ class Symfony_Process_ExecutableFinder
             }
         } else {
             $dirs = array_merge(
-              explode(PATH_SEPARATOR, getenv('PATH') ? '' : getenv('Path')),
+              explode(PATH_SEPARATOR, getenv('PATH') ? getenv('PATH') : getenv('Path')),
               $extraDirs
             );
         }

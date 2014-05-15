@@ -83,6 +83,7 @@ class MMB_Backup extends MMB_Core
             'ftp'          => 6,
             'email'        => 7,
             'google_drive' => 8,
+            'sftp'         => 9,
             'finished'     => 100
         );
 
@@ -224,7 +225,7 @@ class MMB_Backup extends MMB_Core
     /**
      * Checks if scheduled task is ready for execution,
      * if it is ready master sends google_drive_token, failed_emails, success_emails if are needed.
-     *
+     * @deprecated deprecated since version 3.9.29
      * @return void
      */
     function check_backup_tasks()
@@ -1315,7 +1316,10 @@ class MMB_Backup extends MMB_Core
         if ($socket) {
             $processBuilder->add('--socket='.$host);
         } else {
-            $processBuilder->add('--host='.$host)->add('--port='.$port);
+            $processBuilder->add('--host='.$host);
+            if(!empty($port)){
+                $processBuilder->add('--port='.$port);
+            }
         }
 
         try {
@@ -1474,6 +1478,7 @@ class MMB_Backup extends MMB_Core
 
     function restore($params)
     {
+        global $wpdb;
         if (empty($params)) {
             return false;
         }
@@ -1511,6 +1516,15 @@ class MMB_Backup extends MMB_Core
             $this->unzipBackup($backupFile);
         } catch (Exception $e) {
             $unzipFailed = true;
+        }
+
+        if($unzipFailed &&  class_exists("ZipArchive")){
+            $unzipFailed = false;
+            try {
+                $this->unzipWithZipArchive($backupFile);
+            } catch (Exception $e) {
+                $unzipFailed = true;
+            }
         }
 
         if ($unzipFailed) {
@@ -1565,7 +1579,28 @@ class MMB_Backup extends MMB_Core
         /* Replace options and content urls */
         $this->replaceOptionsAndUrls($params['overwrite'], $params['new_user'], $params['new_password'], $params['old_user'], $params['clone_from_url'], $params['admin_email'], $params['mwp_clone'], $oldCredentialsAndOptions, $home, $params['current_tasks_tmp']);
 
-        return true;
+        global $configDiff;
+        $result = array(
+            'status' => true,
+            'admins' => $this->getAdminUsers()
+        );
+        if (isset($configDiff)
+            && is_array($configDiff)
+        ) {
+            $result['configDiff'] = $configDiff;
+        }
+
+        return $result;
+    }
+
+    private function getAdminUsers(){
+        global $wpdb;
+        $users = get_users(array(
+                'role' => ['administrator'],
+                'fields' => ['user_login']
+            ));
+        return $users;
+
     }
 
     private function getBackup($taskName, $resultId, $backupUrl = null)
@@ -1718,6 +1753,21 @@ class MMB_Backup extends MMB_Core
         }
     }
 
+    private function unzipWithZipArchive($backupFile)
+    {
+        mwp_logger()->info('Falling back to ZipArchive Module');
+        $result = false;
+        $zipArchive = new ZipArchive();
+        $zipOpened = $zipArchive->open($backupFile);
+        if($zipOpened === true){
+            $result = $zipArchive->extractTo(ABSPATH);
+            $zipArchive->close();
+        }
+        if($result === false){
+            throw new Exception('Failed to unzip files with ZipArchive. Message: '.$zipArchive);
+        }
+    }
+
     private function pclUnzipIt($backupFile)
     {
         mwp_logger()->info('Falling back to PclZip Module');
@@ -1746,19 +1796,45 @@ class MMB_Backup extends MMB_Core
         if ($overwrite) {
             /* Get New Table prefix */
             $new_table_prefix = trim($this->get_table_prefix());
-            /* Retrieve old wp_config */
-            @unlink(ABSPATH.'wp-config.php');
-            /* Replace table prefix */
-            $lines = file(ABSPATH.'mwp-temp-wp-config.php');
 
+            $configPath            = ABSPATH . 'wp-config.php';
+            $sourceConfigCopyPath  = ABSPATH . 'wp-config.source.php';
+            $destinationConfigPath = ABSPATH . 'mwp-temp-wp-config.php';
+
+            @rename($configPath, $sourceConfigCopyPath);
+
+            /* Config keys diff */
+            $tokenizer                = new MWP_Parser_DefinitionTokenizer();
+            $destinationConfigContent = @file_get_contents($destinationConfigPath);
+            $sourceConfigContent      = @file_get_contents($sourceConfigCopyPath);
+
+            if (is_string($destinationConfigContent) && is_string($sourceConfigContent)) {
+                $sourceTokens      = $tokenizer->getDefinitions($sourceConfigContent);
+                $destinationTokens = $tokenizer->getDefinitions($destinationConfigContent);
+
+                if (is_array($sourceTokens) && is_array($destinationTokens)) {
+                    // First declaration of $configDiff
+                    global $configDiff;
+                    $configDiff = array(
+                        'additions'    => array_values(array_diff($sourceTokens, $destinationTokens)),
+                        'subtractions' => array_values(array_diff($destinationTokens, $sourceTokens))
+                    );
+                }
+            }
+            @unlink($sourceConfigCopyPath);
+
+            /* Retrieve old wp_config */
+            $lines = file($destinationConfigPath);
+
+            /* Replace table prefix */
             foreach ($lines as $line) {
                 if (strstr($line, '$table_prefix')) {
                     $line = '$table_prefix = "'.$new_table_prefix.'";'.PHP_EOL;
                 }
-                file_put_contents(ABSPATH.'wp-config.php', $line, FILE_APPEND);
+                file_put_contents($configPath, $line, FILE_APPEND);
             }
 
-            @unlink(ABSPATH.'mwp-temp-wp-config.php');
+            @unlink($destinationConfigPath);
 
             /* Replace options */
             $query = "SELECT option_value FROM ".$new_table_prefix."options WHERE option_name = 'home'";
@@ -1863,7 +1939,10 @@ class MMB_Backup extends MMB_Core
         if ($socket) {
             $connection = array('--socket='.$host);
         } else {
-            $connection = array('--host='.$host, '--port='.$port);
+            $connection = array('--host='.$host);
+            if (!empty($port)) {
+                $connection[] = '--port='.$port;
+            }
         }
 
         $mysql     = mwp_container()->getExecutableFinder()->find('mysql', 'mysql');
@@ -1995,12 +2074,30 @@ class MMB_Backup extends MMB_Core
 
     }
 
+    public function getServerInformationForStats()
+    {
+        $serverInfo              = array();
+        $serverInfo['zip']       = $this->zipExists();
+        $serverInfo['unzip']     = $this->unzipExists();
+        $serverInfo['proc']      = $this->procOpenExists();
+        $serverInfo['mysql']     = $this->mySqlExists();
+        $serverInfo['mysqldump'] = $this->mySqlDumpExists();
+        $serverInfo['curl']      = false;
+        $serverInfo['shell']     = mwp_is_shell_available();
+
+        if (function_exists('curl_init') && function_exists('curl_exec')) {
+            $serverInfo['curl'] = true;
+        }
+
+        return $serverInfo;
+    }
+
     /**
      * Check if proc_open exists
      *
      * @return    string|bool    exec if exists, then system, then passthru, then false if no one exist
      */
-    function procOpenExists()
+    private function procOpenExists()
     {
         if ($this->mmb_function_exists('proc_open') && $this->mmb_function_exists('escapeshellarg')) {
             return true;
@@ -4101,6 +4198,7 @@ class MMB_Backup extends MMB_Core
                 'error' => 'Backup file not found on your server. Please try again.'
             );
         }
+        $this->sendDataToMaster();
 
         return $return;
     }
@@ -4361,9 +4459,10 @@ class MMB_Backup extends MMB_Core
         // Belows code follows logic from check_backup
         $return    = "PONG";
         $task_name = $args['task_name'];
-
+        $sendDataToMaster = false;
         if (is_array($this->tasks) && !empty($this->tasks) && !empty($this->tasks[$task_name])) {
             $task = $this->tasks[$task_name];
+            $sendDataToMaster = isset($task['task_args']['account_info']) ? false : true;
             if ($task['task_args']['task_id'] && $task['task_args']['site_key']) {
                 $potential_token = !empty($args['google_drive_token']) ? $args['google_drive_token'] : false;
                 if ($potential_token) {
@@ -4406,30 +4505,24 @@ class MMB_Backup extends MMB_Core
         } else {
             $return = array("error" => "Unknown task name");
         }
-
+        if (!$sendDataToMaster) {
+            $this->sendDataToMaster();
+        }
         return $return;
+    }
+
+    public function sendDataToMaster()
+    {
+        $this->notifyMyself('mwp_datasend');
     }
 
     public function mwp_remote_upload($task_name)
     {
-
-        $nonce         = substr(wp_hash(wp_nonce_tick().'mmb-backup-nonce'. 0, 'nonce'), -12, 10);
-        $cron_url      = site_url('index.php');
         $backup_file   = $this->tasks[$task_name]['task_results'][count($this->tasks[$task_name]['task_results']) - 1]['server']['file_url'];
         $del_host_file = $this->tasks[$task_name]['task_args']['del_host_file'];
-        $public_key    = get_option('_worker_public_key');
-        $args          = array(
-            'body'      => array(
-                'backup_cron_action' => 'mmb_remote_upload',
-                'args'               => json_encode(array('task_name' => $task_name, 'backup_file' => $backup_file, 'del_host_file' => $del_host_file)),
-                'mmb_backup_nonce'   => $nonce,
-                'public_key'         => $public_key,
-            ),
-            'timeout'   => 0.01,
-            'blocking'  => false,
-            'sslverify' => apply_filters('https_local_ssl_verify', true)
-        );
-        wp_remote_post($cron_url, $args);
+        $args = array('task_name' => $task_name, 'backup_file' => $backup_file, 'del_host_file' => $del_host_file);
+
+        $this->notifyMyself('mmb_remote_upload', $args);
     }
 
 }

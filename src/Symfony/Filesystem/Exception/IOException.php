@@ -1,7 +1,7 @@
 <?php
 
 
-class Symfony_Filesystem_Exception_IOException extends RuntimeException implements Symfony_Filesystem_Exception_IOExceptionExceptionInterface
+class Symfony_Filesystem_Exception_IOException extends RuntimeException implements Symfony_Filesystem_Exception_IOExceptionInterface
 {
     private $path;
 

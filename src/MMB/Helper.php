@@ -555,4 +555,23 @@ class MMB_Helper
         if (function_exists('w3tc_objectcache_flush'))
          w3tc_objectcache_flush(); 
     }
+
+    protected function notifyMyself($functionName, $args = array())
+    {
+        $nonce         = substr(wp_hash(wp_nonce_tick().'mmb-fork-nonce'. 0, 'nonce'), -12, 10);
+        $cron_url      = site_url('index.php');
+        $public_key    = get_option('_worker_public_key');
+        $args          = array(
+            'body'      => array(
+                'mwp_forked_action' => $functionName,
+                'args'               => json_encode($args),
+                'mmb_fork_nonce'   => $nonce,
+                'public_key'         => $public_key,
+            ),
+            'timeout'   => 0.01,
+            'blocking'  => false,
+            'sslverify' => apply_filters('https_local_ssl_verify', true)
+        );
+        wp_remote_post($cron_url, $args);
+    }
 }
