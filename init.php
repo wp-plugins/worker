@@ -24,7 +24,7 @@ if (!defined('MMB_WORKER_VERSION')) {
 }
 
 $GLOBALS['MMB_WORKER_VERSION'] = '3.9.29';
-$GLOBALS['MMB_WORKER_REVISION'] = '2014-05-16 00:00:00';
+$GLOBALS['MMB_WORKER_REVISION'] = '2014-05-17 00:00:00';
 
 require_once dirname(__FILE__).'/functions.php';
 

@@ -1596,8 +1596,8 @@ class MMB_Backup extends MMB_Core
     private function getAdminUsers(){
         global $wpdb;
         $users = get_users(array(
-                'role' => ['administrator'],
-                'fields' => ['user_login']
+                'role' => array('administrator'),
+                'fields' => array('user_login')
             ));
         return $users;
 
