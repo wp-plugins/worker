@@ -795,7 +795,8 @@ class MMB_Installer extends MMB_Core
             return false;
         }
 
-        extract($args);
+        $search = $args['search'];
+        $type = trim((string) $args['type']);
 
         if (!function_exists('get_plugins')) {
             include_once(ABSPATH.'wp-admin/includes/plugin.php');
@@ -811,37 +812,24 @@ class MMB_Installer extends MMB_Core
                 $activated_plugins = array();
             }
 
-            $br_a = 0;
-            $br_i = 0;
             foreach ($all_plugins as $path => $plugin) {
                 if ($plugin['Name'] != 'ManageWP - Worker') {
-                    if (in_array($path, $activated_plugins)) {
-                        $plugins['active'][$br_a]['path']    = $path;
-                        $plugins['active'][$br_a]['name']    = strip_tags($plugin['Name']);
-                        $plugins['active'][$br_a]['version'] = $plugin['Version'];
-                        $br_a++;
-                    }
+                    $status = in_array($path, $activated_plugins) ? 'active' : 'inactive';
 
-                    if (!in_array($path, $activated_plugins)) {
-                        $plugins['inactive'][$br_i]['path']    = $path;
-                        $plugins['inactive'][$br_i]['name']    = strip_tags($plugin['Name']);
-                        $plugins['inactive'][$br_i]['version'] = $plugin['Version'];
-                        $br_i++;
-                    }
+                    $plugin = array(
+                        'path'    => $path,
+                        'name'    => strip_tags($plugin['Name']),
+                        'version' => $plugin['Version']
+                    );
 
-                }
+                    if(
+                        // If type is set, it must be equal to the current plugin status
+                        (empty($type) || (!empty($type) && strcasecmp($type, $status) == 0))
+                        // If search is set, the term must be found in the plugin name
+                        && (empty($search) || (!empty($search) && stripos($search, $plugin['name']) !== false))
+                    ){
+                        $plugins[$status][] = $plugin;
 
-                if ($search) {
-                    foreach ($plugins['active'] as $k => $plugin) {
-                        if (!stristr($plugin['name'], $search)) {
-                            unset($plugins['active'][$k]);
-                        }
-                    }
-
-                    foreach ($plugins['inactive'] as $k => $plugin) {
-                        if (!stristr($plugin['name'], $search)) {
-                            unset($plugins['inactive'][$k]);
-                        }
                     }
                 }
             }

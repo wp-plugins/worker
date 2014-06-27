@@ -40,7 +40,7 @@ class MMB_Comment extends MMB_Core
         extract($args);
 
         if (!empty($filter_comments)) {
-            $where .= " AND (c.comment_author LIKE '%".mysql_real_escape_string($filter_comments)."%' OR c.comment_content LIKE '%".mysql_real_escape_string($filter_comments)."%')";
+            $where .= " AND (c.comment_author LIKE '%".esc_sql($filter_comments)."%' OR c.comment_content LIKE '%".esc_sql($filter_comments)."%')";
         }
         $comment_array    = array();
         $comment_statuses = array('approved', 'pending', 'spam', 'trash');

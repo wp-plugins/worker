@@ -423,7 +423,7 @@ class MMB_Backup extends MMB_Core
 
         @file_put_contents($new_file_path.'/index.php', ''); //safe
 
-        //Prepare .zip file name  
+        //Prepare .zip file name
         $hash        = md5(time());
         $label       = !empty($type) ? $type : 'manual';
         $backup_file = $new_file_path.'/'.$this->site_name.'_'.$label.'_'.$what.'_'.date('Y-m-d').'_'.$hash.'.zip';
@@ -587,6 +587,7 @@ class MMB_Backup extends MMB_Core
                 $pclzip_db_result = $this->pclzip_backup_db($task_name, $backup_file);
                 if (!$pclzip_db_result) {
                     @unlink(MWP_BACKUP_DIR.'/mwp_db/index.php');
+                    @unlink(MWP_BACKUP_DIR.'/mwp_db/info.json');
                     @unlink($db_result);
                     @rmdir(MWP_DB_DIR);
 
@@ -602,6 +603,7 @@ class MMB_Backup extends MMB_Core
         }
 
         @unlink(MWP_BACKUP_DIR.'/mwp_db/index.php');
+        @unlink(MWP_BACKUP_DIR.'/mwp_db/info.json');
         @unlink($db_result);
         @rmdir(MWP_DB_DIR);
 
@@ -1482,6 +1484,7 @@ class MMB_Backup extends MMB_Core
         if (empty($params)) {
             return false;
         }
+
         if (isset($params['google_drive_token'])) {
             $this->tasks[$params['task_name']]['task_args']['account_info']['mwp_google_drive']['google_drive_token'] = $params['google_drive_token'];
         }
@@ -1576,9 +1579,27 @@ class MMB_Backup extends MMB_Core
         @unlink($filePath.'/index.php');
         @rmdir($filePath);
         mwp_logger()->info('Restore successfully completed');
+
+        // Try to fetch old home and site url, as well as new ones for usage later in database updates
+        // Take fresh options
+        $homeOpt = $wpdb->get_row($wpdb->prepare("SELECT option_value FROM $wpdb->options WHERE option_name = %s LIMIT 1", 'home'));
+        $siteUrlOpt = $wpdb->get_row($wpdb->prepare("SELECT option_value FROM $wpdb->options WHERE option_name = %s LIMIT 1", 'siteurl'));
+        global $restoreParams;
+        $restoreParams = array (
+            'oldUrl'     => is_object($homeOpt) ? $homeOpt->option_value : null,
+            'oldSiteUrl'  => is_object($siteUrlOpt) ? $siteUrlOpt->option_value : null,
+            'tablePrefix' => $this->get_table_prefix(),
+            'newUrl'      => ''
+        );
+
         /* Replace options and content urls */
         $this->replaceOptionsAndUrls($params['overwrite'], $params['new_user'], $params['new_password'], $params['old_user'], $params['clone_from_url'], $params['admin_email'], $params['mwp_clone'], $oldCredentialsAndOptions, $home, $params['current_tasks_tmp']);
 
+        $newUrl = $wpdb->get_row($wpdb->prepare("SELECT option_value FROM $wpdb->options WHERE option_name = %s LIMIT 1", 'home'));
+        $restoreParams['newUrl'] = is_object($newUrl) ? $newUrl->option_value : null;
+        restore_migrate_urls();
+        restore_htaccess();
+        $this->w3tc_flush(true);
         global $configDiff;
         $result = array(
             'status' => true,
@@ -1844,6 +1865,7 @@ class MMB_Backup extends MMB_Core
             $wpdb->query($wpdb->prepare($query, $home));
             $query = "UPDATE ".$new_table_prefix."options  SET option_value = %s WHERE option_name = 'siteurl'";
             $wpdb->query($wpdb->prepare($query, $home));
+
             /* Replace content urls */
             $regexp1 = 'src="(.*)$old(.*)"';
             $regexp2 = 'href="(.*)$old(.*)"';
@@ -2475,7 +2497,7 @@ class MMB_Backup extends MMB_Core
     private function ftpErrorMessage($message, $additionalMessage = null)
     {
         if ($additionalMessage) {
-            $message .= ' The server returned an error: '.$additionalMessage.'.';
+            $message .= ' Message: '.$additionalMessage.'.';
         }
 
         return $message;
@@ -2501,7 +2523,7 @@ class MMB_Backup extends MMB_Core
         }
 
         if ($ftp === false) {
-            throw new Exception($this->ftpErrorMessage('Failed connecting to the FTP server.', $errorCatcher->yieldErrorMessage()));
+            throw new Exception($this->ftpErrorMessage('Failed connecting to the FTP server, please check FTP host and port.', $errorCatcher->yieldErrorMessage()));
         }
 
         $errorCatcher->register('ftp_login');
@@ -2509,7 +2531,7 @@ class MMB_Backup extends MMB_Core
         $errorCatcher->unRegister();
 
         if ($login === false) {
-            throw new Exception($this->ftpErrorMessage('FTP login failed.', $errorCatcher->yieldErrorMessage()));
+            throw new Exception($this->ftpErrorMessage('FTP login failed, please check your FTP login details.', $errorCatcher->yieldErrorMessage()));
         }
 
         if ($passive) {
@@ -4091,6 +4113,12 @@ class MMB_Backup extends MMB_Core
      */
     function remote_backup_now($args)
     {
+        /**
+         * Remember if this is called as a forked http request, or a connection to the dasboard is persistent
+         */
+        global $forkedRequest;
+        $forkedRequest = isset($args['forked']) ? $args['forked'] : false;
+
         $this->set_memory();
         if (!empty($args)) {
             extract($args);
@@ -4505,7 +4533,7 @@ class MMB_Backup extends MMB_Core
         } else {
             $return = array("error" => "Unknown task name");
         }
-        if (!$sendDataToMaster) {
+        if ($sendDataToMaster) {
             $this->sendDataToMaster();
         }
         return $return;
@@ -4593,4 +4621,182 @@ if (!function_exists('get_all_files_from_dir_recursive')) {
         }
         @closedir($dh);
     }
+}
+
+/**
+ * Retrieves a value from an array by key, or a specified default if given key doesn't exist
+ *
+ * @param array $array
+ * @param       $key
+ * @param null  $default
+ *
+ * @return mixed
+ */
+function getKey($key, array $array, $default = null)
+{
+    return array_key_exists($key, $array) ? $array[$key] : $default;
+}
+
+function recursiveUrlReplacement(&$value, $index, $data)
+{
+    if (is_string($value)) {
+        if (is_string($data['regex'])) {
+            $expressions = array($data['regex']);
+        } else if (is_array($data['regex'])) {
+            $expressions = $data['regex'];
+        } else {
+            return;
+        }
+
+        foreach ($expressions as $exp) {
+            $value = preg_replace($exp, $data['newUrl'], $value);
+        }
+    }
+}
+
+/**
+ * This should mirror database replacements in cloner.php
+ */
+function restore_migrate_urls()
+{
+    // ----- DATABASE REPLACEMENTS
+
+    /**
+     * Finds all urls that begin with $oldSiteUrl AND
+     * end either with OPTIONAL slash OR with MANDATORY slash following any number of any characters
+     */
+
+    //     Get all options that contain old urls, then check if we can replace them safely
+    // Now check for old urls without WWW
+    global $restoreParams, $wpdb;
+    $oldSiteUrl  = $restoreParams['oldSiteUrl'];
+    $oldUrl      = $restoreParams['oldUrl'];
+    $tablePrefix = $restoreParams['tablePrefix'];
+    $newUrl      = $restoreParams['newUrl'];
+
+    if(!isset($oldSiteUrl) || !isset($oldUrl)){
+        return false;
+    }
+
+    $parsedOldSiteUrl      = parse_url(strpos($oldSiteUrl, '://') === false ? "http://$oldSiteUrl" : $oldSiteUrl);
+    $parsedOldUrl          = parse_url(strpos($oldUrl, '://') === false ? "http://$oldUrl" : $oldUrl);
+    $host                  = getKey('host', $parsedOldSiteUrl, '');
+    $path                  = getKey('path', $parsedOldSiteUrl, '');
+    $oldSiteUrlNoWww       = preg_replace('#^www\.(.+\.)#i', '$1', $host) . $path;
+    $parsedOldSiteUrlNoWww = parse_url(strpos($oldSiteUrlNoWww, '://') === false
+            ? "http://$oldSiteUrlNoWww"
+            : $oldSiteUrlNoWww
+    );
+    if (isset($parse['scheme'])) {
+        $oldSiteUrlNoWww = "{$parse['scheme']}://$oldSiteUrlNoWww";
+    }
+
+    // Modify the database for two variants of url, one with and one without WWW
+    $oldUrls = array('oldSiteUrl' => $oldSiteUrl);
+    $tmp1 = @"{$parsedOldUrl['host']}/{$parsedOldUrl['path']}";
+    $tmp2 = @"{$parsedOldSiteUrlNoWww['host']}/{$parsedOldSiteUrlNoWww['path']}";
+    if ($oldSiteUrlNoWww != $oldSiteUrl && $tmp1 != $tmp2) {
+        $oldUrls['oldSiteUrlNoWww'] = $oldSiteUrlNoWww;
+    }
+    if (strpos($oldSiteUrl, $oldUrl
+        ) !== false && $oldSiteUrl != $oldUrl && $parsedOldUrl['host'] != $parsedOldSiteUrl['host']
+    ) {
+        $oldUrls['oldUrl'] = $oldUrl;
+    }
+    foreach ($oldUrls as $key => $url) {
+        if (empty($url) || strlen($url) <= 1) {
+            continue;
+        }
+
+        if ($key == 'oldSiteUrlNoWww') {
+            $amazingRegex = "~http://{$url}(?=(((/.*)+)|(/?$)))~";
+        } else {
+            $amazingRegex = "~{$url}(?=(((/.*)+)|(/?$)))~";
+        }
+        // Check options
+        $query     = "SELECT option_id, option_value FROM {$tablePrefix}options WHERE option_value LIKE '%{$url}%';";
+        $selection = $wpdb->get_results($query, ARRAY_A);
+        foreach ($selection as $row) {
+            // Set a default value untouched
+            $replaced = $row['option_value'];
+
+            if (is_serialized($row['option_value'])) {
+                $unserialized = unserialize($row['option_value']);
+                if (is_array($unserialized)) {
+                    array_walk_recursive($unserialized, 'recursiveUrlReplacement', array(
+                            'newUrl' => $newUrl,
+                            'regex'  => $amazingRegex
+                        )
+                    );
+                    $replaced = serialize($unserialized);
+                }
+            } else {
+                $replaced = preg_replace($amazingRegex, $newUrl, $replaced);
+            }
+
+            $escapedReplacement = $wpdb->_escape($replaced);
+
+            $optId = $row['option_id'];
+            if ($row['option_value'] != $replaced) {
+                $query = "UPDATE {$tablePrefix}options SET option_value = '{$escapedReplacement}' WHERE option_id = {$optId}";
+                $wpdb->query($query);
+            }
+        }
+
+        // Check post meta
+        $query     = "SELECT meta_id, meta_value FROM {$tablePrefix}postmeta WHERE meta_value LIKE '%{$url}%'";
+        $selection = $wpdb->get_results($query, ARRAY_A);
+        foreach ($selection as $row) {
+            $replacement = $row['meta_value'];
+            if (is_serialized($replacement)) {
+                $unserialized = unserialize($replacement);
+                if (is_array($unserialized)) {
+                    array_walk_recursive($unserialized, 'recursiveUrlReplacement', array(
+                            'newUrl' => $newUrl,
+                            'regex'  => $amazingRegex
+                        )
+                    );
+                }
+                $replacement = serialize($unserialized);
+            } else {
+                $replacement = preg_replace($amazingRegex, $newUrl, $replacement);
+            }
+
+            if ($replacement != $row['meta_value']) {
+                $escapedReplacement = $wpdb->_escape($replacement);
+                $id                 = $row['meta_id'];
+                $query              = "UPDATE {$tablePrefix}postmeta SET meta_value = '{$escapedReplacement}' WHERE meta_id = '$id'";
+                $wpdb->query($query);
+            }
+
+        }
+
+        // Do the same with posts
+        $query     = "SELECT ID, post_content, guid FROM {$tablePrefix}posts WHERE post_content LIKE '%{$url}%' OR guid LIKE '%{$url}%'";
+        $selection = $wpdb->get_results($query, ARRAY_A);
+        foreach ($selection as &$row) {
+            $postContent = preg_replace($amazingRegex, $newUrl, $row['post_content']);
+            $guid        = preg_replace($amazingRegex, $newUrl, $row['guid']);
+
+
+            if ($postContent != $row['post_content'] || $guid != $row['guid']) {
+                $postContent = $wpdb->_escape($postContent);
+                $guid        = $wpdb->_escape($guid);
+                $postId      = $row['ID'];
+                $q           = "UPDATE {$tablePrefix}posts SET post_content = '$postContent', guid = '$guid' WHERE ID = {$postId}";
+                $wpdb->query($q);
+            }
+        }
+    }
+}
+
+function restore_htaccess()
+{
+    $htaccessRealpath = realpath(ABSPATH . '.htaccess');
+
+    if ($htaccessRealpath) {
+        @rename($htaccessRealpath, "$htaccessRealpath.old");
+    }
+    @include(ABSPATH . 'wp-admin/includes/admin.php');
+    @flush_rewrite_rules(true);
 }

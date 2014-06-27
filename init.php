@@ -24,7 +24,83 @@ if (!defined('MMB_WORKER_VERSION')) {
 }
 
 $GLOBALS['MMB_WORKER_VERSION'] = '3.9.29';
-$GLOBALS['MMB_WORKER_REVISION'] = '2014-05-17 00:00:00';
+$GLOBALS['MMB_WORKER_REVISION'] = '2014-06-27 00:00:00';
+
+/**
+ * Reserved memory for fatal error handling execution context.
+ */
+$GLOBALS['mwp_reserved_memory'] = str_repeat(' ', 1024 * 20);
+/**
+ * If we ever get only partially upgraded due to a server error or misconfiguration,
+ * attempt to disable the plugin and notify the site's administrator via email.
+ */
+function mwp_fail_safe()
+{
+    $GLOBALS['mwp_reserved_memory'] = null;
+
+    $lastError = error_get_last();
+
+    if (!$lastError || $lastError['type'] !== E_ERROR) {
+        return;
+    }
+
+    $activePlugins = get_option('active_plugins');
+    $workerIndex   = array_search(plugin_basename(__FILE__), $activePlugins);
+    if ($workerIndex === false) {
+        // Plugin is not yet enabled, possibly in activation context.
+        return;
+    }
+
+    $errorSource = realpath($lastError['file']);
+    // We might be in eval() context.
+    if (!$errorSource) {
+        return;
+    }
+
+    // The only fatal error that we would get would be a 'Class 'X' not found in ...', so look out only for those messages.
+    if (!preg_match('/^Class \'[^\']+\' not found$/', $lastError['message'])) {
+        return;
+    }
+
+    // Only look for files that belong to this plugin.
+    $pluginBase = realpath(dirname(__FILE__));
+    if (strpos($errorSource, $pluginBase) !== 0) {
+        return;
+    }
+
+    unset($activePlugins[$workerIndex]);
+    // Reset indexes.
+    $activePlugins = array_values($activePlugins);
+    update_option('active_plugins', $activePlugins);
+
+    // We probably won't have access to the wp_mail function.
+    $mailFn  = function_exists('wp_mail') ? 'wp_mail' : 'mail';
+    $siteUrl = get_option('siteurl');
+    $mailFn(get_option('admin_email').',sales@managewp.com', sprintf("ManageWP Worker deactivated on %s", $siteUrl), sprintf("Due to an unsuccessful (possibly automatic) update, the ManageWP Worker plugin has deactivated itself on your site %s.
+
+This was done as a precaution to prevent any problems to your site. You received this e-mail because you are listed as the site's administrator.
+
+We apologize for the inconvenience. Please reinstall the plugin manually and re-add the website to your ManageWP dashboard.", $siteUrl));
+
+    // If we're inside a cron scope, don't attempt to hide this error.
+    if (defined('DOING_CRON') && DOING_CRON) {
+        return;
+    }
+
+    // If we're inside a normal request scope, we apologize. Retry the request so user doesn't have to see an ugly error page.
+    if (!empty($_SERVER['REQUEST_URI'])) {
+        $siteUrl .= $_SERVER['REQUEST_URI'];
+    }
+    if (headers_sent()) {
+        // The headers are probably sent if the PHP configuration has the 'display_errors' directive enabled. In that case try a meta redirect.
+        echo sprintf('<meta http-equiv="refresh" content="0; url=%s">', htmlspecialchars($siteUrl, ENT_QUOTES));
+    } else {
+        header('Location: '.htmlspecialchars($siteUrl, ENT_QUOTES));
+    }
+    exit;
+}
+
+register_shutdown_function('mwp_fail_safe');
 
 require_once dirname(__FILE__).'/functions.php';
 
@@ -130,7 +206,7 @@ if (!function_exists('mmb_authenticate')) {
         if (!isset($HTTP_RAW_POST_DATA)) {
             $HTTP_RAW_POST_DATA = file_get_contents('php://input');
         }
-        $compat       = true;
+        $compat       = false;
         $compatActive = false;
         $contentType  = empty($_SERVER['CONTENT_TYPE']) ? false : $_SERVER['CONTENT_TYPE'];
 
@@ -164,7 +240,7 @@ if (!function_exists('mmb_authenticate')) {
         }
 
         if (isset($_mwp_data['params']['username']) && !is_user_logged_in()) {
-            $user = function_exists('get_user_by') ? get_user_by('login', $_mwp_data['params']['username']) : get_userdatabylogin($_mwp_data['params']['username']);
+            $user = function_exists('get_user_by') ? get_user_by('login', $_mwp_data['params']['username']) : get_user_by('login', $_mwp_data['params']['username']);
         }
 
         if ($_mwp_data['action'] === 'add_site') {
@@ -196,6 +272,10 @@ if (!function_exists('mmb_authenticate')) {
         /*if (!defined('WP_ADMIN')) {
             define('WP_ADMIN', true);
         }*/
+
+        if(defined('ALTERNATE_WP_CRON') && !defined('DOING_AJAX')){
+            define('DOING_AJAX', true);
+        }
     }
 }
 
@@ -208,7 +288,7 @@ if (!function_exists("mwp_add_site_verify_signature")) {
         $nonce->setValue($_mwp_data['id']);
         if (!$nonce->verify()) {
             $_mwp_auth = array(
-                'error' => 'Invalid nonce used. Please try again'
+                'error' => 'Invalid nonce used. Please contact support'
             );
             mmb_response($_mwp_auth['error'], false);
         } else {
@@ -229,8 +309,8 @@ if (!function_exists("mwp_add_site_verify_signature")) {
                 } else {
                     $_mwp_auth = false; // we don't have key
                 }
-            } else { //after test period this flag should be false
-                $_mwp_auth = true;
+            } else {
+                $_mwp_auth = false;
             }
 
             if ($_mwp_auth !== true) {
@@ -441,11 +521,11 @@ if (!function_exists('mmb_add_site')) {
 
                     mmb_response($mmb_core->stats_instance->get_initial_stats(), true);
                 } else {
-                    mmb_response('Handshake not successful. Please deactivate, then activate ManageWP Worker plugin on your site, and re-add this site to your dashboard.', false);
+                    mmb_response('Sorry, we were unable to communicate with your website. Please deactivate, then activate ManageWP Worker plugin on your website and try again or contact our support.', false);
                 }
 
             } else {
-                mmb_response('Handshake not successful. Please deactivate, then activate ManageWP Worker plugin on your site, and re-add this site to your dashboard.', false);
+                mmb_response('Sorry, we were unable to communicate with your website. Please deactivate, then activate ManageWP Worker plugin on your website and try again or contact our support.', false);
             }
         } else {
             mmb_response('Invalid parameters received. Please try again.', false);
@@ -465,6 +545,9 @@ if (!function_exists('mmb_remove_site')) {
 
         if ($deactivate) {
             deactivate_plugins($plugin_slug, true);
+        } else {
+            // Prolong the worker deactivation upon site removal.
+            update_option('mmb_worker_activation_time', time());
         }
 
         if (!is_plugin_active($plugin_slug)) {
@@ -834,8 +917,13 @@ if (!function_exists('mmb_change_post_status')) {
         global $mmb_core;
         $mmb_core->get_post_instance();
         $return = $mmb_core->post_instance->change_status($params);
-        //mmb_response($return, true);
-
+        if (is_wp_error($return)){
+            mmb_response($return->get_error_message(), false);
+        } elseif (empty($return)) {
+            mmb_response("Post status can not be changed", false);
+        } else {
+            mmb_response($return, true);
+        }
     }
 }
 
@@ -1052,6 +1140,8 @@ function mmb_run_forked_action()
         return false;
     }
     $args = @json_decode(stripslashes($_POST['args']), true);
+    $args['forked'] = true;
+
     if (!isset($args)) {
         return false;
     }

@@ -453,17 +453,17 @@ class MMB_Post extends MMB_Core
         extract($args);
 
         if (!empty($filter_posts)) {
-            $where .= " AND (post_title LIKE '%".mysql_real_escape_string($filter_posts)."%' OR post_content LIKE '%".mysql_real_escape_string($filter_posts)."%')";
+            $where .= " AND (post_title LIKE '%".esc_sql($filter_posts)."%' OR post_content LIKE '%".esc_sql($filter_posts)."%')";
         }
 
         if (!empty($mwp_get_posts_date_from) && !empty($mwp_get_posts_date_to)) {
-            $where .= " AND post_date BETWEEN '".mysql_real_escape_string($mwp_get_posts_date_from)."' AND '".mysql_real_escape_string($mwp_get_posts_date_to)."'";
+            $where .= " AND post_date BETWEEN '".esc_sql($mwp_get_posts_date_from)."' AND '".esc_sql($mwp_get_posts_date_to)."'";
         } else {
             if (!empty($mwp_get_posts_date_from) && empty($mwp_get_posts_date_to)) {
-                $where .= " AND post_date >= '".mysql_real_escape_string($mwp_get_posts_date_from)."'";
+                $where .= " AND post_date >= '".esc_sql($mwp_get_posts_date_from)."'";
             } else {
                 if (empty($mwp_get_posts_date_from) && !empty($mwp_get_posts_date_to)) {
-                    $where .= " AND post_date <= '".mysql_real_escape_string($mwp_get_posts_date_to)."'";
+                    $where .= " AND post_date <= '".esc_sql($mwp_get_posts_date_to)."'";
                 }
             }
         }
@@ -478,7 +478,7 @@ class MMB_Post extends MMB_Core
             $where .= " AND post_status IN (".implode(",", $post_array).")";
         }
 
-        $limit = ($mwp_get_posts_range) ? ' LIMIT '.mysql_real_escape_string($mwp_get_posts_range) : ' LIMIT 500';
+        $limit = ($mwp_get_posts_range) ? ' LIMIT '.esc_sql($mwp_get_posts_range) : ' LIMIT 500';
 
         $sql_query = "$wpdb->posts  WHERE post_status!='auto-draft' AND post_status!='inherit' AND post_type='post' ".$where." ORDER BY post_date DESC";
 
@@ -489,17 +489,6 @@ class MMB_Post extends MMB_Core
         $post_cats          = $this->getPostCats();
         $post_tags          = $this->getPostCats('post_tag');
         $total['total_num'] = count($posts_info);
-
-        if ($mwp_get_posts_range && !empty($mwp_get_posts_date_from) && !empty($mwp_get_posts_date_to) && $total['total_num'] < $mwp_get_posts_range) {
-            $sql_query = "$wpdb->posts
-				WHERE post_status!='auto-draft' AND post_status!='inherit' AND post_type='post'  AND post_date <= '".mysql_real_escape_string($mwp_get_posts_date_to)."' 
-				ORDER BY post_date DESC
-				LIMIT ".mysql_real_escape_string($mwp_get_posts_range);
-
-            $posts_info         = $wpdb->get_results("SELECT * FROM ".$sql_query);
-            $total              = array();
-            $total['total_num'] = count($posts_info);
-        }
 
         foreach ($posts_info as $post_info) {
 
@@ -542,7 +531,7 @@ class MMB_Post extends MMB_Core
     {
         if (!empty($args['post_id']) && !empty($args['action'])) {
             if ($args['action'] == 'delete' || $args['action'] == 'delete_restore') {
-                $action        = ($args['action'] == 'delete') ? 'delete' : 'publish';
+                $action        = ($args['action'] == 'delete') ? 'trash' : 'publish';
                 $edited_status = array(
                     'ID'          => $args['post_id'],
                     'post_status' => $action
@@ -613,16 +602,16 @@ class MMB_Post extends MMB_Core
         extract($args);
 
         if (!empty($filter_pages)) {
-            $where .= " AND post_title LIKE '%".mysql_real_escape_string($filter_pages)."%'";
+            $where .= " AND (post_title LIKE '%".esc_sql($filter_pages)."%' OR post_content LIKE '%".esc_sql($filter_pages)."%')";
         }
         if (!empty($mwp_get_pages_date_from) && !empty($mwp_get_pages_date_to)) {
-            $where .= " AND post_date BETWEEN '".mysql_real_escape_string($mwp_get_pages_date_from)."' AND '".mysql_real_escape_string($mwp_get_pages_date_to)."'";
+            $where .= " AND post_date BETWEEN '".esc_sql($mwp_get_pages_date_from)."' AND '".esc_sql($mwp_get_pages_date_to)."'";
         } else {
             if (!empty($mwp_get_pages_date_from) && empty($mwp_get_pages_date_to)) {
-                $where .= " AND post_date >= '".mysql_real_escape_string($mwp_get_pages_date_from)."'";
+                $where .= " AND post_date >= '".esc_sql($mwp_get_pages_date_from)."'";
             } else {
                 if (empty($mwp_get_pages_date_from) && !empty($mwp_get_pages_date_to)) {
-                    $where .= " AND post_date <= '".mysql_real_escape_string($mwp_get_pages_date_to)."'";
+                    $where .= " AND post_date <= '".esc_sql($mwp_get_pages_date_to)."'";
                 }
             }
         }
@@ -638,7 +627,7 @@ class MMB_Post extends MMB_Core
             $where .= " AND post_status IN (".implode(",", $post_array).")";
         }
 
-        $limit = ($mwp_get_pages_range) ? ' LIMIT '.mysql_real_escape_string($mwp_get_pages_range) : ' LIMIT 500';
+        $limit = ($mwp_get_pages_range) ? ' LIMIT '.esc_sql($mwp_get_pages_range) : ' LIMIT 500';
 
         $sql_query = "$wpdb->posts  WHERE post_status!='auto-draft' AND post_status!='inherit' AND post_type='page' ".$where.' ORDER BY post_date DESC';
 
@@ -647,17 +636,6 @@ class MMB_Post extends MMB_Core
         $posts_info         = $wpdb->get_results("SELECT * FROM ".$sql_query.$limit);
         $user_info          = $this->getUsersIDs();
         $total['total_num'] = count($posts_info);
-
-        if ($mwp_get_pages_range && !empty($mwp_get_pages_date_from) && !empty($mwp_get_pages_date_to) && $total['total_num'] < $mwp_get_pages_range) {
-            $sql_query = "$wpdb->posts
-				WHERE post_status!='auto-draft' AND post_status!='inherit' AND post_type='post'  AND post_date <= '".mysql_real_escape_string($mwp_get_pages_date_to)."' 
-				ORDER BY post_date DESC
-				LIMIT ".mysql_real_escape_string($mwp_get_pages_range);
-
-            $posts_info         = $wpdb->get_results("SELECT * FROM ".$sql_query);
-            $total              = array();
-            $total['total_num'] = count($posts_info);
-        }
 
         foreach ($posts_info as $post_info) {
 
@@ -724,18 +702,5 @@ INNER JOIN $wpdb->terms ON ( $wpdb->term_taxonomy.term_id = $wpdb->terms.term_id
         }
 
         return $post_cats;
-    }
-
-    function getUsersIDs()
-    {
-        global $wpdb;
-        $users_authors = array();
-        $users         = $wpdb->get_results("SELECT ID as user_id, display_name FROM $wpdb->users WHERE user_status=0");
-
-        foreach ($users as $user_key => $user_val) {
-            $users_authors[$user_val->user_id] = $user_val->display_name;
-        }
-
-        return $users_authors;
     }
 }

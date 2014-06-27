@@ -15,12 +15,12 @@
  * limitations under the License.
  */
 
-
 /**
  * @author Chirag Shah <chirags@google.com>
  */
 class Google_Http_Batch
 {
+
     /** @var string Multipart Boundary. */
     private $boundary;
 
@@ -69,7 +69,7 @@ class Google_Http_Batch
         $url         = $this->base_path.'/batch';
         $httpRequest = new Google_Http_Request($url, 'POST');
         $httpRequest->setRequestHeaders(
-          array('Content-Type' => 'multipart/mixed; boundary='.$this->boundary)
+            array('Content-Type' => 'multipart/mixed; boundary='.$this->boundary)
         );
 
         $httpRequest->setPostBody($body);
@@ -116,7 +116,7 @@ class Google_Http_Batch
                     $key = $metaHeaders['content-id'];
 
                     if (isset($this->expected_classes[$key]) &&
-                      strlen($this->expected_classes[$key]) > 0
+                        strlen($this->expected_classes[$key]) > 0
                     ) {
                         $class = $this->expected_classes[$key];
                         $response->setExpectedClass($class);

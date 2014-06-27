@@ -86,7 +86,7 @@ class MMB_Link extends MMB_Core
         extract($args);
 
         if (!empty($filter_links)) {
-            $where .= " AND (link_name LIKE '%".mysql_real_escape_string($filter_links)."%' OR link_url LIKE '%".mysql_real_escape_string($filter_links)."%')";
+            $where .= " AND (link_name LIKE '%".esc_sql($filter_links)."%' OR link_url LIKE '%".esc_sql($filter_links)."%')";
         }
 
         $linkcats  = $this->getLinkCats();

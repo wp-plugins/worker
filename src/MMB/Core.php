@@ -171,7 +171,9 @@ class MMB_Core extends MMB_Helper
         add_action('set_auth_cookie', array(&$this, 'mmb_set_auth_cookie'));
         add_action('set_logged_in_cookie', array(&$this, 'mmb_set_logged_in_cookie'));
 
-
+        if(!get_option('_worker_nossl_key') && !get_option('_worker_public_key')){
+            add_action('init', array(&$this, 'deactivateWorkerIfNotAddedAfterTenMinutes'));
+        }
     }
 
     function mmb_remote_action()
@@ -368,12 +370,8 @@ EOF;
                     </form>
                     <div id="support_response_id" style="margin-top: 14px"></div>
                     <style scoped="scoped">
-                        .ui-widget-content {
+                        .mwp-support-dialog.ui-dialog {
                             z-index: 300002;
-                        }
-
-                        .ui-widget-overlay {
-                            background-repeat: repeat;
                         }
                     </style>
                 </div>
@@ -420,6 +418,7 @@ EOF;
                         width: '530px',
                         height: 'auto',
                         title: 'Contact Support',
+                        dialogClass: 'mwp-support-dialog',
                         close: function () {
                             $('#support_response_id').html('');
                             $(this).dialog("destroy");
@@ -622,6 +621,7 @@ EOF;
                 update_option("mwp_worker_configuration", $jsonConfiguration);
             }
         }
+        update_option('mmb_worker_activation_time', time());
     }
     /**
      * Saves the (modified) options into the database
@@ -689,6 +689,7 @@ EOF;
         wp_clear_scheduled_hook('mwp_notifications');
         wp_clear_scheduled_hook('mwp_datasend');
         delete_option('mwp_worker_configuration');
+        delete_option('mmb_worker_activation_time');
     }
 
 
@@ -877,5 +878,20 @@ EOF;
         }
 
         return $all_plugins;
+    }
+
+    function deactivateWorkerIfNotAddedAfterTenMinutes()
+    {
+        $workerActivationTime = get_option("mmb_worker_activation_time");
+        if((int)$workerActivationTime + 600 > time()){
+            return;
+        }
+        $activated_plugins = get_option('active_plugins');
+        $keyWorker = array_search("worker/init.php", $activated_plugins, true);
+        if($keyWorker === false){
+            return;
+        }
+        unset($activated_plugins[$keyWorker]);
+        update_option('active_plugins',$activated_plugins);
     }
 }

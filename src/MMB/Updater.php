@@ -43,8 +43,19 @@ class MMB_Updater
         add_filter('auto_update_translation', array($updater, 'updateTranslation'), 100, 1);
     }
 
-    public function updatePlugin($update, $slug)
+    public function updatePlugin($update, $item)
     {
+        /*
+          {
+            "id": "11780",
+            "slug": "bbpress",
+            "plugin": "bbpress\/bbpress.php",
+            "new_version": "2.5.3",
+            "url": "https:\/\/wordpress.org\/plugins\/bbpress\/",
+            "package": "https:\/\/downloads.wordpress.org\/plugin\/bbpress.2.5.3.zip"
+          }
+         */
+        $slug = $item->plugin;
         if ($slug == 'worker/init.php') {
             return false;
         }
@@ -62,8 +73,17 @@ class MMB_Updater
         return $update;
     }
 
-    public function updateTheme($update, $slug)
+    public function updateTheme($update, $item)
     {
+        /*
+          {
+            "theme": "twentyfourteen",
+            "new_version": "1.1",
+            "url": "https:\/\/wordpress.org\/themes\/twentyfourteen",
+            "package": "https:\/\/wordpress.org\/themes\/download\/twentyfourteen.1.1.zip"
+          }
+         */
+        $slug = $item->theme;
         $alwaysUpdateThemes = get_option('mwp_global_themes_autoupdate', 'disabled');
 
         if ($alwaysUpdateThemes === 'enabled') {
@@ -149,12 +169,16 @@ class MMB_Updater
     {
         $return = array();
         foreach ($items as $item) {
-            $plugin  = plugin_basename($item['path']);
+            if($type == 'plugins'){
+                $pluginOrTheme  = plugin_basename($item['path']);
+            }else{
+                $pluginOrTheme = $item['name'];
+            }
             $current = get_option('mwp_active_autoupdate_'.$type, array());
             if ($item['action'] === 'on') {
-                $current[] = $plugin;
+                $current[] = $pluginOrTheme;
             } else {
-                $current = array_diff($current, array($plugin));
+                $current = array_diff($current, array($pluginOrTheme));
             }
             sort($current);
             update_option('mwp_active_autoupdate_'.$type, $current);

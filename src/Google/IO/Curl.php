@@ -20,15 +20,18 @@
  *
  * @author Stuart Langley <slangley@google.com>
  */
-
-
 class Google_IO_Curl extends Google_IO_Abstract
 {
+    // cURL hex representation of version 7.30.0
+    const NO_QUIRK_VERSION = 0x071E00;
+
     private $options = array();
+
     /**
      * Execute an HTTP Request
      *
      * @param Google_HttpRequest $request the http request to be executed
+     *
      * @return Google_HttpRequest http request with the response http code,
      * response headers and response body filled in
      * @throws Google_IO_Exception on curl or IO error
@@ -50,6 +53,8 @@ class Google_IO_Curl extends Google_IO_Abstract
             curl_setopt($curl, CURLOPT_HTTPHEADER, $curlHeaders);
         }
 
+        curl_setopt($curl, CURLOPT_URL, $request->getUrl());
+
         curl_setopt($curl, CURLOPT_CUSTOMREQUEST, $request->getRequestMethod());
         curl_setopt($curl, CURLOPT_USERAGENT, $request->getUserAgent());
 
@@ -57,8 +62,6 @@ class Google_IO_Curl extends Google_IO_Abstract
         curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, true);
         curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($curl, CURLOPT_HEADER, true);
-
-        curl_setopt($curl, CURLOPT_URL, $request->getUrl());
 
         if ($request->canGzip()) {
             curl_setopt($curl, CURLOPT_ENCODING, 'gzip,deflate');
@@ -69,7 +72,7 @@ class Google_IO_Curl extends Google_IO_Abstract
         }
 
         if (!isset($this->options[CURLOPT_CAINFO])) {
-            curl_setopt($curl, CURLOPT_CAINFO, dirname(__FILE__) . '/cacerts.pem');
+            curl_setopt($curl, CURLOPT_CAINFO, dirname(__FILE__).'/cacerts.pem');
         }
 
         $response = curl_exec($curl);
@@ -78,9 +81,8 @@ class Google_IO_Curl extends Google_IO_Abstract
         }
         $headerSize = curl_getinfo($curl, CURLINFO_HEADER_SIZE);
 
-        $responseBody = substr($response, $headerSize);
-        $responseHeaderString = substr($response, 0, $headerSize);
-        $responseHeaders = $this->getHttpResponseHeaders($responseHeaderString);
+        list($responseHeaders, $responseBody) = $this->parseHttpResponse($response, $headerSize);
+
         $responseCode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
 
         return array($responseBody, $responseHeaders, $responseCode);
@@ -88,6 +90,7 @@ class Google_IO_Curl extends Google_IO_Abstract
 
     /**
      * Set options that update the transport implementation's behavior.
+     *
      * @param $options
      */
     public function setOptions($options)
@@ -97,6 +100,7 @@ class Google_IO_Curl extends Google_IO_Abstract
 
     /**
      * Set the maximum request time in seconds.
+     *
      * @param $timeout in seconds
      */
     public function setTimeout($timeout)
@@ -106,15 +110,24 @@ class Google_IO_Curl extends Google_IO_Abstract
         // CURLOPT_TIMEOUT, or a tigher CONNECTTIMEOUT, the best thing to
         // do is use the setOptions method for the values individually.
         $this->options[CURLOPT_CONNECTTIMEOUT] = $timeout;
-        $this->options[CURLOPT_TIMEOUT] = $timeout;
+        $this->options[CURLOPT_TIMEOUT]        = $timeout;
     }
 
     /**
      * Get the maximum request time in seconds.
+     *
      * @return timeout in seconds
      */
     public function getTimeout()
     {
         return $this->options[CURLOPT_TIMEOUT];
+    }
+
+    protected function needsQuirk()
+    {
+        $ver        = curl_version();
+        $versionNum = $ver['version_number'];
+
+        return $versionNum < Google_IO_Curl::NO_QUIRK_VERSION;
     }
 }

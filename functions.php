@@ -410,32 +410,16 @@ function mmb_delete_all_revisions($filter)
     return $revisions;
 }
 
-
-/* Optimize */
-
 function mmb_handle_overhead($clear = false)
 {
+    /** @var wpdb $wpdb */
     global $wpdb;
-    $tot_data     = 0;
-    $tot_idx      = 0;
-    $tot_all      = 0;
     $query        = 'SHOW TABLE STATUS';
     $tables       = $wpdb->get_results($query, ARRAY_A);
     $total_gain   = 0;
     $table_string = '';
     foreach ($tables as $table) {
-        if (isset($table['Engine']) && in_array(
-                $table['Engine'],
-                array(
-                    'MyISAM',
-                    'ISAM',
-                    'HEAP',
-                    'MEMORY',
-                    'ARCHIVE',
-                    //          'InnoDB'
-                )
-            )
-        ) {
+        if (isset($table['Engine']) && $table['Engine'] === 'MyISAM') {
             if ($wpdb->base_prefix != $wpdb->prefix) {
                 if (preg_match('/^'.$wpdb->prefix.'*/Ui', $table['Name'])) {
                     if ($table['Data_free'] > 0) {
@@ -453,28 +437,25 @@ function mmb_handle_overhead($clear = false)
                     }
                 }
             }
-        } elseif (isset($table['Engine']) && $table['Engine'] == 'InnoDB') {
-            $innodb_file_per_table = $wpdb->get_results("SHOW VARIABLES LIKE 'innodb_file_per_table'");
-            if ($innodb_file_per_table[0]->Value === "ON") {
-                if ($table['Data_free'] > 0) {
-                    $total_gain += $table['Data_free'] / 1024;
-                    $table_string .= $table['Name'].",";
-                }
-            }
-            //$total_gain +=  $table['Data_free'] > 100*1024*1024 ? $table['Data_free'] / 1024 : 0;
+            // @todo check if the cleanup was successful, if not, set a flag always skip innodb cleanup
+            //} elseif (isset($table['Engine']) && $table['Engine'] == 'InnoDB') {
+            //    $innodb_file_per_table = $wpdb->get_results("SHOW VARIABLES LIKE 'innodb_file_per_table'");
+            //    if (isset($innodb_file_per_table[0]->Value) && $innodb_file_per_table[0]->Value === "ON") {
+            //        if ($table['Data_free'] > 0) {
+            //            $total_gain += $table['Data_free'] / 1024;
+            //            $table_string .= $table['Name'].",";
+            //        }
+            //    }
         }
     }
 
     if ($clear) {
         $table_string = substr($table_string, 0, strlen($table_string) - 1); //remove last ,
-
         $table_string = rtrim($table_string);
-
         $query = "OPTIMIZE TABLE $table_string";
-
         $optimize = $wpdb->query($query);
 
-        return $optimize === false ? false : true;
+        return (bool)$optimize;
     } else {
         return round($total_gain, 3);
     }

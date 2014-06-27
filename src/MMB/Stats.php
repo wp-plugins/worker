@@ -63,15 +63,11 @@ class MMB_Stats extends MMB_Core
                     $commented_post           = get_post($comment->comment_post_ID);
                     $comment->post_title      = $commented_post->post_title;
                     $comment->comment_content = $this->trim_content($comment->comment_content, $trimlen);
-                    unset($comment->comment_author_url);
-                    unset($comment->comment_author_email);
                     unset($comment->comment_author_IP);
-                    unset($comment->comment_date_gmt);
                     unset($comment->comment_karma);
                     unset($comment->comment_agent);
                     unset($comment->comment_type);
                     unset($comment->comment_parent);
-                    unset($comment->user_id);
                 }
                 $stats['comments']['pending'] = $comments;
             }
@@ -82,15 +78,11 @@ class MMB_Stats extends MMB_Core
                     $commented_post           = get_post($comment->comment_post_ID);
                     $comment->post_title      = $commented_post->post_title;
                     $comment->comment_content = $this->trim_content($comment->comment_content, $trimlen);
-                    unset($comment->comment_author_url);
-                    unset($comment->comment_author_email);
                     unset($comment->comment_author_IP);
-                    unset($comment->comment_date_gmt);
                     unset($comment->comment_karma);
                     unset($comment->comment_agent);
                     unset($comment->comment_type);
                     unset($comment->comment_parent);
-                    unset($comment->user_id);
                 }
                 $stats['comments']['approved'] = $comments;
             }
@@ -102,6 +94,7 @@ class MMB_Stats extends MMB_Core
     function get_posts($stats, $options = array())
     {
         $nposts = isset($options['numberposts']) ? (int) $options['numberposts'] : 20;
+        $user_info = $this->getUsersIDs();
 
         if ($nposts) {
             $posts        = get_posts('post_status=publish&numberposts='.$nposts.'&orderby=post_date&order=desc');
@@ -115,6 +108,7 @@ class MMB_Stats extends MMB_Core
                     $recent->post_title     = $recent_post->post_title;
                     $recent->post_type      = $recent_post->post_type;
                     $recent->comment_count  = (int) $recent_post->comment_count;
+                    $recent->post_author_name    = array('author_id' => $recent_post->post_author, 'author_name' => $user_info[$recent_post->post_author]);
                     $recent_posts[]         = $recent;
                 }
             }
@@ -129,6 +123,7 @@ class MMB_Stats extends MMB_Core
                     $recent->ID             = $recent_page_published->ID;
                     $recent->post_date      = $recent_page_published->post_date;
                     $recent->post_title     = $recent_page_published->post_title;
+                    $recent->post_author    = array('author_id' => $recent_page_published->post_author, 'author_name' => $user_info[$recent_page_published->post_author]);
 
                     $recent_posts[] = $recent;
                 }
