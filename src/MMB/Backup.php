@@ -1785,7 +1785,7 @@ class MMB_Backup extends MMB_Core
             $zipArchive->close();
         }
         if($result === false){
-            throw new Exception('Failed to unzip files with ZipArchive. Message: '.$zipArchive);
+            throw new Exception('Failed to unzip files with ZipArchive. Message: '. $zipArchive->getStatusString());
         }
     }
 

@@ -360,18 +360,29 @@ function cleanup_delete_worker($params = array())
 function mmb_num_revisions($filter)
 {
     global $wpdb;
-    $sql           = "SELECT COUNT(*) FROM $wpdb->posts WHERE post_type = 'revision'";
-    $num_revisions = $wpdb->get_var($sql);
+
+    $allRevisions = $wpdb->get_results("SELECT ID, post_name FROM {$wpdb->posts} WHERE post_type = 'revision'", ARRAY_A);
+
+    $revisionsToDelete    = 0;
+    $revisionsToKeepCount = array();
+
     if (isset($filter['num_to_keep']) && !empty($filter['num_to_keep'])) {
         $num_rev = str_replace("r_", "", $filter['num_to_keep']);
-        if ($num_revisions < $num_rev) {
-            return 0;
-        }
 
-        return ($num_revisions - $num_rev);
+        foreach ($allRevisions as $revision) {
+            $revisionsToKeepCount[$revision['post_name']] = isset($revisionsToKeepCount[$revision['post_name']])
+                ? $revisionsToKeepCount[$revision['post_name']] + 1
+                : 1;
+
+            if ($revisionsToKeepCount[$revision['post_name']] > $num_rev) {
+                ++$revisionsToDelete;
+            }
+        }
     } else {
-        return $num_revisions;
+        $revisionsToDelete = count($allRevisions);
     }
+
+    return $revisionsToDelete;
 }
 
 function mmb_select_all_revisions()
@@ -387,23 +398,29 @@ function mmb_delete_all_revisions($filter)
 {
     global $wpdb;
     $where = '';
-    if (isset($filter['num_to_keep']) && !empty($filter['num_to_keep'])) {
-        $num_rev          = str_replace("r_", "", $filter['num_to_keep']);
-        $select_posts     = "SELECT ID FROM $wpdb->posts WHERE post_type = 'revision' ORDER BY post_date DESC LIMIT ".$num_rev;
-        $select_posts_res = $wpdb->get_results($select_posts);
-        $notin            = '';
-        $n                = 0;
-        foreach ($select_posts_res as $keep_post) {
-            $notin .= $keep_post->ID;
-            $n++;
-            if (count($select_posts_res) > $n) {
-                $notin .= ',';
+    $keep = isset($filter['num_to_keep']) ? $filter['num_to_keep'] : false;
+    if ($keep) {
+        $num_rev          = str_replace("r_", "", $keep);
+        $allRevisions = $wpdb->get_results("SELECT ID, post_name FROM {$wpdb->posts} WHERE post_type = 'revision' ORDER BY post_date DESC", ARRAY_A);
+        $revisionsToKeep = array(0 => 0);
+        $revisionsToKeepCount = array();
+
+        foreach ($allRevisions as $revision) {
+            $revisionsToKeepCount[$revision['post_name']] = isset($revisionsToKeepCount[$revision['post_name']])
+                ? $revisionsToKeepCount[$revision['post_name']] + 1
+                : 1;
+
+            if ($revisionsToKeepCount[$revision['post_name']] <= $num_rev) {
+                $revisionsToKeep[] = $revision['ID'];
             }
         }
-        $where = " AND a.ID NOT IN (".$notin.")";
+
+        $notInQuery = join(', ', $revisionsToKeep);
+
+        $where = "AND a.ID NOT IN ({$notInQuery})";
     }
 
-    $sql = "DELETE a,b,c FROM $wpdb->posts a LEFT JOIN $wpdb->term_relationships b ON (a.ID = b.object_id) LEFT JOIN $wpdb->postmeta c ON (a.ID = c.post_id) WHERE a.post_type = 'revision'".$where;
+    $sql = "DELETE a,b,c FROM $wpdb->posts a LEFT JOIN $wpdb->term_relationships b ON (a.ID = b.object_id) LEFT JOIN $wpdb->postmeta c ON (a.ID = c.post_id) WHERE a.post_type = 'revision' {$where}";
 
     $revisions = $wpdb->query($sql);
 
