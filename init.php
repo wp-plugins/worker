@@ -24,7 +24,7 @@ if (!defined('MMB_WORKER_VERSION')) {
 }
 
 $GLOBALS['MMB_WORKER_VERSION'] = '3.9.29';
-$GLOBALS['MMB_WORKER_REVISION'] = '2014-06-27 00:00:00';
+$GLOBALS['MMB_WORKER_REVISION'] = '2014-07-07 00:00:00';
 
 /**
  * Reserved memory for fatal error handling execution context.
@@ -273,7 +273,7 @@ if (!function_exists('mmb_authenticate')) {
             define('WP_ADMIN', true);
         }*/
 
-        if(defined('ALTERNATE_WP_CRON') && !defined('DOING_AJAX')){
+        if(defined('ALTERNATE_WP_CRON') && !defined('DOING_AJAX') && ALTERNATE_WP_CRON === true ){
             define('DOING_AJAX', true);
         }
     }

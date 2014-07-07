@@ -2272,11 +2272,11 @@ class MMB_Backup extends MMB_Core
         $file_path = MWP_BACKUP_DIR;
         $reqs['Backup Folder']['status'] .= ' ('.$file_path.')';
 
-        $reqs['Execute Function']['status'] = 'exists';
-        $reqs['Execute Function']['pass']   = true;
+        $reqs['Function `proc_open`']['status'] = 'exists';
+        $reqs['Function `proc_open`']['pass']   = true;
         if (!$this->procOpenExists()) {
-            $reqs['Execute Function']['status'] = "not found";
-            $reqs['Execute Function']['pass']   = false;
+            $reqs['Function `proc_open`']['status'] = "not found";
+            $reqs['Function `proc_open`']['pass']   = false;
         }
 
         $reqs['Zip']['status'] = 'exists';
@@ -3909,7 +3909,7 @@ class MMB_Backup extends MMB_Core
                     $this->remove_ftp_backup($args);
                 }
                 if (isset($backups[$task_name]['task_results'][$i]['sftp']) && isset($backups[$task_name]['task_args']['account_info']['mwp_sftp'])) {
-                    $ftp_file            = $backups[$task_name]['task_results'][$i]['fstp'];
+                    $sftp_file           = $backups[$task_name]['task_results'][$i]['sftp'];
                     $args                = $backups[$task_name]['task_args']['account_info']['mwp_sftp'];
                     $args['backup_file'] = $sftp_file;
                     $this->remove_sftp_backup($args);
@@ -3992,9 +3992,9 @@ class MMB_Backup extends MMB_Core
             $this->remove_ftp_backup($args);
         }
         if (isset($backup['sftp'])) {
-            $ftp_file            = $backup['ftp'];
+            $sftp_file           = $backup['sftp'];
             $args                = $tasks[$task_name]['task_args']['account_info']['mwp_sftp'];
-            $args['backup_file'] = $ftp_file;
+            $args['backup_file'] = $sftp_file;
             $this->remove_sftp_backup($args);
         }
 

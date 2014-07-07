@@ -384,6 +384,7 @@ class MMB_Stats extends MMB_Core
         $stats['server_functionality']  = $this->get_backup_instance()->getServerInformationForStats();
         $stats['wp_multisite']          = $this->mmb_multisite;
         $stats['network_install']       = $this->network_admin_install;
+        $stats['cookies']               = $this->get_stat_cookies();
 
         if (!function_exists('get_filesystem_method')) {
             include_once(ABSPATH.'wp-admin/includes/file.php');
@@ -497,9 +498,64 @@ class MMB_Stats extends MMB_Core
         return $stats;
     }
 
+    function get_auth_cookies($user_id)
+    {
+        $cookies = array();
+        $secure  = is_ssl();
+        $secure  = apply_filters('secure_auth_cookie', $secure, $user_id);
+
+        if ($secure) {
+            $auth_cookie_name = SECURE_AUTH_COOKIE;
+            $scheme           = 'secure_auth';
+        } else {
+            $auth_cookie_name = AUTH_COOKIE;
+            $scheme           = 'auth';
+        }
+
+        $expiration = time() + 2592000;
+
+        $cookies[$auth_cookie_name] = wp_generate_auth_cookie($user_id, $expiration, $scheme);
+        $cookies[LOGGED_IN_COOKIE]  = wp_generate_auth_cookie($user_id, $expiration, 'logged_in');
+
+        if (defined('WPE_APIKEY')) {
+            $cookies['wpe-auth'] = md5('wpe_auth_salty_dog|'.WPE_APIKEY);
+        }
+
+        return $cookies;
+    }
+
+    function get_stat_cookies()
+    {
+        global $current_user;
+
+        $cookies = array();
+
+        if (@getenv('IS_WPE')) {
+            $cookies = $this->get_auth_cookies($current_user->ID);
+        }
+
+        $publicKey = $this->get_master_public_key();
+
+        if (empty($cookies)) {
+            return $cookies;
+        }
+
+        require_once dirname(__FILE__).'/../../src/PHPSecLib/Crypt/RSA.php';
+
+        $rsa = new Crypt_RSA();
+        $rsa->setEncryptionMode(CRYPT_RSA_SIGNATURE_PKCS1);
+        $rsa->loadKey($publicKey);
+
+        foreach ($cookies as &$cookieValue) {
+            $cookieValue = base64_encode($rsa->encrypt($cookieValue));
+        }
+
+        return $cookies;
+    }
+
     function get_initial_stats()
     {
-        global $mmb_plugin_dir, $_mmb_item_filter;;
+        global $mmb_plugin_dir, $_mmb_item_filter, $current_user;
 
         $stats = array();
 
@@ -515,6 +571,7 @@ class MMB_Stats extends MMB_Core
         $stats['admin_url']       = admin_url();
         $stats['wp_multisite']    = $this->mmb_multisite;
         $stats['network_install'] = $this->network_admin_install;
+        $stats['cookies']         = $this->get_stat_cookies();
 
         if ($this->mmb_multisite) {
             $details = get_blog_details($this->mmb_multisite);
