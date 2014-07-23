@@ -191,7 +191,7 @@ class MMB_Backup extends MMB_Core
                 if (is_array($error)) {
                     $before[$task_name]['task_results'][count($before[$task_name]['task_results']) - 1]['error'] = $error['error'];
                 } else {
-                    $before[$task_name]['task_results'][count($before[$task_name]['task_results'])]['error'] = $error;
+                    $before[$task_name]['task_results'][count($before[$task_name]['task_results']) - 1]['error'] = $error;
                 }
             }
 
@@ -2282,14 +2282,14 @@ class MMB_Backup extends MMB_Core
         $reqs['Zip']['status'] = 'exists';
         $reqs['Zip']['pass']   = true;
         if (!$this->zipExists()) {
-            $reqs['Zip']['status'] = 'not found.';
+            $reqs['Zip']['status'] = 'not found';
             //$reqs['Zip']['info']   = 'We\'ll use ZipArchive replacement';
             $reqs['Zip']['pass'] = false;
 
             $reqs['ZipArchive']['status'] = 'exists';
             $reqs['ZipArchive']['pass']   = true;
             if (!class_exists('ZipArchive')) {
-                $reqs['ZipArchive']['status'] = 'not found.';
+                $reqs['ZipArchive']['status'] = 'not found';
                 $reqs['ZipArchive']['info']   = 'We\'ll use PclZip replacement (PclZip takes up the memory that is equal to size of your site)';
                 $reqs['ZipArchive']['pass']   = false;
             }
@@ -2298,7 +2298,7 @@ class MMB_Backup extends MMB_Core
         $reqs['Unzip']['status'] = 'exists';
         $reqs['Unzip']['pass']   = true;
         if (!$this->unzipExists()) {
-            $reqs['Unzip']['status'] = 'not found.';
+            $reqs['Unzip']['status'] = 'not found';
             $reqs['Unzip']['info']   = 'We\'ll use PclZip replacement (PclZip takes up the memory that is equal to size of your site)';
             $reqs['Unzip']['pass']   = false;
         }

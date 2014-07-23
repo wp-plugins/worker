@@ -131,29 +131,23 @@ class MMB_Comment extends MMB_Core
 
     function action_comment($args)
     {
-        /** @var wpdb $wpdb */
-        global $wpdb;
 
         $docomaction = $args['docomaction'];
-        $comment_id  = $args['comment_id'];
+        $comment_id = $args['comment_id'];
 
-        if ($docomaction == 'approve') {
-            $docomaction = '1';
-        } else {
-            if ($docomaction == 'unapprove' || $docomaction == 'untrash' || $docomaction == 'unspam') {
-                $docomaction = '0';
-            }
-        }
+        if (!empty($comment_id) && is_numeric($comment_id)) {
 
-        if (!empty($comment_id)) {
             if ($docomaction == 'delete') {
-                $update_query = "DELETE FROM $wpdb->comments WHERE comment_ID = ".$comment_id;
-                $delete_query = "DELETE FROM $wpdb->commentmeta WHERE comment_id = ".$comment_id;
-                $wpdb->query($delete_query);
-            } else {
-                $update_query = "UPDATE $wpdb->comments SET comment_approved = '".$docomaction."' WHERE comment_ID = ".$comment_id;
+                wp_delete_comment($comment_id, true);
+            } elseif ($docomaction == 'unapprove' || $docomaction == 'untrash' || $docomaction == 'unspam') {
+                wp_set_comment_status($comment_id, 'hold');
+            } elseif ($docomaction == 'approve') {
+                wp_set_comment_status($comment_id, 'approve');
+            } elseif ($docomaction == 'spam') {
+                wp_set_comment_status($comment_id, 'spam');
+            } elseif ($docomaction == 'trash') {
+                wp_set_comment_status($comment_id, 'trash');
             }
-            $wpdb->query($update_query);
 
             return 'Comment updated.';
         } else {
@@ -163,32 +157,23 @@ class MMB_Comment extends MMB_Core
 
     function bulk_action_comments($args)
     {
-        /** @var wpdb $wpdb */
-        global $wpdb;
 
         $docomaction = $args['docomaction'];
 
-        if ($docomaction == 'delete') {
-            $update_query_intro = "DELETE FROM $wpdb->comments WHERE comment_ID = ";
-        } else {
-            if ($docomaction == 'unapprove' || $docomaction == 'untrash' || $docomaction == 'unspam') {
-                $docomaction = '0';
-            } else {
-                if ($docomaction == 'approve') {
-                    $docomaction = '1';
-                }
-            }
-            $update_query_intro = "UPDATE $wpdb->comments SET comment_approved = '".$docomaction."' WHERE comment_ID = ";
-        }
         foreach ($args as $val) {
             if (!empty($val) && is_numeric($val)) {
-                if ($docomaction == 'delete') {
-                    $delete_query = "DELETE FROM $wpdb->commentmeta WHERE comment_id = ".$val;
-                    $wpdb->query($delete_query);
-                }
-                $update_query = $update_query_intro.$val;
 
-                $wpdb->query($update_query);
+                if($docomaction == 'delete') {
+                    wp_delete_comment($val, true);
+                } elseif ($docomaction == 'unapprove'|| $docomaction == 'untrash' || $docomaction == 'unspam') {
+                    wp_set_comment_status($val, 'hold');
+                } elseif ($docomaction == 'approve') {
+                    wp_set_comment_status($val, 'approve');
+                } elseif ($docomaction == 'spam') {
+                    wp_set_comment_status($val, 'spam');
+                } elseif ($docomaction == 'trash') {
+                    wp_set_comment_status($val, 'trash');
+                }
             }
         }
 

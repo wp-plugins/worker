@@ -57,14 +57,23 @@ class MMB_User extends MMB_Core
 
         $users                  = array();
         $userlevel_qry          = "('".implode("','", $userlevels)."')";
-        $userlevel_fallback_qry = "('%".implode("%','%", $level_strings)."%')";
+        $queryOR ='';
+        if (!empty($level_strings)) {
+            foreach ($level_strings as $level) {
+                if (!empty($queryOR)) {
+                    $queryOR .= ' OR ';
+                }
+                $queryOR .= "meta_value LIKE '%{$level}%'";
+            }
+        }
         $field                  = $wpdb->prefix."capabilities";
+        $field2                 = $wpdb->prefix."user_level";
 
-        $metaQuery = "SELECT * from {$wpdb->usermeta} WHERE meta_key = '{$field}' AND meta_value IN {$userlevel_fallback_qry}";
+        $metaQuery = "SELECT * from {$wpdb->usermeta} WHERE meta_key = '{$field}' AND ({$queryOR})";
         $user_metas = $wpdb->get_results($metaQuery);
 
         if ($user_metas == false || empty($user_metas)) {
-            $metaQuery = "SELECT * from {$wpdb->usermeta} WHERE meta_key = 'wp_user_level' AND meta_value IN {$userlevel_qry}";
+            $metaQuery = "SELECT * from {$wpdb->usermeta} WHERE meta_key = '{$field2}' AND meta_value IN {$userlevel_qry}";
             $user_metas = $wpdb->get_results($metaQuery);
         }
 

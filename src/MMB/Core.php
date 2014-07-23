@@ -102,6 +102,7 @@ class MMB_Core extends MMB_Helper
             'change_post_status'               => 'mmb_change_post_status',
             'get_comment_stats'                => 'mmb_comment_stats_get',
             'install_addon'                    => 'mmb_install_addon',
+            'install_addons'                   => 'mmb_install_addons',
             'get_links'                        => 'mmb_get_links',
             'add_link'                         => 'mmb_add_link',
             'delete_link'                      => 'mmb_delete_link',

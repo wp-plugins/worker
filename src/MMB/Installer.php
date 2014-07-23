@@ -40,6 +40,23 @@ class MMB_Installer extends MMB_Core
         }
     }
 
+    function install_remote_files($params)
+    {
+        $data = array();
+        foreach ($params['plugins'] as $theme) {
+            $dataTmp = $this->install_remote_file($theme);
+            $pluginName = key($dataTmp);
+            $data[$pluginName] = $dataTmp;
+        }
+        foreach ($params['themes'] as $theme) {
+            $dataTmp = $this->install_remote_file($theme);
+            $themeName = key($dataTmp);
+            $data[$themeName] = $dataTmp;
+        }
+
+        return $data;
+    }
+
     function install_remote_file($params)
     {
         global $wp_filesystem;
