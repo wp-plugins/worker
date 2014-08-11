@@ -565,7 +565,12 @@ class MMB_Helper
 
     protected function notifyMyself($functionName, $args = array())
     {
-        $nonce         = substr(wp_hash(wp_nonce_tick().'mmb-fork-nonce'. 0, 'nonce'), -12, 10);
+        global $wp_version;
+        if (version_compare($wp_version, '3.9.2', '<')) {
+            $nonce = substr(wp_hash(wp_nonce_tick().'mmb-fork-nonce'. 0, 'nonce'), -12, 10);
+        } else {
+            $nonce = substr(wp_hash(wp_nonce_tick().'|'.'mmb-fork-nonce'.'|'. 0, 'nonce'), -12, 10);
+        }
         $cron_url      = site_url('index.php');
         $public_key    = get_option('_worker_public_key');
         $args          = array(

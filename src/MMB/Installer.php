@@ -839,12 +839,15 @@ class MMB_Installer extends MMB_Core
                         'version' => $plugin['Version']
                     );
 
-                    if(
-                        // If type is set, it must be equal to the current plugin status
-                        (empty($type) || (!empty($type) && strcasecmp($type, $status) == 0))
-                        // If search is set, the term must be found in the plugin name
-                        && (empty($search) || (!empty($search) && stripos($search, $plugin['name']) !== false))
-                    ){
+                    // If type is set, it must be equal to the current plugin status
+                    $typeMatches = empty($type)
+                        || (!empty($type) && strcasecmp($type, $status) == 0);
+
+                    // If search is set, the term must be found in the plugin name
+                    $searchTermFound = empty($search)
+                        || (!empty($search) && stripos($plugin['name'], $search) !== false);
+
+                    if ($typeMatches && $searchTermFound) {
                         $plugins[$status][] = $plugin;
 
                     }

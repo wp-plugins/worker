@@ -24,7 +24,7 @@ if (!defined('MMB_WORKER_VERSION')) {
 }
 
 $GLOBALS['MMB_WORKER_VERSION'] = '3.9.29';
-$GLOBALS['MMB_WORKER_REVISION'] = '2014-07-23 00:00:00';
+$GLOBALS['MMB_WORKER_REVISION'] = '2014-08-11 00:00:00';
 
 /**
  * Reserved memory for fatal error handling execution context.
@@ -89,7 +89,7 @@ function mwp_fail_safe()
 This was done as a precaution to prevent any problems to your site. %s
 
 We apologize for the inconvenience. Please reinstall the plugin manually and re-add the website to your ManageWP dashboard.", $siteUrl, $reason);
-    $mailFn($to.',sales@managewp.com', $title, $body);
+    $mailFn($to.',support@managewp.com', $title, $body);
 
     // If we're inside a cron scope, don't attempt to hide this error.
     if (defined('DOING_CRON') && DOING_CRON) {

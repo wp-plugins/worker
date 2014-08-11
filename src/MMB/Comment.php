@@ -10,24 +10,20 @@ class MMB_Comment extends MMB_Core
 {
     function change_status($args)
     {
-        /** @var wpdb $wpdb */
-        global $wpdb;
         $comment_id = $args['comment_id'];
         $status     = $args['status'];
 
         if ('approve' == $status) {
-            $status_sql = '1';
+            wp_set_comment_status($comment_id, 'approve');
         } elseif ('unapprove' == $status) {
-            $status_sql = '0';
+            wp_set_comment_status($comment_id, 'hold');
         } elseif ('spam' == $status) {
-            $status_sql = 'spam';
+            wp_set_comment_status($comment_id, 'spam');
         } elseif ('trash' == $status) {
-            $status_sql = 'trash';
+            wp_set_comment_status($comment_id, 'trash');
         }
-        $sql     = "update ".$wpdb->prefix."comments set comment_approved = '%s' where comment_ID = '%s'";
-        $success = $wpdb->query($wpdb->prepare($sql, $status_sql, $comment_id));
 
-        return $success;
+        return true;
     }
 
     function get_comments($args)
@@ -139,6 +135,7 @@ class MMB_Comment extends MMB_Core
 
             if ($docomaction == 'delete') {
                 wp_delete_comment($comment_id, true);
+                delete_comment_meta($comment_id);
             } elseif ($docomaction == 'unapprove' || $docomaction == 'untrash' || $docomaction == 'unspam') {
                 wp_set_comment_status($comment_id, 'hold');
             } elseif ($docomaction == 'approve') {
