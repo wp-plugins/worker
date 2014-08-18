@@ -16,11 +16,20 @@ class MMB_Stats extends MMB_Core
     function get_core_update($stats, $options = array())
     {
         global $wp_version;
-
+        $current_transient = null;
         if (isset($options['core']) && $options['core']) {
             $core = $this->mmb_get_transient('update_core');
             if (isset($core->updates) && !empty($core->updates)) {
-                $current_transient = $core->updates[0];
+                foreach ($core->updates as $update) {
+                    if ($update->locale == get_locale() && strtolower($update->response) == "upgrade") {
+                        $current_transient = $update;
+                        break;
+                    }
+                }
+                //fallback to first
+                if (!$current_transient) {
+                    $current_transient = $core->updates[0];
+                }
                 if ($current_transient->response == "development" || version_compare($wp_version, $current_transient->current, '<')) {
                     $current_transient->current_version = $wp_version;
                     $stats['core_updates']              = $current_transient;

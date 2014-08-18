@@ -22,9 +22,8 @@ class MMB_User extends MMB_Core
             return false;
         }
 
-        $user_roles      = $args['user_roles'];
-        $username_filter = $args['username_filter'];
-        $username        = $args['username'];
+        $user_roles      = isset($args['user_roles']) ? $args['user_roles'] : array();
+        $username_filter = isset($args['username_filter']) ? $args['username_filter'] : '';
 
         $userlevels    = array();
         $level_strings = array();
