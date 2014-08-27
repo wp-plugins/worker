@@ -24,7 +24,7 @@ if (!defined('MMB_WORKER_VERSION')) {
 }
 
 $GLOBALS['MMB_WORKER_VERSION'] = '3.9.29';
-$GLOBALS['MMB_WORKER_REVISION'] = '2014-08-19 00:00:00';
+$GLOBALS['MMB_WORKER_REVISION'] = '2014-08-27 00:00:00';
 
 /**
  * Reserved memory for fatal error handling execution context.
@@ -1157,6 +1157,18 @@ if (!function_exists('mmb_clean_orphan_backups')) {
 
 function mmb_run_forked_action()
 {
+
+    $usernameUsed = array_key_exists('username', $_POST) ? $_POST : null;
+    if ($usernameUsed && !is_user_logged_in()) {
+        $user = function_exists('get_user_by') ? get_user_by('login', $_POST['username']) : get_user_by('login', $_POST['username']);
+    }
+
+    if (isset($user)) {
+        wp_set_current_user($user->ID);
+        if (@getenv('IS_WPE')) {
+            wp_set_auth_cookie($user->ID);
+        }
+    }
     if (!isset($_POST['mmb_fork_nonce']) || (isset($_POST['mmb_fork_nonce']) && !wp_verify_nonce($_POST['mmb_fork_nonce'], 'mmb-fork-nonce'))) {
         return false;
     }

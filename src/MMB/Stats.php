@@ -15,7 +15,8 @@ class MMB_Stats extends MMB_Core
 
     function get_core_update($stats, $options = array())
     {
-        global $wp_version;
+        global $wp_version, $wp_local_package;
+        $locale = empty($wp_local_package) ? 'en_US' : $wp_local_package;
         $current_transient = null;
         if (isset($options['core']) && $options['core']) {
             $core = $this->mmb_get_transient('update_core');
@@ -30,7 +31,7 @@ class MMB_Stats extends MMB_Core
                 if (!$current_transient) {
                     $current_transient = $core->updates[0];
                 }
-                if ($current_transient->response == "development" || version_compare($wp_version, $current_transient->current, '<')) {
+                if ($current_transient->response == "development" || version_compare($wp_version, $current_transient->current, '<') || $locale !== $current_transient->locale) {
                     $current_transient->current_version = $wp_version;
                     $stats['core_updates']              = $current_transient;
                 } else {

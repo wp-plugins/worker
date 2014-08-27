@@ -1118,6 +1118,9 @@ class MMB_Backup extends MMB_Core
         );
 
         $include = array_merge($add, $include);
+        foreach ($include as &$value) {
+            $value = rtrim($value, '/');
+        }
 
         $filelist = array();
         if ($handle = opendir(ABSPATH)) {
