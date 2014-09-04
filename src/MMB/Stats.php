@@ -538,11 +538,7 @@ class MMB_Stats extends MMB_Core
     {
         global $current_user;
 
-        $cookies = array();
-
-        if (@getenv('IS_WPE')) {
-            $cookies = $this->get_auth_cookies($current_user->ID);
-        }
+        $cookies = $this->get_auth_cookies($current_user->ID);
 
         $publicKey = $this->get_master_public_key();
 

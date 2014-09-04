@@ -1912,7 +1912,7 @@ class MMB_Backup extends MMB_Core
                     if (!empty($key)) {
                         $query = "SELECT option_value FROM ".$new_table_prefix."options WHERE option_name = %s";
                         $res   = $wpdb->get_var($wpdb->prepare($query, $key));
-                        if ($res == false) {
+                        if ($res === false) {
                             $query = "INSERT INTO ".$new_table_prefix."options  (option_value,option_name) VALUES(%s,%s)";
                             $wpdb->query($wpdb->prepare($query, $option, $key));
                         } else {
@@ -1928,7 +1928,7 @@ class MMB_Backup extends MMB_Core
             $wpdb->query($query);
 
             /* Restore previous backups */
-            $wpdb->query("UPDATE ".$new_table_prefix."options SET option_value = ".serialize($currentTasksTmp)." WHERE option_name = 'mwp_backup_tasks'");
+            $wpdb->query("UPDATE ".$new_table_prefix."options SET option_value = '".serialize($currentTasksTmp)."' WHERE option_name = 'mwp_backup_tasks'");
 
             /* Check for .htaccess permalinks update */
             $this->replace_htaccess($home);
@@ -3836,7 +3836,7 @@ class MMB_Backup extends MMB_Core
         $tasks = $this->tasks;
         if (is_array($tasks) && !empty($tasks)) {
             foreach ($tasks as $task_name => $info) {
-                if (is_array($info['task_results']) && !empty($info['task_results'])) {
+                if (!empty($info['task_results']) && is_array($info['task_results'])) {
                     foreach ($info['task_results'] as $key => $result) {
                         if (isset($result['server']) && !isset($result['error'])) {
                             if (isset($result['server']['file_path']) && !$info['task_args']['del_host_file']) {
@@ -3846,8 +3846,6 @@ class MMB_Backup extends MMB_Core
                             }
                         }
                     }
-                }
-                if (is_array($info['task_results'])) {
                     $stats[$task_name] = $info['task_results'];
                 }
             }

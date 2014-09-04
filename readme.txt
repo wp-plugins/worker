@@ -3,7 +3,7 @@ Contributors: freediver
 Donate link: https://www.networkforgood.org/donation/MakeDonation.aspx?ORGID2=520781390
 Tags: admin, analytics, administration, amazon, api, google drive, authentication, automatic, dashboard, dropbox, events, integration, manage, multsite, notification, performance, s3, security, seo, stats, tracking, managewp
 Requires at least: 3.0
-Tested up to: 3.9
+Tested up to: 4.0
 Stable tag: trunk
 
 ManageWP Worker plugin allows you to remotely manage your WordPress sites from one dashboard.
@@ -33,6 +33,15 @@ Check out [ManageWP.com](https://managewp.com/ "Manage Multiple Blogs").
 
 == Changelog ==  
 
+= 3.9.30 =
+
+- New: Fully compatible with WordPress 4.0
+- New: Adding websites to your ManageWP Dashboard is now easier than ever
+- Fix: Backup tool improvements (especially for websites located on Rackspace)
+- Fix: Various Clone/Migration tool improvements and fixes
+- Fix: SEO PDF report visual enhancement
+- Fix: Various interface improvements and fixes
+
 = 3.9.29 =
 
 - New: Worker plugin is now 36% faster and uses 83% less memory
@@ -42,7 +51,7 @@ Check out [ManageWP.com](https://managewp.com/ "Manage Multiple Blogs").
 - New: Refreshed app interface :)
 
 = 3.9.28 =
-- New: Control Wordpress Automatic Background Updates for plugins and themes!
+- New: Control WordPress Automatic Background Updates for plugins and themes!
 - Fix: Tweaks to SFTP support for backups and clone
 - Fix: Enhancements to Backup and Branding features
 
@@ -50,7 +59,7 @@ Check out [ManageWP.com](https://managewp.com/ "Manage Multiple Blogs").
 = 3.9.27 =
 - New: SFTP support for backups and clone!
 - Fix: Database dump for backup tasks with defined socket path or port number in wp-config.php 
-- Fix: Optimize Wordpress tables before backup
+- Fix: Optimize WordPress tables before backup
 - Fix: Compatibility with Better WP Security 
 - Fix: Not adding jQuery on front page while using branding option
 

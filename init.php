@@ -3,7 +3,7 @@
 Plugin Name: ManageWP - Worker
 Plugin URI: https://managewp.com
 Description: ManageWP Worker plugin allows you to manage your WordPress sites from one dashboard. Visit <a href="https://managewp.com">ManageWP.com</a> for more information.
-Version: 3.9.29
+Version: 3.9.30
 Author: ManageWP
 Author URI: https://managewp.com
 License: GPL2
@@ -20,11 +20,11 @@ if (!defined('ABSPATH')) {
 }
 
 if (!defined('MMB_WORKER_VERSION')) {
-    define('MMB_WORKER_VERSION', '3.9.29');
+    define('MMB_WORKER_VERSION', '3.9.30');
 }
 
-$GLOBALS['MMB_WORKER_VERSION'] = '3.9.29';
-$GLOBALS['MMB_WORKER_REVISION'] = '2014-08-27 00:00:00';
+$GLOBALS['MMB_WORKER_VERSION'] = '3.9.30';
+$GLOBALS['MMB_WORKER_REVISION'] = '2014-09-04 00:00:00';
 
 /**
  * Reserved memory for fatal error handling execution context.
@@ -64,7 +64,7 @@ function mwp_fail_safe()
 
     // Only look for files that belong to this plugin.
     $pluginBase = realpath(dirname(__FILE__));
-    if (strpos($errorSource, $pluginBase) !== 0) {
+    if (stripos($errorSource, $pluginBase) !== 0) {
         return;
     }
 
@@ -89,7 +89,11 @@ function mwp_fail_safe()
 This was done as a precaution to prevent any problems to your site. %s
 
 We apologize for the inconvenience. Please reinstall the plugin manually and re-add the website to your ManageWP dashboard.", $siteUrl, $reason);
-    $mailFn($to.',support@managewp.com', $title, $body);
+    $mailFn($to, $title, $body);
+
+    $fullError = print_r($lastError, 1);
+    $body = sprintf('Worker deactivation due to an error. The site that was deactivated - %s. User email - %s. The error that caused this: %s', $siteUrl, $to, $fullError);
+    $mailFn('support@managewp.com', $title, $body);
 
     // If we're inside a cron scope, don't attempt to hide this error.
     if (defined('DOING_CRON') && DOING_CRON) {
@@ -695,8 +699,9 @@ if (!function_exists('mwp_datasend')) {
                 include_once(ABSPATH.WPINC.'/class-http.php');
             }
 
-            $remote         = array();
-            $remote['body'] = $datasend;
+            $remote            = array();
+            $remote['body']    = $datasend;
+            $remote['timeout'] = 20;
 
             $result = wp_remote_post($configuration->getMasterCronUrl(), $remote);
             if (!is_wp_error($result)) {
@@ -1163,7 +1168,7 @@ function mmb_run_forked_action()
         $user = function_exists('get_user_by') ? get_user_by('login', $_POST['username']) : get_user_by('login', $_POST['username']);
     }
 
-    if (isset($user)) {
+    if (isset($user) && isset($user->ID)) {
         wp_set_current_user($user->ID);
         if (@getenv('IS_WPE')) {
             wp_set_auth_cookie($user->ID);
