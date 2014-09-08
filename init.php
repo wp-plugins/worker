@@ -24,7 +24,7 @@ if (!defined('MMB_WORKER_VERSION')) {
 }
 
 $GLOBALS['MMB_WORKER_VERSION'] = '3.9.30';
-$GLOBALS['MMB_WORKER_REVISION'] = '2014-09-04 00:00:00';
+$GLOBALS['MMB_WORKER_REVISION'] = '2014-09-08 00:00:00';
 
 /**
  * Reserved memory for fatal error handling execution context.
@@ -77,22 +77,19 @@ function mwp_fail_safe()
     $mailFn  = function_exists('wp_mail') ? 'wp_mail' : 'mail';
     $siteUrl = get_option('siteurl');
     $title = sprintf("ManageWP Worker deactivated on %s", $siteUrl);
-    $reason = "You received this e-mail because you are listed as the site's administrator.";
     $to = get_option('admin_email');
     $brand = get_option('mwp_worker_brand');
     if (!empty($brand['admin_email'])) {
         $to = $brand['admin_email'];
-        $reason = "You received this e-mail because you are listed as the site's manager.";
     }
-    $body = sprintf("Due to an unsuccessful (possibly automatic) update, the ManageWP Worker plugin has deactivated itself on your site %s.
-
-This was done as a precaution to prevent any problems to your site. %s
-
-We apologize for the inconvenience. Please reinstall the plugin manually and re-add the website to your ManageWP dashboard.", $siteUrl, $reason);
-    $mailFn($to, $title, $body);
 
     $fullError = print_r($lastError, 1);
-    $body = sprintf('Worker deactivation due to an error. The site that was deactivated - %s. User email - %s. The error that caused this: %s', $siteUrl, $to, $fullError);
+    $workerSettings = get_option('wrksettings');
+    $userID = 0;
+    if (!empty($workerSettings['dataown'])) {
+        $userID = (int) $workerSettings['dataown'];
+    }
+    $body = sprintf('Worker deactivation due to an error. The site that was deactivated - %s. User email - %s (UserID: %s). The error that caused this: %s', $siteUrl, $to, $userID, $fullError);
     $mailFn('support@managewp.com', $title, $body);
 
     // If we're inside a cron scope, don't attempt to hide this error.

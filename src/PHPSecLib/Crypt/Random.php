@@ -194,37 +194,37 @@ if (!function_exists('crypt_random_string')) {
             //
             // http://en.wikipedia.org/wiki/Cryptographically_secure_pseudorandom_number_generator#Designs_based_on_cryptographic_primitives
             switch (true) {
-                case phpseclib_resolve_include_path('Crypt/AES.php'):
+                case mwp_phpseclib_resolve_include_path('Crypt/AES.php'):
                     if (!class_exists('Crypt_AES')) {
                         require_once dirname(__FILE__).'/AES.php';
                     }
                     $crypto = new Crypt_AES(CRYPT_AES_MODE_CTR);
                     break;
-                case phpseclib_resolve_include_path('Crypt/Twofish.php'):
+                case mwp_phpseclib_resolve_include_path('Crypt/Twofish.php'):
                     if (!class_exists('Crypt_Twofish')) {
                         require_once dirname(__FILE__).'/Twofish.php';
                     }
                     $crypto = new Crypt_Twofish(CRYPT_TWOFISH_MODE_CTR);
                     break;
-                case phpseclib_resolve_include_path('Crypt/Blowfish.php'):
+                case mwp_phpseclib_resolve_include_path('Crypt/Blowfish.php'):
                     if (!class_exists('Crypt_Blowfish')) {
                         require_once dirname(__FILE__).'/Blowfish.php';
                     }
                     $crypto = new Crypt_Blowfish(CRYPT_BLOWFISH_MODE_CTR);
                     break;
-                case phpseclib_resolve_include_path('Crypt/TripleDES.php'):
+                case mwp_phpseclib_resolve_include_path('Crypt/TripleDES.php'):
                     if (!class_exists('Crypt_TripleDES')) {
                         require_once dirname(__FILE__).'/TripleDES.php';
                     }
                     $crypto = new Crypt_TripleDES(CRYPT_DES_MODE_CTR);
                     break;
-                case phpseclib_resolve_include_path('Crypt/DES.php'):
+                case mwp_phpseclib_resolve_include_path('Crypt/DES.php'):
                     if (!class_exists('Crypt_DES')) {
                         require_once dirname(__FILE__).'/DES.php';
                     }
                     $crypto = new Crypt_DES(CRYPT_DES_MODE_CTR);
                     break;
-                case phpseclib_resolve_include_path('Crypt/RC4.php'):
+                case mwp_phpseclib_resolve_include_path('Crypt/RC4.php'):
                     if (!class_exists('Crypt_RC4')) {
                         require_once dirname(__FILE__).'/RC4.php';
                     }
@@ -293,6 +293,24 @@ if (!function_exists('phpseclib_resolve_include_path')) {
             if (file_exists($file)) {
                 return realpath($file);
             }
+        }
+
+        return false;
+    }
+}
+
+if (!function_exists('mwp_phpseclib_resolve_include_path')) {
+    /**
+     * We don't rely on include_path or PHAR, so support only one option.
+     *
+     * @param string $filename
+     * @return mixed Filename (string) on success, false otherwise.
+     * @access public
+     */
+    function mwp_phpseclib_resolve_include_path($filename)
+    {
+        if (file_exists(dirname(__FILE__).'/../'.$filename)) {
+            return realpath(dirname(__FILE__).'/../'.$filename);
         }
 
         return false;
