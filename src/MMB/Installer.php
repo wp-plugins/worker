@@ -162,6 +162,37 @@ class MMB_Installer extends MMB_Core
         return $install_info;
     }
 
+    private function check_expiration($plugin)
+    {
+        // Check if download link for plugin expired
+        $parsedUrl = parse_url($plugin['package']);
+        $queryString = isset($parsedUrl['query']) ? $parsedUrl['query'] : '';
+        parse_str($queryString, $queryParams);
+        $queryParams = array_change_key_case($queryParams, CASE_LOWER);
+
+        // Check if the update link expired for (iThemes) plugin download
+        if (empty($queryParams['expires']) || intval($queryParams['expires']) > time()) {
+            return;
+        }
+
+        // Check for the iThemes updater class
+        if (empty($GLOBALS['ithemes_updater_path']) ||
+            !file_exists($GLOBALS['ithemes_updater_path'].'/settings.php')) {
+            return;
+        }
+
+        // Include iThemes updater
+        require_once($GLOBALS['ithemes_updater_path'].'/settings.php');
+
+        // Check if the updater is instantiated
+        if (empty($GLOBALS['ithemes-updater-settings'])) {
+            return;
+        }
+
+        // Update the download link
+        $GLOBALS['ithemes-updater-settings']->flush('forced');
+    }
+
     function do_upgrade($params = null)
     {
 
@@ -194,6 +225,7 @@ class MMB_Installer extends MMB_Core
         if (!empty($upgrade_plugins)) {
             $plugin_files = array();
             foreach ($upgrade_plugins as $plugin) {
+                $this->check_expiration($plugin);
                 if (isset($plugin['file'])) {
                     $plugin_files[$plugin['file']] = $plugin['old_version'];
                 } else {
