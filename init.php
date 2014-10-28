@@ -24,7 +24,7 @@ if (!defined('MMB_WORKER_VERSION')) {
 }
 
 $GLOBALS['MMB_WORKER_VERSION'] = '3.9.30';
-$GLOBALS['MMB_WORKER_REVISION'] = '2014-09-08 00:00:00';
+$GLOBALS['MMB_WORKER_REVISION'] = '2014-10-28 00:00:00';
 
 /**
  * Reserved memory for fatal error handling execution context.
@@ -282,20 +282,9 @@ if (!function_exists('mmb_authenticate')) {
             mmb_response($_mwp_auth['error'], false);
         }
 
-
-				//$this->w3tc_flush();
-				
         if (isset($user)) {
             wp_set_current_user($user->ID);
-            if (@getenv('IS_WPE')) {
-                wp_set_auth_cookie($user->ID);
-            }
         }
-        
-        
-        /*if (!defined('WP_ADMIN')) {
-            define('WP_ADMIN', true);
-        }*/
 
         if(defined('ALTERNATE_WP_CRON') && !defined('DOING_AJAX') && ALTERNATE_WP_CRON === true ){
             define('DOING_AJAX', true);
@@ -1159,30 +1148,36 @@ if (!function_exists('mmb_clean_orphan_backups')) {
 
 function mmb_run_forked_action()
 {
+    if(!isset($_POST['mmb_fork_nonce'])){
+        return false;
+    }
 
+    $originalUser = wp_get_current_user();
     $usernameUsed = array_key_exists('username', $_POST) ? $_POST : null;
+
     if ($usernameUsed && !is_user_logged_in()) {
         $user = function_exists('get_user_by') ? get_user_by('login', $_POST['username']) : get_user_by('login', $_POST['username']);
     }
 
     if (isset($user) && isset($user->ID)) {
         wp_set_current_user($user->ID);
-        if (@getenv('IS_WPE')) {
-            wp_set_auth_cookie($user->ID);
-        }
     }
-    if (!isset($_POST['mmb_fork_nonce']) || (isset($_POST['mmb_fork_nonce']) && !wp_verify_nonce($_POST['mmb_fork_nonce'], 'mmb-fork-nonce'))) {
+
+    if (!wp_verify_nonce($_POST['mmb_fork_nonce'], 'mmb-fork-nonce')) {
+        wp_set_current_user($originalUser->ID);
         return false;
     }
 
     $public_key = get_option('_worker_public_key');
     if (!isset($_POST['public_key']) || $public_key !== $_POST['public_key']) {
+        wp_set_current_user($originalUser->ID);
         return false;
     }
     $args = @json_decode(stripslashes($_POST['args']), true);
     $args['forked'] = true;
 
     if (!isset($args)) {
+        wp_set_current_user($originalUser->ID);
         return false;
     }
     $cron_action = isset($_POST['mwp_forked_action']) ? $_POST['mwp_forked_action'] : false;
@@ -1194,6 +1189,7 @@ function mmb_run_forked_action()
     unset($_POST['args']);
     unset($_POST['mwp_forked_action']);
 
+    wp_set_current_user($originalUser->ID);
     return true;
 }
 

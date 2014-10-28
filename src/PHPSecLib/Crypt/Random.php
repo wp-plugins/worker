@@ -70,7 +70,7 @@ if (!function_exists('crypt_random_string')) {
         if (CRYPT_RANDOM_IS_WINDOWS) {
             // method 1. prior to PHP 5.3 this would call rand() on windows hence the function_exists('class_alias') call.
             // ie. class_alias is a function that was introduced in PHP 5.3
-            if (function_exists('mcrypt_create_iv') && function_exists('class_alias')) {
+            if (version_compare(PHP_VERSION, '5.3.6', '!=') && function_exists('mcrypt_create_iv') && function_exists('class_alias')) {
                 return mcrypt_create_iv($length);
             }
             // method 2. openssl_random_pseudo_bytes was introduced in PHP 5.3.0 but prior to PHP 5.3.4 there was,

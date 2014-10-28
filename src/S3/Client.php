@@ -177,6 +177,12 @@ class S3_Client
      */
     private static $__progressCallback;
 
+    /**
+     * Only one call to amazon in order to calculate time offset
+     * @var bool
+     */
+    private static $__timeCorrected = false;
+
 
     /**
      * Constructor - if you're not using the class statically
@@ -401,6 +407,7 @@ class S3_Client
     public static function listBuckets($detailed = false)
     {
         $rest = new S3_Request('GET', '', '', self::$endpoint);
+        self::setCorrectDate($rest);
         $rest = $rest->getResponse();
         if ($rest->error === false && $rest->code !== 200)
             $rest->error = array('code' => $rest->code, 'message' => 'Unexpected HTTP status');
@@ -447,6 +454,7 @@ class S3_Client
     public static function getBucket($bucket, $prefix = null, $marker = null, $maxKeys = null, $delimiter = null, $returnCommonPrefixes = false)
     {
         $rest = new S3_Request('GET', $bucket, '', self::$endpoint);
+        self::setCorrectDate($rest);
         if ($maxKeys == 0) $maxKeys = null;
         if ($prefix !== null && $prefix !== '') $rest->setParameter('prefix', $prefix);
         if ($marker !== null && $marker !== '') $rest->setParameter('marker', $marker);
@@ -492,6 +500,7 @@ class S3_Client
             do
             {
                 $rest = new S3_Request('GET', $bucket, '', self::$endpoint);
+                self::setCorrectDate($rest);
                 if ($prefix !== null && $prefix !== '') $rest->setParameter('prefix', $prefix);
                 $rest->setParameter('marker', $nextMarker);
                 if ($delimiter !== null && $delimiter !== '') $rest->setParameter('delimiter', $delimiter);
@@ -534,6 +543,7 @@ class S3_Client
     public static function putBucket($bucket, $acl = self::ACL_PRIVATE, $location = false)
     {
         $rest = new S3_Request('PUT', $bucket, '', self::$endpoint);
+        self::setCorrectDate($rest);
         $rest->setAmzHeader('x-amz-acl', $acl);
 
         if ($location !== false)
@@ -570,6 +580,7 @@ class S3_Client
     public static function deleteBucket($bucket)
     {
         $rest = new S3_Request('DELETE', $bucket, '', self::$endpoint);
+        self::setCorrectDate($rest);
         $rest = $rest->getResponse();
         if ($rest->error === false && $rest->code !== 204)
             $rest->error = array('code' => $rest->code, 'message' => 'Unexpected HTTP status');
@@ -652,6 +663,7 @@ class S3_Client
     {
         if ($input === false) return false;
         $rest = new S3_Request('PUT', $bucket, $uri, self::$endpoint);
+        self::setCorrectDate($rest);
 
         self::injectProgressCallback($rest);
 
@@ -770,6 +782,7 @@ class S3_Client
     public static function getObject($bucket, $uri, $saveTo = false)
     {
         $rest = new S3_Request('GET', $bucket, $uri, self::$endpoint);
+        self::setCorrectDate($rest);
         if ($saveTo !== false)
         {
             if (is_resource($saveTo))
@@ -805,6 +818,7 @@ class S3_Client
     public static function getObjectInfo($bucket, $uri, $returnInfo = true)
     {
         $rest = new S3_Request('HEAD', $bucket, $uri, self::$endpoint);
+        self::setCorrectDate($rest);
         $rest = $rest->getResponse();
         if ($rest->error === false && ($rest->code !== 200 && $rest->code !== 404))
             $rest->error = array('code' => $rest->code, 'message' => 'Unexpected HTTP status');
@@ -834,6 +848,7 @@ class S3_Client
     public static function copyObject($srcBucket, $srcUri, $bucket, $uri, $acl = self::ACL_PRIVATE, $metaHeaders = array(), $requestHeaders = array(), $storageClass = self::STORAGE_CLASS_STANDARD)
     {
         $rest = new S3_Request('PUT', $bucket, $uri, self::$endpoint);
+        self::setCorrectDate($rest);
         $rest->setHeader('Content-Length', 0);
         foreach ($requestHeaders as $h => $v) $rest->setHeader($h, $v);
         foreach ($metaHeaders as $h => $v) $rest->setAmzHeader('x-amz-meta-'.$h, $v);
@@ -870,6 +885,7 @@ class S3_Client
     public static function setBucketRedirect($bucket = NULL, $location = NULL)
     {
         $rest = new S3_Request('PUT', $bucket, '', self::$endpoint);
+        self::setCorrectDate($rest);
 
         if( empty($bucket) || empty($location) ) {
             self::__triggerError("S3::setBucketRedirect({$bucket}, {$location}): Empty parameter.", __FILE__, __LINE__);
@@ -947,6 +963,7 @@ class S3_Client
         $dom->appendChild($bucketLoggingStatus);
 
         $rest = new S3_Request('PUT', $bucket, '', self::$endpoint);
+        self::setCorrectDate($rest);
         $rest->setParameter('logging', null);
         $rest->data = $dom->saveXML();
         $rest->size = strlen($rest->data);
@@ -976,6 +993,7 @@ class S3_Client
     public static function getBucketLogging($bucket)
     {
         $rest = new S3_Request('GET', $bucket, '', self::$endpoint);
+        self::setCorrectDate($rest);
         $rest->setParameter('logging', null);
         $rest = $rest->getResponse();
         if ($rest->error === false && $rest->code !== 200)
@@ -1015,6 +1033,7 @@ class S3_Client
     public static function getBucketLocation($bucket)
     {
         $rest = new S3_Request('GET', $bucket, '', self::$endpoint);
+        self::setCorrectDate($rest);
         $rest->setParameter('location', null);
         $rest = $rest->getResponse();
         if ($rest->error === false && $rest->code !== 200)
@@ -1079,6 +1098,7 @@ class S3_Client
         $dom->appendChild($accessControlPolicy);
 
         $rest = new S3_Request('PUT', $bucket, $uri, self::$endpoint);
+        self::setCorrectDate($rest);
         $rest->setParameter('acl', null);
         $rest->data = $dom->saveXML();
         $rest->size = strlen($rest->data);
@@ -1106,6 +1126,7 @@ class S3_Client
     public static function getAccessControlPolicy($bucket, $uri = '')
     {
         $rest = new S3_Request('GET', $bucket, $uri, self::$endpoint);
+        self::setCorrectDate($rest);
         $rest->setParameter('acl', null);
         $rest = $rest->getResponse();
         if ($rest->error === false && $rest->code !== 200)
@@ -1167,6 +1188,7 @@ class S3_Client
     public static function deleteObject($bucket, $uri)
     {
         $rest = new S3_Request('DELETE', $bucket, $uri, self::$endpoint);
+        self::setCorrectDate($rest);
         $rest = $rest->getResponse();
         if ($rest->error === false && $rest->code !== 204)
             $rest->error = array('code' => $rest->code, 'message' => 'Unexpected HTTP status');
@@ -1330,6 +1352,7 @@ class S3_Client
 
         self::$useSSL = true; // CloudFront requires SSL
         $rest = new S3_Request('POST', '', '2010-11-01/distribution', 'cloudfront.amazonaws.com');
+        self::setCorrectDate($rest);
         $rest->data = self::__getCloudFrontDistributionConfigXML(
           $bucket.'.s3.amazonaws.com',
           $enabled,
@@ -1378,6 +1401,7 @@ class S3_Client
 
         self::$useSSL = true; // CloudFront requires SSL
         $rest = new S3_Request('GET', '', '2010-11-01/distribution/'.$distributionId, 'cloudfront.amazonaws.com');
+        self::setCorrectDate($rest);
         $rest = self::__getCloudFrontResponse($rest);
 
         self::$useSSL = $useSSL;
@@ -1420,6 +1444,7 @@ class S3_Client
 
         self::$useSSL = true; // CloudFront requires SSL
         $rest = new S3_Request('PUT', '', '2010-11-01/distribution/'.$dist['id'].'/config', 'cloudfront.amazonaws.com');
+        self::setCorrectDate($rest);
         $rest->data = self::__getCloudFrontDistributionConfigXML(
           $dist['origin'],
           $dist['enabled'],
@@ -1472,6 +1497,7 @@ class S3_Client
 
         self::$useSSL = true; // CloudFront requires SSL
         $rest = new S3_Request('DELETE', '', '2008-06-30/distribution/'.$dist['id'], 'cloudfront.amazonaws.com');
+        self::setCorrectDate($rest);
         $rest->setHeader('If-Match', $dist['hash']);
         $rest = self::__getCloudFrontResponse($rest);
 
@@ -1506,6 +1532,7 @@ class S3_Client
         $useSSL = self::$useSSL;
         self::$useSSL = true; // CloudFront requires SSL
         $rest = new S3_Request('GET', '', '2010-11-01/distribution', 'cloudfront.amazonaws.com');
+        self::setCorrectDate($rest);
         $rest = self::__getCloudFrontResponse($rest);
         self::$useSSL = $useSSL;
 
@@ -1550,6 +1577,7 @@ class S3_Client
 
         self::$useSSL = true; // CloudFront requires SSL
         $rest = new S3_Request('GET', '', '2010-11-01/origin-access-identity/cloudfront', 'cloudfront.amazonaws.com');
+        self::setCorrectDate($rest);
         $rest = self::__getCloudFrontResponse($rest);
         $useSSL = self::$useSSL;
 
@@ -1595,6 +1623,7 @@ class S3_Client
         $useSSL = self::$useSSL;
         self::$useSSL = true; // CloudFront requires SSL
         $rest = new S3_Request('POST', '', '2010-08-01/distribution/'.$distributionId.'/invalidation', 'cloudfront.amazonaws.com');
+        self::setCorrectDate($rest);
         $rest->data = self::__getCloudFrontInvalidationBatchXML($paths, (string)microtime(true));
         $rest->size = strlen($rest->data);
         $rest = self::__getCloudFrontResponse($rest);
@@ -1662,6 +1691,7 @@ class S3_Client
         $useSSL = self::$useSSL;
         self::$useSSL = true; // CloudFront requires SSL
         $rest = new S3_Request('GET', '', '2010-11-01/distribution/'.$distributionId.'/invalidation', 'cloudfront.amazonaws.com');
+        self::setCorrectDate($rest);
         $rest = self::__getCloudFrontResponse($rest);
         self::$useSSL = $useSSL;
 
@@ -1888,7 +1918,20 @@ class S3_Client
         return time() + self::$__timeOffset;
     }
 
+    /**
+     * Correct time skew between client server and amazon
+     *
+     * @param S3_Request $rest
+     */
+    public static function setCorrectDate(S3_Request $rest){
 
+        if(!self::$__timeCorrected) {
+            self::setTimeCorrectionOffset();
+            self::$__timeCorrected = true;
+        }
+
+        $rest->setHeader('Date', gmdate('D, d M Y H:i:s T',self::__getTime()));
+    }
     /**
      * Generate the auth string: "AWS AccessKey:Signature"
      *

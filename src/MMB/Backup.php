@@ -609,9 +609,18 @@ class MMB_Backup extends MMB_Core
 
         $remove  = array(
             trim(basename(WP_CONTENT_DIR))."/managewp/backups",
+            trim(basename(WP_CONTENT_DIR))."/infinitewp/backups",
             trim(basename(WP_CONTENT_DIR))."/".md5('mmb-worker')."/mwp_backups",
+            trim(basename(WP_CONTENT_DIR))."/backupwordpress",
+            trim(basename(WP_CONTENT_DIR))."/contents/cache",
+            trim(basename(WP_CONTENT_DIR))."/content/cache",
             trim(basename(WP_CONTENT_DIR))."/cache",
+            trim(basename(WP_CONTENT_DIR))."/old-cache",
+            trim(basename(WP_CONTENT_DIR))."/uploads/backupbuddy_backups",
             trim(basename(WP_CONTENT_DIR))."/w3tc",
+            "dbcache",
+            "pgcache",
+            "objectcache",
         );
         $exclude = array_merge($exclude, $remove);
 
@@ -1352,7 +1361,7 @@ class MMB_Backup extends MMB_Core
                 ));
             }
 
-            if (class_exists('PDO')) {
+            if (class_exists('PDO') && extension_loaded('pdo_mysql')) {
                 mwp_logger()->info('Using PHP dumper v2');
                 try {
                     $config = array(

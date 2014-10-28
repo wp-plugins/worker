@@ -162,19 +162,8 @@ class MMB_Installer extends MMB_Core
         return $install_info;
     }
 
-    private function check_expiration($plugin)
+    private function ithemes_updater_compatiblity()
     {
-        // Check if download link for plugin expired
-        $parsedUrl = parse_url($plugin['package']);
-        $queryString = isset($parsedUrl['query']) ? $parsedUrl['query'] : '';
-        parse_str($queryString, $queryParams);
-        $queryParams = array_change_key_case($queryParams, CASE_LOWER);
-
-        // Check if the update link expired for (iThemes) plugin download
-        if (empty($queryParams['expires']) || intval($queryParams['expires']) > time()) {
-            return;
-        }
-
         // Check for the iThemes updater class
         if (empty($GLOBALS['ithemes_updater_path']) ||
             !file_exists($GLOBALS['ithemes_updater_path'].'/settings.php')) {
@@ -224,8 +213,8 @@ class MMB_Installer extends MMB_Core
 
         if (!empty($upgrade_plugins)) {
             $plugin_files = array();
+            $this->ithemes_updater_compatiblity();
             foreach ($upgrade_plugins as $plugin) {
-                $this->check_expiration($plugin);
                 if (isset($plugin['file'])) {
                     $plugin_files[$plugin['file']] = $plugin['old_version'];
                 } else {
@@ -235,7 +224,7 @@ class MMB_Installer extends MMB_Core
             if (!empty($plugin_files)) {
                 $upgrades['plugins'] = $this->upgrade_plugins($plugin_files);
             }
-
+            $this->ithemes_updater_compatiblity();
         }
 
         if (!empty($upgrade_themes)) {
