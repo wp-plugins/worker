@@ -305,7 +305,7 @@ For detailed instructions, you can read our [User Guide](http://managewp.com/use
 
 == Screenshots ==
 
-1. ManageWP dashboard with available upgrades, site statistics and management functions
+1. Screenshot-1.png ManageWP dashboard with available upgrades, site statistics and management functions
 
 
 == Upgrade Notice ==
