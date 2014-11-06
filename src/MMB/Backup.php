@@ -2960,7 +2960,7 @@ class MMB_Backup extends MMB_Core
     {
         mwp_logger()->info('Acquiring Dropbox token to start uploading the backup file');
         try {
-            $dropbox = mwp_dropbox_oauth1_factory($args['consumer_key'], $args['consumer_secret'], $args['oauth_token'], $args['oauth_token_secret']);
+            $dropbox = mwp_dropbox_oauth_factory($args['consumer_key'], $args['consumer_secret'], $args['oauth_token'], $args['oauth_token_secret']);
         } catch (Exception $e) {
             mwp_logger()->error('Error while acquiring Dropbox token', array(
                 'exception' => $e,
@@ -3033,7 +3033,7 @@ class MMB_Backup extends MMB_Core
     {
         mwp_logger()->info('Acquiring Dropbox token to remove a backup file');
         try {
-            $dropbox = mwp_dropbox_oauth1_factory($args['consumer_key'], $args['consumer_secret'], $args['oauth_token'], $args['oauth_token_secret']);
+            $dropbox = mwp_dropbox_oauth_factory($args['consumer_key'], $args['consumer_secret'], $args['oauth_token'], $args['oauth_token_secret']);
         } catch (Exception $e) {
             mwp_logger()->error('Error while acquiring Dropbox token', array(
                 'exception' => $e,
@@ -3078,7 +3078,7 @@ class MMB_Backup extends MMB_Core
     {
         mwp_logger()->info('Acquiring Dropbox token to download the backup file');
         try {
-            $dropbox = mwp_dropbox_oauth1_factory($args['consumer_key'], $args['consumer_secret'], $args['oauth_token'], $args['oauth_token_secret']);
+            $dropbox = mwp_dropbox_oauth_factory($args['consumer_key'], $args['consumer_secret'], $args['oauth_token'], $args['oauth_token_secret']);
         } catch (Exception $e) {
             mwp_logger()->error('Error while acquiring Dropbox token', array(
                 'exception' => $e,

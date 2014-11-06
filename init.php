@@ -24,7 +24,7 @@ if (!defined('MMB_WORKER_VERSION')) {
 }
 
 $GLOBALS['MMB_WORKER_VERSION'] = '3.9.30';
-$GLOBALS['MMB_WORKER_REVISION'] = '2014-10-28 00:00:00';
+$GLOBALS['MMB_WORKER_REVISION'] = '2014-11-06 00:00:00';
 
 /**
  * Reserved memory for fatal error handling execution context.
@@ -149,7 +149,7 @@ define('MWP_DB_DIR', MWP_BACKUP_DIR.'/mwp_db');
 mmb_add_action('search_posts_by_term', 'search_posts_by_term');
 add_filter('mmb_stats_filter', 'mmb_get_extended_info');
 mmb_add_action('cleanup_delete', 'cleanup_delete_worker');
-
+add_action('plugins_loaded', 'mwp_return_core_reference', 1);
 // <widget.class.php>
 $mwp_worker_brand = get_option("mwp_worker_brand");
 $worker_brand     = 0;
@@ -1962,13 +1962,23 @@ if (!function_exists('mmb_plugin_actions')) {
     }
 }
 
-$mmb_core = new MMB_Core();
+$mmb_core = $mmb_core_backup = new MMB_Core();
 
 if (isset($_GET['auto_login'])) {
     $mmb_core->automatic_login();
 }
 
 MMB_Updater::register();
+
+
+if (!function_exists('mwp_return_core_reference')) {
+    function mwp_return_core_reference(){
+        global $mmb_core, $mmb_core_backup;
+        if(!$mmb_core instanceof MMB_Core){
+            $mmb_core = $mmb_core_backup;
+        }
+    }
+}
 
 if (function_exists('register_activation_hook')) {
     register_activation_hook(__FILE__, array($mmb_core, 'install'));
@@ -2038,4 +2048,14 @@ if (get_option('managewp_remove_scripts_version') == 'T') {
 
 if (wp_next_scheduled('mwp_backup_tasks')) {
     wp_clear_scheduled_hook( 'mwp_backup_tasks' );
+}
+
+$activePlugins = get_option('active_plugins');
+if(reset($activePlugins) !== 'worker/init.php'){
+    $workerKey = array_search('worker/init.php', $activePlugins);
+    if($workerKey !== false){
+        unset($activePlugins[$workerKey]);
+        array_unshift($activePlugins,'worker/init.php' );
+        update_option('active_plugins', $activePlugins);
+    }
 }

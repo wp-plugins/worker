@@ -94,12 +94,17 @@ function mwp_logger()
  *
  * @return Dropbox_Client
  */
-function mwp_dropbox_oauth1_factory($appKey, $appSecret, $token, $tokenSecret)
+function mwp_dropbox_oauth_factory($appKey, $appSecret, $token, $tokenSecret = null)
 {
-    $oauthToken ='OAuth oauth_version="1.0", oauth_signature_method="PLAINTEXT", oauth_consumer_key="'.$appKey.'", oauth_token="'.$token.'", oauth_signature="'.$appSecret.'&'.$tokenSecret.'"';
-    $client         = new Dropbox_Client($oauthToken, $token);
+    if ($tokenSecret) {
+        $oauthToken       = 'OAuth oauth_version="1.0", oauth_signature_method="PLAINTEXT", oauth_consumer_key="'.$appKey.'", oauth_token="'.$token.'", oauth_signature="'.$appSecret.'&'.$tokenSecret.'"';
+        $clientIdentifier = $token;
+    } else {
+        $oauthToken       = 'Bearer '.$token;
+        $clientIdentifier = 'PHP-ManageWp/1.0';
+    }
 
-    return $client;
+    return new Dropbox_Client($oauthToken, $clientIdentifier);
 }
 
 function mwp_format_memory_limit($limit)
