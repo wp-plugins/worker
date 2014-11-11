@@ -419,6 +419,7 @@ class MMB_Stats extends MMB_Core
         $stats['network_install']       = $this->network_admin_install;
         $stats['cookies']               = $this->get_stat_cookies();
         $stats['admin_usernames']       = $this->getUserList();
+        $stats['site_title']            = get_bloginfo('name');
 
         if (!function_exists('get_filesystem_method')) {
             include_once(ABSPATH.'wp-admin/includes/file.php');
@@ -670,11 +671,16 @@ class MMB_Stats extends MMB_Core
         global $mmb_core;
         $uptime_robot = array(
             "74.86.158.106",
-            "74.86.179.130",
-            "74.86.179.131",
+            "74.86.158.107",
+            "74.86.158.109",
+            "74.86.158.110",
+            "74.86.158.108",
             "46.137.190.132",
             "122.248.234.23",
-            "74.86.158.107"
+            "188.226.183.141",
+            "178.62.52.237",
+            "54.79.28.129",
+            "54.94.142.218"
         ); //don't let uptime robot to affect visit count
 
         if ($fix_count || (!is_admin() && !MMB_Stats::is_bot() && !isset($_GET['doing_wp_cron']) && !in_array($_SERVER['REMOTE_ADDR'], $uptime_robot))) {
@@ -747,48 +753,81 @@ class MMB_Stats extends MMB_Core
         $agent = isset($_SERVER['HTTP_USER_AGENT']) ? $_SERVER['HTTP_USER_AGENT'] : '' ;
 
         if ($agent == '') {
-            return false;
+            return true;
         }
 
         $bot_list = array(
-            "Teoma",
-            "alexa",
-            "froogle",
-            "Gigabot",
-            "inktomi",
-            "looksmart",
-            "URL_Spider_SQL",
-            "Firefly",
-            "NationalDirectory",
-            "Ask Jeeves",
-            "TECNOSEEK",
-            "InfoSeek",
-            "WebFindBot",
-            "girafabot",
-            "crawler",
-            "www.galaxy.com",
-            "Googlebot",
-            "Scooter",
-            "Slurp",
-            "msnbot",
-            "appie",
-            "FAST",
-            "WebBug",
-            "Spade",
-            "ZyBorg",
-            "rabaz",
-            "Baiduspider",
-            "Feedfetcher-Google",
-            "TechnoratiSnoop",
-            "Rankivabot",
-            "Mediapartners-Google",
-            "Sogou web spider",
-            "WebAlta Crawler",
-            "aolserver"
+            'bot',
+            'crawl',
+            'feed',
+            'java/',
+            'spider',
+            'curl',
+            'libwww',
+            'alexa',
+            'altavista',
+            'aolserver',
+            'appie',
+            'Ask Jeeves',
+            'baidu',
+            'Bing',
+            'borg',
+            'BrowserMob',
+            'ccooter',
+            'dataparksearch',
+            'Download Demon',
+            'echoping',
+            'FAST',
+            'findlinks',
+            'Firefly',
+            'froogle',
+            'GomezA',
+            'Google',
+            'grub-client',
+            'htdig',
+            'http%20client',
+            'HttpMonitor',
+            'ia_archiver',
+            'InfoSeek',
+            'inktomi',
+            'larbin',
+            'looksmart',
+            'Microsoft URL Control',
+            'Minimo',
+            'mogimogi',
+            'NationalDirectory',
+            'netcraftsurvey',
+            'nuhk',
+            'oegp',
+            'panopta',
+            'rabaz',
+            'Read%20Later',
+            'Scooter',
+            'scrubby',
+            'SearchExpress',
+            'searchsight',
+            'semanticdiscovery',
+            'Slurp',
+            'snappy',
+            'Spade',
+            'TechnoratiSnoop',
+            'TECNOSEEK',
+            'teoma',
+            'twiceler',
+            'URL2PNG',
+            'vortex',
+            'WebBug',
+            'www.galaxy.com',
+            'yahoo',
+            'yandex',
+            'zao',
+            'zeal',
+            'ZooShot',
+            'ZyBorg',
         );
 
         foreach ($bot_list as $bot) {
-            if (strpos($agent, $bot) !== false) {
+            if (stripos($agent, $bot) !== false) {
                 return true;
             }
         }

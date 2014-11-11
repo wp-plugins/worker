@@ -284,6 +284,8 @@ if (!function_exists('mmb_authenticate')) {
 
         if (isset($user)) {
             wp_set_current_user($user->ID);
+            // Compatibility with All In One Security
+            update_user_meta($user->ID, 'last_login_time', current_time('mysql'));
         }
 
         if(defined('ALTERNATE_WP_CRON') && !defined('DOING_AJAX') && ALTERNATE_WP_CRON === true ){
@@ -1161,6 +1163,8 @@ function mmb_run_forked_action()
 
     if (isset($user) && isset($user->ID)) {
         wp_set_current_user($user->ID);
+        // Compatibility with All In One Security
+        update_user_meta($user->ID, 'last_login_time', current_time('mysql'));
     }
 
     if (!wp_verify_nonce($_POST['mmb_fork_nonce'], 'mmb-fork-nonce')) {

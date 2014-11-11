@@ -791,6 +791,8 @@ EOF;
                 $siteurl = function_exists('get_site_option') ? get_site_option('siteurl') : get_option('siteurl');
                 $user    = $this->mmb_get_user_info($username);
                 wp_set_current_user($user->ID);
+                // Compatibility with All In One Security
+                update_user_meta($user->ID, 'last_login_time', current_time('mysql'));
 
                 if (!defined('COOKIEHASH') || (isset($this->mmb_multisite) && $this->mmb_multisite)) {
                     wp_cookie_constants();
