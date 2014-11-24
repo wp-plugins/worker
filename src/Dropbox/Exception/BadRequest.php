@@ -9,7 +9,7 @@ final class Dropbox_Exception_BadRequest extends Dropbox_Exception_ProtocolError
     /**
      * @internal
      */
-    function __construct($message = "")
+    public function __construct($message = "")
     {
         parent::__construct($message);
     }

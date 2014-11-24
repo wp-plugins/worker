@@ -54,4 +54,4 @@ class MWP_Security_HashNonce implements MWP_Security_NonceInterface
 
         return true;
     }
-} 
+}

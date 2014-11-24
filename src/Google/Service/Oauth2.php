@@ -56,56 +56,56 @@ class Google_Service_Oauth2 extends Google_ApiService
         $this->version     = 'v2';
         $this->serviceName = 'oauth2';
 
-        $this->userinfo       = new Google_Service_Oauth2_Userinfo_Resource(
-          $this,
-          $this->serviceName,
-          'userinfo',
-          array(
-            'methods' => array(
-              'get' => array(
-                'path'       => 'oauth2/v2/userinfo',
-                'httpMethod' => 'GET',
-                'parameters' => array(),
-              ),
+        $this->userinfo = new Google_Service_Oauth2_Userinfo_Resource(
+            $this,
+            $this->serviceName,
+            'userinfo',
+            array(
+                'methods' => array(
+                    'get' => array(
+                        'path'       => 'oauth2/v2/userinfo',
+                        'httpMethod' => 'GET',
+                        'parameters' => array(),
+                    ),
+                ),
             )
-          )
         );
         $this->userinfo_v2_me = new Google_Service_Oauth2_UserinfoV2Me_Resource(
-          $this,
-          $this->serviceName,
-          'me',
-          array(
-            'methods' => array(
-              'get' => array(
-                'path'       => 'userinfo/v2/me',
-                'httpMethod' => 'GET',
-                'parameters' => array(),
-              ),
-            )
-          )
-        );
-        $this->base_methods   = new Google_Service_Resource(
-          $this,
-          $this->serviceName,
-          '',
-          array(
-            'methods' => array(
-              'tokeninfo' => array(
-                'path'       => 'oauth2/v2/tokeninfo',
-                'httpMethod' => 'POST',
-                'parameters' => array(
-                  'access_token' => array(
-                    'location' => 'query',
-                    'type'     => 'string',
-                  ),
-                  'id_token'     => array(
-                    'location' => 'query',
-                    'type'     => 'string',
-                  ),
+            $this,
+            $this->serviceName,
+            'me',
+            array(
+                'methods' => array(
+                    'get' => array(
+                        'path'       => 'userinfo/v2/me',
+                        'httpMethod' => 'GET',
+                        'parameters' => array(),
+                    ),
                 ),
-              ),
             )
-          )
+        );
+        $this->base_methods = new Google_Service_Resource(
+            $this,
+            $this->serviceName,
+            '',
+            array(
+                'methods' => array(
+                    'tokeninfo' => array(
+                        'path'       => 'oauth2/v2/tokeninfo',
+                        'httpMethod' => 'POST',
+                        'parameters' => array(
+                            'access_token' => array(
+                                'location' => 'query',
+                                'type'     => 'string',
+                            ),
+                            'id_token'     => array(
+                                'location' => 'query',
+                                'type'     => 'string',
+                            ),
+                        ),
+                    ),
+                ),
+            )
         );
     }
 
@@ -129,7 +129,6 @@ class Google_Service_Oauth2 extends Google_ApiService
     }
 }
 
-
 /**
  * The "userinfo" collection of methods.
  * Typical usage is:
@@ -140,7 +139,6 @@ class Google_Service_Oauth2 extends Google_ApiService
  */
 class Google_Service_Oauth2_Userinfo_Resource extends Google_Service_Resource
 {
-
     /**
      * (userinfo.get)
      *
@@ -167,7 +165,6 @@ class Google_Service_Oauth2_Userinfo_Resource extends Google_Service_Resource
  */
 class Google_Service_Oauth2_UserinfoV2_Resource extends Google_Service_Resource
 {
-
 }
 
 /**
@@ -180,7 +177,6 @@ class Google_Service_Oauth2_UserinfoV2_Resource extends Google_Service_Resource
  */
 class Google_Service_Oauth2_UserinfoV2Me_Resource extends Google_Service_Resource
 {
-
     /**
      * (me.get)
      *
@@ -196,7 +192,6 @@ class Google_Service_Oauth2_UserinfoV2Me_Resource extends Google_Service_Resourc
         return $this->call('get', array($params), "Google_Service_Oauth2_Userinfoplus");
     }
 }
-
 
 class Google_Service_Oauth2_Tokeninfo extends Google_ApiModel
 {

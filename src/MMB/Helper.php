@@ -17,7 +17,7 @@ class MMB_Helper
      *
      * @param mixed $mixed
      */
-    function _log($mixed)
+    public function _log($mixed)
     {
         if ((defined('MWP_SHOW_LOG') && MWP_SHOW_LOG == true) || get_option('mwp_debug_enable')) {
             if (is_array($mixed)) {
@@ -44,7 +44,7 @@ class MMB_Helper
     /**
      * Initializes the file system
      */
-    function init_filesystem()
+    public function init_filesystem()
     {
         global $wp_filesystem;
 
@@ -59,9 +59,8 @@ class MMB_Helper
         return true;
     }
 
-    function mmb_get_user_info($user_info = false, $info = 'login')
+    public function mmb_get_user_info($user_info = false, $info = 'login')
     {
-
         if ($user_info === false) {
             return false;
         }
@@ -76,9 +75,8 @@ class MMB_Helper
     /**
      * Call action item filters
      */
-    function mmb_parse_action_params($key = '', $params = null, $call_object = null)
+    public function mmb_parse_action_params($key = '', $params = null, $call_object = null)
     {
-
         global $_mmb_item_filter;
         $call_object = $call_object !== null ? $call_object : $this;
         $return      = array();
@@ -104,9 +102,8 @@ class MMB_Helper
     /**
      * Check if function exists or not on `suhosin` black list
      */
-    function mmb_function_exists($function_callback)
+    public function mmb_function_exists($function_callback)
     {
-
         if (!function_exists($function_callback)) {
             return false;
         }
@@ -131,7 +128,7 @@ class MMB_Helper
         return true;
     }
 
-    function mmb_get_transient($option_name)
+    public function mmb_get_transient($option_name)
     {
         if (trim($option_name) == '') {
             return false;
@@ -157,7 +154,7 @@ class MMB_Helper
         }
     }
 
-    function mmb_delete_transient($option_name)
+    public function mmb_delete_transient($option_name)
     {
         if (trim($option_name) == '') {
             return;
@@ -176,7 +173,7 @@ class MMB_Helper
         }
     }
 
-    function mmb_get_sitemeta_transient($option_name)
+    public function mmb_get_sitemeta_transient($option_name)
     {
         /** @var wpdb $wpdb */
         global $wpdb;
@@ -188,7 +185,7 @@ class MMB_Helper
         return $result;
     }
 
-    function mmb_set_sitemeta_transient($option_name, $option_value)
+    public function mmb_set_sitemeta_transient($option_name, $option_value)
     {
         /** @var wpdb $wpdb */
         global $wpdb;
@@ -198,11 +195,11 @@ class MMB_Helper
             $result = $wpdb->update(
                 $wpdb->sitemeta,
                 array(
-                    'meta_value' => maybe_serialize($option_value)
+                    'meta_value' => maybe_serialize($option_value),
                 ),
                 array(
                     'meta_key' => $option_name,
-                    'site_id'  => $this->mmb_multisite
+                    'site_id'  => $this->mmb_multisite,
                 )
             );
         } else {
@@ -211,7 +208,7 @@ class MMB_Helper
                 array(
                     'meta_key'   => $option_name,
                     'meta_value' => maybe_serialize($option_value),
-                    'site_id'    => $this->mmb_multisite
+                    'site_id'    => $this->mmb_multisite,
                 )
             );
         }
@@ -219,7 +216,7 @@ class MMB_Helper
         return $result;
     }
 
-    function delete_temp_dir($directory)
+    public function delete_temp_dir($directory)
     {
         if (substr($directory, -1) == "/") {
             $directory = substr($directory, 0, -1);
@@ -249,7 +246,7 @@ class MMB_Helper
         }
     }
 
-    function set_worker_message_id($message_id = false)
+    public function set_worker_message_id($message_id = false)
     {
         if ($message_id) {
             add_option('_action_message_id', $message_id) or update_option('_action_message_id', $message_id);
@@ -260,12 +257,12 @@ class MMB_Helper
         return false;
     }
 
-    function get_worker_message_id()
+    public function get_worker_message_id()
     {
         return (int) get_option('_action_message_id');
     }
 
-    function set_master_public_key($public_key = false)
+    public function set_master_public_key($public_key = false)
     {
         if ($public_key && !get_option('_worker_public_key')) {
             add_option('_worker_public_key', base64_encode($public_key));
@@ -276,7 +273,7 @@ class MMB_Helper
         return false;
     }
 
-    function get_master_public_key()
+    public function get_master_public_key()
     {
         if (!get_option('_worker_public_key')) {
             return false;
@@ -285,8 +282,7 @@ class MMB_Helper
         return base64_decode(get_option('_worker_public_key'));
     }
 
-
-    function get_random_signature()
+    public function get_random_signature()
     {
         if (!get_option('_worker_nossl_key')) {
             return false;
@@ -295,7 +291,7 @@ class MMB_Helper
         return base64_decode(get_option('_worker_nossl_key'));
     }
 
-    function set_random_signature($random_key = false)
+    public function set_random_signature($random_key = false)
     {
         if ($random_key && !get_option('_worker_nossl_key')) {
             add_option('_worker_nossl_key', base64_encode($random_key));
@@ -306,26 +302,25 @@ class MMB_Helper
         return false;
     }
 
-
-    function authenticate_message($data = false, $signature = false, $message_id = false)
+    public function authenticate_message($data = false, $signature = false, $message_id = false)
     {
         if (!$data && !$signature) {
             return array(
-                'error' => 'Authentication failed.'
+                'error' => 'Authentication failed.',
             );
         }
         $nonce = new MWP_Security_HashNonce();
         $nonce->setValue($message_id);
         if (!$nonce->verify()) {
             return array(
-                'error' => 'Invalid nonce used. Please contact support'
+                'error' => 'Invalid nonce used. Please contact support',
             );
         }
 
         $pl_key = $this->get_master_public_key();
         if (!$pl_key) {
             return array(
-                'error' => 'Authentication failed. Deactivate and activate the ManageWP Worker plugin on this site, then re-add it to your ManageWP account.'
+                'error' => 'Authentication failed. Deactivate and activate the ManageWP Worker plugin on this site, then re-add it to your ManageWP account.',
             );
         }
 
@@ -338,11 +333,11 @@ class MMB_Helper
             } else {
                 if ($verify == 0) {
                     return array(
-                        'error' => 'Invalid message signature. Deactivate and activate the ManageWP Worker plugin on this site, then re-add it to your ManageWP account.'
+                        'error' => 'Invalid message signature. Deactivate and activate the ManageWP Worker plugin on this site, then re-add it to your ManageWP account.',
                     );
                 } else {
                     return array(
-                        'error' => 'Command not successful! Please try again.'
+                        'error' => 'Command not successful! Please try again.',
                     );
                 }
             }
@@ -355,20 +350,19 @@ class MMB_Helper
                 }
 
                 return array(
-                    'error' => 'Invalid message signature. Deactivate and activate the ManageWP Worker plugin on this site, then re-add it to your ManageWP account.'
+                    'error' => 'Invalid message signature. Deactivate and activate the ManageWP Worker plugin on this site, then re-add it to your ManageWP account.',
                 );
             } // no rand key - deleted in get_stat maybe
             else {
                 return array(
-                    'error' => 'Invalid message signature. Deactivate and activate the ManageWP Worker plugin on this site, then re-add it to your ManageWP account.'
+                    'error' => 'Invalid message signature. Deactivate and activate the ManageWP Worker plugin on this site, then re-add it to your ManageWP account.',
                 );
             }
         }
     }
 
-    function get_secure_hash()
+    public function get_secure_hash()
     {
-
         $pl_key = $this->get_master_public_key();
         if (empty($pl_key) || $this->get_random_signature() !== false) {
             $pl_key = $this->get_random_signature();
@@ -381,7 +375,7 @@ class MMB_Helper
         return false;
     }
 
-    function _secure_data($data = false)
+    public function _secure_data($data = false)
     {
         if ($data == false) {
             return false;
@@ -412,10 +406,9 @@ class MMB_Helper
         }
 
         return false;
-
     }
 
-    function encrypt_data($data = false)
+    public function encrypt_data($data = false)
     {
         if (empty($data)) {
             return $data;
@@ -444,10 +437,9 @@ class MMB_Helper
         }
 
         return $crypted;
-
     }
 
-    function check_if_user_exists($username = false)
+    public function check_if_user_exists($username = false)
     {
         global $wpdb;
 
@@ -477,27 +469,26 @@ class MMB_Helper
         return false;
     }
 
-    function refresh_updates()
+    public function refresh_updates()
     {
         if (rand(1, 3) == '2') {
-            require_once(ABSPATH.WPINC.'/update.php');
+            require_once ABSPATH.WPINC.'/update.php';
             wp_update_plugins();
             wp_update_themes();
             wp_version_check();
         }
     }
 
-    function remove_http($url = '')
+    public function remove_http($url = '')
     {
-        if ($url == 'http://' OR $url == 'https://') {
+        if ($url == 'http://' or $url == 'https://') {
             return $url;
         }
 
         return preg_replace('/^(http|https)\:\/\/(www.)?/i', '', $url);
-
     }
 
-    function mmb_get_error($error_object)
+    public function mmb_get_error($error_object)
     {
         if (!is_wp_error($error_object)) {
             return $error_object != '' ? $error_object : '';
@@ -517,9 +508,8 @@ class MMB_Helper
         }
     }
 
-    function is_server_writable()
+    public function is_server_writable()
     {
-
         if ((!defined('FTP_HOST') || !defined('FTP_USER')) && (get_filesystem_method(array(), false) != 'direct')) {
             return false;
         } else {
@@ -527,7 +517,7 @@ class MMB_Helper
         }
     }
 
-    function return_bytes($val)
+    public function return_bytes($val)
     {
         $val  = trim($val);
         $last = strtolower($val[strlen($val) - 1]);
@@ -543,18 +533,16 @@ class MMB_Helper
 
         return $val;
     }
-    
-    function w3tc_flush($flushAll = false)
+
+    public function w3tc_flush($flushAll = false)
     {
         if ($flushAll) {
             if (function_exists('w3tc_pgcache_flush')) {
                 w3tc_pgcache_flush();
-
             }
 
             if (function_exists('w3tc_dbcache_flush')) {
                 w3tc_dbcache_flush();
-
             }
         }
 
@@ -566,10 +554,10 @@ class MMB_Helper
     protected function notifyMyself($functionName, $args = array())
     {
         global $current_user;
-        $nonce = wp_create_nonce("mmb-fork-nonce");
-        $cron_url      = site_url('index.php');
-        $public_key    = get_option('_worker_public_key');
-        $args          = array(
+        $nonce      = wp_create_nonce("mmb-fork-nonce");
+        $cron_url   = site_url('index.php');
+        $public_key = get_option('_worker_public_key');
+        $args       = array(
             'body'      => array(
                 'mwp_forked_action' => $functionName,
                 'args'              => json_encode($args),
@@ -579,7 +567,7 @@ class MMB_Helper
             ),
             'timeout'   => 0.01,
             'blocking'  => false,
-            'sslverify' => apply_filters('https_local_ssl_verify', true)
+            'sslverify' => apply_filters('https_local_ssl_verify', true),
         );
         wp_remote_post($cron_url, $args);
     }

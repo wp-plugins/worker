@@ -15,7 +15,6 @@
  * limitations under the License.
  */
 
-
 /**
  * A blank storage class, for cases where caching is not
  * required.
@@ -24,7 +23,6 @@ class Google_Cache_Null extends Google_Cache_Abstract
 {
     public function __construct(Google_ApiClient $client)
     {
-
     }
 
     /**
@@ -45,6 +43,7 @@ class Google_Cache_Null extends Google_Cache_Abstract
 
     /**
      * @inheritDoc
+     *
      * @param String $key
      */
     public function delete($key)

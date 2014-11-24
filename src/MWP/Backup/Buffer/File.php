@@ -58,7 +58,6 @@ class MWP_Backup_Buffer_File
 
     public function flushBuffer()
     {
-
         fwrite($this->filePointer, $this->buffer);
         $this->buffer = '';
 
@@ -78,11 +77,8 @@ class MWP_Backup_Buffer_File
      */
     public function setBufferLimit($bufferLimit)
     {
-
         $this->bufferLimit = (int) $bufferLimit;
 
         return $this;
     }
-
-
 }

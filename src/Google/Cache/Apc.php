@@ -15,7 +15,6 @@
  * limitations under the License.
  */
 
-
 /**
  * A persistent storage class based on the APC cache, which is not
  * really very persistent, as soon as you restart your web server

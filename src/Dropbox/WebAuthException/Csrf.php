@@ -13,7 +13,7 @@ class Dropbox_WebAuthException_Csrf extends Dropbox_Exception
      *
      * @internal
      */
-    function __construct($message)
+    public function __construct($message)
     {
         parent::__construct($message);
     }

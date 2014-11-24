@@ -20,8 +20,8 @@
  */
 abstract class Google_IO_Abstract
 {
-    const UNKNOWN_CODE = 0;
-    const FORM_URLENCODED = 'application/x-www-form-urlencoded';
+    const UNKNOWN_CODE           = 0;
+    const FORM_URLENCODED        = 'application/x-www-form-urlencoded';
     const CONNECTION_ESTABLISHED = "HTTP/1.0 200 Connection established\r\n\r\n";
 
     private static $ENTITY_HTTP_METHODS = array("POST" => null, "PUT" => null);
@@ -86,7 +86,7 @@ abstract class Google_IO_Abstract
      * @param Google_Http_Request $request
      *
      * @return bool Returns true if the insertion was successful.
-     * Otherwise, return false.
+     *              Otherwise, return false.
      */
     public function setCachedRequest(Google_Http_Request $request)
     {
@@ -105,8 +105,8 @@ abstract class Google_IO_Abstract
      *
      * @param Google_HttpRequest $request the http request to be executed
      *
-     * @return Google_HttpRequest http request with the response http code,
-     * response headers and response body filled in
+     * @return Google_HttpRequest  http request with the response http code,
+     *                             response headers and response body filled in
      * @throws Google_IO_Exception on curl or IO error
      */
     public function makeRequest(Google_Http_Request $request)
@@ -152,7 +152,7 @@ abstract class Google_IO_Abstract
      * @param Google_Http_Request $request
      *
      * @return Google_Http_Request|bool Returns the cached object or
-     * false if the operation was unsuccessful.
+     *                                  false if the operation was unsuccessful.
      */
     public function getCachedRequest(Google_Http_Request $request)
     {
@@ -310,7 +310,7 @@ abstract class Google_IO_Abstract
         foreach ($responseHeaderLines as $headerLine) {
             if ($headerLine && strpos($headerLine, ':') !== false) {
                 list($header, $value) = explode(': ', $headerLine, 2);
-                $header = strtolower($header);
+                $header               = strtolower($header);
                 if (isset($responseHeaders[$header])) {
                     $headers[$header] .= "\n".$value;
                 } else {

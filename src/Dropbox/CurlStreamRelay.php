@@ -9,22 +9,22 @@
  */
 class Dropbox_CurlStreamRelay
 {
-    var $outStream;
-    var $errorData;
-    var $isError;
+    public $outStream;
+    public $errorData;
+    public $isError;
 
-    function __construct($ch, $outStream)
+    public function __construct($ch, $outStream)
     {
         $this->outStream = $outStream;
         $this->errorData = array();
-        $isError = null;
+        $isError         = null;
         curl_setopt($ch, CURLOPT_WRITEFUNCTION, array($this, 'writeData'));
     }
 
-    function writeData($ch, $data)
+    public function writeData($ch, $data)
     {
         if ($this->isError === null) {
-            $statusCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            $statusCode    = curl_getinfo($ch, CURLINFO_HTTP_CODE);
             $this->isError = ($statusCode !== 200);
         }
 
@@ -37,9 +37,8 @@ class Dropbox_CurlStreamRelay
         return strlen($data);
     }
 
-    function getErrorBody()
+    public function getErrorBody()
     {
         return implode($this->errorData);
     }
 }
-

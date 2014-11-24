@@ -40,7 +40,7 @@ abstract class Monolog_Handler_AbstractProcessingHandler extends Monolog_Handler
     /**
      * Writes the record down to the log of the implementing handler
      *
-     * @param  array $record
+     * @param array $record
      *
      * @return void
      */
@@ -49,7 +49,7 @@ abstract class Monolog_Handler_AbstractProcessingHandler extends Monolog_Handler
     /**
      * Processes a record.
      *
-     * @param  array $record
+     * @param array $record
      *
      * @return array
      */

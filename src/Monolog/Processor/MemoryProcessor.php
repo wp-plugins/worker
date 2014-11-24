@@ -29,7 +29,7 @@ abstract class Monolog_Processor_MemoryProcessor implements Monolog_Processor_Pr
     /**
      * Formats bytes into a human readable string
      *
-     * @param  int $bytes
+     * @param int $bytes
      *
      * @return string
      */

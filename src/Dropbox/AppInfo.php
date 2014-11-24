@@ -11,7 +11,10 @@ final class Dropbox_AppInfo
      *
      * @return string
      */
-    function getKey() { return $this->key; }
+    public function getKey()
+    {
+        return $this->key;
+    }
 
     /** @var string */
     private $key;
@@ -26,7 +29,10 @@ final class Dropbox_AppInfo
      *
      * @return string
      */
-    function getSecret() { return $this->secret; }
+    public function getSecret()
+    {
+        return $this->secret;
+    }
 
     /** @var string */
     private $secret;
@@ -39,7 +45,10 @@ final class Dropbox_AppInfo
      *
      * @internal
      */
-    function getHost() { return $this->host; }
+    public function getHost()
+    {
+        return $this->host;
+    }
 
     /** @var Dropbox_Host */
     private $host;
@@ -48,16 +57,16 @@ final class Dropbox_AppInfo
      * Constructor.
      *
      * @param string $key
-     *    See {@link getKey()}
+     *                       See {@link getKey()}
      * @param string $secret
-     *    See {@link getSecret()}
+     *                       See {@link getSecret()}
      */
-    function __construct($key, $secret)
+    public function __construct($key, $secret)
     {
         self::checkKeyArg($key);
         self::checkSecretArg($secret);
 
-        $this->key = $key;
+        $this->key    = $key;
         $this->secret = $secret;
 
         // The $host parameter is sort of internal.  We don't include it in the param list because
@@ -80,15 +89,16 @@ final class Dropbox_AppInfo
      * for details about what this file should look like.
      *
      * @param string $path
-     *    Path to a JSON file
+     *                     Path to a JSON file
      *
      * @return Dropbox_AppInfo
      *
      * @throws Dropbox_AppInfoLoadException
      */
-    static function loadFromJsonFile($path)
+    public static function loadFromJsonFile($path)
     {
         list($rawJson, $appInfo) = self::loadFromJsonFileWithRaw($path);
+
         return $appInfo;
     }
 
@@ -98,24 +108,24 @@ final class Dropbox_AppInfo
      * for details about what this file should look like.
      *
      * @param string $path
-     *    Path to a JSON file
+     *                     Path to a JSON file
      *
      * @return array
-     *    A list of two items.  The first is a PHP array representation of the raw JSON, the second
-     *    is an AppInfo object that is the parsed version of the JSON.
+     *               A list of two items.  The first is a PHP array representation of the raw JSON, the second
+     *               is an AppInfo object that is the parsed version of the JSON.
      *
      * @throws Dropbox_AppInfoLoadException
      *
      * @internal
      */
-    static function loadFromJsonFileWithRaw($path)
+    public static function loadFromJsonFileWithRaw($path)
     {
         if (!file_exists($path)) {
             throw new Dropbox_AppInfoLoadException("File doesn't exist: \"$path\"");
         }
 
-        $str = file_get_contents($path);
-        $jsonArr = json_decode($str, TRUE);
+        $str     = file_get_contents($path);
+        $jsonArr = json_decode($str, true);
 
         if (is_null($jsonArr)) {
             throw new Dropbox_AppInfoLoadException("JSON parse error: \"$path\"");
@@ -136,7 +146,7 @@ final class Dropbox_AppInfo
      *
      * @throws Dropbox_AppInfoLoadException
      */
-    static function loadFromJson($jsonArr)
+    public static function loadFromJson($jsonArr)
     {
         if (!is_array($jsonArr)) {
             throw new Dropbox_AppInfoLoadException("Expecting JSON object, got something else");
@@ -154,7 +164,7 @@ final class Dropbox_AppInfo
         }
 
         // Check app_key and app_secret
-        $appKey = $jsonArr["key"];
+        $appKey    = $jsonArr["key"];
         $appSecret = $jsonArr["secret"];
 
         $tokenErr = self::getTokenPartError($appKey);
@@ -170,16 +180,15 @@ final class Dropbox_AppInfo
         // Check for the optional 'host' field
         if (!array_key_exists('host', $jsonArr)) {
             $host = null;
-        }
-        else {
+        } else {
             $baseHost = $jsonArr["host"];
             if (!is_string($baseHost)) {
                 throw new Dropbox_AppInfoLoadException("Optional field \"host\" must be a string");
             }
 
-            $api = "api-$baseHost";
+            $api     = "api-$baseHost";
             $content = "api-content-$baseHost";
-            $web = "meta-$baseHost";
+            $web     = "meta-$baseHost";
 
             $host = new Dropbox_Host($api, $content, $web);
         }
@@ -192,9 +201,11 @@ final class Dropbox_AppInfo
      *
      * @internal
      */
-    static function checkArg($argName, $argValue)
+    public static function checkArg($argName, $argValue)
     {
-        if (!($argValue instanceof self)) Dropbox_Checker::throwError($argName, $argValue, __CLASS__);
+        if (!($argValue instanceof self)) {
+            Dropbox_Checker::throwError($argName, $argValue, __CLASS__);
+        }
     }
 
     /**
@@ -203,35 +214,49 @@ final class Dropbox_AppInfo
      *
      * @internal
      */
-    static function checkArgOrNull($argName, $argValue)
+    public static function checkArgOrNull($argName, $argValue)
     {
-        if ($argValue === null) return;
-        if (!($argValue instanceof self)) Dropbox_Checker::throwError($argName, $argValue, __CLASS__);
+        if ($argValue === null) {
+            return;
+        }
+        if (!($argValue instanceof self)) {
+            Dropbox_Checker::throwError($argName, $argValue, __CLASS__);
+        }
     }
 
     /** @internal */
-    static function getTokenPartError($s)
+    public static function getTokenPartError($s)
     {
-        if ($s === null) return "can't be null";
-        if (strlen($s) === 0) return "can't be empty";
-        if (strstr($s, ' ')) return "can't contain a space";
+        if ($s === null) {
+            return "can't be null";
+        }
+        if (strlen($s) === 0) {
+            return "can't be empty";
+        }
+        if (strstr($s, ' ')) {
+            return "can't contain a space";
+        }
+
         return null;  // 'null' means "no error"
     }
 
     /** @internal */
-    static function checkKeyArg($key)
+    public static function checkKeyArg($key)
     {
         $error = self::getTokenPartError($key);
-        if ($error === null) return;
+        if ($error === null) {
+            return;
+        }
         throw new InvalidArgumentException("Bad 'key': \"$key\": $error.");
     }
 
     /** @internal */
-    static function checkSecretArg($secret)
+    public static function checkSecretArg($secret)
     {
         $error = self::getTokenPartError($secret);
-        if ($error === null) return;
+        if ($error === null) {
+            return;
+        }
         throw new InvalidArgumentException("Bad 'secret': \"$secret\": $error.");
     }
-
 }

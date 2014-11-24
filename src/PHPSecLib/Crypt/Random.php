@@ -62,6 +62,7 @@ if (!function_exists('crypt_random_string')) {
      * eg. for RSA key generation.
      *
      * @param Integer $length
+     *
      * @return String
      * @access public
      */
@@ -135,10 +136,10 @@ if (!function_exists('crypt_random_string')) {
         static $crypto = false, $v;
         if ($crypto === false) {
             // save old session data
-            $old_session_id = session_id();
-            $old_use_cookies = ini_get('session.use_cookies');
+            $old_session_id            = session_id();
+            $old_use_cookies           = ini_get('session.use_cookies');
             $old_session_cache_limiter = session_cache_limiter();
-            $_OLD_SESSION = isset($_SESSION) ? $_SESSION : false;
+            $_OLD_SESSION              = isset($_SESSION) ? $_SESSION : false;
             if ($old_session_id != '') {
                 session_write_close();
             }
@@ -149,12 +150,12 @@ if (!function_exists('crypt_random_string')) {
             session_start();
 
             $v = $seed = $_SESSION['seed'] = pack('H*', sha1(
-                serialize($_SERVER) .
-                serialize($_POST) .
-                serialize($_GET) .
-                serialize($_COOKIE) .
-                serialize($GLOBALS) .
-                serialize($_SESSION) .
+                serialize($_SERVER).
+                serialize($_POST).
+                serialize($_GET).
+                serialize($_COOKIE).
+                serialize($GLOBALS).
+                serialize($_SESSION).
                 serialize($_OLD_SESSION)
             ));
             if (!isset($_SESSION['count'])) {
@@ -171,9 +172,9 @@ if (!function_exists('crypt_random_string')) {
                 ini_set('session.use_cookies', $old_use_cookies);
                 session_cache_limiter($old_session_cache_limiter);
             } else {
-               if ($_OLD_SESSION !== false) {
-                   $_SESSION = $_OLD_SESSION;
-                   unset($_OLD_SESSION);
+                if ($_OLD_SESSION !== false) {
+                    $_SESSION = $_OLD_SESSION;
+                    unset($_OLD_SESSION);
                 } else {
                     unset($_SESSION);
                 }
@@ -187,8 +188,8 @@ if (!function_exists('crypt_random_string')) {
             // http://tools.ietf.org/html/rfc4253#section-7.2
             //
             // see the is_string($crypto) part for an example of how to expand the keys
-            $key = pack('H*', sha1($seed . 'A'));
-            $iv = pack('H*', sha1($seed . 'C'));
+            $key = pack('H*', sha1($seed.'A'));
+            $iv  = pack('H*', sha1($seed.'C'));
 
             // ciphers are used as per the nist.gov link below. also, see this link:
             //
@@ -232,6 +233,7 @@ if (!function_exists('crypt_random_string')) {
                     break;
                 default:
                     user_error('crypt_random_string requires at least one symmetric cipher be loaded');
+
                     return false;
             }
 
@@ -255,8 +257,9 @@ if (!function_exists('crypt_random_string')) {
             $i = $crypto->encrypt(microtime()); // strlen(microtime()) == 21
             $r = $crypto->encrypt($i ^ $v); // strlen($v) == 20
             $v = $crypto->encrypt($r ^ $i); // strlen($r) == 20
-            $result.= $r;
+            $result .= $r;
         }
+
         return substr($result, 0, $length);
     }
 }
@@ -269,6 +272,7 @@ if (!function_exists('phpseclib_resolve_include_path')) {
      * PHP 5.3.2) with fallback implementation for earlier PHP versions.
      *
      * @param string $filename
+     *
      * @return mixed Filename (string) on success, false otherwise.
      * @access public
      */
@@ -288,8 +292,8 @@ if (!function_exists('phpseclib_resolve_include_path')) {
             explode(PATH_SEPARATOR, get_include_path());
         foreach ($paths as $prefix) {
             // path's specified in include_path don't always end in /
-            $ds = substr($prefix, -1) == DIRECTORY_SEPARATOR ? '' : DIRECTORY_SEPARATOR;
-            $file = $prefix . $ds . $filename;
+            $ds   = substr($prefix, -1) == DIRECTORY_SEPARATOR ? '' : DIRECTORY_SEPARATOR;
+            $file = $prefix.$ds.$filename;
             if (file_exists($file)) {
                 return realpath($file);
             }
@@ -304,6 +308,7 @@ if (!function_exists('mwp_phpseclib_resolve_include_path')) {
      * We don't rely on include_path or PHAR, so support only one option.
      *
      * @param string $filename
+     *
      * @return mixed Filename (string) on success, false otherwise.
      * @access public
      */

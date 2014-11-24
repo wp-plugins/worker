@@ -4,7 +4,6 @@
  * Date: 2/18/14
  */
 
-
 /**
  * Class MWP_Configuration_Service
  * This class is service provider for configuration object.
@@ -17,7 +16,7 @@ class MWP_Configuration_Service
     /**
      * @var MWP_Configuration_Conf
      */
-    static $configuration;
+    public static $configuration;
 
     /**
      * Returns configuration instance. This is singleton
@@ -28,7 +27,7 @@ class MWP_Configuration_Service
     {
         if (!self::$configuration) {
             $configuration = get_option("mwp_worker_configuration");
-            $path = realpath(dirname(__FILE__)."/../../../worker.json");
+            $path          = realpath(dirname(__FILE__)."/../../../worker.json");
             if (empty($configuration) && file_exists($path)) {
                 $json          = file_get_contents($path);
                 $configuration = json_decode($json, true);
@@ -37,7 +36,6 @@ class MWP_Configuration_Service
 
             self::$configuration = new MWP_Configuration_Conf($configuration);
         }
-
 
         return self::$configuration;
     }
@@ -63,9 +61,8 @@ class MWP_Configuration_Service
     {
         self::$configuration = $configuration;
         $data                = $configuration->toArray();
-        if(array_key_exists("master_cron_url", $data) && !empty($data['master_cron_url'])){
+        if (array_key_exists("master_cron_url", $data) && !empty($data['master_cron_url'])) {
             update_option("mwp_worker_configuration", $data);
         }
     }
-
-} 
+}

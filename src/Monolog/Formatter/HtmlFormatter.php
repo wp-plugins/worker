@@ -42,8 +42,9 @@ class Monolog_Formatter_HtmlFormatter extends Monolog_Formatter_NormalizerFormat
     /**
      * Creates an HTML table row
      *
-     * @param  string $th Row header content
-     * @param  string $td Row standard cell content
+     * @param string $th Row header content
+     * @param string $td Row standard cell content
+     *
      * @return string
      */
     private function addRow($th, $td = ' ')
@@ -57,8 +58,9 @@ class Monolog_Formatter_HtmlFormatter extends Monolog_Formatter_NormalizerFormat
     /**
      * Create a HTML h1 tag
      *
-     * @param  string  $title Text to be in the h1
-     * @param  integer $level Error level
+     * @param string  $title Text to be in the h1
+     * @param integer $level Error level
+     *
      * @return string
      */
     private function addTitle($title, $level)
@@ -67,10 +69,12 @@ class Monolog_Formatter_HtmlFormatter extends Monolog_Formatter_NormalizerFormat
 
         return '<h1 style="background: '.$this->logLevels[$level].';color: #ffffff;padding: 5px;">'.$title.'</h1>';
     }
+
     /**
      * Formats a log record.
      *
-     * @param  array $record A record to format
+     * @param array $record A record to format
+     *
      * @return mixed The formatted record
      */
     public function format(array $record)
@@ -94,7 +98,8 @@ class Monolog_Formatter_HtmlFormatter extends Monolog_Formatter_NormalizerFormat
     /**
      * Formats a set of log records.
      *
-     * @param  array $records A set of records to format
+     * @param array $records A set of records to format
+     *
      * @return mixed The formatted set of records
      */
     public function formatBatch(array $records)

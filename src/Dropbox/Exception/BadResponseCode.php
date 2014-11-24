@@ -10,11 +10,11 @@ final class Dropbox_Exception_BadResponseCode extends Dropbox_Exception_BadRespo
 
     /**
      * @param string $message
-     * @param int $statusCode
+     * @param int    $statusCode
      *
      * @internal
      */
-    function __construct($message, $statusCode)
+    public function __construct($message, $statusCode)
     {
         parent::__construct($message);
         $this->statusCode = $statusCode;

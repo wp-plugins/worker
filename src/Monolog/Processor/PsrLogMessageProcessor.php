@@ -19,7 +19,7 @@
 class Monolog_Processor_PsrLogMessageProcessor implements Monolog_Processor_ProcessorInterface
 {
     /**
-     * @param  array $record
+     * @param array $record
      *
      * @return array
      */

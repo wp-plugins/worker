@@ -70,8 +70,8 @@ if (!class_exists('Crypt_Rijndael')) {
 
 /**#@+
  * @access public
- * @see Crypt_AES::encrypt()
- * @see Crypt_AES::decrypt()
+ * @see    Crypt_AES::encrypt()
+ * @see    Crypt_AES::decrypt()
  */
 /**
  * Encrypt / decrypt using the Counter mode.
@@ -109,7 +109,7 @@ define('CRYPT_AES_MODE_OFB', CRYPT_MODE_OFB);
 
 /**#@+
  * @access private
- * @see Crypt_Base::Crypt_Base()
+ * @see    Crypt_Base::Crypt_Base()
  */
 /**
  * Toggles the internal implementation
@@ -133,22 +133,23 @@ class Crypt_AES extends Crypt_Rijndael
     /**
      * The namespace used by the cipher for its constants.
      *
-     * @see Crypt_Base::const_namespace
+     * @see    Crypt_Base::const_namespace
      * @var String
      * @access private
      */
-    var $const_namespace = 'AES';
+    public $const_namespace = 'AES';
 
     /**
      * Dummy function
      *
      * Since Crypt_AES extends Crypt_Rijndael, this function is, technically, available, but it doesn't do anything.
      *
-     * @see Crypt_Rijndael::setBlockLength()
+     * @see    Crypt_Rijndael::setBlockLength()
      * @access public
+     *
      * @param Integer $length
      */
-    function setBlockLength($length)
+    public function setBlockLength($length)
     {
         return;
     }

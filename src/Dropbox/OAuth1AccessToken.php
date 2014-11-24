@@ -12,7 +12,10 @@ class Dropbox_OAuth1AccessToken
      *
      * @return string
      */
-    function getKey() { return $this->key; }
+    public function getKey()
+    {
+        return $this->key;
+    }
 
     /** @var string */
     private $key;
@@ -26,7 +29,10 @@ class Dropbox_OAuth1AccessToken
      *
      * @return string
      */
-    function getSecret() { return $this->secret; }
+    public function getSecret()
+    {
+        return $this->secret;
+    }
 
     /** @var string */
     private $secret;
@@ -35,16 +41,16 @@ class Dropbox_OAuth1AccessToken
      * Constructor.
      *
      * @param string $key
-     *     {@link getKey()}
+     *                       {@link getKey()}
      * @param string $secret
-     *     {@link getSecret()}
+     *                       {@link getSecret()}
      */
-    function __construct($key, $secret)
+    public function __construct($key, $secret)
     {
         Dropbox_AppInfo::checkKeyArg($key);
         Dropbox_AppInfo::checkSecretArg($secret);
 
-        $this->key = $key;
+        $this->key    = $key;
         $this->secret = $secret;
     }
 
@@ -53,8 +59,10 @@ class Dropbox_OAuth1AccessToken
      *
      * @internal
      */
-    static function checkArg($argName, $argValue)
+    public static function checkArg($argName, $argValue)
     {
-        if (!($argValue instanceof self)) Dropbox_Checker::throwError($argName, $argValue, __CLASS__);
+        if (!($argValue instanceof self)) {
+            Dropbox_Checker::throwError($argName, $argValue, __CLASS__);
+        }
     }
 }

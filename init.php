@@ -24,7 +24,7 @@ if (!defined('MMB_WORKER_VERSION')) {
 }
 
 $GLOBALS['MMB_WORKER_VERSION'] = '3.9.30';
-$GLOBALS['MMB_WORKER_REVISION'] = '2014-11-06 00:00:00';
+$GLOBALS['MMB_WORKER_REVISION'] = '2014-11-24 00:00:00';
 
 /**
  * Reserved memory for fatal error handling execution context.
@@ -45,7 +45,7 @@ function mwp_fail_safe()
     }
 
     $activePlugins = get_option('active_plugins');
-    $workerIndex   = array_search(plugin_basename(__FILE__), $activePlugins);
+    $workerIndex = array_search(plugin_basename(__FILE__), $activePlugins);
     if ($workerIndex === false) {
         // Plugin is not yet enabled, possibly in activation context.
         return;
@@ -74,7 +74,7 @@ function mwp_fail_safe()
     update_option('active_plugins', $activePlugins);
 
     // We probably won't have access to the wp_mail function.
-    $mailFn  = function_exists('wp_mail') ? 'wp_mail' : 'mail';
+    $mailFn = function_exists('wp_mail') ? 'wp_mail' : 'mail';
     $siteUrl = get_option('siteurl');
     $title = sprintf("ManageWP Worker deactivated on %s", $siteUrl);
     $to = get_option('admin_email');
@@ -152,7 +152,7 @@ mmb_add_action('cleanup_delete', 'cleanup_delete_worker');
 add_action('plugins_loaded', 'mwp_return_core_reference', 1);
 // <widget.class.php>
 $mwp_worker_brand = get_option("mwp_worker_brand");
-$worker_brand     = 0;
+$worker_brand = 0;
 if (is_array($mwp_worker_brand)) {
     if ($mwp_worker_brand['name'] || $mwp_worker_brand['desc'] || $mwp_worker_brand['author'] || $mwp_worker_brand['author_url']) {
         $worker_brand = 1;
@@ -216,9 +216,9 @@ if (!function_exists('mmb_authenticate')) {
         if (!isset($HTTP_RAW_POST_DATA)) {
             $HTTP_RAW_POST_DATA = file_get_contents('php://input');
         }
-        $compat       = false;
+        $compat = false;
         $compatActive = false;
-        $contentType  = empty($_SERVER['CONTENT_TYPE']) ? false : $_SERVER['CONTENT_TYPE'];
+        $contentType = empty($_SERVER['CONTENT_TYPE']) ? false : $_SERVER['CONTENT_TYPE'];
 
         if ($compat && empty($_SERVER['HTTP_MWP_ACTION']) && $contentType === 'application/json') {
             $compatActive = true;
@@ -240,19 +240,19 @@ if (!function_exists('mmb_authenticate')) {
             }
             $_mwp_data['signature'] = base64_decode($_mwp_data['signature']);
         } else {
-            $_mwp_data['action']    = $_SERVER['HTTP_MWP_ACTION'];
-            $_mwp_data['id']        = isset($_SERVER['HTTP_MWP_MESSAGE_ID']) ? $_SERVER['HTTP_MWP_MESSAGE_ID'] : "";
+            $_mwp_data['action'] = $_SERVER['HTTP_MWP_ACTION'];
+            $_mwp_data['id'] = isset($_SERVER['HTTP_MWP_MESSAGE_ID']) ? $_SERVER['HTTP_MWP_MESSAGE_ID'] : "";
             $_mwp_data['signature'] = isset($_SERVER['HTTP_MWP_SIGNATURE']) ? base64_decode($_SERVER['HTTP_MWP_SIGNATURE']) : '';
         }
 
         $usernameUsed = array_key_exists('username', $_mwp_data['params']) ? $_mwp_data['params']['username'] : null;
         if (empty($_mwp_data['params']['username']) || !$mmb_core->check_if_user_exists($_mwp_data['params']['username'])) {
             $filter = array(
-                'user_roles' => array(
+                'user_roles'      => array(
                     'administrator'
                 ),
-                'username'=>'',
-				'username_filter'=>'',
+                'username'        => '',
+                'username_filter' => '',
             );
             $users = $mmb_core->get_user_instance()->get_users($filter);
 
@@ -269,7 +269,7 @@ if (!function_exists('mmb_authenticate')) {
 
         if ($_mwp_data['action'] === 'add_site') {
             $_mwp_auth = mwp_add_site_verify_signature($_mwp_data, $usernameUsed);
-            if(isset($user)){
+            if (isset($user)) {
                 $GLOBALS['mwp_user_id'] = $user->ID;
             }
 
@@ -288,7 +288,7 @@ if (!function_exists('mmb_authenticate')) {
             update_user_meta($user->ID, 'last_login_time', current_time('mysql'));
         }
 
-        if(defined('ALTERNATE_WP_CRON') && !defined('DOING_AJAX') && ALTERNATE_WP_CRON === true ){
+        if (defined('ALTERNATE_WP_CRON') && !defined('DOING_AJAX') && ALTERNATE_WP_CRON === true) {
             define('DOING_AJAX', true);
         }
     }
@@ -309,11 +309,11 @@ if (!function_exists("mwp_add_site_verify_signature")) {
         } else {
 
             if (!empty($_mwp_data['add_site_signature']) && !empty($_mwp_data['add_site_signature_id'])) {
-                $signature            = base64_decode($_mwp_data['add_site_signature']);
-                $signature_id         = $_mwp_data['add_site_signature_id'];
-                $plaintext            = array();
+                $signature = base64_decode($_mwp_data['add_site_signature']);
+                $signature_id = $_mwp_data['add_site_signature_id'];
+                $plaintext = array();
                 $plaintext['setting'] = $_mwp_data['setting'];
-                $plaintext['params']  = $_mwp_data['params'];
+                $plaintext['params'] = $_mwp_data['params'];
                 if (isset($posted_username)) {
                     $plaintext['params']['username'] = $posted_username;
                 }
@@ -357,14 +357,14 @@ if (!function_exists('mmb_parse_request')) {
         @set_time_limit(1200);
 
         if (isset($_mwp_data['setting'])) {
-            if(array_key_exists("dataown",$_mwp_data['setting'])){
+            if (array_key_exists("dataown", $_mwp_data['setting'])) {
                 $oldconfiguration = array("dataown" => $_mwp_data['setting']['dataown']);
                 $mmb_core->save_options($oldconfiguration);
                 unset($_mwp_data['setting']['dataown']);
             }
 
             $configurationService = new MWP_Configuration_Service();
-            $configuration        = new MWP_Configuration_Conf($_mwp_data['setting']);
+            $configuration = new MWP_Configuration_Conf($_mwp_data['setting']);
             $configurationService->saveConfiguration($configuration);
         }
 
@@ -418,7 +418,7 @@ if (!function_exists('mmb_parse_request')) {
                 require_once dirname(__FILE__).'/src/PHPSecLib/Crypt/AES.php';
                 $cipher = new Crypt_AES(CRYPT_AES_MODE_ECB);
                 $cipher->setKey($mmb_core->get_random_signature());
-                $decrypted                           = $cipher->decrypt($_mwp_data['params']['secure']);
+                $decrypted = $cipher->decrypt($_mwp_data['params']['secure']);
                 $_mwp_data['params']['account_info'] = json_decode($decrypted, true);
             }
 
@@ -430,7 +430,7 @@ if (!function_exists('mmb_parse_request')) {
             'action_settings'   => $_mwp_data['setting'],
         );
 
-        if (!empty( $_mwp_data['setting'])) {
+        if (!empty($_mwp_data['setting'])) {
             $logData['settings'] = $_mwp_data['setting'];
         }
 
@@ -637,7 +637,7 @@ if (!function_exists('mwp_datasend')) {
         }
 
         $_mmb_item_filter['pre_init_stats'] = array('core_update', 'hit_counter', 'comments', 'backups', 'posts', 'drafts', 'scheduled');
-        $_mmb_item_filter['get']            = array('updates', 'errors');
+        $_mmb_item_filter['get'] = array('updates', 'errors');
         $mmb_core->get_stats_instance();
 
         $filter = array(
@@ -664,31 +664,31 @@ if (!function_exists('mwp_datasend')) {
         );
 
         $pre_init_data = $mmb_core->stats_instance->pre_init_stats($filter);
-        $init_data     = $mmb_core->stats_instance->get($filter);
+        $init_data = $mmb_core->stats_instance->get($filter);
 
-        $data              = array_merge($init_data, $pre_init_data);
+        $data = array_merge($init_data, $pre_init_data);
         $data['server_ip'] = $_SERVER['SERVER_ADDR'];
-        $data['uhost']     = php_uname('n');
+        $data['uhost'] = php_uname('n');
         $hash = $mmb_core->get_secure_hash();
 
         if (mwp_datasend_trigger($data)) { // adds trigger to check if really need to send something
             $configurationService = new MWP_Configuration_Service();
-            $configuration        = $configurationService->getConfiguration();
+            $configuration = $configurationService->getConfiguration();
 
             set_transient("mwp_cache_notifications", $data);
             set_transient("mwp_cache_notifications_time", time());
 
-            $datasend['datasend']               = $mmb_core->encrypt_data($data);
-            $datasend['sitehome']               = base64_encode($_mmb_remoteown.'[]'.$_mmb_remoteurl);
-            $datasend['sitehash']               = md5($hash.$_mmb_remoteown.$_mmb_remoteurl);
+            $datasend['datasend'] = $mmb_core->encrypt_data($data);
+            $datasend['sitehome'] = base64_encode($_mmb_remoteown.'[]'.$_mmb_remoteurl);
+            $datasend['sitehash'] = md5($hash.$_mmb_remoteown.$_mmb_remoteurl);
             $datasend['setting_checksum_order'] = implode(",", array_keys($configuration->getVariables()));
-            $datasend['setting_checksum']       = md5(json_encode($configuration->toArray()));
+            $datasend['setting_checksum'] = md5(json_encode($configuration->toArray()));
             if (!class_exists('WP_Http')) {
                 include_once(ABSPATH.WPINC.'/class-http.php');
             }
 
-            $remote            = array();
-            $remote['body']    = $datasend;
+            $remote = array();
+            $remote['body'] = $datasend;
             $remote['timeout'] = 20;
 
             $result = wp_remote_post($configuration->getMasterCronUrl(), $remote);
@@ -702,8 +702,8 @@ if (!function_exists('mwp_datasend')) {
                     }
                     update_option("mwp_worker_brand", $brand);
                     /* change worker version */
-                    $w_version = $settings['worker_updates']['version'];
-                    $w_url     = $settings['worker_updates']['url'];
+                    $w_version = @$settings['worker_updates']['version'];
+                    $w_url = @$settings['worker_updates']['url'];
                     if (version_compare($GLOBALS['MMB_WORKER_VERSION'], $w_version, '<')) {
                         //automatic update
                         $mmb_core->update_worker_plugin(array("download_url" => $w_url));
@@ -711,7 +711,7 @@ if (!function_exists('mwp_datasend')) {
 
                     if (!empty($settings['mwp_worker_configuration'])) {
                         require_once dirname(__FILE__).'/src/PHPSecLib/Crypt/RSA.php';
-                        $rsa     = new Crypt_RSA();
+                        $rsa = new Crypt_RSA();
                         $keyName = $configuration->getKeyName();
                         $rsa->setSignatureMode(CRYPT_RSA_SIGNATURE_PKCS1);
                         $rsa->loadKey(file_get_contents(dirname(__FILE__)."/publickeys/$keyName.pub")); // public key
@@ -737,11 +737,11 @@ if (!function_exists("mwp_datasend_trigger")) {
     function mwp_datasend_trigger($stats)
     {
 
-        $configurationService  = new MWP_Configuration_Service();
+        $configurationService = new MWP_Configuration_Service();
         $configuration = $configurationService->getConfiguration();
 
         $cachedData = get_transient("mwp_cache_notifications");
-        $cacheTime  = (int) get_transient("mwp_cache_notifications_time");
+        $cacheTime = (int) get_transient("mwp_cache_notifications_time");
 
         $returnValue = false;
         if (false == $cachedData || empty($configuration)) {
@@ -765,7 +765,7 @@ if (!function_exists("mwp_datasend_trigger")) {
             $returnValue = true;
         }
         if (!$returnValue && !empty($stats['upgradable_themes'])) {
-            $themesArr       = mwp_std_to_array($stats['upgradable_themes']);
+            $themesArr = mwp_std_to_array($stats['upgradable_themes']);
             $cachedThemesArr = mwp_std_to_array($cachedData['upgradable_themes']);
             if ($themesArr != $cachedThemesArr) {
                 $returnValue = true;
@@ -781,7 +781,7 @@ if (!function_exists("mwp_datasend_trigger")) {
         }
 
         if (!$returnValue && !empty($stats['upgradable_plugins'])) { //we have hear  stdclass
-            $pluginsArr       = mwp_std_to_array($stats['upgradable_plugins']);
+            $pluginsArr = mwp_std_to_array($stats['upgradable_plugins']);
             $cachedPluginsArr = mwp_std_to_array($cachedData['upgradable_plugins']);
             if ($pluginsArr != $cachedPluginsArr) {
                 $returnValue = true;
@@ -796,7 +796,7 @@ if (!function_exists("mwp_datasend_trigger")) {
             $returnValue = true;
         }
         if (!$returnValue && !empty($stats['premium_updates'])) {
-            $premiumArr       = mwp_std_to_array($stats['premium_updates']);
+            $premiumArr = mwp_std_to_array($stats['premium_updates']);
             $cachedPremiumArr = mwp_std_to_array($cachedData['premium_updates']);
             if ($premiumArr != $cachedPremiumArr) {
                 $returnValue = true;
@@ -815,7 +815,7 @@ if (!function_exists("mwp_datasend_trigger")) {
 
         if (!$returnValue && !empty($stats['comments'])) {
             if (!empty($stats['comments']['pending']) && count($stats['comments']['pending']) >= $configuration->getNotiTresholdPendingComments()) {
-                $pendingArr       = mwp_std_to_array($stats['comments']['pending']);
+                $pendingArr = mwp_std_to_array($stats['comments']['pending']);
                 $cachedPendingArr = mwp_std_to_array($cachedData['comments']['pending']);
                 if ($pendingArr != $cachedPendingArr) {
                     $returnValue = true;
@@ -823,7 +823,7 @@ if (!function_exists("mwp_datasend_trigger")) {
             }
 
             if (!empty($stats['comments']['approved']) && count($stats['comments']['approved']) >= $configuration->getNotiTresholdApprovedComments()) {
-                $approvedArr       = mwp_std_to_array($stats['comments']['approved']);
+                $approvedArr = mwp_std_to_array($stats['comments']['approved']);
                 $cachedApprovedArr = mwp_std_to_array($cachedData['comments']['approved']);
                 if ($approvedArr != $cachedApprovedArr) {
                     $returnValue = true;
@@ -839,7 +839,7 @@ if (!function_exists("mwp_datasend_trigger")) {
             if (count($stats['drafts']) > $configuration->getNotiTresholdDrafts() && empty($cachedData['drafts'])) {
                 $returnValue = true;
             } else {
-                $draftsArr       = mwp_std_to_array($stats['drafts']);
+                $draftsArr = mwp_std_to_array($stats['drafts']);
                 $cachedDraftsArr = mwp_std_to_array($cachedData['drafts']);
                 if ($draftsArr != $cachedDraftsArr) {
                     $returnValue = true;
@@ -852,7 +852,7 @@ if (!function_exists("mwp_datasend_trigger")) {
             if (count($stats['posts']) > $configuration->getNotiTresholdPosts() && empty($cachedData['posts'])) {
                 $returnValue = true;
             } else {
-                $postsArr       = mwp_std_to_array($stats['posts']);
+                $postsArr = mwp_std_to_array($stats['posts']);
                 $cachedPostsArr = mwp_std_to_array($cachedData['posts']);
                 if ($postsArr != $cachedPostsArr) {
                     $returnValue = true;
@@ -867,7 +867,7 @@ if (!function_exists("mwp_datasend_trigger")) {
             $returnValue = true;
         }
         if (!$returnValue && !empty($stats['core_updates'])) {
-            $coreArr       = mwp_std_to_array($stats['core_updates']);
+            $coreArr = mwp_std_to_array($stats['core_updates']);
             $cachedCoreArr = mwp_std_to_array($cachedData['core_updates']);
             if ($coreArr != $cachedCoreArr) {
                 $returnValue = true;
@@ -878,7 +878,7 @@ if (!function_exists("mwp_datasend_trigger")) {
             $returnValue = true;
         }
         if (!$returnValue && !empty($stats['mwp_backups'])) {
-            $backupArr       = mwp_std_to_array($stats['mwp_backups']);
+            $backupArr = mwp_std_to_array($stats['mwp_backups']);
             $cachedBackupArr = mwp_std_to_array($cachedData['mwp_backups']);
             if ($backupArr != $cachedBackupArr) {
                 $returnValue = true;
@@ -936,7 +936,7 @@ if (!function_exists('mmb_change_post_status')) {
         global $mmb_core;
         $mmb_core->get_post_instance();
         $return = $mmb_core->post_instance->change_status($params);
-        if (is_wp_error($return)){
+        if (is_wp_error($return)) {
             mmb_response($return->get_error_message(), false);
         } elseif (empty($return)) {
             mmb_response("Post status can not be changed", false);
@@ -1012,7 +1012,7 @@ if (!function_exists('mmb_run_task_now')) {
         global $mmb_core;
         $mmb_core->get_backup_instance();
 
-        $task_name          = isset($params['task_name']) ? $params['task_name'] : false;
+        $task_name = isset($params['task_name']) ? $params['task_name'] : false;
         $google_drive_token = isset($params['google_drive_token']) ? $params['google_drive_token'] : false;
 
         if ($task_name) {
@@ -1124,7 +1124,7 @@ if (!function_exists('mmb_remote_backup_now')) {
     {
         global $mmb_core;
         $backup_instance = $mmb_core->get_backup_instance();
-        $return          = $mmb_core->backup_instance->remote_backup_now($params);
+        $return = $mmb_core->backup_instance->remote_backup_now($params);
         if (is_array($return) && array_key_exists('error', $return)) {
             mmb_response($return['error'], false);
         } else {
@@ -1139,7 +1139,7 @@ if (!function_exists('mmb_clean_orphan_backups')) {
     {
         global $mmb_core;
         $backup_instance = $mmb_core->get_backup_instance();
-        $return          = $mmb_core->backup_instance->cleanup();
+        $return = $mmb_core->backup_instance->cleanup();
         if (is_array($return)) {
             mmb_response($return, true);
         } else {
@@ -1150,7 +1150,7 @@ if (!function_exists('mmb_clean_orphan_backups')) {
 
 function mmb_run_forked_action()
 {
-    if(!isset($_POST['mmb_fork_nonce'])){
+    if (!isset($_POST['mmb_fork_nonce'])) {
         return false;
     }
 
@@ -1169,12 +1169,14 @@ function mmb_run_forked_action()
 
     if (!wp_verify_nonce($_POST['mmb_fork_nonce'], 'mmb-fork-nonce')) {
         wp_set_current_user($originalUser->ID);
+
         return false;
     }
 
     $public_key = get_option('_worker_public_key');
     if (!isset($_POST['public_key']) || $public_key !== $_POST['public_key']) {
         wp_set_current_user($originalUser->ID);
+
         return false;
     }
     $args = @json_decode(stripslashes($_POST['args']), true);
@@ -1182,6 +1184,7 @@ function mmb_run_forked_action()
 
     if (!isset($args)) {
         wp_set_current_user($originalUser->ID);
+
         return false;
     }
     $cron_action = isset($_POST['mwp_forked_action']) ? $_POST['mwp_forked_action'] : false;
@@ -1194,6 +1197,7 @@ function mmb_run_forked_action()
     unset($_POST['mwp_forked_action']);
 
     wp_set_current_user($originalUser->ID);
+
     return true;
 }
 
@@ -1204,7 +1208,7 @@ if (!function_exists('mmb_readd_backup_task')) {
     {
         global $mmb_core;
         $backup_instance = $mmb_core->get_backup_instance();
-        $settings        = $backup_instance->readd_tasks($params);
+        $settings = $backup_instance->readd_tasks($params);
 
         return $settings;
     }
@@ -1625,8 +1629,8 @@ if (!function_exists('mmb_edit_users')) {
     {
         global $mmb_core;
         $mmb_core->get_user_instance();
-        $users       = $mmb_core->user_instance->edit_users($params);
-        $response    = 'User updated.';
+        $users = $mmb_core->user_instance->edit_users($params);
+        $response = 'User updated.';
         $check_error = false;
         foreach ($users as $username => $user) {
             $check_error = array_key_exists('error', $user);
@@ -1780,13 +1784,13 @@ if (!function_exists('mmb_more_reccurences')) {
     add_filter('cron_schedules', 'mmb_more_reccurences');
     function mmb_more_reccurences($schedules)
     {
-        $schedules['halfminute']  = array('interval' => 30, 'display' => 'Once in a half minute');
-        $schedules['minutely']    = array('interval' => 60, 'display' => 'Once in a minute');
+        $schedules['halfminute'] = array('interval' => 30, 'display' => 'Once in a half minute');
+        $schedules['minutely'] = array('interval' => 60, 'display' => 'Once in a minute');
         $schedules['fiveminutes'] = array('interval' => 300, 'display' => 'Once every five minutes');
-        $schedules['tenminutes']  = array('interval' => 600, 'display' => 'Once every ten minutes');
-        $schedules['sixhours']    = array('interval' => 21600, 'display' => 'Every six hours');
-        $schedules['fourhours']   = array('interval' => 14400, 'display' => 'Every four hours');
-        $schedules['threehours']  = array('interval' => 10800, 'display' => 'Every three hours');
+        $schedules['tenminutes'] = array('interval' => 600, 'display' => 'Once every ten minutes');
+        $schedules['sixhours'] = array('interval' => 21600, 'display' => 'Every six hours');
+        $schedules['fourhours'] = array('interval' => 14400, 'display' => 'Every four hours');
+        $schedules['threehours'] = array('interval' => 10800, 'display' => 'Every three hours');
 
         return $schedules;
     }
@@ -1895,7 +1899,7 @@ if (!function_exists('mmb_maintenance_mode')) {
         global $wp_object_cache;
 
         $default = get_option('mwp_maintenace_mode');
-        $params  = empty($default) ? $params : array_merge($default, $params);
+        $params = empty($default) ? $params : array_merge($default, $params);
         update_option("mwp_maintenace_mode", $params);
 
         if (!empty($wp_object_cache)) {
@@ -1976,9 +1980,10 @@ MMB_Updater::register();
 
 
 if (!function_exists('mwp_return_core_reference')) {
-    function mwp_return_core_reference(){
+    function mwp_return_core_reference()
+    {
         global $mmb_core, $mmb_core_backup;
-        if(!$mmb_core instanceof MMB_Core){
+        if (!$mmb_core instanceof MMB_Core) {
             $mmb_core = $mmb_core_backup;
         }
     }
@@ -2051,15 +2056,15 @@ if (get_option('managewp_remove_scripts_version') == 'T') {
 }
 
 if (wp_next_scheduled('mwp_backup_tasks')) {
-    wp_clear_scheduled_hook( 'mwp_backup_tasks' );
+    wp_clear_scheduled_hook('mwp_backup_tasks');
 }
 
 $activePlugins = get_option('active_plugins');
-if(reset($activePlugins) !== 'worker/init.php'){
+if (reset($activePlugins) !== 'worker/init.php') {
     $workerKey = array_search('worker/init.php', $activePlugins);
-    if($workerKey !== false){
+    if ($workerKey !== false) {
         unset($activePlugins[$workerKey]);
-        array_unshift($activePlugins,'worker/init.php' );
+        array_unshift($activePlugins, 'worker/init.php');
         update_option('active_plugins', $activePlugins);
     }
 }

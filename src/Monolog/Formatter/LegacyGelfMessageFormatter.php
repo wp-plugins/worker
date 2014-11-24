@@ -65,13 +65,13 @@ class Monolog_Formatter_LegacyGelfMessageFormatter extends Monolog_Formatter_Nor
         $record  = parent::format($record);
         $message = new Gelf_Message();
         $message
-          ->setTimestamp($record['datetime'])
-          ->setShortMessage((string) $record['message'])
-          ->setFacility($record['channel'])
-          ->setHost($this->systemName)
-          ->setLine(isset($record['extra']['line']) ? $record['extra']['line'] : null)
-          ->setFile(isset($record['extra']['file']) ? $record['extra']['file'] : null)
-          ->setLevel($this->logLevels[$record['level']]);
+            ->setTimestamp($record['datetime'])
+            ->setShortMessage((string) $record['message'])
+            ->setFacility($record['channel'])
+            ->setHost($this->systemName)
+            ->setLine(isset($record['extra']['line']) ? $record['extra']['line'] : null)
+            ->setFile(isset($record['extra']['file']) ? $record['extra']['file'] : null)
+            ->setLevel($this->logLevels[$record['level']]);
 
         // Do not duplicate these values in the additional fields
         unset($record['extra']['line']);

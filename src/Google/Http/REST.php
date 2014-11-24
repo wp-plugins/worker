@@ -15,7 +15,6 @@
  * limitations under the License.
  */
 
-
 /**
  * This class implements the RESTful transport of apiServiceRequest()'s
  *
@@ -30,9 +29,9 @@ class Google_Http_REST
      * @param Google_ApiClient    $client
      * @param Google_Http_Request $req
      *
-     * @return array decoded result
+     * @return array                    decoded result
      * @throws Google_Service_Exception on server side error (ie: not authenticated,
-     *  invalid or malformed post body, invalid url)
+     *                                  invalid or malformed post body, invalid url)
      */
     public static function execute(Google_ApiClient $client, Google_Http_Request $req)
     {
@@ -41,7 +40,6 @@ class Google_Http_REST
 
         return self::decodeHttpResponse($httpRequest);
     }
-
 
     /**
      * Decode an HTTP Response.
@@ -63,8 +61,8 @@ class Google_Http_REST
             $decoded = json_decode($body, true);
             $err     = 'Error calling '.$response->getRequestMethod().' '.$response->getUrl();
             if (isset($decoded['error']) &&
-              isset($decoded['error']['message']) &&
-              isset($decoded['error']['code'])
+                isset($decoded['error']['message']) &&
+                isset($decoded['error']['code'])
             ) {
                 // if we're getting a json encoded error definition, use that instead of the raw response
                 // body for improved readability

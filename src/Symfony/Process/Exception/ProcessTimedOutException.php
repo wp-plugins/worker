@@ -28,9 +28,9 @@ class Symfony_Process_Exception_ProcessTimedOutException extends Exception imple
         $this->timeoutType = $timeoutType;
 
         parent::__construct(sprintf(
-          'The process "%s" exceeded the timeout of %s seconds.',
-          $process->getCommandLine(),
-          $this->getExceededTimeout()
+            'The process "%s" exceeded the timeout of %s seconds.',
+            $process->getCommandLine(),
+            $this->getExceededTimeout()
         ));
     }
 

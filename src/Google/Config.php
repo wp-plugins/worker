@@ -38,54 +38,53 @@ class Google_Config
     {
         $this->configuration = array(
             // The application_name is included in the User-Agent HTTP header.
-          'application_name' => '',
+            'application_name' => '',
             // Which Authentication, Storage and HTTP IO classes to use.
-          'auth_class'       => 'Google_Auth_OAuth2',
-          'io_class'         => self::USE_AUTO_IO_SELECTION,
-          'cache_class'      => 'Google_Cache_File',
+            'auth_class'       => 'Google_Auth_OAuth2',
+            'io_class'         => self::USE_AUTO_IO_SELECTION,
+            'cache_class'      => 'Google_Cache_File',
             // Don't change these unless you're working against a special development
             // or testing environment.
-          'base_path'        => 'https://www.googleapis.com',
+            'base_path'        => 'https://www.googleapis.com',
             // Definition of class specific values, like file paths and so on.
-          'classes'          => array(
-            'Google_IO_Abstract'  => array(
-              'request_timeout_seconds' => 100,
+            'classes'          => array(
+                'Google_IO_Abstract'  => array(
+                    'request_timeout_seconds' => 100,
+                ),
+                'Google_Http_Request' => array(
+                    // Disable the use of gzip on calls if set to true. Defaults to false.
+                    'disable_gzip'            => self::GZIP_ENABLED,
+                    // We default gzip to disabled on uploads even if gzip is otherwise
+                    // enabled, due to some issues seen with small packet sizes for uploads.
+                    // Please test with this option before enabling gzip for uploads in
+                    // a production environment.
+                    'enable_gzip_for_uploads' => self::GZIP_UPLOADS_DISABLED,
+                ),
+                // If you want to pass in OAuth 2.0 settings, they will need to be
+                // structured like this.
+                'Google_Auth_OAuth2'  => array(
+                    // Keys for OAuth 2.0 access, see the API console at
+                    // https://developers.google.com/console
+                    'client_id'                  => '',
+                    'client_secret'              => '',
+                    'redirect_uri'               => '',
+                    // Simple API access key, also from the API console. Ensure you get
+                    // a Server key, and not a Browser key.
+                    'developer_key'              => '',
+                    // Other parameters.
+                    'access_type'                => 'online',
+                    'approval_prompt'            => 'auto',
+                    'request_visible_actions'    => '',
+                    'federated_signon_certs_url' => 'https://www.googleapis.com/oauth2/v1/certs',
+                ),
+                // Set a default directory for the file cache.
+                'Google_Cache_File'   => array(
+                    'directory' => sys_get_temp_dir().'/Google_ApiClient',
+                ),
             ),
-            'Google_Http_Request' => array(
-                // Disable the use of gzip on calls if set to true. Defaults to false.
-              'disable_gzip'            => self::GZIP_ENABLED,
-                // We default gzip to disabled on uploads even if gzip is otherwise
-                // enabled, due to some issues seen with small packet sizes for uploads.
-                // Please test with this option before enabling gzip for uploads in
-                // a production environment.
-              'enable_gzip_for_uploads' => self::GZIP_UPLOADS_DISABLED,
-            ),
-              // If you want to pass in OAuth 2.0 settings, they will need to be
-              // structured like this.
-            'Google_Auth_OAuth2'  => array(
-                // Keys for OAuth 2.0 access, see the API console at
-                // https://developers.google.com/console
-              'client_id'                  => '',
-              'client_secret'              => '',
-              'redirect_uri'               => '',
-                // Simple API access key, also from the API console. Ensure you get
-                // a Server key, and not a Browser key.
-              'developer_key'              => '',
-                // Other parameters.
-              'access_type'                => 'online',
-              'approval_prompt'            => 'auto',
-              'request_visible_actions'    => '',
-              'federated_signon_certs_url' =>
-                'https://www.googleapis.com/oauth2/v1/certs',
-            ),
-              // Set a default directory for the file cache.
-            'Google_Cache_File'   => array(
-              'directory' => sys_get_temp_dir().'/Google_ApiClient'
-            )
-          ),
             // Definition of service specific values like scopes, oauth token URLs,
             // etc. Example:
-          'services'         => array(),
+            'services'         => array(),
         );
         if ($ini_file_location) {
             $ini = parse_ini_file($ini_file_location, true);
@@ -157,10 +156,10 @@ class Google_Config
     {
         $prev = $this->configuration['auth_class'];
         if (!isset($this->configuration['classes'][$class]) &&
-          isset($this->configuration['classes'][$prev])
+            isset($this->configuration['classes'][$prev])
         ) {
             $this->configuration['classes'][$class] =
-              $this->configuration['classes'][$prev];
+                $this->configuration['classes'][$prev];
         }
         $this->configuration['auth_class'] = $class;
     }
@@ -174,10 +173,10 @@ class Google_Config
     {
         $prev = $this->configuration['io_class'];
         if (!isset($this->configuration['classes'][$class]) &&
-          isset($this->configuration['classes'][$prev])
+            isset($this->configuration['classes'][$prev])
         ) {
             $this->configuration['classes'][$class] =
-              $this->configuration['classes'][$prev];
+                $this->configuration['classes'][$prev];
         }
         $this->configuration['io_class'] = $class;
     }
@@ -191,10 +190,10 @@ class Google_Config
     {
         $prev = $this->configuration['cache_class'];
         if (!isset($this->configuration['classes'][$class]) &&
-          isset($this->configuration['classes'][$prev])
+            isset($this->configuration['classes'][$prev])
         ) {
             $this->configuration['classes'][$class] =
-              $this->configuration['classes'][$prev];
+                $this->configuration['classes'][$prev];
         }
         $this->configuration['cache_class'] = $class;
     }

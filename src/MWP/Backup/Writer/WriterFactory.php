@@ -4,7 +4,7 @@ class MWP_Backup_Writer_WriterFactory
 {
     /**
      * @param string $filename
-     * @param string $type Writer type
+     * @param string $type     Writer type
      * @param string $mode
      *
      * @return MWP_Backup_Writer_WriterInterface

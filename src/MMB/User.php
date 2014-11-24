@@ -8,12 +8,12 @@
  **************************************************************/
 class MMB_User extends MMB_Core
 {
-    function __construct()
+    public function __construct()
     {
         parent::__construct();
     }
 
-    function get_users($args)
+    public function get_users($args)
     {
         global $wpdb;
 
@@ -54,9 +54,9 @@ class MMB_User extends MMB_Core
             }
         }
 
-        $users                  = array();
-        $userlevel_qry          = "('".implode("','", $userlevels)."')";
-        $queryOR ='';
+        $users         = array();
+        $userlevel_qry = "('".implode("','", $userlevels)."')";
+        $queryOR       = '';
         if (!empty($level_strings)) {
             foreach ($level_strings as $level) {
                 if (!empty($queryOR)) {
@@ -65,14 +65,14 @@ class MMB_User extends MMB_Core
                 $queryOR .= "meta_value LIKE '%{$level}%'";
             }
         }
-        $field                  = $wpdb->prefix."capabilities";
-        $field2                 = $wpdb->prefix."user_level";
+        $field  = $wpdb->prefix."capabilities";
+        $field2 = $wpdb->prefix."user_level";
 
-        $metaQuery = "SELECT * from {$wpdb->usermeta} WHERE meta_key = '{$field}' AND ({$queryOR})";
+        $metaQuery  = "SELECT * from {$wpdb->usermeta} WHERE meta_key = '{$field}' AND ({$queryOR})";
         $user_metas = $wpdb->get_results($metaQuery);
 
         if ($user_metas == false || empty($user_metas)) {
-            $metaQuery = "SELECT * from {$wpdb->usermeta} WHERE meta_key = '{$field2}' AND meta_value IN {$userlevel_qry}";
+            $metaQuery  = "SELECT * from {$wpdb->usermeta} WHERE meta_key = '{$field2}' AND meta_value IN {$userlevel_qry}";
             $user_metas = $wpdb->get_results($metaQuery);
         }
 
@@ -101,11 +101,10 @@ class MMB_User extends MMB_Core
         return array('users' => $users);
     }
 
-    function add_user($args)
+    public function add_user($args)
     {
-
         if (!function_exists('username_exists') || !function_exists('email_exists')) {
-            include_once(ABSPATH.WPINC.'/registration.php');
+            include_once ABSPATH.WPINC.'/registration.php';
         }
 
         if (username_exists($args['user_login'])) {
@@ -117,13 +116,12 @@ class MMB_User extends MMB_Core
         }
 
         if (!function_exists('wp_insert_user')) {
-            include_once(ABSPATH.'wp-admin/includes/user.php');
+            include_once ABSPATH.'wp-admin/includes/user.php';
         }
 
         $user_id = wp_insert_user($args);
 
         if ($user_id) {
-
             if ($args['email_notify']) {
                 //require_once ABSPATH . WPINC . '/pluggable.php';
                 wp_new_user_notification($user_id, $args['user_pass']);
@@ -133,20 +131,18 @@ class MMB_User extends MMB_Core
         } else {
             return array('error' => 'User not added. Please try again.');
         }
-
     }
 
-    function edit_users($args)
+    public function edit_users($args)
     {
-
         if (empty($args)) {
             return false;
         }
         if (!function_exists('get_user_to_edit')) {
-            include_once(ABSPATH.'wp-admin/includes/user.php');
+            include_once ABSPATH.'wp-admin/includes/user.php';
         }
         if (!function_exists('wp_update_user')) {
-            include_once(ABSPATH.WPINC.'/user.php');
+            include_once ABSPATH.WPINC.'/user.php';
         }
 
         extract($args);
@@ -231,20 +227,18 @@ class MMB_User extends MMB_Core
         }
 
         return $return;
-
     }
 
     //Check if user is the only one admin on the site
-    function last_admin($user_obj)
+    public function last_admin($user_obj)
     {
         global $wpdb;
         $field        = $wpdb->prefix."capabilities";
         $capabilities = array_map('strtolower', array_keys($user_obj->$field));
         $result       = count_users();
         if (in_array('administrator', $capabilities)) {
-
             if (!function_exists('count_users')) {
-                include_once(ABSPATH.WPINC.'/user.php');
+                include_once ABSPATH.WPINC.'/user.php';
             }
 
             $result = count_users();
@@ -255,5 +249,4 @@ class MMB_User extends MMB_Core
 
         return false;
     }
-
 }

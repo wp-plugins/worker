@@ -15,7 +15,6 @@
  * limitations under the License.
  */
 
-
 /**
  * A persistent storage class based on the memcache, which is not
  * really very persistent, as soon as you restart your memcache daemon
@@ -29,7 +28,7 @@
 class Google_Cache_Memcache extends Google_Cache_Abstract
 {
     private $connection = false;
-    private $mc = false;
+    private $mc         = false;
     private $host;
     private $port;
 

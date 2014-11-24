@@ -83,7 +83,7 @@ class MMB_Updater
             "package": "https:\/\/wordpress.org\/themes\/download\/twentyfourteen.1.1.zip"
           }
          */
-        $slug = $item->theme;
+        $slug               = $item->theme;
         $alwaysUpdateThemes = get_option('mwp_global_themes_autoupdate', 'disabled');
 
         if ($alwaysUpdateThemes === 'enabled') {
@@ -169,9 +169,9 @@ class MMB_Updater
     {
         $return = array();
         foreach ($items as $item) {
-            if($type == 'plugins'){
-                $pluginOrTheme  = plugin_basename($item['path']);
-            }else{
+            if ($type == 'plugins') {
+                $pluginOrTheme = plugin_basename($item['path']);
+            } else {
                 $pluginOrTheme = $item['name'];
             }
             $current = get_option('mwp_active_autoupdate_'.$type, array());
@@ -260,7 +260,7 @@ class MMB_Updater
         if (!function_exists('wp_get_themes')) {
             return array();
         }
-        $themes    = array(
+        $themes = array(
             'active'   => array(),
             'inactive' => array(),
         );

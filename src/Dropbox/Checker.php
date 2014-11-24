@@ -7,9 +7,11 @@
  */
 class Dropbox_Checker
 {
-    static function throwError($argName, $argValue, $expectedTypeName)
+    public static function throwError($argName, $argValue, $expectedTypeName)
     {
-        if ($argValue === null) throw new InvalidArgumentException("'$argName' must not be null");
+        if ($argValue === null) {
+            throw new InvalidArgumentException("'$argName' must not be null");
+        }
 
         if (is_object($argValue)) {
             // Class type.
@@ -21,73 +23,117 @@ class Dropbox_Checker
         throw new InvalidArgumentException("'$argName' has bad type; expecting $expectedTypeName, got $argTypeName");
     }
 
-    static function argResource($argName, $argValue)
+    public static function argResource($argName, $argValue)
     {
-        if (!is_resource($argValue)) self::throwError($argName, $argValue, "resource");
+        if (!is_resource($argValue)) {
+            self::throwError($argName, $argValue, "resource");
+        }
     }
 
-    static function argCallable($argName, $argValue)
+    public static function argCallable($argName, $argValue)
     {
-        if (!is_callable($argValue)) self::throwError($argName, $argValue, "callable");
+        if (!is_callable($argValue)) {
+            self::throwError($argName, $argValue, "callable");
+        }
     }
 
-    static function argBool($argName, $argValue)
+    public static function argBool($argName, $argValue)
     {
-        if (!is_bool($argValue)) self::throwError($argName, $argValue, "boolean");
+        if (!is_bool($argValue)) {
+            self::throwError($argName, $argValue, "boolean");
+        }
     }
 
-    static function argArray($argName, $argValue)
+    public static function argArray($argName, $argValue)
     {
-        if (!is_array($argValue)) self::throwError($argName, $argValue, "array");
+        if (!is_array($argValue)) {
+            self::throwError($argName, $argValue, "array");
+        }
     }
 
-    static function argString($argName, $argValue)
+    public static function argString($argName, $argValue)
     {
-        if (!is_string($argValue)) self::throwError($argName, $argValue, "string");
+        if (!is_string($argValue)) {
+            self::throwError($argName, $argValue, "string");
+        }
     }
 
-    static function argStringOrNull($argName, $argValue)
+    public static function argStringOrNull($argName, $argValue)
     {
-        if ($argValue === null) return;
-        if (!is_string($argValue)) self::throwError($argName, $argValue, "string");
+        if ($argValue === null) {
+            return;
+        }
+        if (!is_string($argValue)) {
+            self::throwError($argName, $argValue, "string");
+        }
     }
 
-    static function argStringNonEmpty($argName, $argValue)
+    public static function argStringNonEmpty($argName, $argValue)
     {
-        if (!is_string($argValue)) self::throwError($argName, $argValue, "string");
-        if (strlen($argValue) === 0) throw new InvalidArgumentException("'$argName' must be non-empty");
+        if (!is_string($argValue)) {
+            self::throwError($argName, $argValue, "string");
+        }
+        if (strlen($argValue) === 0) {
+            throw new InvalidArgumentException("'$argName' must be non-empty");
+        }
     }
 
-    static function argStringNonEmptyOrNull($argName, $argValue)
+    public static function argStringNonEmptyOrNull($argName, $argValue)
     {
-        if ($argValue === null) return;
-        if (!is_string($argValue)) self::throwError($argName, $argValue, "string");
-        if (strlen($argValue) === 0) throw new InvalidArgumentException("'$argName' must be non-empty");
+        if ($argValue === null) {
+            return;
+        }
+        if (!is_string($argValue)) {
+            self::throwError($argName, $argValue, "string");
+        }
+        if (strlen($argValue) === 0) {
+            throw new InvalidArgumentException("'$argName' must be non-empty");
+        }
     }
 
-    static function argNat($argName, $argValue)
+    public static function argNat($argName, $argValue)
     {
-        if (!is_int($argValue)) self::throwError($argName, $argValue, "int");
-        if ($argValue < 0) throw new InvalidArgumentException("'$argName' must be non-negative (you passed in $argValue)");
+        if (!is_int($argValue)) {
+            self::throwError($argName, $argValue, "int");
+        }
+        if ($argValue < 0) {
+            throw new InvalidArgumentException("'$argName' must be non-negative (you passed in $argValue)");
+        }
     }
 
-    static function argNatOrNull($argName, $argValue)
+    public static function argNatOrNull($argName, $argValue)
     {
-        if ($argValue === null) return;
-        if (!is_int($argValue)) self::throwError($argName, $argValue, "int");
-        if ($argValue < 0) throw new InvalidArgumentException("'$argName' must be non-negative (you passed in $argValue)");
+        if ($argValue === null) {
+            return;
+        }
+        if (!is_int($argValue)) {
+            self::throwError($argName, $argValue, "int");
+        }
+        if ($argValue < 0) {
+            throw new InvalidArgumentException("'$argName' must be non-negative (you passed in $argValue)");
+        }
     }
 
-    static function argIntPositive($argName, $argValue)
+    public static function argIntPositive($argName, $argValue)
     {
-        if (!is_int($argValue)) self::throwError($argName, $argValue, "int");
-        if ($argValue < 1) throw new InvalidArgumentException("'$argName' must be positive (you passed in $argValue)");
+        if (!is_int($argValue)) {
+            self::throwError($argName, $argValue, "int");
+        }
+        if ($argValue < 1) {
+            throw new InvalidArgumentException("'$argName' must be positive (you passed in $argValue)");
+        }
     }
 
-    static function argIntPositiveOrNull($argName, $argValue)
+    public static function argIntPositiveOrNull($argName, $argValue)
     {
-        if ($argValue === null) return;
-        if (!is_int($argValue)) self::throwError($argName, $argValue, "int");
-        if ($argValue < 1) throw new InvalidArgumentException("'$argName' must be positive (you passed in $argValue)");
+        if ($argValue === null) {
+            return;
+        }
+        if (!is_int($argValue)) {
+            self::throwError($argName, $argValue, "int");
+        }
+        if ($argValue < 1) {
+            throw new InvalidArgumentException("'$argName' must be positive (you passed in $argValue)");
+        }
     }
 }

@@ -15,15 +15,15 @@ class Dropbox_ArrayEntryStore implements Dropbox_ValueStore
      * Constructor.
      *
      * @param array $array
-     *    The array that we'll be accessing.
+     *                     The array that we'll be accessing.
      *
      * @param mixed $key
-     *    The key for the array element we'll be accessing.
+     *                   The key for the array element we'll be accessing.
      */
-    function __construct(&$array, $key)
+    public function __construct(&$array, $key)
     {
         $this->array = &$array;
-        $this->key = $key;
+        $this->key   = $key;
     }
 
     /**
@@ -31,7 +31,7 @@ class Dropbox_ArrayEntryStore implements Dropbox_ValueStore
      *
      * @return object
      */
-    function get()
+    public function get()
     {
         if (isset($this->array[$this->key])) {
             return $this->array[$this->key];
@@ -45,7 +45,7 @@ class Dropbox_ArrayEntryStore implements Dropbox_ValueStore
      *
      * @param object $value
      */
-    function set($value)
+    public function set($value)
     {
         $this->array[$this->key] = $value;
     }
@@ -53,7 +53,7 @@ class Dropbox_ArrayEntryStore implements Dropbox_ValueStore
     /**
      * Clear the entry.
      */
-    function clear()
+    public function clear()
     {
         unset($this->array[$this->key]);
     }

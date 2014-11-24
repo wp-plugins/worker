@@ -37,8 +37,8 @@ class MWP_Progress_Download extends MWP_Progress_Abstract
         $progress = round($currentProgress / $downloadSize * 100, 2);
 
         $this->logger->info('Download progress: {progress}% (speed: {speed}/s)', array(
-          'progress' => $progress,
-          'speed'    => $speed,
+            'progress' => $progress,
+            'speed'    => $speed,
         ));
     }
 }

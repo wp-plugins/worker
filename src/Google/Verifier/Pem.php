@@ -15,7 +15,6 @@
  * limitations under the License.
  */
 
-
 /**
  * Verifies signatures using PEM encoded certificates.
  *

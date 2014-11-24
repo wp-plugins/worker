@@ -32,8 +32,8 @@ class Google_IO_Curl extends Google_IO_Abstract
      *
      * @param Google_HttpRequest $request the http request to be executed
      *
-     * @return Google_HttpRequest http request with the response http code,
-     * response headers and response body filled in
+     * @return Google_HttpRequest  http request with the response http code,
+     *                             response headers and response body filled in
      * @throws Google_IO_Exception on curl or IO error
      */
     public function executeRequest(Google_Http_Request $request)

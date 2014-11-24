@@ -42,10 +42,10 @@ class Monolog_ErrorHandler
      *
      * By default it will handle errors, exceptions and fatal errors
      *
-     * @param  Monolog_Psr_LoggerInterface $logger
-     * @param  array|false                 $errorLevelMap  an array of E_* constant to LogLevel::* constant mapping, or false to disable error handling
-     * @param  int|false                   $exceptionLevel a LogLevel::* constant, or false to disable exception handling
-     * @param  int|false                   $fatalLevel     a LogLevel::* constant, or false to disable fatal error handling
+     * @param Monolog_Psr_LoggerInterface $logger
+     * @param array|false                 $errorLevelMap  an array of E_* constant to LogLevel::* constant mapping, or false to disable error handling
+     * @param int|false                   $exceptionLevel a LogLevel::* constant, or false to disable exception handling
+     * @param int|false                   $fatalLevel     a LogLevel::* constant, or false to disable fatal error handling
      *
      * @return Monolog_ErrorHandler
      */
@@ -100,8 +100,8 @@ class Monolog_ErrorHandler
                 }
             } else {
                 trigger_error(
-                  __FUNCTION__.'(): Argument #'.($i + 1).' is not an array',
-                  E_USER_WARNING
+                    __FUNCTION__.'(): Argument #'.($i + 1).' is not an array',
+                    E_USER_WARNING
                 );
 
                 return null;
@@ -151,9 +151,9 @@ class Monolog_ErrorHandler
     public function handleException(Exception $e)
     {
         $this->logger->log(
-          $this->uncaughtExceptionLevel === null ? Monolog_Psr_LogLevel::ERROR : $this->uncaughtExceptionLevel,
-          'Uncaught exception',
-          array('exception' => $e)
+            $this->uncaughtExceptionLevel === null ? Monolog_Psr_LogLevel::ERROR : $this->uncaughtExceptionLevel,
+            'Uncaught exception',
+            array('exception' => $e)
         );
 
         if ($this->previousExceptionHandler) {
@@ -190,9 +190,9 @@ class Monolog_ErrorHandler
         $lastError = error_get_last();
         if ($lastError && in_array($lastError['type'], self::$fatalErrors)) {
             $this->logger->log(
-              $this->fatalLevel === null ? Monolog_Psr_LogLevel::ALERT : $this->fatalLevel,
-              'Fatal Error ('.self::codeToString($lastError['type']).'): '.$lastError['message'],
-              array('file' => $lastError['file'], 'line' => $lastError['line'])
+                $this->fatalLevel === null ? Monolog_Psr_LogLevel::ALERT : $this->fatalLevel,
+                'Fatal Error ('.self::codeToString($lastError['type']).'): '.$lastError['message'],
+                array('file' => $lastError['file'], 'line' => $lastError['line'])
             );
         }
     }

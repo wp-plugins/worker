@@ -8,7 +8,7 @@
  **************************************************************/
 class MMB_Comment extends MMB_Core
 {
-    function change_status($args)
+    public function change_status($args)
     {
         $comment_id = $args['comment_id'];
         $status     = $args['status'];
@@ -26,7 +26,7 @@ class MMB_Comment extends MMB_Core
         return true;
     }
 
-    function get_comments($args)
+    public function get_comments($args)
     {
         /** @var wpdb $wpdb */
         global $wpdb;
@@ -101,7 +101,7 @@ class MMB_Comment extends MMB_Core
         return array('comments' => $comments, 'total' => $total);
     }
 
-    function comment_total()
+    public function comment_total()
     {
         /** @var wpdb $wpdb */
         global $wpdb;
@@ -125,14 +125,12 @@ class MMB_Comment extends MMB_Core
         return $totals;
     }
 
-    function action_comment($args)
+    public function action_comment($args)
     {
-
         $docomaction = $args['docomaction'];
-        $comment_id = $args['comment_id'];
+        $comment_id  = $args['comment_id'];
 
         if (!empty($comment_id) && is_numeric($comment_id)) {
-
             if ($docomaction == 'delete') {
                 wp_delete_comment($comment_id, true);
                 delete_comment_meta($comment_id);
@@ -152,17 +150,15 @@ class MMB_Comment extends MMB_Core
         }
     }
 
-    function bulk_action_comments($args)
+    public function bulk_action_comments($args)
     {
-
         $docomaction = $args['docomaction'];
 
         foreach ($args as $val) {
             if (!empty($val) && is_numeric($val)) {
-
-                if($docomaction == 'delete') {
+                if ($docomaction == 'delete') {
                     wp_delete_comment($val, true);
-                } elseif ($docomaction == 'unapprove'|| $docomaction == 'untrash' || $docomaction == 'unspam') {
+                } elseif ($docomaction == 'unapprove' || $docomaction == 'untrash' || $docomaction == 'unspam') {
                     wp_set_comment_status($val, 'hold');
                 } elseif ($docomaction == 'approve') {
                     wp_set_comment_status($val, 'approve');
@@ -177,7 +173,7 @@ class MMB_Comment extends MMB_Core
         return "comments updated";
     }
 
-    function reply_comment($args)
+    public function reply_comment($args)
     {
         /** @var wpdb $wpdb */
         global $wpdb, $current_user;

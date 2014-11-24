@@ -16,7 +16,6 @@
  * limitations under the License.
  */
 
-
 class Google_Cache_Exception extends Google_ApiException
 {
 }

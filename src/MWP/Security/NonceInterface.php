@@ -6,7 +6,6 @@
  */
 interface MWP_Security_NonceInterface
 {
-
     /**
      * Parse input string and sets inner fields
      *
@@ -22,4 +21,4 @@ interface MWP_Security_NonceInterface
      * @return bool
      */
     public function verify();
-} 
+}

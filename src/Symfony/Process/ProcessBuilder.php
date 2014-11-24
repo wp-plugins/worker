@@ -6,10 +6,10 @@ class Symfony_Process_ProcessBuilder
     private $cwd;
     private $env = array();
     private $stdin;
-    private $timeout = 60;
-    private $options = array();
+    private $timeout    = 60;
+    private $options    = array();
     private $inheritEnv = true;
-    private $prefix = array();
+    private $prefix     = array();
 
     public function __construct(array $arguments = array())
     {

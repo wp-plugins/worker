@@ -2,7 +2,6 @@
 
 class MWP_Backup_MysqlDump_DumpFactory
 {
-
     /**
      * @param       $config
      * @param array $options

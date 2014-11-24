@@ -24,7 +24,7 @@ class Monolog_Processor_WebProcessor implements Monolog_Processor_ProcessorInter
     public function __construct($serverData = null)
     {
         if (null === $serverData) {
-            $this->serverData =& $_SERVER;
+            $this->serverData = & $_SERVER;
         } elseif (is_array($serverData) || $serverData instanceof ArrayAccess) {
             $this->serverData = $serverData;
         } else {
@@ -33,7 +33,7 @@ class Monolog_Processor_WebProcessor implements Monolog_Processor_ProcessorInter
     }
 
     /**
-     * @param  array $record
+     * @param array $record
      *
      * @return array
      */
@@ -46,14 +46,14 @@ class Monolog_Processor_WebProcessor implements Monolog_Processor_ProcessorInter
         }
 
         $record['extra'] = array_merge(
-          $record['extra'],
-          array(
-              'url'         => $this->serverData['REQUEST_URI'],
-              'ip'          => isset($this->serverData['REMOTE_ADDR']) ? $this->serverData['REMOTE_ADDR'] : null,
-              'http_method' => isset($this->serverData['REQUEST_METHOD']) ? $this->serverData['REQUEST_METHOD'] : null,
-              'server'      => isset($this->serverData['SERVER_NAME']) ? $this->serverData['SERVER_NAME'] : null,
-              'referrer'    => isset($this->serverData['HTTP_REFERER']) ? $this->serverData['HTTP_REFERER'] : null,
-          )
+            $record['extra'],
+            array(
+                'url'         => $this->serverData['REQUEST_URI'],
+                'ip'          => isset($this->serverData['REMOTE_ADDR']) ? $this->serverData['REMOTE_ADDR'] : null,
+                'http_method' => isset($this->serverData['REQUEST_METHOD']) ? $this->serverData['REQUEST_METHOD'] : null,
+                'server'      => isset($this->serverData['SERVER_NAME']) ? $this->serverData['SERVER_NAME'] : null,
+                'referrer'    => isset($this->serverData['HTTP_REFERER']) ? $this->serverData['HTTP_REFERER'] : null,
+            )
         );
 
         if (isset($this->serverData['UNIQUE_ID'])) {

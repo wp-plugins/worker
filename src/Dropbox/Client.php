@@ -14,7 +14,10 @@ class Dropbox_Client
      *
      * @return string AccessToken
      */
-    function getAccessToken() { return $this->accessToken; }
+    public function getAccessToken()
+    {
+        return $this->accessToken;
+    }
 
     /** @var string AccessToken */
     private $accessToken;
@@ -38,7 +41,10 @@ class Dropbox_Client
      *
      * @return string
      */
-    function getClientIdentifier() { return $this->clientIdentifier; }
+    public function getClientIdentifier()
+    {
+        return $this->clientIdentifier;
+    }
 
     /** @var string */
     private $clientIdentifier;
@@ -50,7 +56,10 @@ class Dropbox_Client
      *
      * @return null|string
      */
-    function getUserLocale() { return $this->userLocale; }
+    public function getUserLocale()
+    {
+        return $this->userLocale;
+    }
 
     /** @var null|string */
     private $userLocale;
@@ -60,27 +69,30 @@ class Dropbox_Client
      *
      * @return Dropbox_Host
      */
-    function getHost() { return $this->host; }
+    public function getHost()
+    {
+        return $this->host;
+    }
 
     /**
      * Constructor.
      *
-     * @param string $accessToken
-     *     See {@link getAccessToken()}
-     * @param string $clientIdentifier
-     *     See {@link getClientIdentifier()}
+     * @param string      $accessToken
+     *                                      See {@link getAccessToken()}
+     * @param string      $clientIdentifier
+     *                                      See {@link getClientIdentifier()}
      * @param null|string $userLocale
-     *     See {@link getUserLocale()}
+     *                                      See {@link getUserLocale()}
      */
-    function __construct($accessToken, $clientIdentifier, $userLocale = null)
+    public function __construct($accessToken, $clientIdentifier, $userLocale = null)
     {
         self::checkAccessTokenArg("accessToken", $accessToken);
         self::checkClientIdentifierArg("clientIdentifier", $clientIdentifier);
         Dropbox_Checker::argStringNonEmptyOrNull("userLocale", $userLocale);
 
-        $this->accessToken = $accessToken;
+        $this->accessToken      = $accessToken;
         $this->clientIdentifier = $clientIdentifier;
-        $this->userLocale = $userLocale;
+        $this->userLocale       = $userLocale;
 
         // The $host parameter is sort of internal.  We don't include it in the param list because
         // we don't want it to be included in the documentation.  Use PHP arg list hacks to get at
@@ -97,7 +109,7 @@ class Dropbox_Client
 
         // These fields are redundant, but it makes these values a little more convenient
         // to access.
-        $this->apiHost = $host->getApi();
+        $this->apiHost     = $host->getApi();
         $this->contentHost = $host->getContent();
     }
 
@@ -116,11 +128,12 @@ class Dropbox_Client
      *
      * @param string $base
      * @param string $path
+     *
      * @return string
      */
-    function appendFilePath($base, $path)
+    public function appendFilePath($base, $path)
     {
-        return $base . "/auto/" . rawurlencode(substr($path, 1));
+        return $base."/auto/".rawurlencode(substr($path, 1));
     }
 
     /**
@@ -131,10 +144,12 @@ class Dropbox_Client
      *
      * @throws Dropbox_Exception
      */
-    function disableAccessToken()
+    public function disableAccessToken()
     {
         $response = $this->doPost($this->apiHost, "1/disable_access_token");
-        if ($response->statusCode !== 200) throw Dropbox_RequestUtil::unexpectedStatus($response);
+        if ($response->statusCode !== 200) {
+            throw Dropbox_RequestUtil::unexpectedStatus($response);
+        }
     }
 
     /**
@@ -147,14 +162,17 @@ class Dropbox_Client
      * </code>
      *
      * @return array
-     *    See <a href="https://www.dropbox.com/developers/core/docs#account-info">/account/info</a>.
+     *               See <a href="https://www.dropbox.com/developers/core/docs#account-info">/account/info</a>.
      *
      * @throws Dropbox_Exception
      */
-    function getAccountInfo()
+    public function getAccountInfo()
     {
         $response = $this->doGet($this->apiHost, "1/account/info");
-        if ($response->statusCode !== 200) throw Dropbox_RequestUtil::unexpectedStatus($response);
+        if ($response->statusCode !== 200) {
+            throw Dropbox_RequestUtil::unexpectedStatus($response);
+        }
+
         return Dropbox_RequestUtil::parseResponseJson($response->body);
     }
 
@@ -171,23 +189,23 @@ class Dropbox_Client
      * </code>
      *
      * @param string $path
-     *   The path to the file on Dropbox (UTF-8).
+     *                     The path to the file on Dropbox (UTF-8).
      *
      * @param resource $outStream
-     *   If the file exists, the file contents will be written to this stream.
+     *                            If the file exists, the file contents will be written to this stream.
      *
      * @param string|null $rev
-     *   If you want the latest revision of the file at the given path, pass in <code>null</code>.
-     *   If you want a specific version of a file, pass in value of the file metadata's "rev" field.
+     *                         If you want the latest revision of the file at the given path, pass in <code>null</code>.
+     *                         If you want a specific version of a file, pass in value of the file metadata's "rev" field.
      *
      * @return null|array
-     *   The <a href="https://www.dropbox.com/developers/core/docs#metadata-details">metadata
-     *   object</a> for the file at the given $path and $rev, or <code>null</code> if the file
-     *   doesn't exist,
+     *                    The <a href="https://www.dropbox.com/developers/core/docs#metadata-details">metadata
+     *                    object</a> for the file at the given $path and $rev, or <code>null</code> if the file
+     *                    doesn't exist,
      *
      * @throws Dropbox_Exception
      */
-    function getFile($path, $outStream, $rev = null)
+    public function getFile($path, $outStream, $rev = null)
     {
         Dropbox_Path::checkArgNonRoot("path", $path);
         Dropbox_Checker::argResource("outStream", $outStream);
@@ -198,13 +216,15 @@ class Dropbox_Client
             $this->appendFilePath("1/files", $path),
             array("rev" => $rev));
 
-        $curl = $this->mkCurl($url);
+        $curl            = $this->mkCurl($url);
         $metadataCatcher = new Dropbox_DropboxMetadataHeaderCatcher($curl->handle);
-        $streamRelay = new Dropbox_CurlStreamRelay($curl->handle, $outStream);
+        $streamRelay     = new Dropbox_CurlStreamRelay($curl->handle, $outStream);
 
         $response = $curl->exec();
 
-        if ($response->statusCode === 404) return null;
+        if ($response->statusCode === 404) {
+            return null;
+        }
 
         if ($response->statusCode !== 200) {
             $response->body = $streamRelay->getErrorBody();
@@ -251,29 +271,29 @@ class Dropbox_Client
      * </code>
      *
      * @param string $path
-     *    The Dropbox path to save the file to (UTF-8).
+     *                     The Dropbox path to save the file to (UTF-8).
      *
      * @param Dropbox_WriteMode $writeMode
-     *    What to do if there's already a file at the given path.
+     *                                     What to do if there's already a file at the given path.
      *
      * @param resource $inStream
-     *    The data to use for the file contents.
+     *                           The data to use for the file contents.
      *
      * @param int|null $numBytes
-     *    You can pass in <code>null</code> if you don't know.  If you do provide the size, we can
-     *    perform a slightly more efficient upload (fewer network round-trips) for files smaller
-     *    than 8 MB.
+     *                           You can pass in <code>null</code> if you don't know.  If you do provide the size, we can
+     *                           perform a slightly more efficient upload (fewer network round-trips) for files smaller
+     *                           than 8 MB.
      *
      * @param Callable|null $callback
-     *    Curl progress callback.
+     *                                Curl progress callback.
      *
      * @return mixed
-     *    The <a href="https://www.dropbox.com/developers/core/docs#metadata-details>metadata
-     *    object</a> for the newly-added file.
+     *               The <a href="https://www.dropbox.com/developers/core/docs#metadata-details>metadata
+     *               object</a> for the newly-added file.
      *
      * @throws Dropbox_Exception
      */
-    function uploadFile($path, $writeMode, $inStream, $numBytes = null, $callback = null)
+    public function uploadFile($path, $writeMode, $inStream, $numBytes = null, $callback = null)
     {
         Dropbox_Path::checkArgNonRoot("path", $path);
         Dropbox_WriteMode::checkArg("writeMode", $writeMode);
@@ -289,9 +309,9 @@ class Dropbox_Client
         // In all other cases, use regular upload.
         if ($numBytes === null || $numBytes > self::$AUTO_CHUNKED_UPLOAD_THRESHOLD) {
             $metadata = $this->_uploadFileChunked($path, $writeMode, $inStream, $numBytes,
-                                                  self::$DEFAULT_CHUNK_SIZE, $callback);
+                self::$DEFAULT_CHUNK_SIZE, $callback);
         } else {
-            $config = new Dropbox_Closure_CurlConfigInStream($inStream, $numBytes);
+            $config   = new Dropbox_Closure_CurlConfigInStream($inStream, $numBytes);
             $metadata = $this->_uploadFile($path, $writeMode, $config, $callback);
         }
 
@@ -311,27 +331,28 @@ class Dropbox_Client
      * </code>
      *
      * @param string $path
-     *    The Dropbox path to save the file to (UTF-8).
+     *                     The Dropbox path to save the file to (UTF-8).
      *
      * @param Dropbox_WriteMode $writeMode
-     *    What to do if there's already a file at the given path.
+     *                                     What to do if there's already a file at the given path.
      *
      * @param string $data
-     *    The data to use for the contents of the file.
+     *                     The data to use for the contents of the file.
      *
      * @return mixed
-     *    The <a href="https://www.dropbox.com/developers/core/docs#metadata-details>metadata
-     *    object</a> for the newly-added file.
+     *               The <a href="https://www.dropbox.com/developers/core/docs#metadata-details>metadata
+     *               object</a> for the newly-added file.
      *
      * @throws Dropbox_Exception
      */
-    function uploadFileFromString($path, $writeMode, $data)
+    public function uploadFileFromString($path, $writeMode, $data)
     {
         Dropbox_Path::checkArgNonRoot("path", $path);
         Dropbox_WriteMode::checkArg("writeMode", $writeMode);
         Dropbox_Checker::argString("data", $data);
 
         $config = new Dropbox_Closure_CurlConfigOctetStream($data);
+
         return $this->_uploadFile($path, $writeMode, $config);
     }
 
@@ -343,29 +364,29 @@ class Dropbox_Client
      * {@link chunkedUploadContinue()}, and {@link chunkedUploadFinish()}.
      *
      * @param string $path
-     *    The Dropbox path to save the file to (UTF-8).
+     *                     The Dropbox path to save the file to (UTF-8).
      *
      * @param Dropbox_WriteMode $writeMode
-     *    What to do if there's already a file at the given path.
+     *                                     What to do if there's already a file at the given path.
      *
      * @param resource $inStream
-     *    The data to use for the file contents.
+     *                           The data to use for the file contents.
      *
      * @param int|null $numBytes
-     *    The number of bytes available from $inStream.
-     *    You can pass in <code>null</code> if you don't know.
+     *                           The number of bytes available from $inStream.
+     *                           You can pass in <code>null</code> if you don't know.
      *
      * @param int|null $chunkSize
-     *    The number of bytes to upload in each chunk.  You can omit this (or pass in
-     *    <code>null</code> and the library will use a reasonable default.
+     *                            The number of bytes to upload in each chunk.  You can omit this (or pass in
+     *                            <code>null</code> and the library will use a reasonable default.
      *
      * @return mixed
-     *    The <a href="https://www.dropbox.com/developers/core/docs#metadata-details>metadata
-     *    object</a> for the newly-added file.
+     *               The <a href="https://www.dropbox.com/developers/core/docs#metadata-details>metadata
+     *               object</a> for the newly-added file.
      *
      * @throws Dropbox_Exception
      */
-    function uploadFileChunked($path, $writeMode, $inStream, $numBytes = null, $chunkSize = null)
+    public function uploadFileChunked($path, $writeMode, $inStream, $numBytes = null, $chunkSize = null)
     {
         if ($chunkSize === null) {
             $chunkSize = self::$DEFAULT_CHUNK_SIZE;
@@ -384,21 +405,21 @@ class Dropbox_Client
      * @param string $path
      *
      * @param Dropbox_WriteMode $writeMode
-     *    What to do if there's already a file at the given path (UTF-8).
+     *                                     What to do if there's already a file at the given path (UTF-8).
      *
      * @param resource $inStream
-     *    The source of data to upload.
+     *                           The source of data to upload.
      *
      * @param int|null $numBytes
-     *    You can pass in <code>null</code>.  But if you know how many bytes you expect, pass in
-     *    that value and this function will do a sanity check at the end to make sure the number of
-     *    bytes read from $inStream matches up.
+     *                           You can pass in <code>null</code>.  But if you know how many bytes you expect, pass in
+     *                           that value and this function will do a sanity check at the end to make sure the number of
+     *                           bytes read from $inStream matches up.
      *
      * @param int $chunkSize
      *
      * @return array
-     *    The <a href="https://www.dropbox.com/developers/core/docs#metadata-details>metadata
-     *    object</a> for the newly-added file.
+     *               The <a href="https://www.dropbox.com/developers/core/docs#metadata-details>metadata
+     *               object</a> for the newly-added file.
      *
      * @throws InvalidArgumentException
      * @throws Dropbox_Exception_BadResponse
@@ -422,11 +443,11 @@ class Dropbox_Client
         assert($chunkSize > 0);
 
         $data = self::readFully($inStream, $chunkSize);
-        $len = strlen($data);
+        $len  = strlen($data);
 
-        $client = $this;
+        $client      = $this;
         $uploadStart = new Dropbox_Closure_ChunkedUploadStartAction($client, $data, $callback);
-        $uploadId = Dropbox_RequestUtil::runWithRetry(3, $uploadStart);
+        $uploadId    = Dropbox_RequestUtil::runWithRetry(3, $uploadStart);
         unset($uploadStart);
 
         $byteOffset = $len;
@@ -434,11 +455,11 @@ class Dropbox_Client
         while (!feof($inStream)) {
             unset($data);
             $data = self::readFully($inStream, $chunkSize);
-            $len = strlen($data);
+            $len  = strlen($data);
 
             while (true) {
                 $uploadContinue = new Dropbox_Closure_ChunkedUploadContinueAction($client, $uploadId, $byteOffset, $data, $callback);
-                $r = Dropbox_RequestUtil::runWithRetry(3, $uploadContinue);
+                $r              = Dropbox_RequestUtil::runWithRetry(3, $uploadContinue);
                 unset($uploadContinue);
 
                 if ($r === true) {  // Chunk got uploaded!
@@ -454,25 +475,33 @@ class Dropbox_Client
                 $serverByteOffset = $r;
                 assert($serverByteOffset !== $byteOffset);  // chunkedUploadContinue ensures this.
                 // An earlier byte offset means the server has lost data we sent earlier.
-                if ($serverByteOffset < $byteOffset) throw new Dropbox_Exception_BadResponse(
+                if ($serverByteOffset < $byteOffset) {
+                    throw new Dropbox_Exception_BadResponse(
                     "Server is at an ealier byte offset: us=$byteOffset, server=$serverByteOffset");
+                }
                 $diff = $serverByteOffset - $byteOffset;
                 // If the server is past where we think it could possibly be, something went wrong.
-                if ($diff > $len) throw new Dropbox_Exception_BadResponse(
+                if ($diff > $len) {
+                    throw new Dropbox_Exception_BadResponse(
                     "Server is more than a chunk ahead: us=$byteOffset, server=$serverByteOffset");
+                }
                 // The normal case is that the server is a bit further along than us because of a
                 // partially-uploaded chunk.  Finish it off.
                 $byteOffset += $diff;
-                if ($diff === $len) break;  // If the server is at the end, we're done.
+                if ($diff === $len) {
+                    break;
+                }  // If the server is at the end, we're done.
                 $data = substr($data, $diff);
             }
         }
 
-        if ($numBytes !== null && $byteOffset !== $numBytes) throw new InvalidArgumentException(
+        if ($numBytes !== null && $byteOffset !== $numBytes) {
+            throw new InvalidArgumentException(
             "You passed numBytes=$numBytes but the stream had $byteOffset bytes.");
+        }
 
         $uploadFinish = new Dropbox_Closure_ChunkedUploadFinishAction($client, $uploadId, $path, $writeMode);
-        $metadata = Dropbox_RequestUtil::runWithRetry(3, $uploadFinish);
+        $metadata     = Dropbox_RequestUtil::runWithRetry(3, $uploadFinish);
 
         return $metadata;
     }
@@ -483,7 +512,8 @@ class Dropbox_Client
      * bytes have been read or we've reached EOF.
      *
      * @param resource $inStream
-     * @param int $numBytes
+     * @param int      $numBytes
+     *
      * @throws Dropbox_StreamReadException
      * @return string
      */
@@ -491,11 +521,13 @@ class Dropbox_Client
     {
         Dropbox_Checker::argNat("numBytes", $numBytes);
 
-        $full = '';
+        $full           = '';
         $bytesRemaining = $numBytes;
         while (!feof($inStream) && $bytesRemaining > 0) {
             $part = fread($inStream, $bytesRemaining);
-            if ($part === false) throw new Dropbox_StreamReadException("Error reading from \$inStream.");
+            if ($part === false) {
+                throw new Dropbox_StreamReadException("Error reading from \$inStream.");
+            }
             if ($full === '') {
                 $full = $part;
             } else {
@@ -503,13 +535,15 @@ class Dropbox_Client
             }
             $bytesRemaining -= strlen($part);
         }
+
         return $full;
     }
 
     /**
-     * @param string $path
-     * @param Dropbox_WriteMode $writeMode
+     * @param string                              $path
+     * @param Dropbox_WriteMode                   $writeMode
      * @param Dropbox_Closure_CurlConfigInterface $curlConfigClosure
+     *
      * @return array
      *
      * @throws Dropbox_Exception
@@ -536,7 +570,9 @@ class Dropbox_Client
         $curl->set(CURLOPT_RETURNTRANSFER, true);
         $response = $curl->exec();
 
-        if ($response->statusCode !== 200) throw Dropbox_RequestUtil::unexpectedStatus($response);
+        if ($response->statusCode !== 200) {
+            throw Dropbox_RequestUtil::unexpectedStatus($response);
+        }
 
         return Dropbox_RequestUtil::parseResponseJson($response->body);
     }
@@ -545,17 +581,17 @@ class Dropbox_Client
      * Start a new chunked upload session and upload the first chunk of data.
      *
      * @param string $data
-     *     The data to start off the chunked upload session.
+     *                     The data to start off the chunked upload session.
      *
      * @return array
-     *     A pair of <code>(string $uploadId, int $byteOffset)</code>.  <code>$uploadId</code>
-     *     is a unique identifier for this chunked upload session.  You pass this in to
-     *     {@link chunkedUploadContinue} and {@link chuunkedUploadFinish}.  <code>$byteOffset</code>
-     *     is the number of bytes that were successfully uploaded.
+     *               A pair of <code>(string $uploadId, int $byteOffset)</code>.  <code>$uploadId</code>
+     *               is a unique identifier for this chunked upload session.  You pass this in to
+     *               {@link chunkedUploadContinue} and {@link chuunkedUploadFinish}.  <code>$byteOffset</code>
+     *               is the number of bytes that were successfully uploaded.
      *
      * @throws Dropbox_Exception
      */
-    function chunkedUploadStart($data, $callback = null)
+    public function chunkedUploadStart($data, $callback = null)
     {
         Dropbox_Checker::argString("data", $data);
 
@@ -566,15 +602,21 @@ class Dropbox_Client
         }
 
         $correction = self::_chunkedUploadCheckForOffsetCorrection($response);
-        if ($correction !== null) throw new Dropbox_Exception_BadResponse(
+        if ($correction !== null) {
+            throw new Dropbox_Exception_BadResponse(
             "Got an offset-correcting 400 response, but we didn't send an offset");
+        }
 
-        if ($response->statusCode !== 200) throw Dropbox_RequestUtil::unexpectedStatus($response);
+        if ($response->statusCode !== 200) {
+            throw Dropbox_RequestUtil::unexpectedStatus($response);
+        }
 
         list($uploadId, $byteOffset) = self::_chunkedUploadParse200Response($response->body);
-        $len = strlen($data);
-        if ($byteOffset !== $len) throw new Dropbox_Exception_BadResponse(
+        $len                         = strlen($data);
+        if ($byteOffset !== $len) {
+            throw new Dropbox_Exception_BadResponse(
             "We sent $len bytes, but server returned an offset of $byteOffset");
+        }
 
         return $uploadId;
     }
@@ -583,30 +625,30 @@ class Dropbox_Client
      * Append another chunk data to a previously-started chunked upload session.
      *
      * @param string $uploadId
-     *     The unique identifier for the chunked upload session.  This is obtained via
-     *     {@link chunkedUploadStart}.
+     *                         The unique identifier for the chunked upload session.  This is obtained via
+     *                         {@link chunkedUploadStart}.
      *
      * @param int $byteOffset
-     *     The number of bytes you think you've already uploaded to the given chunked upload
-     *     session.  The server will append the new chunk of data after that point.
+     *                        The number of bytes you think you've already uploaded to the given chunked upload
+     *                        session.  The server will append the new chunk of data after that point.
      *
      * @param string $data
-     *     The data to append to the existing chunked upload session.
+     *                     The data to append to the existing chunked upload session.
      *
      * @param Callable $callback
      *
      * @return int|bool
-     *     If <code>false</code>, it means the server didn't know about the given
-     *     <code>$uploadId</code>.  This may be because the chunked upload session has expired
-     *     (they last around 24 hours).
-     *     If <code>true</code>, the chunk was successfully uploaded.  If an integer, it means
-     *     you and the server don't agree on the current <code>$byteOffset</code>.  The returned
-     *     integer is the server's internal byte offset for the chunked upload session.  You need
-     *     to adjust your input to match.
+     *                  If <code>false</code>, it means the server didn't know about the given
+     *                  <code>$uploadId</code>.  This may be because the chunked upload session has expired
+     *                  (they last around 24 hours).
+     *                  If <code>true</code>, the chunk was successfully uploaded.  If an integer, it means
+     *                  you and the server don't agree on the current <code>$byteOffset</code>.  The returned
+     *                  integer is the server's internal byte offset for the chunked upload session.  You need
+     *                  to adjust your input to match.
      *
      * @throws Dropbox_Exception
      */
-    function chunkedUploadContinue($uploadId, $byteOffset, $data, $callback = null)
+    public function chunkedUploadContinue($uploadId, $byteOffset, $data, $callback = null)
     {
         Dropbox_Checker::argStringNonEmpty("uploadId", $uploadId);
         Dropbox_Checker::argNat("byteOffset", $byteOffset);
@@ -623,50 +665,71 @@ class Dropbox_Client
         $correction = self::_chunkedUploadCheckForOffsetCorrection($response);
         if ($correction !== null) {
             list($correctedUploadId, $correctedByteOffset) = $correction;
-            if ($correctedUploadId !== $uploadId) throw new Dropbox_Exception_BadResponse(
+            if ($correctedUploadId !== $uploadId) {
+                throw new Dropbox_Exception_BadResponse(
                 "Corrective 400 upload_id mismatch: us=".
                 self::q($uploadId)." server=".self::q($correctedUploadId));
-            if ($correctedByteOffset === $byteOffset) throw new Dropbox_Exception_BadResponse(
+            }
+            if ($correctedByteOffset === $byteOffset) {
+                throw new Dropbox_Exception_BadResponse(
                 "Corrective 400 offset is the same as ours: $byteOffset");
+            }
+
             return $correctedByteOffset;
         }
 
-        if ($response->statusCode !== 200) throw Dropbox_RequestUtil::unexpectedStatus($response);
+        if ($response->statusCode !== 200) {
+            throw Dropbox_RequestUtil::unexpectedStatus($response);
+        }
         list($retUploadId, $retByteOffset) = self::_chunkedUploadParse200Response($response->body);
 
         $nextByteOffset = $byteOffset + strlen($data);
-        if ($uploadId !== $retUploadId) throw new Dropbox_Exception_BadResponse(
-                "upload_id mismatch: us=".self::q($uploadId).", server=".self::q($uploadId));
-        if ($nextByteOffset !== $retByteOffset) throw new Dropbox_Exception_BadResponse(
-                "next-offset mismatch: us=$nextByteOffset, server=$retByteOffset");
+        if ($uploadId !== $retUploadId) {
+            throw new Dropbox_Exception_BadResponse(
+            "upload_id mismatch: us=".self::q($uploadId).", server=".self::q($uploadId));
+        }
+        if ($nextByteOffset !== $retByteOffset) {
+            throw new Dropbox_Exception_BadResponse(
+            "next-offset mismatch: us=$nextByteOffset, server=$retByteOffset");
+        }
 
         return true;
     }
 
     /**
      * @param string $body
+     *
      * @return array
      */
     private static function _chunkedUploadParse200Response($body)
     {
-        $j = Dropbox_RequestUtil::parseResponseJson($body);
-        $uploadId = self::getField($j, "upload_id");
+        $j          = Dropbox_RequestUtil::parseResponseJson($body);
+        $uploadId   = self::getField($j, "upload_id");
         $byteOffset = self::getField($j, "offset");
+
         return array($uploadId, $byteOffset);
     }
 
     /**
      * @param Dropbox_HttpResponse $response
+     *
      * @return array|null
      */
     private static function _chunkedUploadCheckForOffsetCorrection($response)
     {
-        if ($response->statusCode !== 400) return null;
+        if ($response->statusCode !== 400) {
+            return null;
+        }
         $j = json_decode($response->body, true);
-        if ($j === null) return null;
-        if (!array_key_exists("upload_id", $j) || !array_key_exists("offset", $j)) return null;
-        $uploadId = $j["upload_id"];
+        if ($j === null) {
+            return null;
+        }
+        if (!array_key_exists("upload_id", $j) || !array_key_exists("offset", $j)) {
+            return null;
+        }
+        $uploadId   = $j["upload_id"];
         $byteOffset = $j["offset"];
+
         return array($uploadId, $byteOffset);
     }
 
@@ -676,25 +739,25 @@ class Dropbox_Client
      * See <a href="https://www.dropbox.com/developers/core/docs#commit-chunked-upload">/commit_chunked_upload</a>.
      *
      * @param string $uploadId
-     *     The unique identifier for the chunked upload session.  This is obtained via
-     *     {@link chunkedUploadStart}.
+     *                         The unique identifier for the chunked upload session.  This is obtained via
+     *                         {@link chunkedUploadStart}.
      *
      * @param string $path
-     *    The Dropbox path to save the file to ($path).
+     *                     The Dropbox path to save the file to ($path).
      *
      * @param Dropbox_WriteMode $writeMode
-     *    What to do if there's already a file at the given path.
+     *                                     What to do if there's already a file at the given path.
      *
      * @return array|null
-     *    If <code>null</code>, it means the Dropbox server wasn't aware of the
-     *    <code>$uploadId</code> you gave it.
-     *    Otherwise, you get back the
-     *    <a href="https://www.dropbox.com/developers/core/docs#metadata-details">metadata object</a>
-     *    for the newly-created file.
+     *                    If <code>null</code>, it means the Dropbox server wasn't aware of the
+     *                    <code>$uploadId</code> you gave it.
+     *                    Otherwise, you get back the
+     *                    <a href="https://www.dropbox.com/developers/core/docs#metadata-details">metadata object</a>
+     *                    for the newly-created file.
      *
      * @throws Dropbox_Exception
      */
-    function chunkedUploadFinish($uploadId, $path, $writeMode)
+    public function chunkedUploadFinish($uploadId, $path, $writeMode)
     {
         Dropbox_Checker::argStringNonEmpty("uploadId", $uploadId);
         Dropbox_Path::checkArgNonRoot("path", $path);
@@ -707,15 +770,19 @@ class Dropbox_Client
             $this->appendFilePath("1/commit_chunked_upload", $path),
             $params);
 
-        if ($response->statusCode === 404) return null;
-        if ($response->statusCode !== 200) throw Dropbox_RequestUtil::unexpectedStatus($response);
+        if ($response->statusCode === 404) {
+            return null;
+        }
+        if ($response->statusCode !== 200) {
+            throw Dropbox_RequestUtil::unexpectedStatus($response);
+        }
 
         return Dropbox_RequestUtil::parseResponseJson($response->body);
     }
 
     /**
-     * @param array $params
-     * @param string $data
+     * @param array    $params
+     * @param string   $data
      * @param callable $callback
      *
      * @return Dropbox_HttpResponse
@@ -738,6 +805,7 @@ class Dropbox_Client
         }
 
         $curl->set(CURLOPT_RETURNTRANSFER, true);
+
         return $curl->exec();
     }
 
@@ -751,16 +819,16 @@ class Dropbox_Client
      * </code>
      *
      * @param string $path
-     *    The Dropbox path to a file or folder (UTF-8).
+     *                     The Dropbox path to a file or folder (UTF-8).
      *
      * @return array|null
-     *    If there is a file or folder at the given path, you'll get back the
-     *    <a href="https://www.dropbox.com/developers/core/docs#metadata-details">metadata object</a>
-     *    for that file or folder.  If not, you'll get back <code>null</code>.
+     *                    If there is a file or folder at the given path, you'll get back the
+     *                    <a href="https://www.dropbox.com/developers/core/docs#metadata-details">metadata object</a>
+     *                    for that file or folder.  If not, you'll get back <code>null</code>.
      *
      * @throws Dropbox_Exception
      */
-    function getMetadata($path)
+    public function getMetadata($path)
     {
         Dropbox_Path::checkArg("path", $path);
 
@@ -778,17 +846,17 @@ class Dropbox_Client
      * </code>
      *
      * @param string $path
-     *    The Dropbox path to a file or folder (UTF-8).
+     *                     The Dropbox path to a file or folder (UTF-8).
      *
      * @return array|null
-     *    If there is a file or folder at the given path, you'll get back the
-     *    <a href="https://www.dropbox.com/developers/core/docs#metadata-details">metadata object</a>
-     *    for that file or folder, along with all immediate children if it's a folder.  If not,
-     *    you'll get back <code>null</code>.
+     *                    If there is a file or folder at the given path, you'll get back the
+     *                    <a href="https://www.dropbox.com/developers/core/docs#metadata-details">metadata object</a>
+     *                    for that file or folder, along with all immediate children if it's a folder.  If not,
+     *                    you'll get back <code>null</code>.
      *
      * @throws Dropbox_Exception
      */
-    function getMetadataWithChildren($path)
+    public function getMetadataWithChildren($path)
     {
         Dropbox_Path::checkArg("path", $path);
 
@@ -797,7 +865,8 @@ class Dropbox_Client
 
     /**
      * @param string $path
-     * @param array $params
+     * @param array  $params
+     *
      * @return array
      *
      * @throws Dropbox_Exception
@@ -809,11 +878,18 @@ class Dropbox_Client
             $this->appendFilePath("1/metadata", $path),
             $params);
 
-        if ($response->statusCode === 404) return null;
-        if ($response->statusCode !== 200) throw Dropbox_RequestUtil::unexpectedStatus($response);
+        if ($response->statusCode === 404) {
+            return null;
+        }
+        if ($response->statusCode !== 200) {
+            throw Dropbox_RequestUtil::unexpectedStatus($response);
+        }
 
         $metadata = Dropbox_RequestUtil::parseResponseJson($response->body);
-        if (array_key_exists("is_deleted", $metadata) && $metadata["is_deleted"]) return null;
+        if (array_key_exists("is_deleted", $metadata) && $metadata["is_deleted"]) {
+            return null;
+        }
+
         return $metadata;
     }
 
@@ -842,20 +918,20 @@ class Dropbox_Client
      * </code>
      *
      * @param string $path
-     *    The Dropbox path to a folder (UTF-8).
+     *                     The Dropbox path to a folder (UTF-8).
      *
      * @param string $previousFolderHash
-     *    The "hash" field from the previously retrieved folder metadata.
+     *                                   The "hash" field from the previously retrieved folder metadata.
      *
      * @return array
-     *    A <code>list(boolean $changed, array $metadata)</code>.  If the metadata hasn't changed,
-     *    you'll get <code>list(false, null)</code>.  If the metadata of the folder or any of its
-     *    children has changed, you'll get <code>list(true, $newMetadata)</code>.  $metadata is a
-     *    <a href="https://www.dropbox.com/developers/core/docs#metadata-details">metadata object</a>.
+     *               A <code>list(boolean $changed, array $metadata)</code>.  If the metadata hasn't changed,
+     *               you'll get <code>list(false, null)</code>.  If the metadata of the folder or any of its
+     *               children has changed, you'll get <code>list(true, $newMetadata)</code>.  $metadata is a
+     *               <a href="https://www.dropbox.com/developers/core/docs#metadata-details">metadata object</a>.
      *
      * @throws Dropbox_Exception
      */
-    function getMetadataWithChildrenIfChanged($path, $previousFolderHash)
+    public function getMetadataWithChildrenIfChanged($path, $previousFolderHash)
     {
         Dropbox_Path::checkArg("path", $path);
         Dropbox_Checker::argStringNonEmpty("previousFolderHash", $previousFolderHash);
@@ -867,14 +943,21 @@ class Dropbox_Client
             $this->appendFilePath("1/metadata", $path),
             $params);
 
-        if ($response->statusCode === 304) return array(false, null);
-        if ($response->statusCode === 404) return array(true, null);
-        if ($response->statusCode !== 200) throw Dropbox_RequestUtil::unexpectedStatus($response);
+        if ($response->statusCode === 304) {
+            return array(false, null);
+        }
+        if ($response->statusCode === 404) {
+            return array(true, null);
+        }
+        if ($response->statusCode !== 200) {
+            throw Dropbox_RequestUtil::unexpectedStatus($response);
+        }
 
         $metadata = Dropbox_RequestUtil::parseResponseJson($response->body);
         if (array_key_exists("is_deleted", $metadata) && $metadata["is_deleted"]) {
             return array(true, null);
         }
+
         return array(true, $metadata);
     }
 
@@ -882,35 +965,37 @@ class Dropbox_Client
      * A way of letting you keep up with changes to files and folders in a user's Dropbox.
      *
      * @param string|null $cursor
-     *    If this is the first time you're calling this, pass in <code>null</code>.  Otherwise,
-     *    pass in whatever cursor was returned by the previous call.
+     *                            If this is the first time you're calling this, pass in <code>null</code>.  Otherwise,
+     *                            pass in whatever cursor was returned by the previous call.
      *
      * @param string|null $pathPrefix
-     *    If <code>null</code>, you'll get results for the entire folder (either the user's
-     *    entire Dropbox or your App Folder).  If you set <code>$path_prefix</code> to
-     *    "/Photos/Vacation", you'll only get results for that path and any files and folders
-     *    under it.
+     *                                If <code>null</code>, you'll get results for the entire folder (either the user's
+     *                                entire Dropbox or your App Folder).  If you set <code>$path_prefix</code> to
+     *                                "/Photos/Vacation", you'll only get results for that path and any files and folders
+     *                                under it.
      *
      * @return array
-     *    A <a href="https://www.dropbox.com/developers/core/docs#delta">delta page</a>, which
-     *    contains a list of changes to apply along with a new "cursor" that should be passed into
-     *    future <code>getDelta</code> calls.  If the "reset" field is <code>true</code>, you
-     *    should clear your local state before applying the changes.  If the "has_more" field is
-     *    <code>true</code>, call <code>getDelta</code> immediately to get more results, otherwise
-     *    wait a while (at least 5 minutes) before calling <code>getDelta</code> again.
+     *               A <a href="https://www.dropbox.com/developers/core/docs#delta">delta page</a>, which
+     *               contains a list of changes to apply along with a new "cursor" that should be passed into
+     *               future <code>getDelta</code> calls.  If the "reset" field is <code>true</code>, you
+     *               should clear your local state before applying the changes.  If the "has_more" field is
+     *               <code>true</code>, call <code>getDelta</code> immediately to get more results, otherwise
+     *               wait a while (at least 5 minutes) before calling <code>getDelta</code> again.
      *
      * @throws Dropbox_Exception
      */
-    function getDelta($cursor = null, $pathPrefix = null)
+    public function getDelta($cursor = null, $pathPrefix = null)
     {
         Dropbox_Checker::argStringNonEmptyOrNull("cursor", $cursor);
         Dropbox_Path::checkArgOrNull("pathPrefix", $pathPrefix);
 
         $response = $this->doPost($this->apiHost, "1/delta", array(
-            "cursor" => $cursor,
-            "path_prefix" => $pathPrefix));
+            "cursor"      => $cursor,
+            "path_prefix" => $pathPrefix, ));
 
-        if ($response->statusCode !== 200) throw Dropbox_RequestUtil::unexpectedStatus($response);
+        if ($response->statusCode !== 200) {
+            throw Dropbox_RequestUtil::unexpectedStatus($response);
+        }
 
         return Dropbox_RequestUtil::parseResponseJson($response->body);
     }
@@ -921,19 +1006,19 @@ class Dropbox_Client
      * See <a href="https://www.dropbox.com/developers/core/docs#revisions">/revisions</a>.
      *
      * @param string $path
-     *    The Dropbox path that you want file revision metadata for (UTF-8).
+     *                     The Dropbox path that you want file revision metadata for (UTF-8).
      *
      * @param int|null limit
      *    The maximum number of revisions to return.
      *
      * @return array|null
-     *    A list of <a href="https://www.dropbox.com/developers/core/docs#metadata-details>metadata
-     *    objects</a>, one for each file revision.  The later revisions appear first in the list.
-     *    If <code>null</code>, then there were too many revisions at that path.
+     *                    A list of <a href="https://www.dropbox.com/developers/core/docs#metadata-details>metadata
+     *                    objects</a>, one for each file revision.  The later revisions appear first in the list.
+     *                    If <code>null</code>, then there were too many revisions at that path.
      *
      * @throws Dropbox_Exception
      */
-    function getRevisions($path, $limit = null)
+    public function getRevisions($path, $limit = null)
     {
         Dropbox_Path::checkArgNonRoot("path", $path);
         Dropbox_Checker::argIntPositiveOrNull("limit", $limit);
@@ -943,8 +1028,12 @@ class Dropbox_Client
             $this->appendFilePath("1/revisions", $path),
             array("rev_limit" => $limit));
 
-        if ($response->statusCode === 406) return null;
-        if ($response->statusCode !== 200) throw Dropbox_RequestUtil::unexpectedStatus($response);
+        if ($response->statusCode === 406) {
+            return null;
+        }
+        if ($response->statusCode !== 200) {
+            throw Dropbox_RequestUtil::unexpectedStatus($response);
+        }
 
         return Dropbox_RequestUtil::parseResponseJson($response->body);
     }
@@ -956,18 +1045,18 @@ class Dropbox_Client
      * See <a href="https://www.dropbox.com/developers/core/docs#restore">/restore</a>.
      *
      * @param string $path
-     *    The Dropbox path of the file to restore (UTF-8).
+     *                     The Dropbox path of the file to restore (UTF-8).
      *
      * @param string $rev
-     *    The revision to restore the contents to.
+     *                    The revision to restore the contents to.
      *
      * @return mixed
-     *    The <a href="https://www.dropbox.com/developers/core/docs#metadata-details">metadata
-     *    object</a>
+     *               The <a href="https://www.dropbox.com/developers/core/docs#metadata-details">metadata
+     *               object</a>
      *
      * @throws Dropbox_Exception
      */
-    function restoreFile($path, $rev)
+    public function restoreFile($path, $rev)
     {
         Dropbox_Path::checkArgNonRoot("path", $path);
         Dropbox_Checker::argStringNonEmpty("rev", $rev);
@@ -977,8 +1066,12 @@ class Dropbox_Client
             $this->appendFilePath("1/restore", $path),
             array("rev" => $rev));
 
-        if ($response->statusCode === 404) return null;
-        if ($response->statusCode !== 200) throw Dropbox_RequestUtil::unexpectedStatus($response);
+        if ($response->statusCode === 404) {
+            return null;
+        }
+        if ($response->statusCode !== 200) {
+            throw Dropbox_RequestUtil::unexpectedStatus($response);
+        }
 
         return Dropbox_RequestUtil::parseResponseJson($response->body);
     }
@@ -989,25 +1082,25 @@ class Dropbox_Client
      * See <a href="https://www.dropbox.com/developers/core/docs#search">/search</a>.
      *
      * @param string $basePath
-     *    The path to limit the search to (UTF-8).  Pass in "/" to search everything.
+     *                         The path to limit the search to (UTF-8).  Pass in "/" to search everything.
      *
      * @param string $query
-     *    A space-separated list of substrings to search for.  A file matches only if it contains
-     *    all the substrings.
+     *                      A space-separated list of substrings to search for.  A file matches only if it contains
+     *                      all the substrings.
      *
      * @param int|null $limit
-     *    The maximum number of results to return.
+     *                        The maximum number of results to return.
      *
      * @param bool $includeDeleted
-     *    Whether to include deleted files in the results.
+     *                             Whether to include deleted files in the results.
      *
      * @return mixed
-     *    A list of <a href="https://www.dropbox.com/developers/core/docs#metadata-details>metadata
-     *    objects</a> of files that match the search query.
+     *               A list of <a href="https://www.dropbox.com/developers/core/docs#metadata-details>metadata
+     *               objects</a> of files that match the search query.
      *
      * @throws Dropbox_Exception
      */
-    function searchFileNames($basePath, $query, $limit = null, $includeDeleted = false)
+    public function searchFileNames($basePath, $query, $limit = null, $includeDeleted = false)
     {
         Dropbox_Path::checkArg("basePath", $basePath);
         Dropbox_Checker::argStringNonEmpty("query", $query);
@@ -1018,12 +1111,14 @@ class Dropbox_Client
             $this->apiHost,
             $this->appendFilePath("1/search", $basePath),
             array(
-                "query" => $query,
-                "file_limit" => $limit,
+                "query"           => $query,
+                "file_limit"      => $limit,
                 "include_deleted" => $includeDeleted,
             ));
 
-        if ($response->statusCode !== 200) throw Dropbox_RequestUtil::unexpectedStatus($response);
+        if ($response->statusCode !== 200) {
+            throw Dropbox_RequestUtil::unexpectedStatus($response);
+        }
 
         return Dropbox_RequestUtil::parseResponseJson($response->body);
     }
@@ -1036,14 +1131,14 @@ class Dropbox_Client
      * See <a href="https://www.dropbox.com/developers/core/docs#shares">/shares</a>.
      *
      * @param string $path
-     *    The Dropbox path to the file or folder you want to create a shareable link to (UTF-8).
+     *                     The Dropbox path to the file or folder you want to create a shareable link to (UTF-8).
      *
      * @return string
-     *    The URL of the preview page.
+     *                The URL of the preview page.
      *
      * @throws Dropbox_Exception
      */
-    function createShareableLink($path)
+    public function createShareableLink($path)
     {
         Dropbox_Path::checkArg("path", $path);
 
@@ -1054,10 +1149,15 @@ class Dropbox_Client
                 "short_url" => "false",
             ));
 
-        if ($response->statusCode === 404) return null;
-        if ($response->statusCode !== 200) throw Dropbox_RequestUtil::unexpectedStatus($response);
+        if ($response->statusCode === 404) {
+            return null;
+        }
+        if ($response->statusCode !== 200) {
+            throw Dropbox_RequestUtil::unexpectedStatus($response);
+        }
 
         $j = Dropbox_RequestUtil::parseResponseJson($response->body);
+
         return self::getField($j, "url");
     }
 
@@ -1068,16 +1168,16 @@ class Dropbox_Client
      * See <a href="https://www.dropbox.com/developers/core/docs#media">/media</a>.
      *
      * @param string $path
-     *    The Dropbox path to a file or folder (UTF-8).
+     *                     The Dropbox path to a file or folder (UTF-8).
      *
      * @return array
-     *    A <code>list(string $url, \DateTime $expires)</code> where <code>$url</code> is a direct
-     *    link to the requested file and <code>$expires</code> is a standard PHP
-     *    <code>\DateTime</code> representing when <code>$url</code> will stop working.
+     *               A <code>list(string $url, \DateTime $expires)</code> where <code>$url</code> is a direct
+     *               link to the requested file and <code>$expires</code> is a standard PHP
+     *               <code>\DateTime</code> representing when <code>$url</code> will stop working.
      *
      * @throws Dropbox_Exception
      */
-    function createTemporaryDirectLink($path)
+    public function createTemporaryDirectLink($path)
     {
         Dropbox_Path::checkArgNonRoot("path", $path);
 
@@ -1085,12 +1185,17 @@ class Dropbox_Client
             $this->apiHost,
             $this->appendFilePath("1/media", $path));
 
-        if ($response->statusCode === 404) return null;
-        if ($response->statusCode !== 200) throw Dropbox_RequestUtil::unexpectedStatus($response);
+        if ($response->statusCode === 404) {
+            return null;
+        }
+        if ($response->statusCode !== 200) {
+            throw Dropbox_RequestUtil::unexpectedStatus($response);
+        }
 
-        $j = Dropbox_RequestUtil::parseResponseJson($response->body);
-        $url = self::getField($j, "url");
+        $j       = Dropbox_RequestUtil::parseResponseJson($response->body);
+        $url     = self::getField($j, "url");
         $expires = self::parseDateTime(self::getField($j, "expires"));
+
         return array($url, $expires);
     }
 
@@ -1106,14 +1211,14 @@ class Dropbox_Client
      * See <a href="https://www.dropbox.com/developers/core/docs#copy_ref">/copy_ref</a>.
      *
      * @param string $path
-     *    The Dropbox path of the file or folder you want to create a copy ref for (UTF-8).
+     *                     The Dropbox path of the file or folder you want to create a copy ref for (UTF-8).
      *
      * @return string
-     *    The copy ref (just a string that you keep track of).
+     *                The copy ref (just a string that you keep track of).
      *
      * @throws Dropbox_Exception
      */
-    function createCopyRef($path)
+    public function createCopyRef($path)
     {
         Dropbox_Path::checkArg("path", $path);
 
@@ -1121,10 +1226,15 @@ class Dropbox_Client
             $this->apiHost,
             $this->appendFilePath("1/copy_ref", $path));
 
-        if ($response->statusCode === 404) return null;
-        if ($response->statusCode !== 200) throw Dropbox_RequestUtil::unexpectedStatus($response);
+        if ($response->statusCode === 404) {
+            return null;
+        }
+        if ($response->statusCode !== 200) {
+            throw Dropbox_RequestUtil::unexpectedStatus($response);
+        }
 
         $j = Dropbox_RequestUtil::parseResponseJson($response->body);
+
         return self::getField($j, "copy_ref");
     }
 
@@ -1134,32 +1244,32 @@ class Dropbox_Client
      * See <a href="https://www.dropbox.com/developers/core/docs#thumbnails">/thumbnails</a>.
      *
      * @param string $path
-     *    The path to the file you want a thumbnail for (UTF-8).
+     *                     The path to the file you want a thumbnail for (UTF-8).
      *
      * @param string $format
-     *    One of the two image formats: "jpeg" or "png".
+     *                       One of the two image formats: "jpeg" or "png".
      *
      * @param string $size
-     *    One of the predefined image size names, as a string:
-     *    <ul>
-     *    <li>"xs" - 32x32</li>
-     *    <li>"s" - 64x64</li>
-     *    <li>"m" - 128x128</li>
-     *    <li>"l" - 640x480</li>
-     *    <li>"xl" - 1024x768</li>
-     *    </ul>
+     *                     One of the predefined image size names, as a string:
+     *                     <ul>
+     *                     <li>"xs" - 32x32</li>
+     *                     <li>"s" - 64x64</li>
+     *                     <li>"m" - 128x128</li>
+     *                     <li>"l" - 640x480</li>
+     *                     <li>"xl" - 1024x768</li>
+     *                     </ul>
      *
      * @return array|null
-     *    If the file exists, you'll get <code>list(array $metadata, string $data)</code> where
-     *    <code>$metadata</code> is the file's
-     *    <a href="https://www.dropbox.com/developers/core/docs#metadata-details">metadata object</a>
-     *    and $data is the raw data for the thumbnail image.  If the file doesn't exist, you'll
-     *    get <code>null</code>.
+     *                    If the file exists, you'll get <code>list(array $metadata, string $data)</code> where
+     *                    <code>$metadata</code> is the file's
+     *                    <a href="https://www.dropbox.com/developers/core/docs#metadata-details">metadata object</a>
+     *                    and $data is the raw data for the thumbnail image.  If the file doesn't exist, you'll
+     *                    get <code>null</code>.
      *
      * @throws Dropbox_Exception
      * @throws InvalidArgumentException
      */
-    function getThumbnail($path, $format, $size)
+    public function getThumbnail($path, $format, $size)
     {
         Dropbox_Path::checkArgNonRoot("path", $path);
         Dropbox_Checker::argString("format", $format);
@@ -1176,16 +1286,21 @@ class Dropbox_Client
             $this->appendFilePath("1/thumbnails", $path),
             array("size" => $size, "format" => $format));
 
-        $curl = $this->mkCurl($url);
+        $curl            = $this->mkCurl($url);
         $metadataCatcher = new Dropbox_DropboxMetadataHeaderCatcher($curl->handle);
 
         $curl->set(CURLOPT_RETURNTRANSFER, true);
         $response = $curl->exec();
 
-        if ($response->statusCode === 404) return null;
-        if ($response->statusCode !== 200) throw Dropbox_RequestUtil::unexpectedStatus($response);
+        if ($response->statusCode === 404) {
+            return null;
+        }
+        if ($response->statusCode !== 200) {
+            throw Dropbox_RequestUtil::unexpectedStatus($response);
+        }
 
         $metadata = $metadataCatcher->getMetadata();
+
         return array($metadata, $response->body);
     }
 
@@ -1195,18 +1310,18 @@ class Dropbox_Client
      * See <a href="https://www.dropbox.com/developers/core/docs#fileops-copy">/fileops/copy</a>.
      *
      * @param string $fromPath
-     *    The Dropbox path of the file or folder you want to copy (UTF-8).
+     *                         The Dropbox path of the file or folder you want to copy (UTF-8).
      *
      * @param string $toPath
-     *    The destination Dropbox path (UTF-8).
+     *                       The destination Dropbox path (UTF-8).
      *
      * @return mixed
-     *    The <a href="https://www.dropbox.com/developers/core/docs#metadata-details">metadata
-     *    object</a> for the new file or folder.
+     *               The <a href="https://www.dropbox.com/developers/core/docs#metadata-details">metadata
+     *               object</a> for the new file or folder.
      *
      * @throws Dropbox_Exception
      */
-    function copy($fromPath, $toPath)
+    public function copy($fromPath, $toPath)
     {
         Dropbox_Path::checkArg("fromPath", $fromPath);
         Dropbox_Path::checkArgNonRoot("toPath", $toPath);
@@ -1215,12 +1330,14 @@ class Dropbox_Client
             $this->apiHost,
             "1/fileops/copy",
             array(
-                "root" => "auto",
+                "root"      => "auto",
                 "from_path" => $fromPath,
-                "to_path" => $toPath,
+                "to_path"   => $toPath,
             ));
 
-        if ($response->statusCode !== 200) throw Dropbox_RequestUtil::unexpectedStatus($response);
+        if ($response->statusCode !== 200) {
+            throw Dropbox_RequestUtil::unexpectedStatus($response);
+        }
 
         return Dropbox_RequestUtil::parseResponseJson($response->body);
     }
@@ -1232,18 +1349,18 @@ class Dropbox_Client
      * See <a href="https://www.dropbox.com/developers/core/docs#fileops-copy">/fileops/copy</a>.
      *
      * @param string $copyRef
-     *    A copy ref obtained via the {@link createCopyRef()} call.
+     *                        A copy ref obtained via the {@link createCopyRef()} call.
      *
      * @param string $toPath
-     *    The Dropbox path you want to copy the file or folder to (UTF-8).
+     *                       The Dropbox path you want to copy the file or folder to (UTF-8).
      *
      * @return mixed
-     *    The <a href="https://www.dropbox.com/developers/core/docs#metadata-details">metadata
-     *    object</a> for the new file or folder.
+     *               The <a href="https://www.dropbox.com/developers/core/docs#metadata-details">metadata
+     *               object</a> for the new file or folder.
      *
      * @throws Dropbox_Exception
      */
-    function copyFromCopyRef($copyRef, $toPath)
+    public function copyFromCopyRef($copyRef, $toPath)
     {
         Dropbox_Checker::argStringNonEmpty("copyRef", $copyRef);
         Dropbox_Path::checkArgNonRoot("toPath", $toPath);
@@ -1252,13 +1369,15 @@ class Dropbox_Client
             $this->apiHost,
             "1/fileops/copy",
             array(
-                "root" => "auto",
+                "root"          => "auto",
                 "from_copy_ref" => $copyRef,
-                "to_path" => $toPath,
+                "to_path"       => $toPath,
             )
         );
 
-        if ($response->statusCode !== 200) throw Dropbox_RequestUtil::unexpectedStatus($response);
+        if ($response->statusCode !== 200) {
+            throw Dropbox_RequestUtil::unexpectedStatus($response);
+        }
 
         return Dropbox_RequestUtil::parseResponseJson($response->body);
     }
@@ -1269,16 +1388,16 @@ class Dropbox_Client
      * See <a href="https://www.dropbox.com/developers/core/docs#fileops-create-folder">/fileops/create_folder</a>.
      *
      * @param string $path
-     *    The Dropbox path at which to create the folder (UTF-8).
+     *                     The Dropbox path at which to create the folder (UTF-8).
      *
      * @return array|null
-     *    If successful, you'll get back the
-     *    <a href="https://www.dropbox.com/developers/core/docs#metadata-details">metadata object</a>
-     *    for the newly-created folder.  If not successful, you'll get <code>null</code>.
+     *                    If successful, you'll get back the
+     *                    <a href="https://www.dropbox.com/developers/core/docs#metadata-details">metadata object</a>
+     *                    for the newly-created folder.  If not successful, you'll get <code>null</code>.
      *
      * @throws Dropbox_Exception
      */
-    function createFolder($path)
+    public function createFolder($path)
     {
         Dropbox_Path::checkArgNonRoot("path", $path);
 
@@ -1290,8 +1409,12 @@ class Dropbox_Client
                 "path" => $path,
             ));
 
-        if ($response->statusCode === 403) return null;
-        if ($response->statusCode !== 200) throw Dropbox_RequestUtil::unexpectedStatus($response);
+        if ($response->statusCode === 403) {
+            return null;
+        }
+        if ($response->statusCode !== 200) {
+            throw Dropbox_RequestUtil::unexpectedStatus($response);
+        }
 
         return Dropbox_RequestUtil::parseResponseJson($response->body);
     }
@@ -1302,15 +1425,15 @@ class Dropbox_Client
      * See <a href="https://www.dropbox.com/developers/core/docs#fileops-delete">/fileops/delete</a>.
      *
      * @param string $path
-     *    The Dropbox path of the file or folder to delete (UTF-8).
+     *                     The Dropbox path of the file or folder to delete (UTF-8).
      *
      * @return mixed
-     *    The <a href="https://www.dropbox.com/developers/core/docs#metadata-details">metadata
-     *    object</a> for the deleted file or folder.
+     *               The <a href="https://www.dropbox.com/developers/core/docs#metadata-details">metadata
+     *               object</a> for the deleted file or folder.
      *
      * @throws Dropbox_Exception
      */
-    function delete($path)
+    public function delete($path)
     {
         Dropbox_Path::checkArgNonRoot("path", $path);
 
@@ -1322,7 +1445,9 @@ class Dropbox_Client
                 "path" => $path,
             ));
 
-        if ($response->statusCode !== 200) throw Dropbox_RequestUtil::unexpectedStatus($response);
+        if ($response->statusCode !== 200) {
+            throw Dropbox_RequestUtil::unexpectedStatus($response);
+        }
 
         return Dropbox_RequestUtil::parseResponseJson($response->body);
     }
@@ -1333,18 +1458,18 @@ class Dropbox_Client
      * See <a href="https://www.dropbox.com/developers/core/docs#fileops-move">/fileops/move</a>.
      *
      * @param string $fromPath
-     *    The source Dropbox path (UTF-8).
+     *                         The source Dropbox path (UTF-8).
      *
      * @param string $toPath
-     *    The destination Dropbox path (UTF-8).
+     *                       The destination Dropbox path (UTF-8).
      *
      * @return mixed
-     *    The <a href="https://www.dropbox.com/developers/core/docs#metadata-details">metadata
-     *    object</a> for the destination file or folder.
+     *               The <a href="https://www.dropbox.com/developers/core/docs#metadata-details">metadata
+     *               object</a> for the destination file or folder.
      *
      * @throws Dropbox_Exception
      */
-    function move($fromPath, $toPath)
+    public function move($fromPath, $toPath)
     {
         Dropbox_Path::checkArgNonRoot("fromPath", $fromPath);
         Dropbox_Path::checkArgNonRoot("toPath", $toPath);
@@ -1353,12 +1478,14 @@ class Dropbox_Client
             $this->apiHost,
             "1/fileops/move",
             array(
-                "root" => "auto",
+                "root"      => "auto",
                 "from_path" => $fromPath,
-                "to_path" => $toPath,
+                "to_path"   => $toPath,
             ));
 
-        if ($response->statusCode !== 200) throw Dropbox_RequestUtil::unexpectedStatus($response);
+        if ($response->statusCode !== 200) {
+            throw Dropbox_RequestUtil::unexpectedStatus($response);
+        }
 
         return Dropbox_RequestUtil::parseResponseJson($response->body);
     }
@@ -1367,17 +1494,17 @@ class Dropbox_Client
      * Build a URL for making a GET or PUT request.  Will add the "locale"
      * parameter.
      *
-     * @param $host
-     *    Either the "API" or "API content" hostname from {@link getHost()}.
-     * @param $path
-     *    The "path" part of the URL.  For example, "/account/info".
+     * @param      $host
+     *                     Either the "API" or "API content" hostname from {@link getHost()}.
+     * @param      $path
+     *                     The "path" part of the URL.  For example, "/account/info".
      * @param null $params
-     *    URL parameters.  For POST requests, do not put the parameters here.
-     *    Include them in the request body instead.
+     *                     URL parameters.  For POST requests, do not put the parameters here.
+     *                     Include them in the request body instead.
      *
      * @return string
      */
-    function buildUrlForGetOrPut($host, $path, $params = null)
+    public function buildUrlForGetOrPut($host, $path, $params = null)
     {
         return Dropbox_RequestUtil::buildUrlForGetOrPut($this->userLocale, $host, $path, $params);
     }
@@ -1386,44 +1513,48 @@ class Dropbox_Client
      * Perform an OAuth-2-authorized GET request to the Dropbox API.  Will automatically
      * fill in "User-Agent" and "locale" as well.
      *
-     * @param string $host
-     *    Either the "API" or "API content" hostname from {@link getHost()}.
-     * @param string $path
-     *    The "path" part of the URL.  For example, "/account/info".
+     * @param string     $host
+     *                           Either the "API" or "API content" hostname from {@link getHost()}.
+     * @param string     $path
+     *                           The "path" part of the URL.  For example, "/account/info".
      * @param array|null $params
-     *    GET parameters.
+     *                           GET parameters.
+     *
      * @return Dropbox_HttpResponse
      *
      * @throws Dropbox_Exception
      */
-    function doGet($host, $path, $params = null)
+    public function doGet($host, $path, $params = null)
     {
         Dropbox_Checker::argString("host", $host);
         Dropbox_Checker::argString("path", $path);
+
         return Dropbox_RequestUtil::doGet($this->clientIdentifier, $this->accessToken, $this->userLocale,
-                                  $host, $path, $params);
+            $host, $path, $params);
     }
 
     /**
      * Perform an OAuth-2-authorized POST request to the Dropbox API.  Will automatically
      * fill in "User-Agent" and "locale" as well.
      *
-     * @param string $host
-     *    Either the "API" or "API content" hostname from {@link getHost()}.
-     * @param string $path
-     *    The "path" part of the URL.  For example, "/commit_chunked_upload".
+     * @param string     $host
+     *                           Either the "API" or "API content" hostname from {@link getHost()}.
+     * @param string     $path
+     *                           The "path" part of the URL.  For example, "/commit_chunked_upload".
      * @param array|null $params
-     *    POST parameters.
+     *                           POST parameters.
+     *
      * @return Dropbox_HttpResponse
      *
      * @throws Dropbox_Exception
      */
-    function doPost($host, $path, $params = null)
+    public function doPost($host, $path, $params = null)
     {
         Dropbox_Checker::argString("host", $host);
         Dropbox_Checker::argString("path", $path);
+
         return Dropbox_RequestUtil::doPost($this->clientIdentifier, $this->accessToken, $this->userLocale,
-                                   $host, $path, $params);
+            $host, $path, $params);
     }
 
     /**
@@ -1431,11 +1562,11 @@ class Dropbox_Client
      * and the proper OAuth 2 "Authorization" header.
      *
      * @param string $url
-     *    Generate this URL using {@link buildUrl()}.
+     *                    Generate this URL using {@link buildUrl()}.
      *
      * @return Dropbox_Curl
      */
-    function mkCurl($url)
+    public function mkCurl($url)
     {
         return Dropbox_RequestUtil::mkCurlWithOAuth($this->clientIdentifier, $url, $this->accessToken);
     }
@@ -1445,19 +1576,22 @@ class Dropbox_Client
      * formatted like: <code>"Sat, 21 Aug 2010 22:31:20 +0000"</code>.
      *
      * @param string $apiDateTimeString
-     *    A date/time string returned by the API.
+     *                                  A date/time string returned by the API.
      *
      * @return \DateTime
-     *    A standard PHP <code>\DateTime</code> instance.
+     *                   A standard PHP <code>\DateTime</code> instance.
      *
      * @throws Dropbox_Exception_BadResponse
-     *    Thrown if <code>$apiDateTimeString</code> isn't correctly formatted.
+     *                                       Thrown if <code>$apiDateTimeString</code> isn't correctly formatted.
      */
-    static function parseDateTime($apiDateTimeString)
+    public static function parseDateTime($apiDateTimeString)
     {
         $dt = DateTime::createFromFormat(self::$dateTimeFormat, $apiDateTimeString);
-        if ($dt === false) throw new Dropbox_Exception_BadResponse(
+        if ($dt === false) {
+            throw new Dropbox_Exception_BadResponse(
             "Bad date/time from server: ".self::q($apiDateTimeString));
+        }
+
         return $dt;
     }
 
@@ -1466,15 +1600,21 @@ class Dropbox_Client
     /**
      * @internal
      */
-    static function q($object) { return var_export($object, true); }
+    public static function q($object)
+    {
+        return var_export($object, true);
+    }
 
     /**
      * @internal
      */
-    static function getField($j, $fieldName)
+    public static function getField($j, $fieldName)
     {
-        if (!array_key_exists($fieldName, $j)) throw new Dropbox_Exception_BadResponse(
+        if (!array_key_exists($fieldName, $j)) {
+            throw new Dropbox_Exception_BadResponse(
             "missing field \"$fieldName\" in ".self::q($j));
+        }
+
         return $j[$fieldName];
     }
 
@@ -1486,40 +1626,56 @@ class Dropbox_Client
      *
      * @return string
      */
-    static function getAccessTokenError($s)
+    public static function getAccessTokenError($s)
     {
-        if ($s === null) return "can't be null";
-        if (strlen($s) === 0) return "can't be empty";
-       // if (preg_match('@[^-=_~/A-Za-z0-9\.\+]@', $s) === 1) return "contains invalid character";
+        if ($s === null) {
+            return "can't be null";
+        }
+        if (strlen($s) === 0) {
+            return "can't be empty";
+        }
+
+        // if (preg_match('@[^-=_~/A-Za-z0-9\.\+]@', $s) === 1) return "contains invalid character";
         return null;
     }
 
     /**
      * @internal
      */
-    static function checkAccessTokenArg($argName, $accessToken)
+    public static function checkAccessTokenArg($argName, $accessToken)
     {
         $error = self::getAccessTokenError($accessToken);
-        if ($error !== null) throw new InvalidArgumentException("'$argName' invalid: $error");
+        if ($error !== null) {
+            throw new InvalidArgumentException("'$argName' invalid: $error");
+        }
     }
 
     /**
      * @internal
      */
-    static function getClientIdentifierError($s)
+    public static function getClientIdentifierError($s)
     {
-        if ($s === null) return "can't be null";
-        if (strlen($s) === 0) return "can't be empty";
-        if (preg_match('@[\x00-\x1f\x7f]@', $s) === 1) return "contains control character";
+        if ($s === null) {
+            return "can't be null";
+        }
+        if (strlen($s) === 0) {
+            return "can't be empty";
+        }
+        if (preg_match('@[\x00-\x1f\x7f]@', $s) === 1) {
+            return "contains control character";
+        }
+
         return null;
     }
 
     /**
      * @internal
      */
-    static function checkClientIdentifierArg($argName, $accessToken)
+    public static function checkClientIdentifierArg($argName, $accessToken)
     {
         $error = self::getClientIdentifierError($accessToken);
-        if ($error !== null) throw new InvalidArgumentException("'$argName' invalid: $error");
+        if ($error !== null) {
+            throw new InvalidArgumentException("'$argName' invalid: $error");
+        }
     }
 }

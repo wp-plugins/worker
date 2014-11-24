@@ -15,7 +15,6 @@
  * limitations under the License.
  */
 
-
 /**
  * Class to hold information about an authenticated login.
  *

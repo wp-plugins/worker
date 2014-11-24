@@ -2,9 +2,8 @@
 
 class MMB_Security extends MMB_Core
 {
-    function security_check($args)
+    public function security_check($args)
     {
-
         if (MMB_Security::prevent_listing_ok()) {
             $output["prevent_listing_ok"] = true;
         } else {
@@ -52,45 +51,44 @@ class MMB_Security extends MMB_Core
         }
 
         return $output;
-
     }
 
-    function security_fix_dir_listing($args)
+    public function security_fix_dir_listing($args)
     {
         MMB_Security::prevent_listing();
 
         return $this->security_check($args);
     }
 
-    function security_fix_permissions($args)
+    public function security_fix_permissions($args)
     {
         MMB_Security::file_permission();
 
         return $this->security_check($args);
     }
 
-    function security_fix_php_reporting($args)
+    public function security_fix_php_reporting($args)
     {
         MMB_Security::remove_php_reporting();
 
         return $this->security_check($args);
     }
 
-    function security_fix_database_reporting($args)
+    public function security_fix_database_reporting($args)
     {
         MMB_Security::remove_database_reporting();
 
         return $this->security_check($args);
     }
 
-    function security_fix_wp_version($args)
+    public function security_fix_wp_version($args)
     {
         MMB_Security::remove_wp_version();
 
         return $this->security_check($args);
     }
 
-    function security_fix_admin_username($args)
+    public function security_fix_admin_username($args)
     {
         $username = $args[0];
         MMB_Security::change_admin_username($username);
@@ -100,16 +98,15 @@ class MMB_Security extends MMB_Core
         return $scan_res;
     }
 
-    function security_fix_scripts_styles($args)
+    public function security_fix_scripts_styles($args)
     {
-
         MMB_Security::remove_styles_version();
         MMB_Security::remove_scripts_version();
 
         return $this->security_check($args);
     }
 
-    function security_fix_htaccess_permission($args)
+    public function security_fix_htaccess_permission($args)
     {
         MMB_Security::htaccess_permission();
 
@@ -213,7 +210,6 @@ class MMB_Security extends MMB_Core
     {
         global $wpdb;
         $wpdb->query($wpdb->prepare("Update {$wpdb->prefix}users SET user_login='%s' where user_login='admin'", $new_username));
-
     }
 
     //Admin user name is not admin
@@ -233,11 +229,9 @@ class MMB_Security extends MMB_Core
         $succ         = chmod(ABSPATH.".htaccess", 0644);
     }
 
-
     public static function remove_scripts_version_ok()
     {
         return (get_option('managewp_remove_scripts_version') == 'T');
-
     }
 
     public static function remove_script_versions($src)
@@ -324,7 +318,6 @@ class MMB_Security extends MMB_Core
                         return false;
                     }
                 }
-
             }
         }
 
@@ -351,7 +344,6 @@ class MMB_Security extends MMB_Core
                     }
                 }
             }
-
         }
     }
 
@@ -389,6 +381,4 @@ class MMB_Security extends MMB_Core
 
         return $scan_res;
     }
-
-
 }

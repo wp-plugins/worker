@@ -90,7 +90,7 @@ class Google_Collection extends Google_ApiModel implements Iterator, Countable
         if (isset($this->$typeKey) && !is_object($this->data[$this->collection_key][$offset])) {
             $type                                       = $this->$typeKey;
             $this->data[$this->collection_key][$offset] =
-              new $type($this->data[$this->collection_key][$offset]);
+                new $type($this->data[$this->collection_key][$offset]);
         }
     }
 }

@@ -16,7 +16,7 @@ final class Dropbox_Curl
     /**
      * @param string $url
      */
-    function __construct($url)
+    public function __construct($url)
     {
         // Make sure there aren't any spaces in the URL (i.e. the caller forgot to URL-encode).
         if (strpos($url, ' ') !== false) {
@@ -35,31 +35,31 @@ final class Dropbox_Curl
         $this->set(CURLOPT_SSLVERSION, 1);          // Enforce TLS.
 
         // Only allow ciphersuites supported by Dropbox
-        $curlVersion = curl_version();
+        $curlVersion    = curl_version();
         $curlSslBackend = $curlVersion['ssl_version'];
         if (substr_compare($curlSslBackend, "NSS/", 0, strlen("NSS/")) !== 0) {
             // Can't figure out how to reliably set ciphersuites for NSS.
             $sslCiphersuiteList = null;
             $this->set(CURLOPT_SSL_CIPHER_LIST,
-              'ECDHE-RSA-AES256-GCM-SHA384:'.
-              'ECDHE-RSA-AES128-GCM-SHA256:'.
-              'ECDHE-RSA-AES256-SHA384:'.
-              'ECDHE-RSA-AES128-SHA256:'.
-              'ECDHE-RSA-AES256-SHA:'.
-              'ECDHE-RSA-AES128-SHA:'.
-              'ECDHE-RSA-RC4-SHA:'.
-              'DHE-RSA-AES256-GCM-SHA384:'.
-              'DHE-RSA-AES128-GCM-SHA256:'.
-              'DHE-RSA-AES256-SHA256:'.
-              'DHE-RSA-AES128-SHA256:'.
-              'DHE-RSA-AES256-SHA:'.
-              'DHE-RSA-AES128-SHA:'.
-              'AES256-GCM-SHA384:'.
-              'AES128-GCM-SHA256:'.
-              'AES256-SHA256:'.
-              'AES128-SHA256:'.
-              'AES256-SHA:'.
-              'AES128-SHA'
+                'ECDHE-RSA-AES256-GCM-SHA384:'.
+                'ECDHE-RSA-AES128-GCM-SHA256:'.
+                'ECDHE-RSA-AES256-SHA384:'.
+                'ECDHE-RSA-AES128-SHA256:'.
+                'ECDHE-RSA-AES256-SHA:'.
+                'ECDHE-RSA-AES128-SHA:'.
+                'ECDHE-RSA-RC4-SHA:'.
+                'DHE-RSA-AES256-GCM-SHA384:'.
+                'DHE-RSA-AES128-GCM-SHA256:'.
+                'DHE-RSA-AES256-SHA256:'.
+                'DHE-RSA-AES128-SHA256:'.
+                'DHE-RSA-AES256-SHA:'.
+                'DHE-RSA-AES128-SHA:'.
+                'AES256-GCM-SHA384:'.
+                'AES128-GCM-SHA256:'.
+                'AES256-SHA256:'.
+                'AES128-SHA256:'.
+                'AES256-SHA:'.
+                'AES128-SHA'
             );
         }
 
@@ -70,25 +70,29 @@ final class Dropbox_Curl
         $this->set(CURLOPT_CAPATH, dirname(__FILE__).'/certs/');
 
         // Limit vulnerability surface area.  Supported in cURL 7.19.4+
-        if (defined('CURLOPT_PROTOCOLS')) $this->set(CURLOPT_PROTOCOLS, CURLPROTO_HTTPS);
-        if (defined('CURLOPT_REDIR_PROTOCOLS')) $this->set(CURLOPT_REDIR_PROTOCOLS, CURLPROTO_HTTPS);
+        if (defined('CURLOPT_PROTOCOLS')) {
+            $this->set(CURLOPT_PROTOCOLS, CURLPROTO_HTTPS);
+        }
+        if (defined('CURLOPT_REDIR_PROTOCOLS')) {
+            $this->set(CURLOPT_REDIR_PROTOCOLS, CURLPROTO_HTTPS);
+        }
     }
 
     /**
      * @param string $header
      */
-    function addHeader($header)
+    public function addHeader($header)
     {
         $this->headers[] = $header;
     }
 
-    function exec()
+    public function exec()
     {
         $this->set(CURLOPT_HTTPHEADER, $this->headers);
 
         $body = curl_exec($this->handle);
         if ($body === false) {
-            throw new Dropbox_Exception_NetworkIO("Error executing HTTP request: " . curl_error($this->handle));
+            throw new Dropbox_Exception_NetworkIO("Error executing HTTP request: ".curl_error($this->handle));
         }
 
         $statusCode = curl_getinfo($this->handle, CURLINFO_HTTP_CODE);
@@ -97,15 +101,15 @@ final class Dropbox_Curl
     }
 
     /**
-     * @param int $option
+     * @param int   $option
      * @param mixed $value
      */
-    function set($option, $value)
+    public function set($option, $value)
     {
         curl_setopt($this->handle, $option, $value);
     }
 
-    function __destruct()
+    public function __destruct()
     {
         curl_close($this->handle);
     }

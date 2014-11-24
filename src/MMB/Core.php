@@ -32,7 +32,7 @@ class MMB_Core extends MMB_Helper
     private $mmb_pre_init_filters;
     private $mmb_init_actions;
 
-    function __construct()
+    public function __construct()
     {
         global $wpmu_version, $blog_id, $_mmb_plugin_actions, $_mmb_item_filter, $_mmb_options;
 
@@ -172,12 +172,12 @@ class MMB_Core extends MMB_Helper
         add_action('set_auth_cookie', array(&$this, 'mmb_set_auth_cookie'));
         add_action('set_logged_in_cookie', array(&$this, 'mmb_set_logged_in_cookie'));
 
-        if(!get_option('_worker_nossl_key') && !get_option('_worker_public_key')){
+        if (!get_option('_worker_nossl_key') && !get_option('_worker_public_key')) {
             add_action('init', array(&$this, 'deactivateWorkerIfNotAddedAfterTenMinutes'));
         }
     }
 
-    function mmb_remote_action()
+    public function mmb_remote_action()
     {
         if ($this->action_call != null) {
             $params = isset($this->action_params) && $this->action_params != null ? $this->action_params : array();
@@ -185,9 +185,8 @@ class MMB_Core extends MMB_Helper
         }
     }
 
-    function register_action_params($action = false, $params = array())
+    public function register_action_params($action = false, $params = array())
     {
-
         if (isset($this->mmb_pre_init_actions[$action]) && function_exists($this->mmb_pre_init_actions[$action])) {
             call_user_func($this->mmb_pre_init_actions[$action], $params);
         }
@@ -213,7 +212,6 @@ class MMB_Core extends MMB_Helper
                             add_filter($_name, create_function('$a', 'global $mmb_filters; return array_merge($a, $mmb_filters["'.$_name.'"]);'));
                         }
                     }
-
                 }
             }
 
@@ -226,38 +224,37 @@ class MMB_Core extends MMB_Helper
     /**
      * Add notice to network admin dashboard for security reasons
      */
-    function network_admin_notice()
+    public function network_admin_notice()
     {
         global $status, $page, $s;
-        $context = $status;
-        $plugin  = 'worker/init.php';
-        $nonce   = wp_create_nonce('deactivate-plugin_'.$plugin);
-        $actions = 'plugins.php?action=deactivate&amp;plugin='.urlencode($plugin).'&amp;plugin_status='.$context.'&amp;paged='.$page.'&amp;s='.$s.'&amp;_wpnonce='.$nonce;
+        $context              = $status;
+        $plugin               = 'worker/init.php';
+        $nonce                = wp_create_nonce('deactivate-plugin_'.$plugin);
+        $actions              = 'plugins.php?action=deactivate&amp;plugin='.urlencode($plugin).'&amp;plugin_status='.$context.'&amp;paged='.$page.'&amp;s='.$s.'&amp;_wpnonce='.$nonce;
         $configurationService = new MWP_Configuration_Service();
-        $configuration = $configurationService->getConfiguration();
-        $notice = $configuration->getNetworkNotice();
-        $notice = str_replace("{deactivate_url}", $actions, $notice);
+        $configuration        = $configurationService->getConfiguration();
+        $notice               = $configuration->getNetworkNotice();
+        $notice               = str_replace("{deactivate_url}", $actions, $notice);
         echo $notice;
     }
-
 
     /**
      * Add notice to admin dashboard for security reasons
      */
-    function admin_notice()
+    public function admin_notice()
     {
         global $status, $page, $s;
-        $context      = $status;
-        $plugin       = 'worker/init.php';
-        $nonce        = wp_create_nonce('deactivate-plugin_'.$plugin);
-        $actions      = 'plugins.php?action=deactivate&amp;plugin='.urlencode($plugin).'&amp;plugin_status='.$context.'&amp;paged='.$page.'&amp;s='.$s.'&amp;_wpnonce='.$nonce;
+        $context              = $status;
+        $plugin               = 'worker/init.php';
+        $nonce                = wp_create_nonce('deactivate-plugin_'.$plugin);
+        $actions              = 'plugins.php?action=deactivate&amp;plugin='.urlencode($plugin).'&amp;plugin_status='.$context.'&amp;paged='.$page.'&amp;s='.$s.'&amp;_wpnonce='.$nonce;
         $configurationService = new MWP_Configuration_Service();
         $configuration        = $configurationService->getConfiguration();
         $notice               = $configuration->getNotice();
         $deactivateText       = $configuration->getDeactivateText();
         if ($this->mmb_multisite && $this->network_admin_install != '1') {
             $deactivateTextLink = ''.$deactivateText;
-        }else{
+        } else {
             $deactivateTextLink = '<a href="'.$actions.'" class="mwp_text_notice">'.$deactivateText.'</a>';
         }
         $notice = str_replace("{deactivate_text}", $deactivateTextLink, $notice);
@@ -271,7 +268,7 @@ class MMB_Core extends MMB_Helper
      * Add an item into the Right Now Dashboard widget
      * to inform that the blog can be managed remotely
      */
-    function add_right_now_info()
+    public function add_right_now_info()
     {
         $mwp_worker_brand = get_option('mwp_worker_brand');
         echo '<div class="mmb-slave-info">';
@@ -298,20 +295,20 @@ class MMB_Core extends MMB_Helper
         echo '</div>';
     }
 
-    function enqueue_scripts()
+    public function enqueue_scripts()
     {
         wp_enqueue_script('jquery');
         wp_enqueue_script('jquery-ui-core');
         wp_enqueue_script('jquery-ui-dialog');
     }
 
-    function enqueue_styles()
+    public function enqueue_styles()
     {
         wp_enqueue_style('wp-jquery-ui');
         wp_enqueue_style('jquery-style', 'http://ajax.googleapis.com/ajax/libs/jqueryui/1.10.3/themes/smoothness/jquery-ui.css');
     }
 
-    function send_email_to_admin()
+    public function send_email_to_admin()
     {
         if (!isset($_POST['support_mwp_message'])) {
             return;
@@ -324,8 +321,8 @@ class MMB_Core extends MMB_Helper
         if (empty($mwp_worker_brand['admin_email'])) {
             $this->mwp_send_ajax_response(false, "Unable to send email to admin.");
         }
-        $subject       = 'New ticket for site '.get_bloginfo('url');
-        $message       = <<<EOF
+        $subject = 'New ticket for site '.get_bloginfo('url');
+        $message = <<<EOF
     Hi,
     User with a username {$current_user->user_login} has a new question:
     {$_POST['support_mwp_message']}
@@ -337,7 +334,7 @@ EOF;
         $this->mwp_send_ajax_response(true, "Message successfully sent.");
     }
 
-    function mwp_send_ajax_response($success = true, $message = '')
+    public function mwp_send_ajax_response($success = true, $message = '')
     {
         $response = json_encode(
             array(
@@ -349,7 +346,7 @@ EOF;
         exit;
     }
 
-    function support_page_dialog()
+    public function support_page_dialog()
     {
         $mwp_worker_brand = get_option('mwp_worker_brand');
 
@@ -360,7 +357,8 @@ EOF;
         <div id="support_dialog" style="display: none;">
             <?php if (!empty($notification_text)): ?>
                 <div>
-                    <p><?php echo $notification_text; ?></p>
+                    <p><?php echo $notification_text;
+        ?></p>
                 </div>
             <?php endif ?>
             <?php if ($mwp_worker_brand['email_or_link'] == 1): ?>
@@ -379,9 +377,10 @@ EOF;
             <?php endif ?>
         </div>
     <?php
+
     }
 
-    function support_page_script()
+    public function support_page_script()
     {
         ?>
         <script type="text/javascript">
@@ -429,12 +428,13 @@ EOF;
             });
         </script>
     <?php
+
     }
 
     /**
      * Add Support page on Top Menu
      */
-    function add_support_page()
+    public function add_support_page()
     {
         $mwp_worker_brand = get_option('mwp_worker_brand');
         if ($mwp_worker_brand && isset($mwp_worker_brand['text_for_client']) && ($mwp_worker_brand['text_for_client'] != '')) {
@@ -445,15 +445,14 @@ EOF;
     /**
      * Support page handler
      */
-    function support_function()
+    public function support_function()
     {
     }
-
 
     /**
      * Remove editor from plugins&themes submenu page
      */
-    function dissalow_text_editor()
+    public function dissalow_text_editor()
     {
         $mwp_worker_brand = get_option('mwp_worker_brand');
         if ($mwp_worker_brand && isset($mwp_worker_brand['dissalow_edit']) && ($mwp_worker_brand['dissalow_edit'] == 'checked')) {
@@ -477,7 +476,7 @@ EOF;
     /**
      * Gets an instance of the Comment class
      */
-    function get_comment_instance()
+    public function get_comment_instance()
     {
         if (!isset($this->comment_instance)) {
             $this->comment_instance = new MMB_Comment();
@@ -489,7 +488,7 @@ EOF;
     /**
      * Gets an instance of MMB_Post class
      */
-    function get_post_instance()
+    public function get_post_instance()
     {
         if (!isset($this->post_instance)) {
             $this->post_instance = new MMB_Post();
@@ -501,7 +500,7 @@ EOF;
     /**
      * Gets an instance of User
      */
-    function get_user_instance()
+    public function get_user_instance()
     {
         if (!isset($this->user_instance)) {
             $this->user_instance = new MMB_User();
@@ -513,7 +512,7 @@ EOF;
     /**
      * Gets an instance of Security
      */
-    function get_security_instance()
+    public function get_security_instance()
     {
         if (!isset($this->security_instance)) {
             $this->security_instance = new MMB_Security();
@@ -522,11 +521,10 @@ EOF;
         return $this->security_instance;
     }
 
-
     /**
      * Gets an instance of stats class
      */
-    function get_stats_instance()
+    public function get_stats_instance()
     {
         if (!isset($this->stats_instance)) {
             $this->stats_instance = new MMB_Stats();
@@ -538,7 +536,7 @@ EOF;
     /**
      * Gets an instance of stats class
      */
-    function get_backup_instance()
+    public function get_backup_instance()
     {
         if (!isset($this->backup_instance)) {
             $this->backup_instance = new MMB_Backup();
@@ -551,7 +549,7 @@ EOF;
      * Gets an instance of links class
 
      */
-    function get_link_instance()
+    public function get_link_instance()
     {
         if (!isset($this->link_instance)) {
             $this->link_instance = new MMB_Link();
@@ -560,7 +558,7 @@ EOF;
         return $this->link_instance;
     }
 
-    function get_installer_instance()
+    public function get_installer_instance()
     {
         if (!isset($this->installer_instance)) {
             $this->installer_instance = new MMB_Installer();
@@ -573,7 +571,7 @@ EOF;
      * Plugin install callback function
      * Check PHP version
      */
-    function install()
+    public function install()
     {
         /** @var wpdb $wpdb */
         global $wpdb, $_wp_using_ext_object_cache;
@@ -618,17 +616,18 @@ EOF;
         if (file_exists($path)) {
             $configuration     = file_get_contents($path);
             $jsonConfiguration = json_decode($configuration, true);
-            if($jsonConfiguration !== NULL){
+            if ($jsonConfiguration !== null) {
                 update_option("mwp_worker_configuration", $jsonConfiguration);
             }
         }
         update_option('mmb_worker_activation_time', time());
     }
+
     /**
      * Saves the (modified) options into the database
      * Deprecated
      */
-    function save_options($options = array())
+    public function save_options($options = array())
     {
         global $_mmb_options;
 
@@ -639,7 +638,7 @@ EOF;
     /**
      * Deletes options for communication with master
      */
-    function uninstall($deactivate = false)
+    public function uninstall($deactivate = false)
     {
         /** @var wpdb $wpdb */
         global $current_user, $wpdb, $_wp_using_ext_object_cache;
@@ -693,14 +692,12 @@ EOF;
         delete_option('mmb_worker_activation_time');
     }
 
-
-
     /**
      * Constructs a url (for ajax purpose)
      *
      * @param mixed $base_page
      */
-    function construct_url($params = array(), $base_page = 'index.php')
+    public function construct_url($params = array(), $base_page = 'index.php')
     {
         $url = "$base_page?_wpnonce=".wp_create_nonce($this->slug);
         foreach ($params as $key => $value) {
@@ -713,7 +710,7 @@ EOF;
     /**
      * Worker update
      */
-    function update_worker_plugin($params)
+    public function update_worker_plugin($params)
     {
         if ($params['download_url']) {
             @include_once ABSPATH.'wp-admin/includes/file.php';
@@ -725,7 +722,7 @@ EOF;
 
             if (!$this->is_server_writable()) {
                 return array(
-                    'error' => 'Failed, please <a target="_blank" href="http://managewp.com/user-guide/faq/my-pluginsthemes-fail-to-update-or-i-receive-a-yellow-ftp-warning">add FTP details for automatic upgrades.</a>'
+                    'error' => 'Failed, please <a target="_blank" href="http://managewp.com/user-guide/faq/my-pluginsthemes-fail-to-update-or-i-receive-a-yellow-ftp-warning">add FTP details for automatic upgrades.</a>',
                 );
             }
 
@@ -739,38 +736,38 @@ EOF;
                     'clear_destination' => true,
                     'clear_working'     => true,
                     'hook_extra'        => array(
-                        'plugin' => 'worker/init.php'
-                    )
+                        'plugin' => 'worker/init.php',
+                    ),
                 )
             );
             ob_end_clean();
             if (is_wp_error($result) || !$result) {
                 return array(
-                    'error' => 'ManageWP Worker plugin could not be updated.'
+                    'error' => 'ManageWP Worker plugin could not be updated.',
                 );
             } else {
                 return array(
-                    'success' => 'ManageWP Worker plugin successfully updated.'
+                    'success' => 'ManageWP Worker plugin successfully updated.',
                 );
             }
         }
 
         return array(
-            'error' => 'Bad download path for worker installation file.'
+            'error' => 'Bad download path for worker installation file.',
         );
     }
 
     /**
      * Automatically logs in when called from Master
      */
-    function automatic_login()
+    public function automatic_login()
     {
         $where      = isset($_GET['mwp_goto']) ? $_GET['mwp_goto'] : false;
         $username   = isset($_GET['username']) ? $_GET['username'] : '';
         $auto_login = isset($_GET['auto_login']) ? $_GET['auto_login'] : 0;
 
         if (!function_exists('is_user_logged_in')) {
-            include_once(ABSPATH.'wp-includes/pluggable.php');
+            include_once ABSPATH.'wp-includes/pluggable.php';
         }
 
         if (($auto_login && strlen(trim($username)) && !is_user_logged_in()) || (isset($this->mmb_multisite) && $this->mmb_multisite)) {
@@ -779,7 +776,6 @@ EOF;
 
             $auth = $this->authenticate_message($where.$message_id, $signature, $message_id);
             if ($auth === true) {
-
                 if (!headers_sent()) {
                     header('P3P: CP="CAO PSA OUR"');
                 }
@@ -821,7 +817,7 @@ EOF;
         }
     }
 
-    function mmb_set_auth_cookie($auth_cookie)
+    public function mmb_set_auth_cookie($auth_cookie)
     {
         if (!defined('MMB_USER_LOGIN')) {
             return;
@@ -834,7 +830,7 @@ EOF;
         $_COOKIE['wordpress_'.COOKIEHASH] = $auth_cookie;
     }
 
-    function mmb_set_logged_in_cookie($logged_in_cookie)
+    public function mmb_set_logged_in_cookie($logged_in_cookie)
     {
         if (!defined('MMB_USER_LOGIN')) {
             return;
@@ -847,12 +843,12 @@ EOF;
         $_COOKIE['wordpress_logged_in_'.COOKIEHASH] = $logged_in_cookie;
     }
 
-    function admin_actions()
+    public function admin_actions()
     {
         add_filter('all_plugins', array($this, 'worker_replace'));
     }
 
-    function worker_replace($all_plugins)
+    public function worker_replace($all_plugins)
     {
         $replace = get_option("mwp_worker_brand");
         if (is_array($replace)) {
@@ -868,7 +864,7 @@ EOF;
 
             if ($replace['hide']) {
                 if (!function_exists('get_plugins')) {
-                    include_once(ABSPATH.'wp-admin/includes/plugin.php');
+                    include_once ABSPATH.'wp-admin/includes/plugin.php';
                 }
                 $activated_plugins = get_option('active_plugins');
                 if (!$activated_plugins) {
@@ -883,18 +879,18 @@ EOF;
         return $all_plugins;
     }
 
-    function deactivateWorkerIfNotAddedAfterTenMinutes()
+    public function deactivateWorkerIfNotAddedAfterTenMinutes()
     {
         $workerActivationTime = get_option("mmb_worker_activation_time");
-        if((int)$workerActivationTime + 600 > time()){
+        if ((int) $workerActivationTime + 600 > time()) {
             return;
         }
         $activated_plugins = get_option('active_plugins');
-        $keyWorker = array_search("worker/init.php", $activated_plugins, true);
-        if($keyWorker === false){
+        $keyWorker         = array_search("worker/init.php", $activated_plugins, true);
+        if ($keyWorker === false) {
             return;
         }
         unset($activated_plugins[$keyWorker]);
-        update_option('active_plugins',$activated_plugins);
+        update_option('active_plugins', $activated_plugins);
     }
 }

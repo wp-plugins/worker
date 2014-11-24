@@ -33,13 +33,13 @@ class Google_Utils_URITemplate
      * processed.
      */
     private $operators = array(
-      "+" => "reserved",
-      "/" => "segments",
-      "." => "dotprefix",
-      "#" => "fragment",
-      ";" => "semicolon",
-      "?" => "form",
-      "&" => "continuation"
+        "+" => "reserved",
+        "/" => "segments",
+        "." => "dotprefix",
+        "#" => "fragment",
+        ";" => "semicolon",
+        "?" => "form",
+        "&" => "continuation",
     );
 
     /**
@@ -48,46 +48,46 @@ class Google_Utils_URITemplate
      * strings.
      */
     private $reserved = array(
-      "=",
-      ",",
-      "!",
-      "@",
-      "|",
-      ":",
-      "/",
-      "?",
-      "#",
-      "[",
-      "]",
-      "$",
-      "&",
-      "'",
-      "(",
-      ")",
-      "*",
-      "+",
-      ";"
+        "=",
+        ",",
+        "!",
+        "@",
+        "|",
+        ":",
+        "/",
+        "?",
+        "#",
+        "[",
+        "]",
+        "$",
+        "&",
+        "'",
+        "(",
+        ")",
+        "*",
+        "+",
+        ";",
     );
     private $reservedEncoded = array(
-      "%3D",
-      "%2C",
-      "%21",
-      "%40",
-      "%7C",
-      "%3A",
-      "%2F",
-      "%3F",
-      "%23",
-      "%5B",
-      "%5D",
-      "%24",
-      "%26",
-      "%27",
-      "%28",
-      "%29",
-      "%2A",
-      "%2B",
-      "%3B"
+        "%3D",
+        "%2C",
+        "%21",
+        "%40",
+        "%7C",
+        "%3A",
+        "%2F",
+        "%3F",
+        "%23",
+        "%5B",
+        "%5D",
+        "%24",
+        "%26",
+        "%27",
+        "%28",
+        "%29",
+        "%2A",
+        "%2B",
+        "%3B",
     );
 
     public function parse($string, array $parameters)
@@ -171,7 +171,6 @@ class Google_Utils_URITemplate
             if ($data || ($data !== false && $prefix_on_missing)) {
                 $data = $prefix.$data;
             }
-
         } else {
             // If no operator we replace with the defaults.
             $data = $this->replaceVars($data, $parameters);
@@ -182,24 +181,24 @@ class Google_Utils_URITemplate
     }
 
     private function replaceVars(
-      $section,
-      $parameters,
-      $sep = ",",
-      $combine = null,
-      $reserved = false,
-      $tag_empty = false,
-      $combine_on_empty = true
+        $section,
+        $parameters,
+        $sep = ",",
+        $combine = null,
+        $reserved = false,
+        $tag_empty = false,
+        $combine_on_empty = true
     ) {
         if (strpos($section, ",") === false) {
             // If we only have a single value, we can immediately process.
             return $this->combine(
-              $section,
-              $parameters,
-              $sep,
-              $combine,
-              $reserved,
-              $tag_empty,
-              $combine_on_empty
+                $section,
+                $parameters,
+                $sep,
+                $combine,
+                $reserved,
+                $tag_empty,
+                $combine_on_empty
             );
         } else {
             // If we have multiple values, we need to split and loop over them.
@@ -208,25 +207,25 @@ class Google_Utils_URITemplate
             $vars = explode(",", $section);
 
             return $this->combineList(
-              $vars,
-              $sep,
-              $parameters,
-              $combine,
-              $reserved,
-              false, // Never emit empty strings in multi-param replacements
-              $combine_on_empty
+                $vars,
+                $sep,
+                $parameters,
+                $combine,
+                $reserved,
+                false, // Never emit empty strings in multi-param replacements
+                $combine_on_empty
             );
         }
     }
 
     public function combine(
-      $key,
-      $parameters,
-      $sep,
-      $combine,
-      $reserved,
-      $tag_empty,
-      $combine_on_empty
+        $key,
+        $parameters,
+        $sep,
+        $combine,
+        $reserved,
+        $tag_empty,
+        $combine_on_empty
     ) {
         $length             = false;
         $explode            = false;
@@ -333,24 +332,24 @@ class Google_Utils_URITemplate
      * for multi-key templates.
      */
     private function combineList(
-      $vars,
-      $sep,
-      $parameters,
-      $combine,
-      $reserved,
-      $tag_empty,
-      $combine_on_empty
+        $vars,
+        $sep,
+        $parameters,
+        $combine,
+        $reserved,
+        $tag_empty,
+        $combine_on_empty
     ) {
         $ret = array();
         foreach ($vars as $var) {
             $response = $this->combine(
-              $var,
-              $parameters,
-              $sep,
-              $combine,
-              $reserved,
-              $tag_empty,
-              $combine_on_empty
+                $var,
+                $parameters,
+                $sep,
+                $combine,
+                $reserved,
+                $tag_empty,
+                $combine_on_empty
             );
             if ($response === false) {
                 continue;

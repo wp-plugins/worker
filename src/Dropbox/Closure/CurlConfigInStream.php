@@ -8,7 +8,7 @@ class Dropbox_Closure_CurlConfigInStream implements Dropbox_Closure_CurlConfigIn
 
     private $callback;
 
-    function __construct($inStream, $numBytes, $callback = null)
+    public function __construct($inStream, $numBytes, $callback = null)
     {
         $this->inStream = $inStream;
         $this->numBytes = $numBytes;

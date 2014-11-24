@@ -15,7 +15,6 @@
  * limitations under the License.
  */
 
-
 /*
  * This class implements a basic on disk storage. While that does
  * work quite well it's not the most elegant and scalable solution.

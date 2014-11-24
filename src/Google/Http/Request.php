@@ -15,7 +15,6 @@
  * limitations under the License.
  */
 
-
 /**
  * HTTP Request to be executed by IO classes. Upon execution, the
  * responseHttpCode, responseHeaders and responseBody will be filled in.
@@ -29,9 +28,9 @@ class Google_Http_Request
     const GZIP_UA = " (gzip)";
 
     private $batchHeaders = array(
-      'Content-Type'              => 'application/http',
-      'Content-Transfer-Encoding' => 'binary',
-      'MIME-Version'              => '1.0',
+        'Content-Type'              => 'application/http',
+        'Content-Transfer-Encoding' => 'binary',
+        'MIME-Version'              => '1.0',
     );
 
     protected $queryParams;
@@ -52,10 +51,10 @@ class Google_Http_Request
     public $accessKey;
 
     public function __construct(
-      $url,
-      $method = 'GET',
-      $headers = array(),
-      $postBody = null
+        $url,
+        $method = 'GET',
+        $headers = array(),
+        $postBody = null
     ) {
         $this->setUrl($url);
         $this->setRequestMethod($method);
@@ -100,8 +99,8 @@ class Google_Http_Request
     public function disableGzip()
     {
         if (
-          isset($this->requestHeaders['accept-encoding']) &&
-          $this->requestHeaders['accept-encoding'] == "gzip"
+            isset($this->requestHeaders['accept-encoding']) &&
+            $this->requestHeaders['accept-encoding'] == "gzip"
         ) {
             unset($this->requestHeaders['accept-encoding']);
         }
@@ -211,13 +210,13 @@ class Google_Http_Request
      * @param string $key
      *
      * @return array|boolean Returns the requested HTTP header or
-     * false if unavailable.
+     *                       false if unavailable.
      */
     public function getResponseHeader($key)
     {
         return isset($this->responseHeaders[$key])
-          ? $this->responseHeaders[$key]
-          : false;
+            ? $this->responseHeaders[$key]
+            : false;
     }
 
     /**
@@ -235,8 +234,8 @@ class Google_Http_Request
     {
         return $this->baseComponent.$this->path.
         (count($this->queryParams) ?
-          "?".$this->buildQuery($this->queryParams) :
-          '');
+            "?".$this->buildQuery($this->queryParams) :
+            '');
     }
 
     /**
@@ -259,13 +258,13 @@ class Google_Http_Request
      * @param string $key
      *
      * @return array|boolean Returns the requested HTTP header or
-     * false if unavailable.
+     *                       false if unavailable.
      */
     public function getRequestHeader($key)
     {
         return isset($this->requestHeaders[$key])
-          ? $this->requestHeaders[$key]
-          : false;
+            ? $this->requestHeaders[$key]
+            : false;
     }
 
     /**
@@ -290,10 +289,10 @@ class Google_Http_Request
         $parts = parse_url($url);
         if (isset($parts['host'])) {
             $this->baseComponent = sprintf(
-              "%s%s%s",
-              isset($parts['scheme']) ? $parts['scheme']."://" : '',
-              isset($parts['host']) ? $parts['host'] : '',
-              isset($parts['port']) ? ":".$parts['port'] : ''
+                "%s%s%s",
+                isset($parts['scheme']) ? $parts['scheme']."://" : '',
+                isset($parts['host']) ? $parts['host'] : '',
+                isset($parts['port']) ? ":".$parts['port'] : ''
             );
         }
         $this->path        = isset($parts['path']) ? $parts['path'] : '';
@@ -398,7 +397,7 @@ class Google_Http_Request
     {
         $str  = '';
         $path = parse_url($this->getUrl(), PHP_URL_PATH)."?".
-          http_build_query($this->queryParams);
+            http_build_query($this->queryParams);
         $str .= $this->getRequestMethod().' '.$path." HTTP/1.1\n";
 
         foreach ($this->getRequestHeaders() as $key => $val) {
@@ -433,7 +432,7 @@ class Google_Http_Request
         $parts  = explode("&", $string);
         foreach ($parts as $part) {
             list($key, $value) = explode('=', $part, 2);
-            $value = urldecode($value);
+            $value             = urldecode($value);
             if (isset($return[$key])) {
                 if (!is_array($return[$key])) {
                     $return[$key] = array($return[$key]);
@@ -478,10 +477,9 @@ class Google_Http_Request
     {
         if ($this->getRequestMethod() == "POST" && empty($this->postBody)) {
             $this->setRequestHeaders(
-              array(
-                "content-type" =>
-                  "application/x-www-form-urlencoded; charset=UTF-8"
-              )
+                array(
+                    "content-type" => "application/x-www-form-urlencoded; charset=UTF-8",
+                )
             );
             $this->setPostBody($this->buildQuery($this->queryParams));
             $this->queryParams = array();

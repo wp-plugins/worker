@@ -18,7 +18,7 @@
 class Monolog_Processor_MemoryPeakUsageProcessor extends Monolog_Processor_MemoryProcessor
 {
     /**
-     * @param  array $record
+     * @param array $record
      *
      * @return array
      */
@@ -28,10 +28,10 @@ class Monolog_Processor_MemoryPeakUsageProcessor extends Monolog_Processor_Memor
         $formatted = self::formatBytes($bytes);
 
         $record['extra'] = array_merge(
-          $record['extra'],
-          array(
-              'memory_peak_usage' => $formatted,
-          )
+            $record['extra'],
+            array(
+                'memory_peak_usage' => $formatted,
+            )
         );
 
         return $record;

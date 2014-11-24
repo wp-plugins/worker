@@ -13,20 +13,21 @@ final class Dropbox_AuthInfo
      * in the examples directory for details about what this file should look like.
      *
      * @param string $path
-     *    Path to a JSON file
+     *                     Path to a JSON file
+     *
      * @return array
-     *    A <code>list(string $accessToken, Host $host)</code>.
+     *               A <code>list(string $accessToken, Host $host)</code>.
      *
      * @throws Dropbox_AuthInfoLoadException
      */
-    static function loadFromJsonFile($path)
+    public static function loadFromJsonFile($path)
     {
         if (!file_exists($path)) {
             throw new Dropbox_AuthInfoLoadException("File doesn't exist: \"$path\"");
         }
 
-        $str = file_get_contents($path);
-        $jsonArr = json_decode($str, TRUE);
+        $str     = file_get_contents($path);
+        $jsonArr = json_decode($str, true);
 
         if (is_null($jsonArr)) {
             throw new Dropbox_AuthInfoLoadException("JSON parse error: \"$path\"");
@@ -40,9 +41,10 @@ final class Dropbox_AuthInfo
      * please use the @see loadFromJsonFile method.
      *
      * @param array $jsonArr
-     *    A parsed JSON object, typcally the result of json_decode(..., TRUE).
+     *                       A parsed JSON object, typcally the result of json_decode(..., TRUE).
+     *
      * @return array
-     *    A <code>list(string $accessToken, Host $host)</code>.
+     *               A <code>list(string $accessToken, Host $host)</code>.
      *
      * @throws Dropbox_AuthInfoLoadException
      */
@@ -65,16 +67,15 @@ final class Dropbox_AuthInfo
         // Check for the optional 'host' field
         if (!array_key_exists('host', $jsonArr)) {
             $host = null;
-        }
-        else {
+        } else {
             $baseHost = $jsonArr["host"];
             if (!is_string($baseHost)) {
                 throw new Dropbox_AuthInfoLoadException("Optional field \"host\" must be a string");
             }
 
-            $api = "api-$baseHost";
+            $api     = "api-$baseHost";
             $content = "api-content-$baseHost";
-            $web = "meta-$baseHost";
+            $web     = "meta-$baseHost";
 
             $host = new Dropbox_Host($api, $content, $web);
         }

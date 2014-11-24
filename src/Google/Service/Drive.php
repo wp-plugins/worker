@@ -60,7 +60,6 @@ class Google_Service_Drive extends Google_ApiService
     public $replies;
     public $revisions;
 
-
     /**
      * Constructs the internal representation of the Drive service.
      *
@@ -73,1185 +72,1184 @@ class Google_Service_Drive extends Google_ApiService
         $this->version     = 'v2';
         $this->serviceName = 'drive';
 
-        $this->about       = new Google_Service_Drive_About_Resource(
-          $this,
-          $this->serviceName,
-          'about',
-          array(
-            'methods' => array(
-              'get' => array(
-                'path'       => 'about',
-                'httpMethod' => 'GET',
-                'parameters' => array(
-                  'includeSubscribed' => array(
-                    'location' => 'query',
-                    'type'     => 'boolean',
-                  ),
-                  'maxChangeIdCount'  => array(
-                    'location' => 'query',
-                    'type'     => 'string',
-                  ),
-                  'startChangeId'     => array(
-                    'location' => 'query',
-                    'type'     => 'string',
-                  ),
+        $this->about = new Google_Service_Drive_About_Resource(
+            $this,
+            $this->serviceName,
+            'about',
+            array(
+                'methods' => array(
+                    'get' => array(
+                        'path'       => 'about',
+                        'httpMethod' => 'GET',
+                        'parameters' => array(
+                            'includeSubscribed' => array(
+                                'location' => 'query',
+                                'type'     => 'boolean',
+                            ),
+                            'maxChangeIdCount'  => array(
+                                'location' => 'query',
+                                'type'     => 'string',
+                            ),
+                            'startChangeId'     => array(
+                                'location' => 'query',
+                                'type'     => 'string',
+                            ),
+                        ),
+                    ),
                 ),
-              ),
             )
-          )
         );
-        $this->apps        = new Google_Service_Drive_Apps_Resource(
-          $this,
-          $this->serviceName,
-          'apps',
-          array(
-            'methods' => array(
-              'get'  => array(
-                'path'       => 'apps/{appId}',
-                'httpMethod' => 'GET',
-                'parameters' => array(
-                  'appId' => array(
-                    'location' => 'path',
-                    'type'     => 'string',
-                    'required' => true,
-                  ),
+        $this->apps = new Google_Service_Drive_Apps_Resource(
+            $this,
+            $this->serviceName,
+            'apps',
+            array(
+                'methods' => array(
+                    'get'  => array(
+                        'path'       => 'apps/{appId}',
+                        'httpMethod' => 'GET',
+                        'parameters' => array(
+                            'appId' => array(
+                                'location' => 'path',
+                                'type'     => 'string',
+                                'required' => true,
+                            ),
+                        ),
+                    ),
+                    'list' => array(
+                        'path'       => 'apps',
+                        'httpMethod' => 'GET',
+                        'parameters' => array(),
+                    ),
                 ),
-              ),
-              'list' => array(
-                'path'       => 'apps',
-                'httpMethod' => 'GET',
-                'parameters' => array(),
-              ),
             )
-          )
         );
-        $this->changes     = new Google_Service_Drive_Changes_Resource(
-          $this,
-          $this->serviceName,
-          'changes',
-          array(
-            'methods' => array(
-              'get'   => array(
-                'path'       => 'changes/{changeId}',
-                'httpMethod' => 'GET',
-                'parameters' => array(
-                  'changeId' => array(
-                    'location' => 'path',
-                    'type'     => 'string',
-                    'required' => true,
-                  ),
+        $this->changes = new Google_Service_Drive_Changes_Resource(
+            $this,
+            $this->serviceName,
+            'changes',
+            array(
+                'methods' => array(
+                    'get'   => array(
+                        'path'       => 'changes/{changeId}',
+                        'httpMethod' => 'GET',
+                        'parameters' => array(
+                            'changeId' => array(
+                                'location' => 'path',
+                                'type'     => 'string',
+                                'required' => true,
+                            ),
+                        ),
+                    ),
+                    'list'  => array(
+                        'path'       => 'changes',
+                        'httpMethod' => 'GET',
+                        'parameters' => array(
+                            'includeSubscribed' => array(
+                                'location' => 'query',
+                                'type'     => 'boolean',
+                            ),
+                            'startChangeId'     => array(
+                                'location' => 'query',
+                                'type'     => 'string',
+                            ),
+                            'includeDeleted'    => array(
+                                'location' => 'query',
+                                'type'     => 'boolean',
+                            ),
+                            'maxResults'        => array(
+                                'location' => 'query',
+                                'type'     => 'integer',
+                            ),
+                            'pageToken'         => array(
+                                'location' => 'query',
+                                'type'     => 'string',
+                            ),
+                        ),
+                    ),
+                    'watch' => array(
+                        'path'       => 'changes/watch',
+                        'httpMethod' => 'POST',
+                        'parameters' => array(
+                            'includeSubscribed' => array(
+                                'location' => 'query',
+                                'type'     => 'boolean',
+                            ),
+                            'startChangeId'     => array(
+                                'location' => 'query',
+                                'type'     => 'string',
+                            ),
+                            'includeDeleted'    => array(
+                                'location' => 'query',
+                                'type'     => 'boolean',
+                            ),
+                            'maxResults'        => array(
+                                'location' => 'query',
+                                'type'     => 'integer',
+                            ),
+                            'pageToken'         => array(
+                                'location' => 'query',
+                                'type'     => 'string',
+                            ),
+                        ),
+                    ),
                 ),
-              ),
-              'list'  => array(
-                'path'       => 'changes',
-                'httpMethod' => 'GET',
-                'parameters' => array(
-                  'includeSubscribed' => array(
-                    'location' => 'query',
-                    'type'     => 'boolean',
-                  ),
-                  'startChangeId'     => array(
-                    'location' => 'query',
-                    'type'     => 'string',
-                  ),
-                  'includeDeleted'    => array(
-                    'location' => 'query',
-                    'type'     => 'boolean',
-                  ),
-                  'maxResults'        => array(
-                    'location' => 'query',
-                    'type'     => 'integer',
-                  ),
-                  'pageToken'         => array(
-                    'location' => 'query',
-                    'type'     => 'string',
-                  ),
-                ),
-              ),
-              'watch' => array(
-                'path'       => 'changes/watch',
-                'httpMethod' => 'POST',
-                'parameters' => array(
-                  'includeSubscribed' => array(
-                    'location' => 'query',
-                    'type'     => 'boolean',
-                  ),
-                  'startChangeId'     => array(
-                    'location' => 'query',
-                    'type'     => 'string',
-                  ),
-                  'includeDeleted'    => array(
-                    'location' => 'query',
-                    'type'     => 'boolean',
-                  ),
-                  'maxResults'        => array(
-                    'location' => 'query',
-                    'type'     => 'integer',
-                  ),
-                  'pageToken'         => array(
-                    'location' => 'query',
-                    'type'     => 'string',
-                  ),
-                ),
-              ),
             )
-          )
         );
-        $this->channels    = new Google_Service_Drive_Channels_Resource(
-          $this,
-          $this->serviceName,
-          'channels',
-          array(
-            'methods' => array(
-              'stop' => array(
-                'path'       => 'channels/stop',
-                'httpMethod' => 'POST',
-                'parameters' => array(),
-              ),
+        $this->channels = new Google_Service_Drive_Channels_Resource(
+            $this,
+            $this->serviceName,
+            'channels',
+            array(
+                'methods' => array(
+                    'stop' => array(
+                        'path'       => 'channels/stop',
+                        'httpMethod' => 'POST',
+                        'parameters' => array(),
+                    ),
+                ),
             )
-          )
         );
-        $this->children    = new Google_Service_Drive_Children_Resource(
-          $this,
-          $this->serviceName,
-          'children',
-          array(
-            'methods' => array(
-              'delete' => array(
-                'path'       => 'files/{folderId}/children/{childId}',
-                'httpMethod' => 'DELETE',
-                'parameters' => array(
-                  'folderId' => array(
-                    'location' => 'path',
-                    'type'     => 'string',
-                    'required' => true,
-                  ),
-                  'childId'  => array(
-                    'location' => 'path',
-                    'type'     => 'string',
-                    'required' => true,
-                  ),
+        $this->children = new Google_Service_Drive_Children_Resource(
+            $this,
+            $this->serviceName,
+            'children',
+            array(
+                'methods' => array(
+                    'delete' => array(
+                        'path'       => 'files/{folderId}/children/{childId}',
+                        'httpMethod' => 'DELETE',
+                        'parameters' => array(
+                            'folderId' => array(
+                                'location' => 'path',
+                                'type'     => 'string',
+                                'required' => true,
+                            ),
+                            'childId'  => array(
+                                'location' => 'path',
+                                'type'     => 'string',
+                                'required' => true,
+                            ),
+                        ),
+                    ),
+                    'get'    => array(
+                        'path'       => 'files/{folderId}/children/{childId}',
+                        'httpMethod' => 'GET',
+                        'parameters' => array(
+                            'folderId' => array(
+                                'location' => 'path',
+                                'type'     => 'string',
+                                'required' => true,
+                            ),
+                            'childId'  => array(
+                                'location' => 'path',
+                                'type'     => 'string',
+                                'required' => true,
+                            ),
+                        ),
+                    ),
+                    'insert' => array(
+                        'path'       => 'files/{folderId}/children',
+                        'httpMethod' => 'POST',
+                        'parameters' => array(
+                            'folderId' => array(
+                                'location' => 'path',
+                                'type'     => 'string',
+                                'required' => true,
+                            ),
+                        ),
+                    ),
+                    'list'   => array(
+                        'path'       => 'files/{folderId}/children',
+                        'httpMethod' => 'GET',
+                        'parameters' => array(
+                            'folderId'   => array(
+                                'location' => 'path',
+                                'type'     => 'string',
+                                'required' => true,
+                            ),
+                            'q'          => array(
+                                'location' => 'query',
+                                'type'     => 'string',
+                            ),
+                            'pageToken'  => array(
+                                'location' => 'query',
+                                'type'     => 'string',
+                            ),
+                            'maxResults' => array(
+                                'location' => 'query',
+                                'type'     => 'integer',
+                            ),
+                        ),
+                    ),
                 ),
-              ),
-              'get'    => array(
-                'path'       => 'files/{folderId}/children/{childId}',
-                'httpMethod' => 'GET',
-                'parameters' => array(
-                  'folderId' => array(
-                    'location' => 'path',
-                    'type'     => 'string',
-                    'required' => true,
-                  ),
-                  'childId'  => array(
-                    'location' => 'path',
-                    'type'     => 'string',
-                    'required' => true,
-                  ),
-                ),
-              ),
-              'insert' => array(
-                'path'       => 'files/{folderId}/children',
-                'httpMethod' => 'POST',
-                'parameters' => array(
-                  'folderId' => array(
-                    'location' => 'path',
-                    'type'     => 'string',
-                    'required' => true,
-                  ),
-                ),
-              ),
-              'list'   => array(
-                'path'       => 'files/{folderId}/children',
-                'httpMethod' => 'GET',
-                'parameters' => array(
-                  'folderId'   => array(
-                    'location' => 'path',
-                    'type'     => 'string',
-                    'required' => true,
-                  ),
-                  'q'          => array(
-                    'location' => 'query',
-                    'type'     => 'string',
-                  ),
-                  'pageToken'  => array(
-                    'location' => 'query',
-                    'type'     => 'string',
-                  ),
-                  'maxResults' => array(
-                    'location' => 'query',
-                    'type'     => 'integer',
-                  ),
-                ),
-              ),
             )
-          )
         );
-        $this->comments    = new Google_Service_Drive_Comments_Resource(
-          $this,
-          $this->serviceName,
-          'comments',
-          array(
-            'methods' => array(
-              'delete' => array(
-                'path'       => 'files/{fileId}/comments/{commentId}',
-                'httpMethod' => 'DELETE',
-                'parameters' => array(
-                  'fileId'    => array(
-                    'location' => 'path',
-                    'type'     => 'string',
-                    'required' => true,
-                  ),
-                  'commentId' => array(
-                    'location' => 'path',
-                    'type'     => 'string',
-                    'required' => true,
-                  ),
+        $this->comments = new Google_Service_Drive_Comments_Resource(
+            $this,
+            $this->serviceName,
+            'comments',
+            array(
+                'methods' => array(
+                    'delete' => array(
+                        'path'       => 'files/{fileId}/comments/{commentId}',
+                        'httpMethod' => 'DELETE',
+                        'parameters' => array(
+                            'fileId'    => array(
+                                'location' => 'path',
+                                'type'     => 'string',
+                                'required' => true,
+                            ),
+                            'commentId' => array(
+                                'location' => 'path',
+                                'type'     => 'string',
+                                'required' => true,
+                            ),
+                        ),
+                    ),
+                    'get'    => array(
+                        'path'       => 'files/{fileId}/comments/{commentId}',
+                        'httpMethod' => 'GET',
+                        'parameters' => array(
+                            'fileId'         => array(
+                                'location' => 'path',
+                                'type'     => 'string',
+                                'required' => true,
+                            ),
+                            'commentId'      => array(
+                                'location' => 'path',
+                                'type'     => 'string',
+                                'required' => true,
+                            ),
+                            'includeDeleted' => array(
+                                'location' => 'query',
+                                'type'     => 'boolean',
+                            ),
+                        ),
+                    ),
+                    'insert' => array(
+                        'path'       => 'files/{fileId}/comments',
+                        'httpMethod' => 'POST',
+                        'parameters' => array(
+                            'fileId' => array(
+                                'location' => 'path',
+                                'type'     => 'string',
+                                'required' => true,
+                            ),
+                        ),
+                    ),
+                    'list'   => array(
+                        'path'       => 'files/{fileId}/comments',
+                        'httpMethod' => 'GET',
+                        'parameters' => array(
+                            'fileId'         => array(
+                                'location' => 'path',
+                                'type'     => 'string',
+                                'required' => true,
+                            ),
+                            'pageToken'      => array(
+                                'location' => 'query',
+                                'type'     => 'string',
+                            ),
+                            'updatedMin'     => array(
+                                'location' => 'query',
+                                'type'     => 'string',
+                            ),
+                            'includeDeleted' => array(
+                                'location' => 'query',
+                                'type'     => 'boolean',
+                            ),
+                            'maxResults'     => array(
+                                'location' => 'query',
+                                'type'     => 'integer',
+                            ),
+                        ),
+                    ),
+                    'patch'  => array(
+                        'path'       => 'files/{fileId}/comments/{commentId}',
+                        'httpMethod' => 'PATCH',
+                        'parameters' => array(
+                            'fileId'    => array(
+                                'location' => 'path',
+                                'type'     => 'string',
+                                'required' => true,
+                            ),
+                            'commentId' => array(
+                                'location' => 'path',
+                                'type'     => 'string',
+                                'required' => true,
+                            ),
+                        ),
+                    ),
+                    'update' => array(
+                        'path'       => 'files/{fileId}/comments/{commentId}',
+                        'httpMethod' => 'PUT',
+                        'parameters' => array(
+                            'fileId'    => array(
+                                'location' => 'path',
+                                'type'     => 'string',
+                                'required' => true,
+                            ),
+                            'commentId' => array(
+                                'location' => 'path',
+                                'type'     => 'string',
+                                'required' => true,
+                            ),
+                        ),
+                    ),
                 ),
-              ),
-              'get'    => array(
-                'path'       => 'files/{fileId}/comments/{commentId}',
-                'httpMethod' => 'GET',
-                'parameters' => array(
-                  'fileId'         => array(
-                    'location' => 'path',
-                    'type'     => 'string',
-                    'required' => true,
-                  ),
-                  'commentId'      => array(
-                    'location' => 'path',
-                    'type'     => 'string',
-                    'required' => true,
-                  ),
-                  'includeDeleted' => array(
-                    'location' => 'query',
-                    'type'     => 'boolean',
-                  ),
-                ),
-              ),
-              'insert' => array(
-                'path'       => 'files/{fileId}/comments',
-                'httpMethod' => 'POST',
-                'parameters' => array(
-                  'fileId' => array(
-                    'location' => 'path',
-                    'type'     => 'string',
-                    'required' => true,
-                  ),
-                ),
-              ),
-              'list'   => array(
-                'path'       => 'files/{fileId}/comments',
-                'httpMethod' => 'GET',
-                'parameters' => array(
-                  'fileId'         => array(
-                    'location' => 'path',
-                    'type'     => 'string',
-                    'required' => true,
-                  ),
-                  'pageToken'      => array(
-                    'location' => 'query',
-                    'type'     => 'string',
-                  ),
-                  'updatedMin'     => array(
-                    'location' => 'query',
-                    'type'     => 'string',
-                  ),
-                  'includeDeleted' => array(
-                    'location' => 'query',
-                    'type'     => 'boolean',
-                  ),
-                  'maxResults'     => array(
-                    'location' => 'query',
-                    'type'     => 'integer',
-                  ),
-                ),
-              ),
-              'patch'  => array(
-                'path'       => 'files/{fileId}/comments/{commentId}',
-                'httpMethod' => 'PATCH',
-                'parameters' => array(
-                  'fileId'    => array(
-                    'location' => 'path',
-                    'type'     => 'string',
-                    'required' => true,
-                  ),
-                  'commentId' => array(
-                    'location' => 'path',
-                    'type'     => 'string',
-                    'required' => true,
-                  ),
-                ),
-              ),
-              'update' => array(
-                'path'       => 'files/{fileId}/comments/{commentId}',
-                'httpMethod' => 'PUT',
-                'parameters' => array(
-                  'fileId'    => array(
-                    'location' => 'path',
-                    'type'     => 'string',
-                    'required' => true,
-                  ),
-                  'commentId' => array(
-                    'location' => 'path',
-                    'type'     => 'string',
-                    'required' => true,
-                  ),
-                ),
-              ),
             )
-          )
         );
-        $this->files       = new Google_Service_Drive_Files_Resource(
-          $this,
-          $this->serviceName,
-          'files',
-          array(
-            'methods' => array(
-              'copy'    => array(
-                'path'       => 'files/{fileId}/copy',
-                'httpMethod' => 'POST',
-                'parameters' => array(
-                  'fileId'             => array(
-                    'location' => 'path',
-                    'type'     => 'string',
-                    'required' => true,
-                  ),
-                  'convert'            => array(
-                    'location' => 'query',
-                    'type'     => 'boolean',
-                  ),
-                  'ocrLanguage'        => array(
-                    'location' => 'query',
-                    'type'     => 'string',
-                  ),
-                  'visibility'         => array(
-                    'location' => 'query',
-                    'type'     => 'string',
-                  ),
-                  'pinned'             => array(
-                    'location' => 'query',
-                    'type'     => 'boolean',
-                  ),
-                  'ocr'                => array(
-                    'location' => 'query',
-                    'type'     => 'boolean',
-                  ),
-                  'timedTextTrackName' => array(
-                    'location' => 'query',
-                    'type'     => 'string',
-                  ),
-                  'timedTextLanguage'  => array(
-                    'location' => 'query',
-                    'type'     => 'string',
-                  ),
+        $this->files = new Google_Service_Drive_Files_Resource(
+            $this,
+            $this->serviceName,
+            'files',
+            array(
+                'methods' => array(
+                    'copy'    => array(
+                        'path'       => 'files/{fileId}/copy',
+                        'httpMethod' => 'POST',
+                        'parameters' => array(
+                            'fileId'             => array(
+                                'location' => 'path',
+                                'type'     => 'string',
+                                'required' => true,
+                            ),
+                            'convert'            => array(
+                                'location' => 'query',
+                                'type'     => 'boolean',
+                            ),
+                            'ocrLanguage'        => array(
+                                'location' => 'query',
+                                'type'     => 'string',
+                            ),
+                            'visibility'         => array(
+                                'location' => 'query',
+                                'type'     => 'string',
+                            ),
+                            'pinned'             => array(
+                                'location' => 'query',
+                                'type'     => 'boolean',
+                            ),
+                            'ocr'                => array(
+                                'location' => 'query',
+                                'type'     => 'boolean',
+                            ),
+                            'timedTextTrackName' => array(
+                                'location' => 'query',
+                                'type'     => 'string',
+                            ),
+                            'timedTextLanguage'  => array(
+                                'location' => 'query',
+                                'type'     => 'string',
+                            ),
+                        ),
+                    ),
+                    'delete'  => array(
+                        'path'       => 'files/{fileId}',
+                        'httpMethod' => 'DELETE',
+                        'parameters' => array(
+                            'fileId' => array(
+                                'location' => 'path',
+                                'type'     => 'string',
+                                'required' => true,
+                            ),
+                        ),
+                    ),
+                    'get'     => array(
+                        'path'       => 'files/{fileId}',
+                        'httpMethod' => 'GET',
+                        'parameters' => array(
+                            'fileId'           => array(
+                                'location' => 'path',
+                                'type'     => 'string',
+                                'required' => true,
+                            ),
+                            'updateViewedDate' => array(
+                                'location' => 'query',
+                                'type'     => 'boolean',
+                            ),
+                            'projection'       => array(
+                                'location' => 'query',
+                                'type'     => 'string',
+                            ),
+                        ),
+                    ),
+                    'insert'  => array(
+                        'path'       => 'files',
+                        'httpMethod' => 'POST',
+                        'parameters' => array(
+                            'convert'                   => array(
+                                'location' => 'query',
+                                'type'     => 'boolean',
+                            ),
+                            'useContentAsIndexableText' => array(
+                                'location' => 'query',
+                                'type'     => 'boolean',
+                            ),
+                            'ocrLanguage'               => array(
+                                'location' => 'query',
+                                'type'     => 'string',
+                            ),
+                            'visibility'                => array(
+                                'location' => 'query',
+                                'type'     => 'string',
+                            ),
+                            'pinned'                    => array(
+                                'location' => 'query',
+                                'type'     => 'boolean',
+                            ),
+                            'ocr'                       => array(
+                                'location' => 'query',
+                                'type'     => 'boolean',
+                            ),
+                            'timedTextTrackName'        => array(
+                                'location' => 'query',
+                                'type'     => 'string',
+                            ),
+                            'timedTextLanguage'         => array(
+                                'location' => 'query',
+                                'type'     => 'string',
+                            ),
+                        ),
+                    ),
+                    'list'    => array(
+                        'path'       => 'files',
+                        'httpMethod' => 'GET',
+                        'parameters' => array(
+                            'q'          => array(
+                                'location' => 'query',
+                                'type'     => 'string',
+                            ),
+                            'pageToken'  => array(
+                                'location' => 'query',
+                                'type'     => 'string',
+                            ),
+                            'projection' => array(
+                                'location' => 'query',
+                                'type'     => 'string',
+                            ),
+                            'maxResults' => array(
+                                'location' => 'query',
+                                'type'     => 'integer',
+                            ),
+                        ),
+                    ),
+                    'patch'   => array(
+                        'path'       => 'files/{fileId}',
+                        'httpMethod' => 'PATCH',
+                        'parameters' => array(
+                            'fileId'                    => array(
+                                'location' => 'path',
+                                'type'     => 'string',
+                                'required' => true,
+                            ),
+                            'convert'                   => array(
+                                'location' => 'query',
+                                'type'     => 'boolean',
+                            ),
+                            'updateViewedDate'          => array(
+                                'location' => 'query',
+                                'type'     => 'boolean',
+                            ),
+                            'setModifiedDate'           => array(
+                                'location' => 'query',
+                                'type'     => 'boolean',
+                            ),
+                            'useContentAsIndexableText' => array(
+                                'location' => 'query',
+                                'type'     => 'boolean',
+                            ),
+                            'ocrLanguage'               => array(
+                                'location' => 'query',
+                                'type'     => 'string',
+                            ),
+                            'pinned'                    => array(
+                                'location' => 'query',
+                                'type'     => 'boolean',
+                            ),
+                            'newRevision'               => array(
+                                'location' => 'query',
+                                'type'     => 'boolean',
+                            ),
+                            'ocr'                       => array(
+                                'location' => 'query',
+                                'type'     => 'boolean',
+                            ),
+                            'timedTextLanguage'         => array(
+                                'location' => 'query',
+                                'type'     => 'string',
+                            ),
+                            'timedTextTrackName'        => array(
+                                'location' => 'query',
+                                'type'     => 'string',
+                            ),
+                        ),
+                    ),
+                    'touch'   => array(
+                        'path'       => 'files/{fileId}/touch',
+                        'httpMethod' => 'POST',
+                        'parameters' => array(
+                            'fileId' => array(
+                                'location' => 'path',
+                                'type'     => 'string',
+                                'required' => true,
+                            ),
+                        ),
+                    ),
+                    'trash'   => array(
+                        'path'       => 'files/{fileId}/trash',
+                        'httpMethod' => 'POST',
+                        'parameters' => array(
+                            'fileId' => array(
+                                'location' => 'path',
+                                'type'     => 'string',
+                                'required' => true,
+                            ),
+                        ),
+                    ),
+                    'untrash' => array(
+                        'path'       => 'files/{fileId}/untrash',
+                        'httpMethod' => 'POST',
+                        'parameters' => array(
+                            'fileId' => array(
+                                'location' => 'path',
+                                'type'     => 'string',
+                                'required' => true,
+                            ),
+                        ),
+                    ),
+                    'update'  => array(
+                        'path'       => 'files/{fileId}',
+                        'httpMethod' => 'PUT',
+                        'parameters' => array(
+                            'fileId'                    => array(
+                                'location' => 'path',
+                                'type'     => 'string',
+                                'required' => true,
+                            ),
+                            'convert'                   => array(
+                                'location' => 'query',
+                                'type'     => 'boolean',
+                            ),
+                            'updateViewedDate'          => array(
+                                'location' => 'query',
+                                'type'     => 'boolean',
+                            ),
+                            'setModifiedDate'           => array(
+                                'location' => 'query',
+                                'type'     => 'boolean',
+                            ),
+                            'useContentAsIndexableText' => array(
+                                'location' => 'query',
+                                'type'     => 'boolean',
+                            ),
+                            'ocrLanguage'               => array(
+                                'location' => 'query',
+                                'type'     => 'string',
+                            ),
+                            'pinned'                    => array(
+                                'location' => 'query',
+                                'type'     => 'boolean',
+                            ),
+                            'newRevision'               => array(
+                                'location' => 'query',
+                                'type'     => 'boolean',
+                            ),
+                            'ocr'                       => array(
+                                'location' => 'query',
+                                'type'     => 'boolean',
+                            ),
+                            'timedTextLanguage'         => array(
+                                'location' => 'query',
+                                'type'     => 'string',
+                            ),
+                            'timedTextTrackName'        => array(
+                                'location' => 'query',
+                                'type'     => 'string',
+                            ),
+                        ),
+                    ),
+                    'watch'   => array(
+                        'path'       => 'files/{fileId}/watch',
+                        'httpMethod' => 'POST',
+                        'parameters' => array(
+                            'fileId'           => array(
+                                'location' => 'path',
+                                'type'     => 'string',
+                                'required' => true,
+                            ),
+                            'updateViewedDate' => array(
+                                'location' => 'query',
+                                'type'     => 'boolean',
+                            ),
+                            'projection'       => array(
+                                'location' => 'query',
+                                'type'     => 'string',
+                            ),
+                        ),
+                    ),
                 ),
-              ),
-              'delete'  => array(
-                'path'       => 'files/{fileId}',
-                'httpMethod' => 'DELETE',
-                'parameters' => array(
-                  'fileId' => array(
-                    'location' => 'path',
-                    'type'     => 'string',
-                    'required' => true,
-                  ),
-                ),
-              ),
-              'get'     => array(
-                'path'       => 'files/{fileId}',
-                'httpMethod' => 'GET',
-                'parameters' => array(
-                  'fileId'           => array(
-                    'location' => 'path',
-                    'type'     => 'string',
-                    'required' => true,
-                  ),
-                  'updateViewedDate' => array(
-                    'location' => 'query',
-                    'type'     => 'boolean',
-                  ),
-                  'projection'       => array(
-                    'location' => 'query',
-                    'type'     => 'string',
-                  ),
-                ),
-              ),
-              'insert'  => array(
-                'path'       => 'files',
-                'httpMethod' => 'POST',
-                'parameters' => array(
-                  'convert'                   => array(
-                    'location' => 'query',
-                    'type'     => 'boolean',
-                  ),
-                  'useContentAsIndexableText' => array(
-                    'location' => 'query',
-                    'type'     => 'boolean',
-                  ),
-                  'ocrLanguage'               => array(
-                    'location' => 'query',
-                    'type'     => 'string',
-                  ),
-                  'visibility'                => array(
-                    'location' => 'query',
-                    'type'     => 'string',
-                  ),
-                  'pinned'                    => array(
-                    'location' => 'query',
-                    'type'     => 'boolean',
-                  ),
-                  'ocr'                       => array(
-                    'location' => 'query',
-                    'type'     => 'boolean',
-                  ),
-                  'timedTextTrackName'        => array(
-                    'location' => 'query',
-                    'type'     => 'string',
-                  ),
-                  'timedTextLanguage'         => array(
-                    'location' => 'query',
-                    'type'     => 'string',
-                  ),
-                ),
-              ),
-              'list'    => array(
-                'path'       => 'files',
-                'httpMethod' => 'GET',
-                'parameters' => array(
-                  'q'          => array(
-                    'location' => 'query',
-                    'type'     => 'string',
-                  ),
-                  'pageToken'  => array(
-                    'location' => 'query',
-                    'type'     => 'string',
-                  ),
-                  'projection' => array(
-                    'location' => 'query',
-                    'type'     => 'string',
-                  ),
-                  'maxResults' => array(
-                    'location' => 'query',
-                    'type'     => 'integer',
-                  ),
-                ),
-              ),
-              'patch'   => array(
-                'path'       => 'files/{fileId}',
-                'httpMethod' => 'PATCH',
-                'parameters' => array(
-                  'fileId'                    => array(
-                    'location' => 'path',
-                    'type'     => 'string',
-                    'required' => true,
-                  ),
-                  'convert'                   => array(
-                    'location' => 'query',
-                    'type'     => 'boolean',
-                  ),
-                  'updateViewedDate'          => array(
-                    'location' => 'query',
-                    'type'     => 'boolean',
-                  ),
-                  'setModifiedDate'           => array(
-                    'location' => 'query',
-                    'type'     => 'boolean',
-                  ),
-                  'useContentAsIndexableText' => array(
-                    'location' => 'query',
-                    'type'     => 'boolean',
-                  ),
-                  'ocrLanguage'               => array(
-                    'location' => 'query',
-                    'type'     => 'string',
-                  ),
-                  'pinned'                    => array(
-                    'location' => 'query',
-                    'type'     => 'boolean',
-                  ),
-                  'newRevision'               => array(
-                    'location' => 'query',
-                    'type'     => 'boolean',
-                  ),
-                  'ocr'                       => array(
-                    'location' => 'query',
-                    'type'     => 'boolean',
-                  ),
-                  'timedTextLanguage'         => array(
-                    'location' => 'query',
-                    'type'     => 'string',
-                  ),
-                  'timedTextTrackName'        => array(
-                    'location' => 'query',
-                    'type'     => 'string',
-                  ),
-                ),
-              ),
-              'touch'   => array(
-                'path'       => 'files/{fileId}/touch',
-                'httpMethod' => 'POST',
-                'parameters' => array(
-                  'fileId' => array(
-                    'location' => 'path',
-                    'type'     => 'string',
-                    'required' => true,
-                  ),
-                ),
-              ),
-              'trash'   => array(
-                'path'       => 'files/{fileId}/trash',
-                'httpMethod' => 'POST',
-                'parameters' => array(
-                  'fileId' => array(
-                    'location' => 'path',
-                    'type'     => 'string',
-                    'required' => true,
-                  ),
-                ),
-              ),
-              'untrash' => array(
-                'path'       => 'files/{fileId}/untrash',
-                'httpMethod' => 'POST',
-                'parameters' => array(
-                  'fileId' => array(
-                    'location' => 'path',
-                    'type'     => 'string',
-                    'required' => true,
-                  ),
-                ),
-              ),
-              'update'  => array(
-                'path'       => 'files/{fileId}',
-                'httpMethod' => 'PUT',
-                'parameters' => array(
-                  'fileId'                    => array(
-                    'location' => 'path',
-                    'type'     => 'string',
-                    'required' => true,
-                  ),
-                  'convert'                   => array(
-                    'location' => 'query',
-                    'type'     => 'boolean',
-                  ),
-                  'updateViewedDate'          => array(
-                    'location' => 'query',
-                    'type'     => 'boolean',
-                  ),
-                  'setModifiedDate'           => array(
-                    'location' => 'query',
-                    'type'     => 'boolean',
-                  ),
-                  'useContentAsIndexableText' => array(
-                    'location' => 'query',
-                    'type'     => 'boolean',
-                  ),
-                  'ocrLanguage'               => array(
-                    'location' => 'query',
-                    'type'     => 'string',
-                  ),
-                  'pinned'                    => array(
-                    'location' => 'query',
-                    'type'     => 'boolean',
-                  ),
-                  'newRevision'               => array(
-                    'location' => 'query',
-                    'type'     => 'boolean',
-                  ),
-                  'ocr'                       => array(
-                    'location' => 'query',
-                    'type'     => 'boolean',
-                  ),
-                  'timedTextLanguage'         => array(
-                    'location' => 'query',
-                    'type'     => 'string',
-                  ),
-                  'timedTextTrackName'        => array(
-                    'location' => 'query',
-                    'type'     => 'string',
-                  ),
-                ),
-              ),
-              'watch'   => array(
-                'path'       => 'files/{fileId}/watch',
-                'httpMethod' => 'POST',
-                'parameters' => array(
-                  'fileId'           => array(
-                    'location' => 'path',
-                    'type'     => 'string',
-                    'required' => true,
-                  ),
-                  'updateViewedDate' => array(
-                    'location' => 'query',
-                    'type'     => 'boolean',
-                  ),
-                  'projection'       => array(
-                    'location' => 'query',
-                    'type'     => 'string',
-                  ),
-                ),
-              ),
             )
-          )
         );
-        $this->parents     = new Google_Service_Drive_Parents_Resource(
-          $this,
-          $this->serviceName,
-          'parents',
-          array(
-            'methods' => array(
-              'delete' => array(
-                'path'       => 'files/{fileId}/parents/{parentId}',
-                'httpMethod' => 'DELETE',
-                'parameters' => array(
-                  'fileId'   => array(
-                    'location' => 'path',
-                    'type'     => 'string',
-                    'required' => true,
-                  ),
-                  'parentId' => array(
-                    'location' => 'path',
-                    'type'     => 'string',
-                    'required' => true,
-                  ),
+        $this->parents = new Google_Service_Drive_Parents_Resource(
+            $this,
+            $this->serviceName,
+            'parents',
+            array(
+                'methods' => array(
+                    'delete' => array(
+                        'path'       => 'files/{fileId}/parents/{parentId}',
+                        'httpMethod' => 'DELETE',
+                        'parameters' => array(
+                            'fileId'   => array(
+                                'location' => 'path',
+                                'type'     => 'string',
+                                'required' => true,
+                            ),
+                            'parentId' => array(
+                                'location' => 'path',
+                                'type'     => 'string',
+                                'required' => true,
+                            ),
+                        ),
+                    ),
+                    'get'    => array(
+                        'path'       => 'files/{fileId}/parents/{parentId}',
+                        'httpMethod' => 'GET',
+                        'parameters' => array(
+                            'fileId'   => array(
+                                'location' => 'path',
+                                'type'     => 'string',
+                                'required' => true,
+                            ),
+                            'parentId' => array(
+                                'location' => 'path',
+                                'type'     => 'string',
+                                'required' => true,
+                            ),
+                        ),
+                    ),
+                    'insert' => array(
+                        'path'       => 'files/{fileId}/parents',
+                        'httpMethod' => 'POST',
+                        'parameters' => array(
+                            'fileId' => array(
+                                'location' => 'path',
+                                'type'     => 'string',
+                                'required' => true,
+                            ),
+                        ),
+                    ),
+                    'list'   => array(
+                        'path'       => 'files/{fileId}/parents',
+                        'httpMethod' => 'GET',
+                        'parameters' => array(
+                            'fileId' => array(
+                                'location' => 'path',
+                                'type'     => 'string',
+                                'required' => true,
+                            ),
+                        ),
+                    ),
                 ),
-              ),
-              'get'    => array(
-                'path'       => 'files/{fileId}/parents/{parentId}',
-                'httpMethod' => 'GET',
-                'parameters' => array(
-                  'fileId'   => array(
-                    'location' => 'path',
-                    'type'     => 'string',
-                    'required' => true,
-                  ),
-                  'parentId' => array(
-                    'location' => 'path',
-                    'type'     => 'string',
-                    'required' => true,
-                  ),
-                ),
-              ),
-              'insert' => array(
-                'path'       => 'files/{fileId}/parents',
-                'httpMethod' => 'POST',
-                'parameters' => array(
-                  'fileId' => array(
-                    'location' => 'path',
-                    'type'     => 'string',
-                    'required' => true,
-                  ),
-                ),
-              ),
-              'list'   => array(
-                'path'       => 'files/{fileId}/parents',
-                'httpMethod' => 'GET',
-                'parameters' => array(
-                  'fileId' => array(
-                    'location' => 'path',
-                    'type'     => 'string',
-                    'required' => true,
-                  ),
-                ),
-              ),
             )
-          )
         );
         $this->permissions = new Google_Service_Drive_Permissions_Resource(
-          $this,
-          $this->serviceName,
-          'permissions',
-          array(
-            'methods' => array(
-              'delete'        => array(
-                'path'       => 'files/{fileId}/permissions/{permissionId}',
-                'httpMethod' => 'DELETE',
-                'parameters' => array(
-                  'fileId'       => array(
-                    'location' => 'path',
-                    'type'     => 'string',
-                    'required' => true,
-                  ),
-                  'permissionId' => array(
-                    'location' => 'path',
-                    'type'     => 'string',
-                    'required' => true,
-                  ),
+            $this,
+            $this->serviceName,
+            'permissions',
+            array(
+                'methods' => array(
+                    'delete'        => array(
+                        'path'       => 'files/{fileId}/permissions/{permissionId}',
+                        'httpMethod' => 'DELETE',
+                        'parameters' => array(
+                            'fileId'       => array(
+                                'location' => 'path',
+                                'type'     => 'string',
+                                'required' => true,
+                            ),
+                            'permissionId' => array(
+                                'location' => 'path',
+                                'type'     => 'string',
+                                'required' => true,
+                            ),
+                        ),
+                    ),
+                    'get'           => array(
+                        'path'       => 'files/{fileId}/permissions/{permissionId}',
+                        'httpMethod' => 'GET',
+                        'parameters' => array(
+                            'fileId'       => array(
+                                'location' => 'path',
+                                'type'     => 'string',
+                                'required' => true,
+                            ),
+                            'permissionId' => array(
+                                'location' => 'path',
+                                'type'     => 'string',
+                                'required' => true,
+                            ),
+                        ),
+                    ),
+                    'getIdForEmail' => array(
+                        'path'       => 'permissionIds/{email}',
+                        'httpMethod' => 'GET',
+                        'parameters' => array(
+                            'email' => array(
+                                'location' => 'path',
+                                'type'     => 'string',
+                                'required' => true,
+                            ),
+                        ),
+                    ),
+                    'insert'        => array(
+                        'path'       => 'files/{fileId}/permissions',
+                        'httpMethod' => 'POST',
+                        'parameters' => array(
+                            'fileId'                 => array(
+                                'location' => 'path',
+                                'type'     => 'string',
+                                'required' => true,
+                            ),
+                            'emailMessage'           => array(
+                                'location' => 'query',
+                                'type'     => 'string',
+                            ),
+                            'sendNotificationEmails' => array(
+                                'location' => 'query',
+                                'type'     => 'boolean',
+                            ),
+                        ),
+                    ),
+                    'list'          => array(
+                        'path'       => 'files/{fileId}/permissions',
+                        'httpMethod' => 'GET',
+                        'parameters' => array(
+                            'fileId' => array(
+                                'location' => 'path',
+                                'type'     => 'string',
+                                'required' => true,
+                            ),
+                        ),
+                    ),
+                    'patch'         => array(
+                        'path'       => 'files/{fileId}/permissions/{permissionId}',
+                        'httpMethod' => 'PATCH',
+                        'parameters' => array(
+                            'fileId'            => array(
+                                'location' => 'path',
+                                'type'     => 'string',
+                                'required' => true,
+                            ),
+                            'permissionId'      => array(
+                                'location' => 'path',
+                                'type'     => 'string',
+                                'required' => true,
+                            ),
+                            'transferOwnership' => array(
+                                'location' => 'query',
+                                'type'     => 'boolean',
+                            ),
+                        ),
+                    ),
+                    'update'        => array(
+                        'path'       => 'files/{fileId}/permissions/{permissionId}',
+                        'httpMethod' => 'PUT',
+                        'parameters' => array(
+                            'fileId'            => array(
+                                'location' => 'path',
+                                'type'     => 'string',
+                                'required' => true,
+                            ),
+                            'permissionId'      => array(
+                                'location' => 'path',
+                                'type'     => 'string',
+                                'required' => true,
+                            ),
+                            'transferOwnership' => array(
+                                'location' => 'query',
+                                'type'     => 'boolean',
+                            ),
+                        ),
+                    ),
                 ),
-              ),
-              'get'           => array(
-                'path'       => 'files/{fileId}/permissions/{permissionId}',
-                'httpMethod' => 'GET',
-                'parameters' => array(
-                  'fileId'       => array(
-                    'location' => 'path',
-                    'type'     => 'string',
-                    'required' => true,
-                  ),
-                  'permissionId' => array(
-                    'location' => 'path',
-                    'type'     => 'string',
-                    'required' => true,
-                  ),
-                ),
-              ),
-              'getIdForEmail' => array(
-                'path'       => 'permissionIds/{email}',
-                'httpMethod' => 'GET',
-                'parameters' => array(
-                  'email' => array(
-                    'location' => 'path',
-                    'type'     => 'string',
-                    'required' => true,
-                  ),
-                ),
-              ),
-              'insert'        => array(
-                'path'       => 'files/{fileId}/permissions',
-                'httpMethod' => 'POST',
-                'parameters' => array(
-                  'fileId'                 => array(
-                    'location' => 'path',
-                    'type'     => 'string',
-                    'required' => true,
-                  ),
-                  'emailMessage'           => array(
-                    'location' => 'query',
-                    'type'     => 'string',
-                  ),
-                  'sendNotificationEmails' => array(
-                    'location' => 'query',
-                    'type'     => 'boolean',
-                  ),
-                ),
-              ),
-              'list'          => array(
-                'path'       => 'files/{fileId}/permissions',
-                'httpMethod' => 'GET',
-                'parameters' => array(
-                  'fileId' => array(
-                    'location' => 'path',
-                    'type'     => 'string',
-                    'required' => true,
-                  ),
-                ),
-              ),
-              'patch'         => array(
-                'path'       => 'files/{fileId}/permissions/{permissionId}',
-                'httpMethod' => 'PATCH',
-                'parameters' => array(
-                  'fileId'            => array(
-                    'location' => 'path',
-                    'type'     => 'string',
-                    'required' => true,
-                  ),
-                  'permissionId'      => array(
-                    'location' => 'path',
-                    'type'     => 'string',
-                    'required' => true,
-                  ),
-                  'transferOwnership' => array(
-                    'location' => 'query',
-                    'type'     => 'boolean',
-                  ),
-                ),
-              ),
-              'update'        => array(
-                'path'       => 'files/{fileId}/permissions/{permissionId}',
-                'httpMethod' => 'PUT',
-                'parameters' => array(
-                  'fileId'            => array(
-                    'location' => 'path',
-                    'type'     => 'string',
-                    'required' => true,
-                  ),
-                  'permissionId'      => array(
-                    'location' => 'path',
-                    'type'     => 'string',
-                    'required' => true,
-                  ),
-                  'transferOwnership' => array(
-                    'location' => 'query',
-                    'type'     => 'boolean',
-                  ),
-                ),
-              ),
             )
-          )
         );
-        $this->properties  = new Google_Service_Drive_Properties_Resource(
-          $this,
-          $this->serviceName,
-          'properties',
-          array(
-            'methods' => array(
-              'delete' => array(
-                'path'       => 'files/{fileId}/properties/{propertyKey}',
-                'httpMethod' => 'DELETE',
-                'parameters' => array(
-                  'fileId'      => array(
-                    'location' => 'path',
-                    'type'     => 'string',
-                    'required' => true,
-                  ),
-                  'propertyKey' => array(
-                    'location' => 'path',
-                    'type'     => 'string',
-                    'required' => true,
-                  ),
-                  'visibility'  => array(
-                    'location' => 'query',
-                    'type'     => 'string',
-                  ),
+        $this->properties = new Google_Service_Drive_Properties_Resource(
+            $this,
+            $this->serviceName,
+            'properties',
+            array(
+                'methods' => array(
+                    'delete' => array(
+                        'path'       => 'files/{fileId}/properties/{propertyKey}',
+                        'httpMethod' => 'DELETE',
+                        'parameters' => array(
+                            'fileId'      => array(
+                                'location' => 'path',
+                                'type'     => 'string',
+                                'required' => true,
+                            ),
+                            'propertyKey' => array(
+                                'location' => 'path',
+                                'type'     => 'string',
+                                'required' => true,
+                            ),
+                            'visibility'  => array(
+                                'location' => 'query',
+                                'type'     => 'string',
+                            ),
+                        ),
+                    ),
+                    'get'    => array(
+                        'path'       => 'files/{fileId}/properties/{propertyKey}',
+                        'httpMethod' => 'GET',
+                        'parameters' => array(
+                            'fileId'      => array(
+                                'location' => 'path',
+                                'type'     => 'string',
+                                'required' => true,
+                            ),
+                            'propertyKey' => array(
+                                'location' => 'path',
+                                'type'     => 'string',
+                                'required' => true,
+                            ),
+                            'visibility'  => array(
+                                'location' => 'query',
+                                'type'     => 'string',
+                            ),
+                        ),
+                    ),
+                    'insert' => array(
+                        'path'       => 'files/{fileId}/properties',
+                        'httpMethod' => 'POST',
+                        'parameters' => array(
+                            'fileId' => array(
+                                'location' => 'path',
+                                'type'     => 'string',
+                                'required' => true,
+                            ),
+                        ),
+                    ),
+                    'list'   => array(
+                        'path'       => 'files/{fileId}/properties',
+                        'httpMethod' => 'GET',
+                        'parameters' => array(
+                            'fileId' => array(
+                                'location' => 'path',
+                                'type'     => 'string',
+                                'required' => true,
+                            ),
+                        ),
+                    ),
+                    'patch'  => array(
+                        'path'       => 'files/{fileId}/properties/{propertyKey}',
+                        'httpMethod' => 'PATCH',
+                        'parameters' => array(
+                            'fileId'      => array(
+                                'location' => 'path',
+                                'type'     => 'string',
+                                'required' => true,
+                            ),
+                            'propertyKey' => array(
+                                'location' => 'path',
+                                'type'     => 'string',
+                                'required' => true,
+                            ),
+                            'visibility'  => array(
+                                'location' => 'query',
+                                'type'     => 'string',
+                            ),
+                        ),
+                    ),
+                    'update' => array(
+                        'path'       => 'files/{fileId}/properties/{propertyKey}',
+                        'httpMethod' => 'PUT',
+                        'parameters' => array(
+                            'fileId'      => array(
+                                'location' => 'path',
+                                'type'     => 'string',
+                                'required' => true,
+                            ),
+                            'propertyKey' => array(
+                                'location' => 'path',
+                                'type'     => 'string',
+                                'required' => true,
+                            ),
+                            'visibility'  => array(
+                                'location' => 'query',
+                                'type'     => 'string',
+                            ),
+                        ),
+                    ),
                 ),
-              ),
-              'get'    => array(
-                'path'       => 'files/{fileId}/properties/{propertyKey}',
-                'httpMethod' => 'GET',
-                'parameters' => array(
-                  'fileId'      => array(
-                    'location' => 'path',
-                    'type'     => 'string',
-                    'required' => true,
-                  ),
-                  'propertyKey' => array(
-                    'location' => 'path',
-                    'type'     => 'string',
-                    'required' => true,
-                  ),
-                  'visibility'  => array(
-                    'location' => 'query',
-                    'type'     => 'string',
-                  ),
-                ),
-              ),
-              'insert' => array(
-                'path'       => 'files/{fileId}/properties',
-                'httpMethod' => 'POST',
-                'parameters' => array(
-                  'fileId' => array(
-                    'location' => 'path',
-                    'type'     => 'string',
-                    'required' => true,
-                  ),
-                ),
-              ),
-              'list'   => array(
-                'path'       => 'files/{fileId}/properties',
-                'httpMethod' => 'GET',
-                'parameters' => array(
-                  'fileId' => array(
-                    'location' => 'path',
-                    'type'     => 'string',
-                    'required' => true,
-                  ),
-                ),
-              ),
-              'patch'  => array(
-                'path'       => 'files/{fileId}/properties/{propertyKey}',
-                'httpMethod' => 'PATCH',
-                'parameters' => array(
-                  'fileId'      => array(
-                    'location' => 'path',
-                    'type'     => 'string',
-                    'required' => true,
-                  ),
-                  'propertyKey' => array(
-                    'location' => 'path',
-                    'type'     => 'string',
-                    'required' => true,
-                  ),
-                  'visibility'  => array(
-                    'location' => 'query',
-                    'type'     => 'string',
-                  ),
-                ),
-              ),
-              'update' => array(
-                'path'       => 'files/{fileId}/properties/{propertyKey}',
-                'httpMethod' => 'PUT',
-                'parameters' => array(
-                  'fileId'      => array(
-                    'location' => 'path',
-                    'type'     => 'string',
-                    'required' => true,
-                  ),
-                  'propertyKey' => array(
-                    'location' => 'path',
-                    'type'     => 'string',
-                    'required' => true,
-                  ),
-                  'visibility'  => array(
-                    'location' => 'query',
-                    'type'     => 'string',
-                  ),
-                ),
-              ),
             )
-          )
         );
-        $this->realtime    = new Google_Service_Drive_Realtime_Resource(
-          $this,
-          $this->serviceName,
-          'realtime',
-          array(
-            'methods' => array(
-              'get'    => array(
-                'path'       => 'files/{fileId}/realtime',
-                'httpMethod' => 'GET',
-                'parameters' => array(
-                  'fileId' => array(
-                    'location' => 'path',
-                    'type'     => 'string',
-                    'required' => true,
-                  ),
+        $this->realtime = new Google_Service_Drive_Realtime_Resource(
+            $this,
+            $this->serviceName,
+            'realtime',
+            array(
+                'methods' => array(
+                    'get'    => array(
+                        'path'       => 'files/{fileId}/realtime',
+                        'httpMethod' => 'GET',
+                        'parameters' => array(
+                            'fileId' => array(
+                                'location' => 'path',
+                                'type'     => 'string',
+                                'required' => true,
+                            ),
+                        ),
+                    ),
+                    'update' => array(
+                        'path'       => 'files/{fileId}/realtime',
+                        'httpMethod' => 'PUT',
+                        'parameters' => array(
+                            'fileId'       => array(
+                                'location' => 'path',
+                                'type'     => 'string',
+                                'required' => true,
+                            ),
+                            'baseRevision' => array(
+                                'location' => 'query',
+                                'type'     => 'string',
+                            ),
+                        ),
+                    ),
                 ),
-              ),
-              'update' => array(
-                'path'       => 'files/{fileId}/realtime',
-                'httpMethod' => 'PUT',
-                'parameters' => array(
-                  'fileId'       => array(
-                    'location' => 'path',
-                    'type'     => 'string',
-                    'required' => true,
-                  ),
-                  'baseRevision' => array(
-                    'location' => 'query',
-                    'type'     => 'string',
-                  ),
-                ),
-              ),
             )
-          )
         );
-        $this->replies     = new Google_Service_Drive_Replies_Resource(
-          $this,
-          $this->serviceName,
-          'replies',
-          array(
-            'methods' => array(
-              'delete' => array(
-                'path'       => 'files/{fileId}/comments/{commentId}/replies/{replyId}',
-                'httpMethod' => 'DELETE',
-                'parameters' => array(
-                  'fileId'    => array(
-                    'location' => 'path',
-                    'type'     => 'string',
-                    'required' => true,
-                  ),
-                  'commentId' => array(
-                    'location' => 'path',
-                    'type'     => 'string',
-                    'required' => true,
-                  ),
-                  'replyId'   => array(
-                    'location' => 'path',
-                    'type'     => 'string',
-                    'required' => true,
-                  ),
+        $this->replies = new Google_Service_Drive_Replies_Resource(
+            $this,
+            $this->serviceName,
+            'replies',
+            array(
+                'methods' => array(
+                    'delete' => array(
+                        'path'       => 'files/{fileId}/comments/{commentId}/replies/{replyId}',
+                        'httpMethod' => 'DELETE',
+                        'parameters' => array(
+                            'fileId'    => array(
+                                'location' => 'path',
+                                'type'     => 'string',
+                                'required' => true,
+                            ),
+                            'commentId' => array(
+                                'location' => 'path',
+                                'type'     => 'string',
+                                'required' => true,
+                            ),
+                            'replyId'   => array(
+                                'location' => 'path',
+                                'type'     => 'string',
+                                'required' => true,
+                            ),
+                        ),
+                    ),
+                    'get'    => array(
+                        'path'       => 'files/{fileId}/comments/{commentId}/replies/{replyId}',
+                        'httpMethod' => 'GET',
+                        'parameters' => array(
+                            'fileId'         => array(
+                                'location' => 'path',
+                                'type'     => 'string',
+                                'required' => true,
+                            ),
+                            'commentId'      => array(
+                                'location' => 'path',
+                                'type'     => 'string',
+                                'required' => true,
+                            ),
+                            'replyId'        => array(
+                                'location' => 'path',
+                                'type'     => 'string',
+                                'required' => true,
+                            ),
+                            'includeDeleted' => array(
+                                'location' => 'query',
+                                'type'     => 'boolean',
+                            ),
+                        ),
+                    ),
+                    'insert' => array(
+                        'path'       => 'files/{fileId}/comments/{commentId}/replies',
+                        'httpMethod' => 'POST',
+                        'parameters' => array(
+                            'fileId'    => array(
+                                'location' => 'path',
+                                'type'     => 'string',
+                                'required' => true,
+                            ),
+                            'commentId' => array(
+                                'location' => 'path',
+                                'type'     => 'string',
+                                'required' => true,
+                            ),
+                        ),
+                    ),
+                    'list'   => array(
+                        'path'       => 'files/{fileId}/comments/{commentId}/replies',
+                        'httpMethod' => 'GET',
+                        'parameters' => array(
+                            'fileId'         => array(
+                                'location' => 'path',
+                                'type'     => 'string',
+                                'required' => true,
+                            ),
+                            'commentId'      => array(
+                                'location' => 'path',
+                                'type'     => 'string',
+                                'required' => true,
+                            ),
+                            'pageToken'      => array(
+                                'location' => 'query',
+                                'type'     => 'string',
+                            ),
+                            'includeDeleted' => array(
+                                'location' => 'query',
+                                'type'     => 'boolean',
+                            ),
+                            'maxResults'     => array(
+                                'location' => 'query',
+                                'type'     => 'integer',
+                            ),
+                        ),
+                    ),
+                    'patch'  => array(
+                        'path'       => 'files/{fileId}/comments/{commentId}/replies/{replyId}',
+                        'httpMethod' => 'PATCH',
+                        'parameters' => array(
+                            'fileId'    => array(
+                                'location' => 'path',
+                                'type'     => 'string',
+                                'required' => true,
+                            ),
+                            'commentId' => array(
+                                'location' => 'path',
+                                'type'     => 'string',
+                                'required' => true,
+                            ),
+                            'replyId'   => array(
+                                'location' => 'path',
+                                'type'     => 'string',
+                                'required' => true,
+                            ),
+                        ),
+                    ),
+                    'update' => array(
+                        'path'       => 'files/{fileId}/comments/{commentId}/replies/{replyId}',
+                        'httpMethod' => 'PUT',
+                        'parameters' => array(
+                            'fileId'    => array(
+                                'location' => 'path',
+                                'type'     => 'string',
+                                'required' => true,
+                            ),
+                            'commentId' => array(
+                                'location' => 'path',
+                                'type'     => 'string',
+                                'required' => true,
+                            ),
+                            'replyId'   => array(
+                                'location' => 'path',
+                                'type'     => 'string',
+                                'required' => true,
+                            ),
+                        ),
+                    ),
                 ),
-              ),
-              'get'    => array(
-                'path'       => 'files/{fileId}/comments/{commentId}/replies/{replyId}',
-                'httpMethod' => 'GET',
-                'parameters' => array(
-                  'fileId'         => array(
-                    'location' => 'path',
-                    'type'     => 'string',
-                    'required' => true,
-                  ),
-                  'commentId'      => array(
-                    'location' => 'path',
-                    'type'     => 'string',
-                    'required' => true,
-                  ),
-                  'replyId'        => array(
-                    'location' => 'path',
-                    'type'     => 'string',
-                    'required' => true,
-                  ),
-                  'includeDeleted' => array(
-                    'location' => 'query',
-                    'type'     => 'boolean',
-                  ),
-                ),
-              ),
-              'insert' => array(
-                'path'       => 'files/{fileId}/comments/{commentId}/replies',
-                'httpMethod' => 'POST',
-                'parameters' => array(
-                  'fileId'    => array(
-                    'location' => 'path',
-                    'type'     => 'string',
-                    'required' => true,
-                  ),
-                  'commentId' => array(
-                    'location' => 'path',
-                    'type'     => 'string',
-                    'required' => true,
-                  ),
-                ),
-              ),
-              'list'   => array(
-                'path'       => 'files/{fileId}/comments/{commentId}/replies',
-                'httpMethod' => 'GET',
-                'parameters' => array(
-                  'fileId'         => array(
-                    'location' => 'path',
-                    'type'     => 'string',
-                    'required' => true,
-                  ),
-                  'commentId'      => array(
-                    'location' => 'path',
-                    'type'     => 'string',
-                    'required' => true,
-                  ),
-                  'pageToken'      => array(
-                    'location' => 'query',
-                    'type'     => 'string',
-                  ),
-                  'includeDeleted' => array(
-                    'location' => 'query',
-                    'type'     => 'boolean',
-                  ),
-                  'maxResults'     => array(
-                    'location' => 'query',
-                    'type'     => 'integer',
-                  ),
-                ),
-              ),
-              'patch'  => array(
-                'path'       => 'files/{fileId}/comments/{commentId}/replies/{replyId}',
-                'httpMethod' => 'PATCH',
-                'parameters' => array(
-                  'fileId'    => array(
-                    'location' => 'path',
-                    'type'     => 'string',
-                    'required' => true,
-                  ),
-                  'commentId' => array(
-                    'location' => 'path',
-                    'type'     => 'string',
-                    'required' => true,
-                  ),
-                  'replyId'   => array(
-                    'location' => 'path',
-                    'type'     => 'string',
-                    'required' => true,
-                  ),
-                ),
-              ),
-              'update' => array(
-                'path'       => 'files/{fileId}/comments/{commentId}/replies/{replyId}',
-                'httpMethod' => 'PUT',
-                'parameters' => array(
-                  'fileId'    => array(
-                    'location' => 'path',
-                    'type'     => 'string',
-                    'required' => true,
-                  ),
-                  'commentId' => array(
-                    'location' => 'path',
-                    'type'     => 'string',
-                    'required' => true,
-                  ),
-                  'replyId'   => array(
-                    'location' => 'path',
-                    'type'     => 'string',
-                    'required' => true,
-                  ),
-                ),
-              ),
             )
-          )
         );
-        $this->revisions   = new Google_Service_Drive_Revisions_Resource(
-          $this,
-          $this->serviceName,
-          'revisions',
-          array(
-            'methods' => array(
-              'delete' => array(
-                'path'       => 'files/{fileId}/revisions/{revisionId}',
-                'httpMethod' => 'DELETE',
-                'parameters' => array(
-                  'fileId'     => array(
-                    'location' => 'path',
-                    'type'     => 'string',
-                    'required' => true,
-                  ),
-                  'revisionId' => array(
-                    'location' => 'path',
-                    'type'     => 'string',
-                    'required' => true,
-                  ),
+        $this->revisions = new Google_Service_Drive_Revisions_Resource(
+            $this,
+            $this->serviceName,
+            'revisions',
+            array(
+                'methods' => array(
+                    'delete' => array(
+                        'path'       => 'files/{fileId}/revisions/{revisionId}',
+                        'httpMethod' => 'DELETE',
+                        'parameters' => array(
+                            'fileId'     => array(
+                                'location' => 'path',
+                                'type'     => 'string',
+                                'required' => true,
+                            ),
+                            'revisionId' => array(
+                                'location' => 'path',
+                                'type'     => 'string',
+                                'required' => true,
+                            ),
+                        ),
+                    ),
+                    'get'    => array(
+                        'path'       => 'files/{fileId}/revisions/{revisionId}',
+                        'httpMethod' => 'GET',
+                        'parameters' => array(
+                            'fileId'     => array(
+                                'location' => 'path',
+                                'type'     => 'string',
+                                'required' => true,
+                            ),
+                            'revisionId' => array(
+                                'location' => 'path',
+                                'type'     => 'string',
+                                'required' => true,
+                            ),
+                        ),
+                    ),
+                    'list'   => array(
+                        'path'       => 'files/{fileId}/revisions',
+                        'httpMethod' => 'GET',
+                        'parameters' => array(
+                            'fileId' => array(
+                                'location' => 'path',
+                                'type'     => 'string',
+                                'required' => true,
+                            ),
+                        ),
+                    ),
+                    'patch'  => array(
+                        'path'       => 'files/{fileId}/revisions/{revisionId}',
+                        'httpMethod' => 'PATCH',
+                        'parameters' => array(
+                            'fileId'     => array(
+                                'location' => 'path',
+                                'type'     => 'string',
+                                'required' => true,
+                            ),
+                            'revisionId' => array(
+                                'location' => 'path',
+                                'type'     => 'string',
+                                'required' => true,
+                            ),
+                        ),
+                    ),
+                    'update' => array(
+                        'path'       => 'files/{fileId}/revisions/{revisionId}',
+                        'httpMethod' => 'PUT',
+                        'parameters' => array(
+                            'fileId'     => array(
+                                'location' => 'path',
+                                'type'     => 'string',
+                                'required' => true,
+                            ),
+                            'revisionId' => array(
+                                'location' => 'path',
+                                'type'     => 'string',
+                                'required' => true,
+                            ),
+                        ),
+                    ),
                 ),
-              ),
-              'get'    => array(
-                'path'       => 'files/{fileId}/revisions/{revisionId}',
-                'httpMethod' => 'GET',
-                'parameters' => array(
-                  'fileId'     => array(
-                    'location' => 'path',
-                    'type'     => 'string',
-                    'required' => true,
-                  ),
-                  'revisionId' => array(
-                    'location' => 'path',
-                    'type'     => 'string',
-                    'required' => true,
-                  ),
-                ),
-              ),
-              'list'   => array(
-                'path'       => 'files/{fileId}/revisions',
-                'httpMethod' => 'GET',
-                'parameters' => array(
-                  'fileId' => array(
-                    'location' => 'path',
-                    'type'     => 'string',
-                    'required' => true,
-                  ),
-                ),
-              ),
-              'patch'  => array(
-                'path'       => 'files/{fileId}/revisions/{revisionId}',
-                'httpMethod' => 'PATCH',
-                'parameters' => array(
-                  'fileId'     => array(
-                    'location' => 'path',
-                    'type'     => 'string',
-                    'required' => true,
-                  ),
-                  'revisionId' => array(
-                    'location' => 'path',
-                    'type'     => 'string',
-                    'required' => true,
-                  ),
-                ),
-              ),
-              'update' => array(
-                'path'       => 'files/{fileId}/revisions/{revisionId}',
-                'httpMethod' => 'PUT',
-                'parameters' => array(
-                  'fileId'     => array(
-                    'location' => 'path',
-                    'type'     => 'string',
-                    'required' => true,
-                  ),
-                  'revisionId' => array(
-                    'location' => 'path',
-                    'type'     => 'string',
-                    'required' => true,
-                  ),
-                ),
-              ),
             )
-          )
         );
     }
 }
-
 
 /**
  * The "about" collection of methods.
@@ -1263,7 +1261,6 @@ class Google_Service_Drive extends Google_ApiService
  */
 class Google_Service_Drive_About_Resource extends Google_Service_Resource
 {
-
     /**
      * Gets the information about the current user along with Drive API settings
      * (about.get)
@@ -1299,7 +1296,6 @@ class Google_Service_Drive_About_Resource extends Google_Service_Resource
  */
 class Google_Service_Drive_Apps_Resource extends Google_Service_Resource
 {
-
     /**
      * Gets a specific app. (apps.get)
      *
@@ -1343,7 +1339,6 @@ class Google_Service_Drive_Apps_Resource extends Google_Service_Resource
  */
 class Google_Service_Drive_Changes_Resource extends Google_Service_Resource
 {
-
     /**
      * Gets a specific change. (changes.get)
      *
@@ -1427,7 +1422,6 @@ class Google_Service_Drive_Changes_Resource extends Google_Service_Resource
  */
 class Google_Service_Drive_Channels_Resource extends Google_Service_Resource
 {
-
     /**
      * Stop watching resources through this channel (channels.stop)
      *
@@ -1453,7 +1447,6 @@ class Google_Service_Drive_Channels_Resource extends Google_Service_Resource
  */
 class Google_Service_Drive_Children_Resource extends Google_Service_Resource
 {
-
     /**
      * Removes a child from a folder. (children.delete)
      *
@@ -1542,7 +1535,6 @@ class Google_Service_Drive_Children_Resource extends Google_Service_Resource
  */
 class Google_Service_Drive_Comments_Resource extends Google_Service_Resource
 {
-
     /**
      * Deletes a comment. (comments.delete)
      *
@@ -1680,7 +1672,6 @@ class Google_Service_Drive_Comments_Resource extends Google_Service_Resource
  */
 class Google_Service_Drive_Files_Resource extends Google_Service_Resource
 {
-
     /**
      * Creates a copy of the specified file. (files.copy)
      *
@@ -1970,7 +1961,6 @@ class Google_Service_Drive_Files_Resource extends Google_Service_Resource
  */
 class Google_Service_Drive_Parents_Resource extends Google_Service_Resource
 {
-
     /**
      * Removes a parent from a file. (parents.delete)
      *
@@ -2053,15 +2043,14 @@ class Google_Service_Drive_Parents_Resource extends Google_Service_Resource
  */
 class Google_Service_Drive_Permissions_Resource extends Google_Service_Resource
 {
-
     /**
      * Deletes a permission from a file. (permissions.delete)
      *
      * @param string $fileId
-     *                          The ID for the file.
+     *                             The ID for the file.
      * @param string $permissionId
-     *                          The ID for the permission.
-     * @param array  $optParams Optional parameters.
+     *                             The ID for the permission.
+     * @param array  $optParams    Optional parameters.
      */
     public function delete($fileId, $permissionId, $optParams = array())
     {
@@ -2075,10 +2064,10 @@ class Google_Service_Drive_Permissions_Resource extends Google_Service_Resource
      * Gets a permission by ID. (permissions.get)
      *
      * @param string $fileId
-     *                          The ID for the file.
+     *                             The ID for the file.
      * @param string $permissionId
-     *                          The ID for the permission.
-     * @param array  $optParams Optional parameters.
+     *                             The ID for the permission.
+     * @param array  $optParams    Optional parameters.
      *
      * @return Google_Service_Drive_Permission
      */
@@ -2151,11 +2140,11 @@ class Google_Service_Drive_Permissions_Resource extends Google_Service_Resource
      * (permissions.patch)
      *
      * @param string            $fileId
-     *                                     The ID for the file.
+     *                                        The ID for the file.
      * @param string            $permissionId
-     *                                     The ID for the permission.
+     *                                        The ID for the permission.
      * @param Google_Permission $postBody
-     * @param array             $optParams Optional parameters.
+     * @param array             $optParams    Optional parameters.
      *
      * @opt_param bool transferOwnership
      * Whether changing a role to 'owner' should also downgrade the current owners to writers.
@@ -2173,11 +2162,11 @@ class Google_Service_Drive_Permissions_Resource extends Google_Service_Resource
      * Updates a permission. (permissions.update)
      *
      * @param string            $fileId
-     *                                     The ID for the file.
+     *                                        The ID for the file.
      * @param string            $permissionId
-     *                                     The ID for the permission.
+     *                                        The ID for the permission.
      * @param Google_Permission $postBody
-     * @param array             $optParams Optional parameters.
+     * @param array             $optParams    Optional parameters.
      *
      * @opt_param bool transferOwnership
      * Whether changing a role to 'owner' should also downgrade the current owners to writers.
@@ -2202,15 +2191,14 @@ class Google_Service_Drive_Permissions_Resource extends Google_Service_Resource
  */
 class Google_Service_Drive_Properties_Resource extends Google_Service_Resource
 {
-
     /**
      * Deletes a property. (properties.delete)
      *
      * @param string $fileId
-     *                          The ID of the file.
+     *                            The ID of the file.
      * @param string $propertyKey
-     *                          The key of the property.
-     * @param array  $optParams Optional parameters.
+     *                            The key of the property.
+     * @param array  $optParams   Optional parameters.
      *
      * @opt_param string visibility
      * The visibility of the property.
@@ -2227,10 +2215,10 @@ class Google_Service_Drive_Properties_Resource extends Google_Service_Resource
      * Gets a property by its key. (properties.get)
      *
      * @param string $fileId
-     *                          The ID of the file.
+     *                            The ID of the file.
      * @param string $propertyKey
-     *                          The key of the property.
-     * @param array  $optParams Optional parameters.
+     *                            The key of the property.
+     * @param array  $optParams   Optional parameters.
      *
      * @opt_param string visibility
      * The visibility of the property.
@@ -2283,11 +2271,11 @@ class Google_Service_Drive_Properties_Resource extends Google_Service_Resource
      * Updates a property. This method supports patch semantics. (properties.patch)
      *
      * @param string          $fileId
-     *                                   The ID of the file.
+     *                                     The ID of the file.
      * @param string          $propertyKey
-     *                                   The key of the property.
+     *                                     The key of the property.
      * @param Google_Property $postBody
-     * @param array           $optParams Optional parameters.
+     * @param array           $optParams   Optional parameters.
      *
      * @opt_param string visibility
      * The visibility of the property.
@@ -2305,11 +2293,11 @@ class Google_Service_Drive_Properties_Resource extends Google_Service_Resource
      * Updates a property. (properties.update)
      *
      * @param string          $fileId
-     *                                   The ID of the file.
+     *                                     The ID of the file.
      * @param string          $propertyKey
-     *                                   The key of the property.
+     *                                     The key of the property.
      * @param Google_Property $postBody
-     * @param array           $optParams Optional parameters.
+     * @param array           $optParams   Optional parameters.
      *
      * @opt_param string visibility
      * The visibility of the property.
@@ -2334,7 +2322,6 @@ class Google_Service_Drive_Properties_Resource extends Google_Service_Resource
  */
 class Google_Service_Drive_Realtime_Resource extends Google_Service_Resource
 {
-
     /**
      * Exports the contents of the Realtime API data model associated with this file
      * as JSON. (realtime.get)
@@ -2384,7 +2371,6 @@ class Google_Service_Drive_Realtime_Resource extends Google_Service_Resource
  */
 class Google_Service_Drive_Replies_Resource extends Google_Service_Resource
 {
-
     /**
      * Deletes a reply. (replies.delete)
      *
@@ -2529,15 +2515,14 @@ class Google_Service_Drive_Replies_Resource extends Google_Service_Resource
  */
 class Google_Service_Drive_Revisions_Resource extends Google_Service_Resource
 {
-
     /**
      * Removes a revision. (revisions.delete)
      *
      * @param string $fileId
-     *                          The ID of the file.
+     *                           The ID of the file.
      * @param string $revisionId
-     *                          The ID of the revision.
-     * @param array  $optParams Optional parameters.
+     *                           The ID of the revision.
+     * @param array  $optParams  Optional parameters.
      */
     public function delete($fileId, $revisionId, $optParams = array())
     {
@@ -2551,10 +2536,10 @@ class Google_Service_Drive_Revisions_Resource extends Google_Service_Resource
      * Gets a specific revision. (revisions.get)
      *
      * @param string $fileId
-     *                          The ID of the file.
+     *                           The ID of the file.
      * @param string $revisionId
-     *                          The ID of the revision.
-     * @param array  $optParams Optional parameters.
+     *                           The ID of the revision.
+     * @param array  $optParams  Optional parameters.
      *
      * @return Google_Service_Drive_Revision
      */
@@ -2587,11 +2572,11 @@ class Google_Service_Drive_Revisions_Resource extends Google_Service_Resource
      * Updates a revision. This method supports patch semantics. (revisions.patch)
      *
      * @param string          $fileId
-     *                                   The ID for the file.
+     *                                    The ID for the file.
      * @param string          $revisionId
-     *                                   The ID for the revision.
+     *                                    The ID for the revision.
      * @param Google_Revision $postBody
-     * @param array           $optParams Optional parameters.
+     * @param array           $optParams  Optional parameters.
      *
      * @return Google_Service_Drive_Revision
      */
@@ -2607,11 +2592,11 @@ class Google_Service_Drive_Revisions_Resource extends Google_Service_Resource
      * Updates a revision. (revisions.update)
      *
      * @param string          $fileId
-     *                                   The ID for the file.
+     *                                    The ID for the file.
      * @param string          $revisionId
-     *                                   The ID for the revision.
+     *                                    The ID for the revision.
      * @param Google_Revision $postBody
-     * @param array           $optParams Optional parameters.
+     * @param array           $optParams  Optional parameters.
      *
      * @return Google_Service_Drive_Revision
      */
@@ -2624,23 +2609,22 @@ class Google_Service_Drive_Revisions_Resource extends Google_Service_Resource
     }
 }
 
-
 class Google_Service_Drive_About extends Google_Collection
 {
-    protected $additionalRoleInfoType = 'Google_Service_Drive_AboutAdditionalRoleInfo';
+    protected $additionalRoleInfoType     = 'Google_Service_Drive_AboutAdditionalRoleInfo';
     protected $additionalRoleInfoDataType = 'array';
     public $domainSharingPolicy;
     public $etag;
-    protected $exportFormatsType = 'Google_Service_Drive_AboutExportFormats';
+    protected $exportFormatsType     = 'Google_Service_Drive_AboutExportFormats';
     protected $exportFormatsDataType = 'array';
-    protected $featuresType = 'Google_Service_Drive_AboutFeatures';
-    protected $featuresDataType = 'array';
-    protected $importFormatsType = 'Google_Service_Drive_AboutImportFormats';
+    protected $featuresType          = 'Google_Service_Drive_AboutFeatures';
+    protected $featuresDataType      = 'array';
+    protected $importFormatsType     = 'Google_Service_Drive_AboutImportFormats';
     protected $importFormatsDataType = 'array';
     public $isCurrentAppInstalled;
     public $kind;
     public $largestChangeId;
-    protected $maxUploadSizesType = 'Google_Service_Drive_AboutMaxUploadSizes';
+    protected $maxUploadSizesType     = 'Google_Service_Drive_AboutMaxUploadSizes';
     protected $maxUploadSizesDataType = 'array';
     public $name;
     public $permissionId;
@@ -2651,7 +2635,7 @@ class Google_Service_Drive_About extends Google_Collection
     public $remainingChangeIds;
     public $rootFolderId;
     public $selfLink;
-    protected $userType = 'Google_Service_Drive_User';
+    protected $userType     = 'Google_Service_Drive_User';
     protected $userDataType = '';
 
     public function setAdditionalRoleInfo($additionalRoleInfo)
@@ -2857,7 +2841,7 @@ class Google_Service_Drive_About extends Google_Collection
 
 class Google_Service_Drive_AboutAdditionalRoleInfo extends Google_Collection
 {
-    protected $roleSetsType = 'Google_Service_Drive_AboutAdditionalRoleInfoRoleSets';
+    protected $roleSetsType     = 'Google_Service_Drive_AboutAdditionalRoleInfoRoleSets';
     protected $roleSetsDataType = 'array';
     public $type;
 
@@ -3017,7 +3001,7 @@ class Google_Service_Drive_App extends Google_Collection
     public $authorized;
     public $createInFolderTemplate;
     public $createUrl;
-    protected $iconsType = 'Google_Service_Drive_AppIcons';
+    protected $iconsType     = 'Google_Service_Drive_AppIcons';
     protected $iconsDataType = 'array';
     public $id;
     public $installed;
@@ -3299,7 +3283,7 @@ class Google_Service_Drive_AppIcons extends Google_ApiModel
 class Google_Service_Drive_AppList extends Google_Collection
 {
     public $etag;
-    protected $itemsType = 'Google_Service_Drive_App';
+    protected $itemsType     = 'Google_Service_Drive_App';
     protected $itemsDataType = 'array';
     public $kind;
     public $selfLink;
@@ -3348,7 +3332,7 @@ class Google_Service_Drive_AppList extends Google_Collection
 class Google_Service_Drive_Change extends Google_ApiModel
 {
     public $deleted;
-    protected $fileType = 'Google_Service_Drive_DriveFile';
+    protected $fileType     = 'Google_Service_Drive_DriveFile';
     protected $fileDataType = '';
     public $fileId;
     public $id;
@@ -3430,7 +3414,7 @@ class Google_Service_Drive_Change extends Google_ApiModel
 class Google_Service_Drive_ChangeList extends Google_Collection
 {
     public $etag;
-    protected $itemsType = 'Google_Service_Drive_Change';
+    protected $itemsType     = 'Google_Service_Drive_Change';
     protected $itemsDataType = 'array';
     public $kind;
     public $largestChangeId;
@@ -3626,7 +3610,7 @@ class Google_Service_Drive_Channel extends Google_ApiModel
 class Google_Service_Drive_ChildList extends Google_Collection
 {
     public $etag;
-    protected $itemsType = 'Google_Service_Drive_ChildReference';
+    protected $itemsType     = 'Google_Service_Drive_ChildReference';
     protected $itemsDataType = 'array';
     public $kind;
     public $nextLink;
@@ -3745,11 +3729,11 @@ class Google_Service_Drive_ChildReference extends Google_ApiModel
 class Google_Service_Drive_Comment extends Google_Collection
 {
     public $anchor;
-    protected $authorType = 'Google_Service_Drive_User';
+    protected $authorType     = 'Google_Service_Drive_User';
     protected $authorDataType = '';
     public $commentId;
     public $content;
-    protected $contextType = 'Google_Service_Drive_CommentContext';
+    protected $contextType     = 'Google_Service_Drive_CommentContext';
     protected $contextDataType = '';
     public $createdDate;
     public $deleted;
@@ -3758,7 +3742,7 @@ class Google_Service_Drive_Comment extends Google_Collection
     public $htmlContent;
     public $kind;
     public $modifiedDate;
-    protected $repliesType = 'Google_Service_Drive_CommentReply';
+    protected $repliesType     = 'Google_Service_Drive_CommentReply';
     protected $repliesDataType = 'array';
     public $selfLink;
     public $status;
@@ -3942,7 +3926,7 @@ class Google_Service_Drive_CommentContext extends Google_ApiModel
 
 class Google_Service_Drive_CommentList extends Google_Collection
 {
-    protected $itemsType = 'Google_Service_Drive_Comment';
+    protected $itemsType     = 'Google_Service_Drive_Comment';
     protected $itemsDataType = 'array';
     public $kind;
     public $nextLink;
@@ -4002,7 +3986,7 @@ class Google_Service_Drive_CommentList extends Google_Collection
 
 class Google_Service_Drive_CommentReply extends Google_ApiModel
 {
-    protected $authorType = 'Google_Service_Drive_User';
+    protected $authorType     = 'Google_Service_Drive_User';
     protected $authorDataType = '';
     public $content;
     public $createdDate;
@@ -4106,7 +4090,7 @@ class Google_Service_Drive_CommentReply extends Google_ApiModel
 
 class Google_Service_Drive_CommentReplyList extends Google_Collection
 {
-    protected $itemsType = 'Google_Service_Drive_CommentReply';
+    protected $itemsType     = 'Google_Service_Drive_CommentReply';
     protected $itemsDataType = 'array';
     public $kind;
     public $nextLink;
@@ -4183,14 +4167,14 @@ class Google_Service_Drive_DriveFile extends Google_Collection
     public $headRevisionId;
     public $iconLink;
     public $id;
-    protected $imageMediaMetadataType = 'Google_Service_Drive_DriveFileImageMediaMetadata';
+    protected $imageMediaMetadataType     = 'Google_Service_Drive_DriveFileImageMediaMetadata';
     protected $imageMediaMetadataDataType = '';
-    protected $indexableTextType = 'Google_Service_Drive_DriveFileIndexableText';
-    protected $indexableTextDataType = '';
+    protected $indexableTextType          = 'Google_Service_Drive_DriveFileIndexableText';
+    protected $indexableTextDataType      = '';
     public $kind;
-    protected $labelsType = 'Google_Service_Drive_DriveFileLabels';
-    protected $labelsDataType = '';
-    protected $lastModifyingUserType = 'Google_Service_Drive_User';
+    protected $labelsType                = 'Google_Service_Drive_DriveFileLabels';
+    protected $labelsDataType            = '';
+    protected $lastModifyingUserType     = 'Google_Service_Drive_User';
     protected $lastModifyingUserDataType = '';
     public $lastModifyingUserName;
     public $lastViewedByMeDate;
@@ -4201,21 +4185,21 @@ class Google_Service_Drive_DriveFile extends Google_Collection
     public $openWithLinks;
     public $originalFilename;
     public $ownerNames;
-    protected $ownersType = 'Google_Service_Drive_User';
-    protected $ownersDataType = 'array';
-    protected $parentsType = 'Google_Service_Drive_ParentReference';
-    protected $parentsDataType = 'array';
-    protected $propertiesType = 'Google_Service_Drive_Property';
+    protected $ownersType         = 'Google_Service_Drive_User';
+    protected $ownersDataType     = 'array';
+    protected $parentsType        = 'Google_Service_Drive_ParentReference';
+    protected $parentsDataType    = 'array';
+    protected $propertiesType     = 'Google_Service_Drive_Property';
     protected $propertiesDataType = 'array';
     public $quotaBytesUsed;
     public $selfLink;
     public $shared;
     public $sharedWithMeDate;
-    protected $thumbnailType = 'Google_Service_Drive_DriveFileThumbnail';
+    protected $thumbnailType     = 'Google_Service_Drive_DriveFileThumbnail';
     protected $thumbnailDataType = '';
     public $thumbnailLink;
     public $title;
-    protected $userPermissionType = 'Google_Service_Drive_Permission';
+    protected $userPermissionType     = 'Google_Service_Drive_Permission';
     protected $userPermissionDataType = '';
     public $webContentLink;
     public $webViewLink;
@@ -4687,7 +4671,7 @@ class Google_Service_Drive_DriveFileImageMediaMetadata extends Google_ApiModel
     public $height;
     public $isoSpeed;
     public $lens;
-    protected $locationType = 'Google_Service_Drive_DriveFileImageMediaMetadataLocation';
+    protected $locationType     = 'Google_Service_Drive_DriveFileImageMediaMetadataLocation';
     protected $locationDataType = '';
     public $maxApertureValue;
     public $meteringMode;
@@ -5048,7 +5032,7 @@ class Google_Service_Drive_DriveFileThumbnail extends Google_ApiModel
 class Google_Service_Drive_FileList extends Google_Collection
 {
     public $etag;
-    protected $itemsType = 'Google_Service_Drive_DriveFile';
+    protected $itemsType     = 'Google_Service_Drive_DriveFile';
     protected $itemsDataType = 'array';
     public $kind;
     public $nextLink;
@@ -5119,7 +5103,7 @@ class Google_Service_Drive_FileList extends Google_Collection
 class Google_Service_Drive_ParentList extends Google_Collection
 {
     public $etag;
-    protected $itemsType = 'Google_Service_Drive_ParentReference';
+    protected $itemsType     = 'Google_Service_Drive_ParentReference';
     protected $itemsDataType = 'array';
     public $kind;
     public $selfLink;
@@ -5411,7 +5395,7 @@ class Google_Service_Drive_PermissionId extends Google_ApiModel
 class Google_Service_Drive_PermissionList extends Google_Collection
 {
     public $etag;
-    protected $itemsType = 'Google_Service_Drive_Permission';
+    protected $itemsType     = 'Google_Service_Drive_Permission';
     protected $itemsDataType = 'array';
     public $kind;
     public $selfLink;
@@ -5530,7 +5514,7 @@ class Google_Service_Drive_Property extends Google_ApiModel
 class Google_Service_Drive_PropertyList extends Google_Collection
 {
     public $etag;
-    protected $itemsType = 'Google_Service_Drive_Property';
+    protected $itemsType     = 'Google_Service_Drive_Property';
     protected $itemsDataType = 'array';
     public $kind;
     public $selfLink;
@@ -5584,7 +5568,7 @@ class Google_Service_Drive_Revision extends Google_ApiModel
     public $fileSize;
     public $id;
     public $kind;
-    protected $lastModifyingUserType = 'Google_Service_Drive_User';
+    protected $lastModifyingUserType     = 'Google_Service_Drive_User';
     protected $lastModifyingUserDataType = '';
     public $lastModifyingUserName;
     public $md5Checksum;
@@ -5782,7 +5766,7 @@ class Google_Service_Drive_Revision extends Google_ApiModel
 class Google_Service_Drive_RevisionList extends Google_Collection
 {
     public $etag;
-    protected $itemsType = 'Google_Service_Drive_Revision';
+    protected $itemsType     = 'Google_Service_Drive_Revision';
     protected $itemsDataType = 'array';
     public $kind;
     public $selfLink;
@@ -5834,7 +5818,7 @@ class Google_Service_Drive_User extends Google_ApiModel
     public $isAuthenticatedUser;
     public $kind;
     public $permissionId;
-    protected $pictureType = 'Google_Service_Drive_UserPicture';
+    protected $pictureType     = 'Google_Service_Drive_UserPicture';
     protected $pictureDataType = '';
 
     public function setDisplayName($displayName)

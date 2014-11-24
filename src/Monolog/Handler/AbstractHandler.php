@@ -16,7 +16,7 @@
  */
 abstract class Monolog_Handler_AbstractHandler implements Monolog_Handler_HandlerInterface
 {
-    protected $level = Monolog_Logger::DEBUG;
+    protected $level  = Monolog_Logger::DEBUG;
     protected $bubble = true;
 
     /**
@@ -112,7 +112,7 @@ abstract class Monolog_Handler_AbstractHandler implements Monolog_Handler_Handle
     /**
      * Sets minimum logging level at which this handler will be triggered.
      *
-     * @param  integer $level
+     * @param integer $level
      *
      * @return self
      */
@@ -136,8 +136,8 @@ abstract class Monolog_Handler_AbstractHandler implements Monolog_Handler_Handle
     /**
      * Sets the bubbling behavior.
      *
-     * @param  Boolean $bubble true means that this handler allows bubbling.
-     *                         false means that bubbling is not permitted.
+     * @param Boolean $bubble true means that this handler allows bubbling.
+     *                        false means that bubbling is not permitted.
      *
      * @return self
      */

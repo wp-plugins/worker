@@ -8,37 +8,39 @@ final class Dropbox_DropboxMetadataHeaderCatcher
     /**
      * @var mixed
      */
-    var $metadata = null;
+    public $metadata = null;
 
     /**
      * @var string
      */
-    var $error = null;
+    public $error = null;
 
     /**
      * @var bool
      */
-    var $skippedFirstLine = false;
+    public $skippedFirstLine = false;
 
     /**
      * @param resource $ch
      */
-    function __construct($ch)
+    public function __construct($ch)
     {
         curl_setopt($ch, CURLOPT_HEADERFUNCTION, array($this, 'headerFunction'));
     }
 
     /**
      * @param resource $ch
-     * @param string $header
+     * @param string   $header
+     *
      * @return int
      * @throws Dropbox_Exception_BadResponse
      */
-    function headerFunction($ch, $header)
+    public function headerFunction($ch, $header)
     {
         // The first line is the HTTP status line (Ex: "HTTP/1.1 200 OK").
         if (!$this->skippedFirstLine) {
             $this->skippedFirstLine = true;
+
             return strlen($header);
         }
 
@@ -54,22 +56,25 @@ final class Dropbox_DropboxMetadataHeaderCatcher
 
         if ($this->metadata !== null) {
             $this->error = "Duplicate X-Dropbox-Metadata header";
+
             return strlen($header);
         }
 
         $headerValue = substr($header, 19);
-        $parsed = json_decode($headerValue, true);
+        $parsed      = json_decode($headerValue, true);
 
         if ($parsed === null) {
             $this->error = "Bad JSON in X-Dropbox-Metadata header";
+
             return strlen($header);
         }
 
         $this->metadata = $parsed;
+
         return strlen($header);
     }
 
-    function getMetadata()
+    public function getMetadata()
     {
         if ($this->error !== null) {
             throw new Dropbox_Exception_BadResponse($this->error);
@@ -77,6 +82,7 @@ final class Dropbox_DropboxMetadataHeaderCatcher
         if ($this->metadata === null) {
             throw new Dropbox_Exception_BadResponse("Missing X-Dropbox-Metadata header");
         }
+
         return $this->metadata;
     }
 }

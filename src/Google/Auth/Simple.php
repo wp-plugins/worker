@@ -15,7 +15,6 @@
  * limitations under the License.
  */
 
-
 /**
  * Simple API access implementation. Can either be used to make requests
  * completely unauthenticated, or by using a Simple API Access developer
@@ -43,7 +42,7 @@ class Google_Auth_Simple extends Google_Auth_Abstract
      * @param Google_Http_Request $request
      *
      * @return Google_Http_Request The resulting HTTP response including the
-     * responseHttpCode, responseHeaders and responseBody.
+     *                             responseHttpCode, responseHeaders and responseBody.
      */
     public function authenticatedRequest(Google_Http_Request $request)
     {

@@ -24,7 +24,7 @@ final class Dropbox_WriteMode
     /**
      * @internal
      */
-    function getExtraParams()
+    public function getExtraParams()
     {
         return $this->extraParams;
     }
@@ -41,13 +41,15 @@ final class Dropbox_WriteMode
      *
      * @return Dropbox_WriteMode
      */
-    static function add()
+    public static function add()
     {
         if (self::$addInstance === null) {
             self::$addInstance = new Dropbox_WriteMode(array("overwrite" => "false"));
         }
+
         return self::$addInstance;
     }
+
     private static $addInstance = null;
 
     /**
@@ -57,13 +59,15 @@ final class Dropbox_WriteMode
      *
      * @return Dropbox_WriteMode
      */
-    static function force()
+    public static function force()
     {
         if (self::$forceInstance === null) {
             self::$forceInstance = new Dropbox_WriteMode(array("overwrite" => "true"));
         }
+
         return self::$forceInstance;
     }
+
     private static $forceInstance = null;
 
     /**
@@ -84,9 +88,10 @@ final class Dropbox_WriteMode
      * metadata object returned by the API call.
      *
      * @param string $revToReplace
+     *
      * @return Dropbox_WriteMode
      */
-    static function update($revToReplace)
+    public static function update($revToReplace)
     {
         return new Dropbox_WriteMode(array("parent_rev" => $revToReplace));
     }
@@ -96,9 +101,11 @@ final class Dropbox_WriteMode
      *
      * @internal
      */
-    static function checkArg($argName, $argValue)
+    public static function checkArg($argName, $argValue)
     {
-        if (!($argValue instanceof self)) Dropbox_Checker::throwError($argName, $argValue, __CLASS__);
+        if (!($argValue instanceof self)) {
+            Dropbox_Checker::throwError($argName, $argValue, __CLASS__);
+        }
     }
 
     /**
@@ -107,9 +114,13 @@ final class Dropbox_WriteMode
      *
      * @internal
      */
-    static function checkArgOrNull($argName, $argValue)
+    public static function checkArgOrNull($argName, $argValue)
     {
-        if ($argValue === null) return;
-        if (!($argValue instanceof self)) Dropbox_Checker::throwError($argName, $argValue, __CLASS__);
+        if ($argValue === null) {
+            return;
+        }
+        if (!($argValue instanceof self)) {
+            Dropbox_Checker::throwError($argName, $argValue, __CLASS__);
+        }
     }
 }

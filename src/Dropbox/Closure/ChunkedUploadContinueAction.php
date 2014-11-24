@@ -25,5 +25,4 @@ class Dropbox_Closure_ChunkedUploadContinueAction implements Dropbox_Closure_ReR
     {
         return $this->client->chunkedUploadContinue($this->uploadId, $this->byteOffset, $this->data, $this->callback);
     }
-
 }

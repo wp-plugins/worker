@@ -22,7 +22,6 @@
  */
 abstract class Google_Cache_Abstract
 {
-
     abstract public function __construct(Google_ApiClient $client);
 
     /**

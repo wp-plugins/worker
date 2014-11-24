@@ -11,7 +11,6 @@
  */
 class MWP_Configuration_Conf
 {
-
     /**
      * @var string
      */
@@ -143,7 +142,6 @@ class MWP_Configuration_Conf
         return $this->deactivate_text;
     }
 
-
     /**
      * @param string $network_notice
      */
@@ -159,7 +157,6 @@ class MWP_Configuration_Conf
     {
         return $this->network_notice;
     }
-
 
     /**
      * @param mixed $master_cron_url
@@ -304,6 +301,4 @@ class MWP_Configuration_Conf
     {
         return $this->notice;
     }
-
-
 }

@@ -73,7 +73,10 @@ class Dropbox_WebAuth extends Dropbox_WebAuthBase
      *
      * @return string
      */
-    function getRedirectUri() { return $this->redirectUri; }
+    public function getRedirectUri()
+    {
+        return $this->redirectUri;
+    }
 
     /** @var string */
     private $redirectUri;
@@ -89,7 +92,10 @@ class Dropbox_WebAuth extends Dropbox_WebAuthBase
      *
      * @return Dropbox_ValueStore
      */
-    function getCsrfTokenStore() { return $this->csrfTokenStore; }
+    public function getCsrfTokenStore()
+    {
+        return $this->csrfTokenStore;
+    }
 
     /** @var object */
     private $csrfTokenStore;
@@ -97,25 +103,25 @@ class Dropbox_WebAuth extends Dropbox_WebAuthBase
     /**
      * Constructor.
      *
-     * @param Dropbox_AppInfo $appInfo
-     *     See {@link getAppInfo()}
-     * @param string $clientIdentifier
-     *     See {@link getClientIdentifier()}
-     * @param null|string $redirectUri
-     *     See {@link getRedirectUri()}
+     * @param Dropbox_AppInfo         $appInfo
+     *                                                  See {@link getAppInfo()}
+     * @param string                  $clientIdentifier
+     *                                                  See {@link getClientIdentifier()}
+     * @param null|string             $redirectUri
+     *                                                  See {@link getRedirectUri()}
      * @param null|Dropbox_ValueStore $csrfTokenStore
-     *     See {@link getCsrfTokenStore()}
-     * @param null|string $userLocale
-     *     See {@link getUserLocale()}
+     *                                                  See {@link getCsrfTokenStore()}
+     * @param null|string             $userLocale
+     *                                                  See {@link getUserLocale()}
      */
-    function __construct($appInfo, $clientIdentifier, $redirectUri, $csrfTokenStore, $userLocale = null)
+    public function __construct($appInfo, $clientIdentifier, $redirectUri, $csrfTokenStore, $userLocale = null)
     {
         parent::__construct($appInfo, $clientIdentifier, $userLocale);
 
         Dropbox_Checker::argStringNonEmpty("redirectUri", $redirectUri);
 
         $this->csrfTokenStore = $csrfTokenStore;
-        $this->redirectUri = $redirectUri;
+        $this->redirectUri    = $redirectUri;
     }
 
     /**
@@ -132,20 +138,20 @@ class Dropbox_WebAuth extends Dropbox_WebAuthBase
      * See <a href="https://www.dropbox.com/developers/core/docs#oa2-authorize">/oauth2/authorize</a>.
      *
      * @param string|null $urlState
-     *    Any data you would like to keep in the URL through the authorization process.
-     *    This exact state will be returned to you by {@link finish()}.
+     *                              Any data you would like to keep in the URL through the authorization process.
+     *                              This exact state will be returned to you by {@link finish()}.
      *
      * @return array
-     *    The URL to redirect the user to.
+     *               The URL to redirect the user to.
      *
      * @throws Dropbox_Exception
      */
-    function start($urlState = null)
+    public function start($urlState = null)
     {
         Dropbox_Checker::argStringOrNull("urlState", $urlState);
 
         $csrfToken = self::encodeCsrfToken(Dropbox_Security::getRandomBytes(16));
-        $state = $csrfToken;
+        $state     = $csrfToken;
         if ($urlState !== null) {
             $state .= "|";
             $state .= $urlState;
@@ -167,16 +173,16 @@ class Dropbox_WebAuth extends Dropbox_WebAuthBase
      * See <a href="https://www.dropbox.com/developers/core/docs#oa2-token">/oauth2/token</a>.
      *
      * @param array $queryParams
-     *    The query parameters on the GET request to your redirect URI.
+     *                           The query parameters on the GET request to your redirect URI.
      *
      * @return array
-     *    A <code>list(string $accessToken, string $userId, string $urlState)</code>, where
-     *    <code>$accessToken</code> can be used to construct a {@link Client}, <code>$userId</code>
-     *    is the user ID of the user's Dropbox account, and <code>$urlState</code> is the
-     *    value you originally passed in to {@link start()}.
+     *               A <code>list(string $accessToken, string $userId, string $urlState)</code>, where
+     *               <code>$accessToken</code> can be used to construct a {@link Client}, <code>$userId</code>
+     *               is the user ID of the user's Dropbox account, and <code>$urlState</code> is the
+     *               value you originally passed in to {@link start()}.
      *
      * @throws Dropbox_Exception
-     *    Thrown if there's an error getting the access token from Dropbox.
+     *                                              Thrown if there's an error getting the access token from Dropbox.
      * @throws Dropbox_WebAuthException_BadRequest
      * @throws Dropbox_WebAuthException_BadState
      * @throws Dropbox_WebAuthException_Csrf
@@ -185,7 +191,7 @@ class Dropbox_WebAuth extends Dropbox_WebAuthBase
      *
      *
      */
-    function finish($queryParams)
+    public function finish($queryParams)
     {
         Dropbox_Checker::argArray("queryParams", $queryParams);
 
@@ -200,7 +206,7 @@ class Dropbox_WebAuth extends Dropbox_WebAuthBase
         $state = $queryParams['state'];
         Dropbox_Checker::argString("queryParams['state']", $state);
 
-        $error = null;
+        $error            = null;
         $errorDescription = null;
         if (isset($queryParams['error'])) {
             $error = $queryParams['error'];
@@ -219,7 +225,7 @@ class Dropbox_WebAuth extends Dropbox_WebAuthBase
 
         if ($code !== null && $error !== null) {
             throw new Dropbox_WebAuthException_BadRequest("Query parameters 'code' and 'error' are both set;".
-                                                 " only one must be set.");
+                " only one must be set.");
         }
         if ($code === null && $error === null) {
             throw new Dropbox_WebAuthException_BadRequest("Neither query parameter 'code' or 'error' is set.");
@@ -234,14 +240,14 @@ class Dropbox_WebAuth extends Dropbox_WebAuthBase
         $splitPos = strpos($state, "|");
         if ($splitPos === false) {
             $givenCsrfToken = $state;
-            $urlState = null;
+            $urlState       = null;
         } else {
             $givenCsrfToken = substr($state, 0, $splitPos);
-            $urlState = substr($state, $splitPos + 1);
+            $urlState       = substr($state, $splitPos + 1);
         }
         if (!Dropbox_Security::stringEquals($csrfTokenFromSession, $givenCsrfToken)) {
             throw new Dropbox_WebAuthException_Csrf("Expected ".Dropbox_Client::q($csrfTokenFromSession).
-                                           ", got ".Dropbox_Client::q($givenCsrfToken).".");
+                ", got ".Dropbox_Client::q($givenCsrfToken).".");
         }
         $this->csrfTokenStore->clear();
 
@@ -269,6 +275,7 @@ class Dropbox_WebAuth extends Dropbox_WebAuthBase
         // If everything went ok, make the network call to get an access token.
 
         list($accessToken, $userId) = $this->_finish($code, $this->redirectUri);
+
         return array($accessToken, $userId, $urlState);
     }
 }

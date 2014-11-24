@@ -8,9 +8,8 @@
  **************************************************************/
 class MMB_Post extends MMB_Core
 {
-    function create($args)
+    public function create($args)
     {
-
         //$this->_log($args);
         global $wpdb;
 
@@ -45,14 +44,14 @@ class MMB_Post extends MMB_Core
             '+',
             '.',
             ':',
-            '?'
+            '?',
         );
-        $with           = array(
+        $with = array(
             '\/',
             '\+',
             '\.',
             '\:',
-            '\?'
+            '\?',
         );
         $mwp_regexp_url = str_replace($rep, $with, $mwp_regexp_url);
 
@@ -73,7 +72,6 @@ class MMB_Post extends MMB_Core
                 }
             }
         }
-
 
         //to find all the images
         $match_count = preg_match_all('/(<a[^>]+href=\"([^"]+)\"[^>]*>)?(<\s*img.[^\/>]*src="([^"]+'.$mmb_regexp_url.'[^\s]+\.(jpg|jpeg|png|gif|bmp))"[^>]*>)/ixu', $post_data['post_content'], $get_urls, PREG_SET_ORDER);
@@ -147,7 +145,7 @@ class MMB_Post extends MMB_Core
                         'post_type'      => 'attachment',
                         //'post_parent' => $post_id,
                         'post_mime_type' => 'image/'.$get_url[5],
-                        'guid'           => $attach_upload['url']
+                        'guid'           => $attach_upload['url'],
                     );
 
                     // Save the data
@@ -187,10 +185,8 @@ class MMB_Post extends MMB_Core
                         }
                     }
 
-
                     $some_data = wp_generate_attachment_metadata($attach_id, $attach_upload['path']);
                     wp_update_attachment_metadata($attach_id, $some_data);
-
 
                     // changing href of a tag
                     if ($get_url[1] != '') {
@@ -204,14 +200,11 @@ class MMB_Post extends MMB_Core
                     @unlink($tmp_file);
 
                     return array('error' => "Cannot create attachment file in ".$attach_upload['path']." Please set correct permissions.");
-
                 }
                 @unlink($tmp_file);
             }
 
-
             $post_data['post_content'] = $post_content;
-
         }
         if (count($post_atta_img)) {
             foreach ($post_atta_img as $img) {
@@ -238,7 +231,7 @@ class MMB_Post extends MMB_Core
                         'post_type'      => 'attachment',
                         //'post_parent' => $post_id,
                         'post_mime_type' => 'image/'.$atta_ext,
-                        'guid'           => $attach_upload['url']
+                        'guid'           => $attach_upload['url'],
                     );
 
                     // Save the data
@@ -260,7 +253,6 @@ class MMB_Post extends MMB_Core
                             $attachments[$attach_id] = $attach_id;
                         }
                     }
-
                 } else {
                     @unlink($tmp_file);
 
@@ -281,8 +273,6 @@ class MMB_Post extends MMB_Core
         //check for edit post
         $post_result = 0;
         if (isset($post_data['mwp_post_edit']) && $post_data['mwp_post_edit']) {
-
-
             if ($post_data['mwp_match_by'] == 'title') {
                 $match_by = "post_title = '".$post_data['post_title']."'";
             } else {
@@ -292,9 +282,7 @@ class MMB_Post extends MMB_Core
             $query = "SELECT ID FROM $wpdb->posts WHERE $match_by AND post_status NOT IN('inherit','auto-draft','draft') LIMIT 1";
 
             $post_result = $wpdb->get_var($query);
-
         }
-
 
         if ($post_result) {
             //update existing post
@@ -302,13 +290,12 @@ class MMB_Post extends MMB_Core
             $post_id         = wp_update_post($post_data);
 
             //check for previous attachments
-            $atta_allimages =& get_children('post_type=attachment&post_parent='.$post_id);
+            $atta_allimages = & get_children('post_type=attachment&post_parent='.$post_id);
             if (!empty($atta_allimages)) {
                 foreach ($atta_allimages as $image) {
                     wp_delete_attachment($image->ID);
                 }
             }
-
         } else {
             if ($post_data['mwp_post_edit'] && $post_data['mwp_force_publish']) {
                 $post_id = wp_insert_post($post_data);
@@ -317,7 +304,6 @@ class MMB_Post extends MMB_Core
             } else {
                 $post_id = wp_insert_post($post_data);
             }
-
         }
 
         if (count($attachments)) {
@@ -325,12 +311,12 @@ class MMB_Post extends MMB_Core
                 $result = wp_update_post(
                     array(
                         'ID'          => $atta_id,
-                        'post_parent' => $post_id
+                        'post_parent' => $post_id,
                     )
                 );
                 if ($featured_id > 0) {
                     $new_custom['_thumbnail_id'] = array(
-                        $featured_id
+                        $featured_id,
                     );
                 }
             }
@@ -358,14 +344,14 @@ class MMB_Post extends MMB_Core
                     'post_type'      => 'attachment',
                     'post_parent'    => $post_id,
                     'post_mime_type' => 'image/'.$atta_ext,
-                    'guid'           => $attach_upload['url']
+                    'guid'           => $attach_upload['url'],
                 );
 
                 // Save the data
                 $attach_id = wp_insert_attachment($attachment, $attach_upload['path']);
                 wp_update_attachment_metadata($attach_id, wp_generate_attachment_metadata($attach_id, $attach_upload['path']));
                 $new_custom['_thumbnail_id'] = array(
-                    $attach_id
+                    $attach_id,
                 );
             } else {
                 @unlink($tmp_file);
@@ -380,7 +366,6 @@ class MMB_Post extends MMB_Core
 
             $cat_ids = wp_create_categories($post_categories, $post_id);
         }
-
 
         //get current custom fields
         $cur_custom = get_post_custom($post_id);
@@ -404,10 +389,8 @@ class MMB_Post extends MMB_Core
         return $post_id;
     }
 
-
-    function change_status($args)
+    public function change_status($args)
     {
-
         global $wpdb;
         $post_id = $args['post_id'];
         $status  = $args['status'];
@@ -416,9 +399,9 @@ class MMB_Post extends MMB_Core
         if (in_array($status, array('draft', 'publish', 'trash'))) {
             $edited_status = array(
                 'ID'          => $post_id,
-                'post_status' => $status
+                'post_status' => $status,
             );
-            $success       = wp_update_post($edited_status);
+            $success = wp_update_post($edited_status);
         }
 
         return $success;
@@ -444,7 +427,7 @@ class MMB_Post extends MMB_Core
      * @arg string mwp_get_posts_trash on or off
      * @return array posts related to args
      */
-    function get_posts($args)
+    public function get_posts($args)
     {
         global $wpdb;
 
@@ -491,7 +474,6 @@ class MMB_Post extends MMB_Core
         $total['total_num'] = count($posts_info);
 
         foreach ($posts_info as $post_info) {
-
             $cats = array();
             foreach ($post_cats[$post_info->ID] as $cat_array => $cat_array_val) {
                 $cats[] = array('name' => $cat_array_val);
@@ -509,17 +491,17 @@ class MMB_Post extends MMB_Core
                 'post_title'     => htmlspecialchars($post_info->post_title),
                 'post_name'      => $post_info->post_name,
                 'post_author'    => array('author_id' => $post_info->post_author, 'author_name' => $user_info[$post_info->post_author]),
-                'post_date'      => $post_info->post_date,
-                'post_modified'  => $post_info->post_modified,
-                'post_status'    => $post_info->post_status,
-                'post_type'      => $post_info->post_type,
-                'guid'           => $post_info->guid,
-                'post_password'  => $post_info->post_password,
-                'ping_status'    => $post_info->ping_status,
-                'comment_status' => $post_info->comment_status,
-                'comment_count'  => $post_info->comment_count,
-                'cats'           => $cats,
-                'tags'           => $tags,
+                'post_date'                           => $post_info->post_date,
+                'post_modified'                       => $post_info->post_modified,
+                'post_status'                         => $post_info->post_status,
+                'post_type'                           => $post_info->post_type,
+                'guid'                                => $post_info->guid,
+                'post_password'                       => $post_info->post_password,
+                'ping_status'                         => $post_info->ping_status,
+                'comment_status'                      => $post_info->comment_status,
+                'comment_count'                       => $post_info->comment_count,
+                'cats'                                => $cats,
+                'tags'                                => $tags,
 
             );
         }
@@ -527,16 +509,16 @@ class MMB_Post extends MMB_Core
         return array('posts' => $posts, 'total' => $total);
     }
 
-    function delete_post($args)
+    public function delete_post($args)
     {
         if (!empty($args['post_id']) && !empty($args['action'])) {
             if ($args['action'] == 'delete' || $args['action'] == 'delete_restore') {
                 $action        = ($args['action'] == 'delete') ? 'trash' : 'publish';
                 $edited_status = array(
                     'ID'          => $args['post_id'],
-                    'post_status' => $action
+                    'post_status' => $action,
                 );
-                $success       = wp_update_post($edited_status);
+                $success = wp_update_post($edited_status);
             } else {
                 if ($args['action'] == 'delete_perm') {
                     $success = wp_delete_post($args['post_id'], true);
@@ -549,7 +531,7 @@ class MMB_Post extends MMB_Core
         }
     }
 
-    function delete_posts($args)
+    public function delete_posts($args)
     {
         extract($args);
         if ($deleteaction == 'trash' || $deleteaction == 'draft' || $deleteaction == 'publish') {
@@ -557,9 +539,9 @@ class MMB_Post extends MMB_Core
                 if (!empty($val) && is_numeric($val)) {
                     $edited_status = array(
                         'ID'          => $val,
-                        'post_status' => $deleteaction
+                        'post_status' => $deleteaction,
                     );
-                    $success       = wp_update_post($edited_status);
+                    $success = wp_update_post($edited_status);
                 }
             }
         } elseif ($deleteaction == 'delete') {
@@ -571,7 +553,6 @@ class MMB_Post extends MMB_Core
         }
 
         return "Post deleted";
-
     }
 
     /**
@@ -594,7 +575,7 @@ class MMB_Post extends MMB_Core
      * @arg string mwp_get_pages_trash on or off
      * @return array pages related to args
      */
-    function get_pages($args)
+    public function get_pages($args)
     {
         global $wpdb;
 
@@ -638,21 +619,20 @@ class MMB_Post extends MMB_Core
         $total['total_num'] = count($posts_info);
 
         foreach ($posts_info as $post_info) {
-
             $posts[] = array(
                 'post_id'        => $post_info->ID,
                 'post_title'     => htmlspecialchars($post_info->post_title),
                 'post_name'      => $post_info->post_name,
                 'post_author'    => array('author_id' => $post_info->post_author, 'author_name' => $user_info[$post_info->post_author]),
-                'post_date'      => $post_info->post_date,
-                'post_modified'  => $post_info->post_modified,
-                'post_status'    => $post_info->post_status,
-                'post_type'      => $post_info->post_type,
-                'guid'           => $post_info->guid,
-                'post_password'  => $post_info->post_password,
-                'ping_status'    => $post_info->ping_status,
-                'comment_status' => $post_info->comment_status,
-                'comment_count'  => $post_info->comment_count
+                'post_date'                           => $post_info->post_date,
+                'post_modified'                       => $post_info->post_modified,
+                'post_status'                         => $post_info->post_status,
+                'post_type'                           => $post_info->post_type,
+                'guid'                                => $post_info->guid,
+                'post_password'                       => $post_info->post_password,
+                'ping_status'                         => $post_info->ping_status,
+                'comment_status'                      => $post_info->comment_status,
+                'comment_count'                       => $post_info->comment_count,
 
             );
         }
@@ -660,7 +640,7 @@ class MMB_Post extends MMB_Core
         return array('posts' => $posts, 'total' => $total);
     }
 
-    function delete_page($args)
+    public function delete_page($args)
     {
         global $wpdb;
         if (!empty($args['post_id']) && !empty($args['action'])) {
@@ -683,7 +663,7 @@ class MMB_Post extends MMB_Core
         }
     }
 
-    function getPostCats($taxonomy = 'category')
+    public function getPostCats($taxonomy = 'category')
     {
         global $wpdb;
 
@@ -697,7 +677,6 @@ INNER JOIN $wpdb->terms ON ( $wpdb->term_taxonomy.term_id = $wpdb->terms.term_id
         );
 
         foreach ($cats as $post_val) {
-
             $post_cats[$post_val->post_id][] = $post_val->name;
         }
 

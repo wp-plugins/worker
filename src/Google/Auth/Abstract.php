@@ -15,7 +15,6 @@
  * limitations under the License.
  */
 
-
 /**
  * Abstract class for the Authentication in the API client
  *

@@ -18,7 +18,7 @@
  */
 class Monolog_Handler_TestHandler extends Monolog_Handler_AbstractProcessingHandler
 {
-    protected $records = array();
+    protected $records        = array();
     protected $recordsByLevel = array();
 
     public function getRecords()

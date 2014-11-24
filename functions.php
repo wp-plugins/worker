@@ -50,7 +50,7 @@ function mwp_container()
 
     if ($container === null) {
         $parameters = get_option('mwp_container_parameters', array());
-        $container  = new MMB_Container($parameters);
+        $container = new MMB_Container($parameters);
     }
 
     return $container;
@@ -74,7 +74,7 @@ function mwp_logger()
     }
     if ($mwp_logger === null) {
         $mwp_logger = true;
-        $logger     = mwp_container()->getLogger();
+        $logger = mwp_container()->getLogger();
         Monolog_Registry::addLogger($logger, 'worker');
 
         $errorHandler = new Monolog_ErrorHandler($logger);
@@ -97,10 +97,10 @@ function mwp_logger()
 function mwp_dropbox_oauth_factory($appKey, $appSecret, $token, $tokenSecret = null)
 {
     if ($tokenSecret) {
-        $oauthToken       = 'OAuth oauth_version="1.0", oauth_signature_method="PLAINTEXT", oauth_consumer_key="'.$appKey.'", oauth_token="'.$token.'", oauth_signature="'.$appSecret.'&'.$tokenSecret.'"';
+        $oauthToken = 'OAuth oauth_version="1.0", oauth_signature_method="PLAINTEXT", oauth_consumer_key="'.$appKey.'", oauth_token="'.$token.'", oauth_signature="'.$appSecret.'&'.$tokenSecret.'"';
         $clientIdentifier = $token;
     } else {
-        $oauthToken       = 'Bearer '.$token;
+        $oauthToken = 'Bearer '.$token;
         $clientIdentifier = 'PHP-ManageWp/1.0';
     }
 
@@ -182,7 +182,7 @@ function search_posts_by_term($params = false)
     $search_term = strtolower(trim($params['search_term']));
     switch ($search_type) {
         case 'page_post':
-            $num_posts        = 10;
+            $num_posts = 10;
             $num_content_char = 30;
 
             $term_orig = trim($params['search_term']);
@@ -221,10 +221,10 @@ function search_posts_by_term($params = false)
                 if (substr_count(strtolower($post->post_content), strtolower($term_orig))) {
                     $str_position_start = strpos(strtolower($post->post_content), strtolower($term_orig));
 
-                    $start     = $str_position_start > $num_content_char ? $str_position_start - $num_content_char : 0;
+                    $start = $str_position_start > $num_content_char ? $str_position_start - $num_content_char : 0;
                     $first_len = $str_position_start > $num_content_char ? $num_content_char : $str_position_start;
 
-                    $start_substring    = $start > 0 ? '...' : '';
+                    $start_substring = $start > 0 ? '...' : '';
                     $post->post_content = $start_substring.substr($post->post_content, $start, $first_len).'<b>'.
                         substr($post->post_content, $str_position_start, strlen($term_orig)).'</b>'.
                         substr($post->post_content, $str_position_start + strlen($term_orig), $num_content_char).'...';
@@ -256,9 +256,9 @@ function search_posts_by_term($params = false)
 
             $have_plugin = array();
             foreach ($plugins as $plugin) {
-                $pl          = WP_PLUGIN_DIR.'/'.$plugin;
+                $pl = WP_PLUGIN_DIR.'/'.$plugin;
                 $pl_extended = get_plugin_data($pl);
-                $pl_name     = $pl_extended['Name'];
+                $pl_name = $pl_extended['Name'];
                 if (strpos(strtolower($pl_name), $search_term) > -1) {
 
                     $have_plugin[] = $pl_name;
@@ -271,11 +271,11 @@ function search_posts_by_term($params = false)
             }
             break;
         case 'theme':
-            $theme       = strtolower(get_option('stylesheet'));
-            $tm          = ABSPATH.'wp-content/themes/'.$theme.'/style.css';
+            $theme = strtolower(get_option('stylesheet'));
+            $tm = ABSPATH.'wp-content/themes/'.$theme.'/style.css';
             $tm_extended = get_theme_data($tm);
-            $tm_name     = $tm_extended['Name'];
-            $have_theme  = array();
+            $tm_name = $tm_extended['Name'];
+            $have_theme = array();
             if (strpos(strtolower($tm_name), $search_term) > -1) {
                 $have_theme[] = $tm_name;
                 mmb_response($have_theme, true);
@@ -309,11 +309,11 @@ function mmb_add_action($action = false, $callback = false)
 
 function mmb_get_extended_info($stats)
 {
-    $params                 = get_option('mmb_stats_filter');
-    $filter                 = isset($params['plugins']['cleanup']) ? $params['plugins']['cleanup'] : array();
+    $params = get_option('mmb_stats_filter');
+    $filter = isset($params['plugins']['cleanup']) ? $params['plugins']['cleanup'] : array();
     $stats['num_revisions'] = mmb_num_revisions($filter['revisions']);
     //$stats['num_revisions'] = 5;
-    $stats['overhead']          = mmb_handle_overhead(false);
+    $stats['overhead'] = mmb_handle_overhead(false);
     $stats['num_spam_comments'] = mmb_num_spam_comments();
 
     return $stats;
@@ -368,7 +368,7 @@ function mmb_num_revisions($filter)
 
     $allRevisions = $wpdb->get_results("SELECT ID, post_name FROM {$wpdb->posts} WHERE post_type = 'revision'", ARRAY_A);
 
-    $revisionsToDelete    = 0;
+    $revisionsToDelete = 0;
     $revisionsToKeepCount = array();
 
     if (isset($filter['num_to_keep']) && !empty($filter['num_to_keep'])) {
@@ -393,7 +393,7 @@ function mmb_num_revisions($filter)
 function mmb_select_all_revisions()
 {
     global $wpdb;
-    $sql       = "SELECT * FROM $wpdb->posts WHERE post_type = 'revision'";
+    $sql = "SELECT * FROM $wpdb->posts WHERE post_type = 'revision'";
     $revisions = $wpdb->get_results($sql);
 
     return $revisions;
@@ -405,7 +405,7 @@ function mmb_delete_all_revisions($filter)
     $where = '';
     $keep = isset($filter['num_to_keep']) ? $filter['num_to_keep'] : false;
     if ($keep) {
-        $num_rev          = str_replace("r_", "", $keep);
+        $num_rev = str_replace("r_", "", $keep);
         $allRevisions = $wpdb->get_results("SELECT ID, post_name FROM {$wpdb->posts} WHERE post_type = 'revision' ORDER BY post_date DESC", ARRAY_A);
         $revisionsToKeep = array(0 => 0);
         $revisionsToKeepCount = array();
@@ -436,9 +436,9 @@ function mmb_handle_overhead($clear = false)
 {
     /** @var wpdb $wpdb */
     global $wpdb;
-    $query        = 'SHOW TABLE STATUS';
-    $tables       = $wpdb->get_results($query, ARRAY_A);
-    $total_gain   = 0;
+    $query = 'SHOW TABLE STATUS';
+    $tables = $wpdb->get_results($query, ARRAY_A);
+    $total_gain = 0;
     $table_string = '';
     foreach ($tables as $table) {
         if (isset($table['Engine']) && $table['Engine'] === 'MyISAM') {
@@ -477,7 +477,7 @@ function mmb_handle_overhead($clear = false)
         $query = "OPTIMIZE TABLE $table_string";
         $optimize = $wpdb->query($query);
 
-        return (bool)$optimize;
+        return (bool) $optimize;
     } else {
         return round($total_gain, 3);
     }
@@ -488,7 +488,7 @@ function mmb_handle_overhead($clear = false)
 function mmb_num_spam_comments()
 {
     global $wpdb;
-    $sql       = "SELECT COUNT(*) FROM $wpdb->comments WHERE comment_approved = 'spam'";
+    $sql = "SELECT COUNT(*) FROM $wpdb->comments WHERE comment_approved = 'spam'";
     $num_spams = $wpdb->get_var($sql);
 
     return $num_spams;
@@ -517,7 +517,7 @@ function mmb_delete_spam_comments()
 function mmb_get_spam_comments()
 {
     global $wpdb;
-    $sql   = "SELECT * FROM $wpdb->comments as a LEFT JOIN $wpdb->commentmeta as b WHERE a.comment_ID = b.comment_id AND a.comment_approved = 'spam'";
+    $sql = "SELECT * FROM $wpdb->comments as a LEFT JOIN $wpdb->commentmeta as b WHERE a.comment_ID = b.comment_id AND a.comment_approved = 'spam'";
     $spams = $wpdb->get_results($sql);
 
     return $spams;
@@ -526,7 +526,7 @@ function mmb_get_spam_comments()
 function mwp_is_nio_shell_available()
 {
     static $check;
-    if(isset($check)){
+    if (isset($check)) {
         return $check;
     }
     try {
@@ -536,6 +536,7 @@ function mwp_is_nio_shell_available()
     } catch (Exception $e) {
         $check = false;
     }
+
     return $check;
 }
 
@@ -549,7 +550,7 @@ function mwp_is_shell_available()
     }
 
     if (extension_loaded('suhosin') && $suhosin = ini_get('suhosin.executor.func.blacklist')) {
-        $suhosin   = explode(',', $suhosin);
+        $suhosin = explode(',', $suhosin);
         $blacklist = array_map('trim', $suhosin);
         $blacklist = array_map('strtolower', $blacklist);
         if (in_array('proc_open', $blacklist)) {

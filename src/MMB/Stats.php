@@ -13,10 +13,9 @@ class MMB_Stats extends MMB_Core
      * (functions to be called after a remote call from Master)
      **************************************************************/
 
-    function get_core_update($stats, $options = array())
+    public function get_core_update($stats, $options = array())
     {
         global $wp_version, $wp_local_package;
-        $locale = empty($wp_local_package) ? 'en_US' : $wp_local_package;
         $current_transient = null;
         if (isset($options['core']) && $options['core']) {
             $core = $this->mmb_get_transient('update_core');
@@ -31,7 +30,7 @@ class MMB_Stats extends MMB_Core
                 if (!$current_transient) {
                     $current_transient = $core->updates[0];
                 }
-                if ($current_transient->response == "development" || version_compare($wp_version, $current_transient->current, '<') || $locale !== $current_transient->locale) {
+                if ($current_transient->response == "development" || version_compare($wp_version, $current_transient->current, '<') || get_locale() !== $current_transient->locale) {
                     $current_transient->current_version = $wp_version;
                     $stats['core_updates']              = $current_transient;
                 } else {
@@ -45,7 +44,7 @@ class MMB_Stats extends MMB_Core
         return $stats;
     }
 
-    function get_hit_counter($stats, $options = array())
+    public function get_hit_counter($stats, $options = array())
     {
         $mmb_user_hits = get_option('user_hit_count');
         if (is_array($mmb_user_hits)) {
@@ -61,7 +60,7 @@ class MMB_Stats extends MMB_Core
         return $stats;
     }
 
-    function get_comments($stats, $options = array())
+    public function get_comments($stats, $options = array())
     {
         $nposts  = isset($options['numberposts']) ? (int) $options['numberposts'] : 20;
         $trimlen = isset($options['trimcontent']) ? (int) $options['trimcontent'] : 200;
@@ -101,9 +100,9 @@ class MMB_Stats extends MMB_Core
         return $stats;
     }
 
-    function get_posts($stats, $options = array())
+    public function get_posts($stats, $options = array())
     {
-        $nposts = isset($options['numberposts']) ? (int) $options['numberposts'] : 20;
+        $nposts    = isset($options['numberposts']) ? (int) $options['numberposts'] : 20;
         $user_info = $this->getUsersIDs();
 
         if ($nposts) {
@@ -111,15 +110,15 @@ class MMB_Stats extends MMB_Core
             $recent_posts = array();
             if (!empty($posts)) {
                 foreach ($posts as $id => $recent_post) {
-                    $recent                 = new stdClass();
-                    $recent->post_permalink = get_permalink($recent_post->ID);
-                    $recent->ID             = $recent_post->ID;
-                    $recent->post_date      = $recent_post->post_date;
-                    $recent->post_title     = $recent_post->post_title;
-                    $recent->post_type      = $recent_post->post_type;
-                    $recent->comment_count  = (int) $recent_post->comment_count;
-                    $recent->post_author_name    = array('author_id' => $recent_post->post_author, 'author_name' => $user_info[$recent_post->post_author]);
-                    $recent_posts[]         = $recent;
+                    $recent                   = new stdClass();
+                    $recent->post_permalink   = get_permalink($recent_post->ID);
+                    $recent->ID               = $recent_post->ID;
+                    $recent->post_date        = $recent_post->post_date;
+                    $recent->post_title       = $recent_post->post_title;
+                    $recent->post_type        = $recent_post->post_type;
+                    $recent->comment_count    = (int) $recent_post->comment_count;
+                    $recent->post_author_name = array('author_id' => $recent_post->post_author, 'author_name' => $user_info[$recent_post->post_author]);
+                    $recent_posts[]           = $recent;
                 }
             }
 
@@ -143,7 +142,7 @@ class MMB_Stats extends MMB_Core
                     $recent_posts,
                     array(
                         $this,
-                        'cmp_posts_worker'
+                        'cmp_posts_worker',
                     )
                 );
                 $stats['posts'] = array_slice($recent_posts, 0, $nposts);
@@ -153,7 +152,7 @@ class MMB_Stats extends MMB_Core
         return $stats;
     }
 
-    function get_drafts($stats, $options = array())
+    public function get_drafts($stats, $options = array())
     {
         $nposts = isset($options['numberposts']) ? (int) $options['numberposts'] : 20;
 
@@ -191,7 +190,7 @@ class MMB_Stats extends MMB_Core
                     $recent_drafts,
                     array(
                         $this,
-                        'cmp_posts_worker'
+                        'cmp_posts_worker',
                     )
                 );
                 $stats['drafts'] = array_slice($recent_drafts, 0, $nposts);
@@ -201,7 +200,7 @@ class MMB_Stats extends MMB_Core
         return $stats;
     }
 
-    function get_scheduled($stats, $options = array())
+    public function get_scheduled($stats, $options = array())
     {
         $nposts = isset($options['numberposts']) ? (int) $options['numberposts'] : 20;
 
@@ -238,7 +237,7 @@ class MMB_Stats extends MMB_Core
                     $scheduled_posts,
                     array(
                         $this,
-                        'cmp_posts_worker'
+                        'cmp_posts_worker',
                     )
                 );
                 $stats['scheduled'] = array_slice($scheduled_posts, 0, $nposts);
@@ -248,7 +247,7 @@ class MMB_Stats extends MMB_Core
         return $stats;
     }
 
-    function get_backups($stats, $options = array())
+    public function get_backups($stats, $options = array())
     {
         $stats['mwp_backups']      = $this->get_backup_instance()->get_backup_stats();
         $stats['mwp_next_backups'] = $this->get_backup_instance()->get_next_schedules();
@@ -256,7 +255,7 @@ class MMB_Stats extends MMB_Core
         return $stats;
     }
 
-    function get_backup_req($stats = array(), $options = array())
+    public function get_backup_req($stats = array(), $options = array())
     {
         $stats['mwp_backups']      = $this->get_backup_instance()->get_backup_stats();
         $stats['mwp_next_backups'] = $this->get_backup_instance()->get_next_schedules();
@@ -265,7 +264,7 @@ class MMB_Stats extends MMB_Core
         return $stats;
     }
 
-    function get_updates($stats, $options = array())
+    public function get_updates($stats, $options = array())
     {
         $upgrades = false;
         $premium  = array();
@@ -303,7 +302,7 @@ class MMB_Stats extends MMB_Core
         return $stats;
     }
 
-    function get_errors($stats, $options = array())
+    public function get_errors($stats, $options = array())
     {
         $period     = isset($options['days']) ? (int) $options['days'] * 86400 : 86400;
         $maxerrors  = isset($options['max']) ? (int) $options['max'] : 100;
@@ -313,8 +312,8 @@ class MMB_Stats extends MMB_Core
             if (function_exists('ini_get')) {
                 $logpath = ini_get('error_log');
                 if (!empty($logpath) && file_exists($logpath)) {
-                    $logfile  = @fopen($logpath, 'r');
-                    $filesize = @filesize($logpath);
+                    $logfile    = @fopen($logpath, 'r');
+                    $filesize   = @filesize($logpath);
                     $read_start = 0;
                     if (is_resource($logfile) && $filesize > 0) {
                         if ($filesize > $last_bytes) {
@@ -352,14 +351,14 @@ class MMB_Stats extends MMB_Core
         return $stats;
     }
 
-    function getUserList()
+    public function getUserList()
     {
         $filter = array(
-            'user_roles' => array(
-                'administrator'
+            'user_roles'      => array(
+                'administrator',
             ),
-            'username'=>'',
-            'username_filter'=>'',
+            'username'        => '',
+            'username_filter' => '',
         );
         $users = $this->get_user_instance()->get_users($filter);
 
@@ -375,12 +374,12 @@ class MMB_Stats extends MMB_Core
         return $userList;
     }
 
-    function pre_init_stats($params)
+    public function pre_init_stats($params)
     {
         global $_mmb_item_filter;
 
-        include_once(ABSPATH.'wp-includes/update.php');
-        include_once(ABSPATH.'/wp-admin/includes/update.php');
+        include_once ABSPATH.'wp-includes/update.php';
+        include_once ABSPATH.'/wp-admin/includes/update.php';
 
         $stats = $this->mmb_parse_action_params('pre_init_stats', $params, $this);
         $num   = extract($params);
@@ -422,7 +421,7 @@ class MMB_Stats extends MMB_Core
         $stats['site_title']            = get_bloginfo('name');
 
         if (!function_exists('get_filesystem_method')) {
-            include_once(ABSPATH.'wp-admin/includes/file.php');
+            include_once ABSPATH.'wp-admin/includes/file.php';
         }
         $mmode = get_option('mwp_maintenace_mode');
 
@@ -434,12 +433,12 @@ class MMB_Stats extends MMB_Core
         return $stats;
     }
 
-    function get($params)
+    public function get($params)
     {
         global $wpdb, $mmb_wp_version, $mmb_plugin_dir, $_mmb_item_filter;
 
-        include_once(ABSPATH.'wp-includes/update.php');
-        include_once(ABSPATH.'wp-admin/includes/update.php');
+        include_once ABSPATH.'wp-includes/update.php';
+        include_once ABSPATH.'wp-admin/includes/update.php';
 
         $stats = $this->mmb_parse_action_params('get', $params, $this);
 
@@ -453,7 +452,7 @@ class MMB_Stats extends MMB_Core
                         $update_result = call_user_func(
                             array(
                                 $update['callback'][0],
-                                $update['callback'][1]
+                                $update['callback'][1],
                             )
                         );
                     } else {
@@ -475,12 +474,12 @@ class MMB_Stats extends MMB_Core
         return $stats;
     }
 
-    function get_multisite($stats = array())
+    public function get_multisite($stats = array())
     {
         global $current_user, $wpdb;
         $user_blogs    = get_blogs_of_user($current_user->ID);
         $network_blogs = $wpdb->get_results("select `blog_id`, `site_id` from `{$wpdb->blogs}`");
-        $user_id = $GLOBALS['mwp_user_id'] ? $GLOBALS['mwp_user_id'] : false;
+        $user_id       = $GLOBALS['mwp_user_id'] ? $GLOBALS['mwp_user_id'] : false;
 
         if ($this->network_admin_install == '1' && is_super_admin($user_id)) {
             if (!empty($network_blogs)) {
@@ -496,7 +495,7 @@ class MMB_Stats extends MMB_Core
                             $user = get_users(
                                 array(
                                     'blog_id' => $details->blog_id,
-                                    'number'  => 1
+                                    'number'  => 1,
                                 )
                             );
                             if (!empty($user)) {
@@ -511,7 +510,7 @@ class MMB_Stats extends MMB_Core
         return $stats;
     }
 
-    function get_comments_stats()
+    public function get_comments_stats()
     {
         $num_pending_comments  = 3;
         $num_approved_comments = 3;
@@ -521,7 +520,6 @@ class MMB_Stats extends MMB_Core
             $comment->post_title = $commented_post->post_title;
         }
         $stats['comments']['pending'] = $pending_comments;
-
 
         $approved_comments = get_comments('status=approve&number='.$num_approved_comments);
         foreach ($approved_comments as &$comment) {
@@ -533,7 +531,7 @@ class MMB_Stats extends MMB_Core
         return $stats;
     }
 
-    function get_auth_cookies($user_id)
+    public function get_auth_cookies($user_id)
     {
         $cookies = array();
         $secure  = is_ssl();
@@ -559,7 +557,7 @@ class MMB_Stats extends MMB_Core
         return $cookies;
     }
 
-    function get_stat_cookies()
+    public function get_stat_cookies()
     {
         global $current_user;
 
@@ -584,7 +582,7 @@ class MMB_Stats extends MMB_Core
         return $cookies;
     }
 
-    function get_initial_stats()
+    public function get_initial_stats()
     {
         global $mmb_plugin_dir, $_mmb_item_filter, $current_user;
 
@@ -602,7 +600,7 @@ class MMB_Stats extends MMB_Core
             'admin_url'       => admin_url(),
             'wp_multisite'    => $this->mmb_multisite,
             'network_install' => $this->network_admin_install,
-            'cookies'         => $this->get_stat_cookies()
+            'cookies'         => $this->get_stat_cookies(),
         );
 
         if ($this->mmb_multisite) {
@@ -615,7 +613,7 @@ class MMB_Stats extends MMB_Core
             }
         }
         if (!function_exists('get_filesystem_method')) {
-            include_once(ABSPATH.'wp-admin/includes/file.php');
+            include_once ABSPATH.'wp-admin/includes/file.php';
         }
 
         $stats['writable'] = $this->is_server_writable();
@@ -639,11 +637,11 @@ class MMB_Stats extends MMB_Core
                         'cleanup' => array(
                             'overhead'  => array(),
                             'revisions' => array('num_to_keep' => 'r_5'),
-                            'spam'      => array(),
-                        )
+                            'spam'                             => array(),
+                        ),
                     ),
                 ),
-            )
+            ),
         );
 
         $pre_init_data = $this->pre_init_stats($filter);
@@ -654,7 +652,7 @@ class MMB_Stats extends MMB_Core
         return $stats;
     }
 
-    function get_active_db()
+    public function get_active_db()
     {
         global $wpdb;
         $sql = 'SELECT DATABASE() as db_name';
@@ -663,10 +661,9 @@ class MMB_Stats extends MMB_Core
         $active_db = $sqlresult->db_name;
 
         return $active_db;
-
     }
 
-    static function set_hit_count($fix_count = false)
+    public static function set_hit_count($fix_count = false)
     {
         global $mmb_core;
         $uptime_robot = array(
@@ -680,11 +677,10 @@ class MMB_Stats extends MMB_Core
             "188.226.183.141",
             "178.62.52.237",
             "54.79.28.129",
-            "54.94.142.218"
+            "54.94.142.218",
         ); //don't let uptime robot to affect visit count
 
         if ($fix_count || (!is_admin() && !MMB_Stats::is_bot() && !isset($_GET['doing_wp_cron']) && !in_array($_SERVER['REMOTE_ADDR'], $uptime_robot))) {
-
             $date           = date('Y-m-d');
             $user_hit_count = (array) get_option('user_hit_count');
             if (!$user_hit_count) {
@@ -711,7 +707,6 @@ class MMB_Stats extends MMB_Core
                             $user_hit_count[$next_key] = 0;
                         }
                     }
-
                 }
 
                 if (!isset($user_hit_count[$date])) {
@@ -726,12 +721,11 @@ class MMB_Stats extends MMB_Core
                 }
 
                 update_option('user_hit_count', $user_hit_count);
-
             }
         }
     }
 
-    function get_hit_count()
+    public function get_hit_count()
     {
         // Check if there are no hits on last key date
         $mmb_user_hits = get_option('user_hit_count');
@@ -747,10 +741,9 @@ class MMB_Stats extends MMB_Core
         return get_option('user_hit_count');
     }
 
-
-    static function is_bot()
+    public static function is_bot()
     {
-        $agent = isset($_SERVER['HTTP_USER_AGENT']) ? $_SERVER['HTTP_USER_AGENT'] : '' ;
+        $agent = isset($_SERVER['HTTP_USER_AGENT']) ? $_SERVER['HTTP_USER_AGENT'] : '';
 
         if ($agent == '') {
             return true;
@@ -835,8 +828,7 @@ class MMB_Stats extends MMB_Core
         return false;
     }
 
-
-    function set_notifications($params)
+    public function set_notifications($params)
     {
         if (empty($params)) {
             return false;
@@ -851,7 +843,7 @@ class MMB_Stats extends MMB_Core
                 'wp'               => $wp,
                 'backups'          => $backups,
                 'url'              => $url,
-                'notification_key' => $notification_key
+                'notification_key' => $notification_key,
             );
             update_option('mwp_notifications', $mwp_notifications);
         } else {
@@ -859,11 +851,10 @@ class MMB_Stats extends MMB_Core
         }
 
         return true;
-
     }
 
     //Cron update check for notifications
-    function check_notifications()
+    public function check_notifications()
     {
         global $wpdb, $mmb_wp_version, $mmb_plugin_dir, $wp_version, $wp_local_package;
 
@@ -873,8 +864,8 @@ class MMB_Stats extends MMB_Core
         $updates = array();
         $send    = 0;
         if (is_array($mwp_notifications) && $mwp_notifications != false) {
-            include_once(ABSPATH.'wp-includes/update.php');
-            include_once(ABSPATH.'/wp-admin/includes/update.php');
+            include_once ABSPATH.'wp-includes/update.php';
+            include_once ABSPATH.'/wp-admin/includes/update.php';
             extract($mwp_notifications);
 
             //Check wordpress core updates
@@ -925,15 +916,12 @@ class MMB_Stats extends MMB_Core
                 $updates['backups'] = $backups;
             }
 
-
             if (!empty($updates)) {
                 $args['body']['updates']          = $updates;
                 $args['body']['notification_key'] = $notification_key;
                 $send                             = 1;
             }
-
         }
-
 
         $alert_data = get_option('mwp_pageview_alerts', true);
         if (is_array($alert_data) && $alert_data['alert']) {
@@ -948,7 +936,7 @@ class MMB_Stats extends MMB_Core
 
         if ($send) {
             if (!class_exists('WP_Http')) {
-                include_once(ABSPATH.WPINC.'/class-http.php');
+                include_once ABSPATH.WPINC.'/class-http.php';
             }
             $result = wp_remote_post($url, $args);
 
@@ -956,17 +944,14 @@ class MMB_Stats extends MMB_Core
                 delete_option('mwp_pageview_alerts');
             }
         }
-
-
     }
 
-
-    function cmp_posts_worker($a, $b)
+    public function cmp_posts_worker($a, $b)
     {
         return ($a->post_date < $b->post_date);
     }
 
-    function trim_content($content = '', $length = 200)
+    public function trim_content($content = '', $length = 200)
     {
         if (function_exists('mb_strlen') && function_exists('mb_substr')) {
             $content = (mb_strlen($content) > ($length + 3)) ? mb_substr($content, 0, $length).'...' : $content;
@@ -976,7 +961,6 @@ class MMB_Stats extends MMB_Core
 
         return $content;
     }
-
 
     public static function readd_alerts($params = array())
     {

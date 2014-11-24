@@ -28,17 +28,19 @@ class Dropbox_OAuth1Upgrader extends Dropbox_AuthBase
      * @param Dropbox_OAuth1AccessToken $oauth1AccessToken
      *
      * @return string
-     *    The OAuth 2 access token.
+     *                The OAuth 2 access token.
      *
      * @throws Dropbox_Exception
      */
-    function createOAuth2AccessToken($oauth1AccessToken)
+    public function createOAuth2AccessToken($oauth1AccessToken)
     {
         Dropbox_OAuth1AccessToken::checkArg("oauth1AccessToken", $oauth1AccessToken);
 
         $response = self::doPost($oauth1AccessToken, "1/oauth2/token_from_oauth1");
 
-        if ($response->statusCode !== 200) throw Dropbox_RequestUtil::unexpectedStatus($response);
+        if ($response->statusCode !== 200) {
+            throw Dropbox_RequestUtil::unexpectedStatus($response);
+        }
 
         $parts = Dropbox_RequestUtil::parseResponseJson($response->body);
 
@@ -68,18 +70,20 @@ class Dropbox_OAuth1Upgrader extends Dropbox_AuthBase
      *
      * @throws Dropbox_Exception
      */
-    function disableOAuth1AccessToken($oauth1AccessToken)
+    public function disableOAuth1AccessToken($oauth1AccessToken)
     {
         Dropbox_OAuth1AccessToken::checkArg("oauth1AccessToken", $oauth1AccessToken);
 
         $response = self::doPost($oauth1AccessToken, "1/disable_access_token");
 
-        if ($response->statusCode !== 200) throw Dropbox_RequestUtil::unexpectedStatus($response);
+        if ($response->statusCode !== 200) {
+            throw Dropbox_RequestUtil::unexpectedStatus($response);
+        }
     }
 
     /**
      * @param Dropbox_OAuth1AccessToken $oauth1AccessToken
-     * @param string $path
+     * @param string                    $path
      *
      * @return Dropbox_HttpResponse
      *
@@ -89,9 +93,9 @@ class Dropbox_OAuth1Upgrader extends Dropbox_AuthBase
     {
         // Construct the OAuth 1 header.
         $authHeaderValue = "OAuth oauth_signature_method=\"PLAINTEXT\""
-             . ", oauth_consumer_key=\"" . rawurlencode($this->appInfo->getKey()) . "\""
-             . ", oauth_token=\"" . rawurlencode($oauth1AccessToken->getKey()) . "\""
-             . ", oauth_signature=\"" . rawurlencode($this->appInfo->getSecret()) . "&" . rawurlencode($oauth1AccessToken->getSecret()) . "\"";
+            .", oauth_consumer_key=\"".rawurlencode($this->appInfo->getKey())."\""
+            .", oauth_token=\"".rawurlencode($oauth1AccessToken->getKey())."\""
+            .", oauth_signature=\"".rawurlencode($this->appInfo->getSecret())."&".rawurlencode($oauth1AccessToken->getSecret())."\"";
 
         return Dropbox_RequestUtil::doPostWithSpecificAuth(
             $this->clientIdentifier, $authHeaderValue, $this->userLocale,

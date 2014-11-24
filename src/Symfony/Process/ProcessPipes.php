@@ -44,14 +44,14 @@ class Symfony_Process_ProcessPipes
         // @see https://bugs.php.net/bug.php?id=51800
         if ($this->useFiles) {
             $this->fileHandles = array(
-              Symfony_Process_Process::STDOUT => tmpfile(),
+                Symfony_Process_Process::STDOUT => tmpfile(),
             );
 
             if (false === $this->fileHandles[Symfony_Process_Process::STDOUT]) {
                 throw new Symfony_Process_Exception_RuntimeException('A temporary file could not be opened to write the process output to, verify that your TEMP environment variable is writable');
             }
             $this->readBytes = array(
-              Symfony_Process_Process::STDOUT => 0,
+                Symfony_Process_Process::STDOUT => 0,
             );
         }
     }
@@ -105,25 +105,25 @@ class Symfony_Process_ProcessPipes
     {
         if ($this->useFiles) {
             return array(
-              array('pipe', 'r'),
-              $this->fileHandles[Symfony_Process_Process::STDOUT],
+                array('pipe', 'r'),
+                $this->fileHandles[Symfony_Process_Process::STDOUT],
                 // Use a file handle only for STDOUT. Using for both STDOUT and STDERR would trigger https://bugs.php.net/bug.php?id=65650
-              array('pipe', 'w'),
+                array('pipe', 'w'),
             );
         }
 
         if ($this->ttyMode) {
             return array(
-              array('file', '/dev/tty', 'r'),
-              array('file', '/dev/tty', 'w'),
-              array('file', '/dev/tty', 'w'),
+                array('file', '/dev/tty', 'r'),
+                array('file', '/dev/tty', 'w'),
+                array('file', '/dev/tty', 'w'),
             );
         }
 
         return array(
-          array('pipe', 'r'), // stdin
-          array('pipe', 'w'), // stdout
-          array('pipe', 'w'), // stderr
+            array('pipe', 'r'), // stdin
+            array('pipe', 'w'), // stdout
+            array('pipe', 'w'), // stderr
         );
     }
 

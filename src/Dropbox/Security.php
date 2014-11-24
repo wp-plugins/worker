@@ -15,9 +15,10 @@ class Dropbox_Security
      *
      * @param string $a
      * @param string $b
+     *
      * @return bool
      */
-    static function stringEquals($a, $b)
+    public static function stringEquals($a, $b)
     {
         // Be strict with arguments.  PHP's liberal types could get us pwned.
         if (func_num_args() !== 2) {
@@ -26,11 +27,14 @@ class Dropbox_Security
         Dropbox_Checker::argString("a", $a);
         Dropbox_Checker::argString("b", $b);
 
-        if (strlen($a) !== strlen($b)) return false;
+        if (strlen($a) !== strlen($b)) {
+            return false;
+        }
         $result = 0;
         for ($i = 0; $i < strlen($a); $i++) {
             $result |= ord($a[$i]) ^ ord($b[$i]);
         }
+
         return $result === 0;
     }
 
@@ -38,19 +42,22 @@ class Dropbox_Security
      * Returns cryptographically strong secure random bytes (as a PHP string).
      *
      * @param int $numBytes
-     *    The number of bytes of random data to return.
+     *                      The number of bytes of random data to return.
      *
      * @return string
      */
-    static function getRandomBytes($numBytes)
+    public static function getRandomBytes($numBytes)
     {
         Dropbox_Checker::argIntPositive("numBytes", $numBytes);
 
-        // openssl_random_pseudo_bytes had some issues prior to PHP 5.3.4 
+        // openssl_random_pseudo_bytes had some issues prior to PHP 5.3.4
         if (function_exists('openssl_random_pseudo_bytes')
-                && version_compare(PHP_VERSION, '5.3.4') >= 0) {
+            && version_compare(PHP_VERSION, '5.3.4') >= 0
+        ) {
             $s = openssl_random_pseudo_bytes($numBytes, $isCryptoStrong);
-            if ($isCryptoStrong) return $s;
+            if ($isCryptoStrong) {
+                return $s;
+            }
         }
 
         if (function_exists('mcrypt_create_iv')) {

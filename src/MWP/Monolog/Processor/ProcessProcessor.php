@@ -9,7 +9,7 @@ class MWP_Monolog_Processor_ProcessProcessor implements Monolog_Processor_Proces
         }
         /** @var Symfony_Process_Process $process */
         $process = $record['context']['process'];
-        unset ($record['context']['process']);
+        unset($record['context']['process']);
         $record['extra']['process_command'] = $process->getCommandLine();
 
         if ($process->getExitCode() !== null) {

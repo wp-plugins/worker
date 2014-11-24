@@ -20,29 +20,28 @@
  *
  * @author Stuart Langley <slangley@google.com>
  */
-
-
 class Google_IO_Stream extends Google_IO_Abstract
 {
-    const TIMEOUT = "timeout";
-    const ZLIB = "compress.zlib://";
+    const TIMEOUT    = "timeout";
+    const ZLIB       = "compress.zlib://";
     private $options = array();
 
     private static $DEFAULT_HTTP_CONTEXT = array(
-      "follow_location" => 0,
-      "ignore_errors" => 1,
+        "follow_location" => 0,
+        "ignore_errors"   => 1,
     );
 
     private static $DEFAULT_SSL_CONTEXT = array(
-      "verify_peer" => true,
+        "verify_peer" => true,
     );
 
     /**
      * Execute an HTTP Request
      *
      * @param Google_HttpRequest $request the http request to be executed
-     * @return Google_HttpRequest http request with the response http code,
-     * response headers and response body filled in
+     *
+     * @return Google_HttpRequest  http request with the response http code,
+     *                             response headers and response body filled in
      * @throws Google_IO_Exception on curl or IO error
      */
     public function executeRequest(Google_Http_Request $request)
@@ -50,7 +49,7 @@ class Google_IO_Stream extends Google_IO_Abstract
         $default_options = stream_context_get_options(stream_context_get_default());
 
         $requestHttpContext = array_key_exists('http', $default_options) ?
-          $default_options['http'] : array();
+            $default_options['http'] : array();
 
         if ($request->getPostBody()) {
             $requestHttpContext["content"] = $request->getPostBody();
@@ -65,25 +64,25 @@ class Google_IO_Stream extends Google_IO_Abstract
             $requestHttpContext["header"] = $headers;
         }
 
-        $requestHttpContext["method"] = $request->getRequestMethod();
+        $requestHttpContext["method"]     = $request->getRequestMethod();
         $requestHttpContext["user_agent"] = $request->getUserAgent();
 
         $requestSslContext = array_key_exists('ssl', $default_options) ?
-          $default_options['ssl'] : array();
+            $default_options['ssl'] : array();
 
         if (!array_key_exists("cafile", $requestSslContext)) {
-            $requestSslContext["cafile"] = dirname(__FILE__) . '/cacerts.pem';
+            $requestSslContext["cafile"] = dirname(__FILE__).'/cacerts.pem';
         }
 
         $options = array(
-          "http" => array_merge(
-            self::$DEFAULT_HTTP_CONTEXT,
-            $requestHttpContext
-          ),
-          "ssl" => array_merge(
-            self::$DEFAULT_SSL_CONTEXT,
-            $requestSslContext
-          )
+            "http" => array_merge(
+                self::$DEFAULT_HTTP_CONTEXT,
+                $requestHttpContext
+            ),
+            "ssl"  => array_merge(
+                self::$DEFAULT_SSL_CONTEXT,
+                $requestSslContext
+            ),
         );
 
         $context = stream_context_create($options);
@@ -91,7 +90,7 @@ class Google_IO_Stream extends Google_IO_Abstract
         $url = $request->getUrl();
 
         if ($request->canGzip()) {
-            $url = self::ZLIB . $url;
+            $url = self::ZLIB.$url;
         }
 
         // Not entirely happy about this, but supressing the warning from the
@@ -101,7 +100,7 @@ class Google_IO_Stream extends Google_IO_Abstract
         @$fh = fopen($url, 'r', false, $context);
 
         $response_data = false;
-        $respHttpCode = self::UNKNOWN_CODE;
+        $respHttpCode  = self::UNKNOWN_CODE;
         if ($fh) {
             if (isset($this->options[self::TIMEOUT])) {
                 stream_set_timeout($fh, $this->options[self::TIMEOUT]);
@@ -115,11 +114,11 @@ class Google_IO_Stream extends Google_IO_Abstract
 
         if (false === $response_data) {
             throw new Google_IO_Exception(
-              sprintf(
-                "HTTP Error: Unable to connect: '%s'",
+                sprintf(
+                    "HTTP Error: Unable to connect: '%s'",
+                    $respHttpCode
+                ),
                 $respHttpCode
-              ),
-              $respHttpCode
             );
         }
 
@@ -130,6 +129,7 @@ class Google_IO_Stream extends Google_IO_Abstract
 
     /**
      * Set options that update the transport implementation's behavior.
+     *
      * @param $options
      */
     public function setOptions($options)
@@ -139,6 +139,7 @@ class Google_IO_Stream extends Google_IO_Abstract
 
     /**
      * Set the maximum request time in seconds.
+     *
      * @param $timeout in seconds
      */
     public function setTimeout($timeout)
@@ -163,9 +164,11 @@ class Google_IO_Stream extends Google_IO_Abstract
             $header = $response_headers[$i];
             if (strncasecmp("HTTP", $header, strlen("HTTP")) == 0) {
                 $response = explode(' ', $header);
+
                 return $response[1];
             }
         }
+
         return self::UNKNOWN_CODE;
     }
 }

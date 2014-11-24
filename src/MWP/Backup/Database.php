@@ -9,7 +9,6 @@
  */
 class MWP_Backup_Database
 {
-
     /**
      * Creates the database dump at a given path
      *
@@ -22,8 +21,8 @@ class MWP_Backup_Database
     {
         @set_time_limit(0);
         $writer = MWP_Backup_Writer_WriterFactory::make(
-          MWP_Backup_ArrayHelper::getKey($options, 'save_path'),
-          MWP_Backup_ArrayHelper::getKey($options, 'compression_method')
+            MWP_Backup_ArrayHelper::getKey($options, 'save_path'),
+            MWP_Backup_ArrayHelper::getKey($options, 'compression_method')
         );
 
         $dumper = MWP_Backup_MysqlDump_DumpFactory::make($config, $options, $writer);

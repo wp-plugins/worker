@@ -10,7 +10,7 @@ class MWP_Monolog_Processor_ExceptionProcessor implements Monolog_Processor_Proc
 
         /** @var Exception $exception */
         $exception = $record['context']['exception'];
-        unset ($record['context']['exception']);
+        unset($record['context']['exception']);
 
         $record['file'] = $exception->getFile();
         $record['line'] = $exception->getLine();

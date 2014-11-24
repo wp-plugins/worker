@@ -8,12 +8,12 @@
  **************************************************************/
 class MMB_Link extends MMB_Core
 {
-    function __construct()
+    public function __construct()
     {
         parent::__construct();
     }
 
-    function add_link($args)
+    public function add_link($args)
     {
         extract($args);
 
@@ -56,9 +56,8 @@ class MMB_Link extends MMB_Core
             $params['link_owner'] = $user_obj->ID;
         }
 
-
         if (!function_exists('wp_insert_link')) {
-            include_once(ABSPATH.'wp-admin/includes/bookmark.php');
+            include_once ABSPATH.'wp-admin/includes/bookmark.php';
         }
 
         $is_success = wp_insert_link($params);
@@ -66,7 +65,7 @@ class MMB_Link extends MMB_Core
         return $is_success ? true : array('error' => 'Failed to add link.');
     }
 
-    function remove_element($arr, $val)
+    public function remove_element($arr, $val)
     {
         foreach ($arr as $key => $value) {
             if ($value == $val) {
@@ -77,7 +76,7 @@ class MMB_Link extends MMB_Core
         return $arr = array_values($arr);
     }
 
-    function get_links($args)
+    public function get_links($args)
     {
         global $wpdb;
 
@@ -111,14 +110,14 @@ class MMB_Link extends MMB_Core
                 "link_visible" => $link_info->link_visible,
                 "link_rating"  => $link_info->link_rating,
                 "link_rel"     => $link_info->link_rel,
-                "link_cats"    => $cats
+                "link_cats"    => $cats,
             );
         }
 
         return array('links' => $links, 'total' => $total);
     }
 
-    function getLinkCats($taxonomy = 'link_category')
+    public function getLinkCats($taxonomy = 'link_category')
     {
         global $wpdb;
 
@@ -132,14 +131,13 @@ INNER JOIN $wpdb->terms ON ( $wpdb->term_taxonomy.term_id = $wpdb->terms.term_id
         );
 
         foreach ($cats as $post_val) {
-
             $post_cats[$post_val->link_id][] = $post_val->name;
         }
 
         return $post_cats;
     }
 
-    function delete_link($args)
+    public function delete_link($args)
     {
         global $wpdb;
 
@@ -153,7 +151,7 @@ INNER JOIN $wpdb->terms ON ( $wpdb->term_taxonomy.term_id = $wpdb->terms.term_id
         }
     }
 
-    function delete_links($args)
+    public function delete_links($args)
     {
         global $wpdb;
         extract($args);
@@ -162,7 +160,6 @@ INNER JOIN $wpdb->terms ON ( $wpdb->term_taxonomy.term_id = $wpdb->terms.term_id
             $delete_query_intro = "DELETE FROM $wpdb->links WHERE link_id = ";
         }
         foreach ($args as $key => $val) {
-
             if (!empty($val) && is_numeric($val)) {
                 $delete_query = $delete_query_intro.$val;
 
@@ -172,5 +169,4 @@ INNER JOIN $wpdb->terms ON ( $wpdb->term_taxonomy.term_id = $wpdb->terms.term_id
 
         return "Link deleted";
     }
-
 }

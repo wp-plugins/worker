@@ -15,7 +15,6 @@
  * limitations under the License.
  */
 
-
 /**
  * @author Chirag Shah <chirags@google.com>
  *
@@ -64,13 +63,13 @@ class Google_Http_MediaFileUpload
      *                        only used if resumable=True
      */
     public function __construct(
-      Google_ApiClient $client,
-      Google_Http_Request $request,
-      $mimeType,
-      $data,
-      $resumable = false,
-      $chunkSize = false,
-      $boundary = false
+        Google_ApiClient $client,
+        Google_Http_Request $request,
+        $mimeType,
+        $data,
+        $resumable = false,
+        $chunkSize = false,
+        $boundary = false
     ) {
         $this->client    = $client;
         $this->request   = $request;
@@ -127,17 +126,17 @@ class Google_Http_MediaFileUpload
 
         $lastBytePos = $this->progress + strlen($chunk) - 1;
         $headers     = array(
-          'content-range'  => "bytes $this->progress-$lastBytePos/$this->size",
-          'content-type'   => $this->request->getRequestHeader('content-type'),
-          'content-length' => $this->chunkSize,
-          'expect'         => '',
+            'content-range'  => "bytes $this->progress-$lastBytePos/$this->size",
+            'content-type'   => $this->request->getRequestHeader('content-type'),
+            'content-length' => $this->chunkSize,
+            'expect'         => '',
         );
 
         $httpRequest = new Google_Http_Request(
-          $this->resumeUri,
-          'PUT',
-          $headers,
-          $chunk
+            $this->resumeUri,
+            'PUT',
+            $headers,
+            $chunk
         );
 
         if ($this->client->getClassConfig("Google_Http_Request", "enable_gzip_for_uploads")) {
@@ -187,8 +186,8 @@ class Google_Http_MediaFileUpload
         $this->request->setQueryParam('uploadType', $uploadType);
         $this->transformToUploadUrl();
         $mimeType = $this->mimeType ?
-          $this->mimeType :
-          $this->request->getRequestHeader('content-type');
+            $this->mimeType :
+            $this->request->getRequestHeader('content-type');
 
         if (self::UPLOAD_RESUMABLE_TYPE == $uploadType) {
             $contentType = $mimeType;
@@ -260,11 +259,11 @@ class Google_Http_MediaFileUpload
         $body   = $this->request->getPostBody();
         if ($body) {
             $headers = array(
-              'content-type'            => 'application/json; charset=UTF-8',
-              'content-length'          => Google_ApiUtils::getStrLen($body),
-              'x-upload-content-type'   => $this->mimeType,
-              'x-upload-content-length' => $this->size,
-              'expect'                  => '',
+                'content-type'            => 'application/json; charset=UTF-8',
+                'content-length'          => Google_ApiUtils::getStrLen($body),
+                'x-upload-content-type'   => $this->mimeType,
+                'x-upload-content-length' => $this->size,
+                'expect'                  => '',
             );
             $this->request->setRequestHeaders($headers);
         }

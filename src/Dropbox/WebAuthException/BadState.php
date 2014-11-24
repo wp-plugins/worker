@@ -11,7 +11,7 @@ class Dropbox_WebAuthException_BadState extends Dropbox_Exception
     /**
      * @internal
      */
-    function __construct()
+    public function __construct()
     {
         parent::__construct("Missing CSRF token in session.");
     }

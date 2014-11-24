@@ -10,7 +10,7 @@ class Dropbox_Exception extends Exception
     /**
      * @internal
      */
-    function __construct($message, $cause = null)
+    public function __construct($message, $cause = null)
     {
         if (version_compare(PHP_VERSION, '5.3', '<')) {
             $this->previousException = $cause;

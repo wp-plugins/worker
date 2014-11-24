@@ -44,17 +44,17 @@ interface Dropbox_ValueStore
      *
      * @return string
      */
-    function get();
+    public function get();
 
     /**
      * Set the entry to the given value.
      *
      * @param string $value
      */
-    function set($value);
+    public function set($value);
 
     /**
      * Remove the value.
      */
-    function clear();
+    public function clear();
 }

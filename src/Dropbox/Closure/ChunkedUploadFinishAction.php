@@ -10,7 +10,7 @@ class Dropbox_Closure_ChunkedUploadFinishAction implements Dropbox_Closure_ReRun
 
     private $writeMode;
 
-    function __construct(Dropbox_Client $client, $uploadId, $path, $writeMode)
+    public function __construct(Dropbox_Client $client, $uploadId, $path, $writeMode)
     {
         $this->client    = $client;
         $this->uploadId  = $uploadId;

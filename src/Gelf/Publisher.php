@@ -85,7 +85,7 @@ class Gelf_Publisher
         // Check if required message parameters are set
         if (!$message->getShortMessage() || !$message->getHost()) {
             throw new UnexpectedValueException(
-              'Missing required data parameter: "version", "short_message" and "host" are required.'
+                'Missing required data parameter: "version", "short_message" and "host" are required.'
             );
         }
 
@@ -110,11 +110,11 @@ class Gelf_Publisher
             // Send chunks to graylog server
             foreach (array_values($messageChunks) as $messageChunkIndex => $messageChunk) {
                 $bytesWritten = $this->writeMessageChunkToSocket(
-                  $socket,
-                  $messageId,
-                  $messageChunk,
-                  $messageChunkIndex,
-                  $messageChunksCount
+                    $socket,
+                    $messageId,
+                    $messageChunk,
+                    $messageChunkIndex,
+                    $messageChunksCount
                 );
 
                 if (false === $bytesWritten) {
@@ -155,8 +155,8 @@ class Gelf_Publisher
     {
         if (!$this->streamSocketClient) {
             $this->streamSocketClient = stream_socket_client(sprintf('udp://%s:%d',
-              gethostbyname($this->hostname),
-              $this->port));
+                gethostbyname($this->hostname),
+                $this->port));
         }
 
         return $this->streamSocketClient;
@@ -232,8 +232,8 @@ class Gelf_Publisher
     protected function writeMessageChunkToSocket($socket, $messageId, $messageChunk, $messageChunkIndex, $messageChunksCount)
     {
         return fwrite(
-          $socket,
-          $this->prependChunkInformation($messageId, $messageChunk, $messageChunkIndex, $messageChunksCount)
+            $socket,
+            $this->prependChunkInformation($messageId, $messageChunk, $messageChunkIndex, $messageChunksCount)
         );
     }
 

@@ -33,7 +33,7 @@ class Monolog_Processor_IntrospectionProcessor implements Monolog_Processor_Proc
     }
 
     /**
-     * @param  array $record
+     * @param array $record
      *
      * @return array
      */
@@ -65,13 +65,13 @@ class Monolog_Processor_IntrospectionProcessor implements Monolog_Processor_Proc
 
         // we should have the call source now
         $record['extra'] = array_merge(
-          $record['extra'],
-          array(
-              'file'     => isset($trace[$i - 1]['file']) ? $trace[$i - 1]['file'] : null,
-              'line'     => isset($trace[$i - 1]['line']) ? $trace[$i - 1]['line'] : null,
-              'class'    => isset($trace[$i]['class']) ? $trace[$i]['class'] : null,
-              'function' => isset($trace[$i]['function']) ? $trace[$i]['function'] : null,
-          )
+            $record['extra'],
+            array(
+                'file'     => isset($trace[$i - 1]['file']) ? $trace[$i - 1]['file'] : null,
+                'line'     => isset($trace[$i - 1]['line']) ? $trace[$i - 1]['line'] : null,
+                'class'    => isset($trace[$i]['class']) ? $trace[$i]['class'] : null,
+                'function' => isset($trace[$i]['function']) ? $trace[$i]['function'] : null,
+            )
         );
 
         return $record;

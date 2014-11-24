@@ -43,9 +43,9 @@ class Monolog_Registry
     /**
      * Adds new logging channel to the registry
      *
-     * @param  Monolog_Logger $logger    Instance of the logging channel
-     * @param  string|null    $name      Name of the logging channel ($logger->getName() by default)
-     * @param  boolean        $overwrite Overwrite instance in the registry if the given name already exists?
+     * @param Monolog_Logger $logger    Instance of the logging channel
+     * @param string|null    $name      Name of the logging channel ($logger->getName() by default)
+     * @param boolean        $overwrite Overwrite instance in the registry if the given name already exists?
      *
      * @throws InvalidArgumentException If $overwrite set to false and named Logger instance already exists
      */
@@ -87,9 +87,9 @@ class Monolog_Registry
     /**
      * Gets Logger instance from the registry
      *
-     * @param  string $name Name of the requested Logger instance
+     * @param string $name Name of the requested Logger instance
      *
-     * @return Monolog_Logger                    Requested instance of Logger
+     * @return Monolog_Logger           Requested instance of Logger
      * @throws InvalidArgumentException If named Logger instance is not in the registry
      */
     public static function getInstance($name)

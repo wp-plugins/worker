@@ -11,5 +11,4 @@ interface MWP_Backup_Writer_WriterInterface
     public function writeLine($content = '');
 
     public function consoleOutput($outputCommand, $destination, $options = null);
-
 }

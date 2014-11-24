@@ -4,7 +4,7 @@ class Dropbox_Closure_CurlConfigOctetStream implements Dropbox_Closure_CurlConfi
 {
     private $data;
 
-    function __construct($data)
+    public function __construct($data)
     {
         $this->data = $data;
     }

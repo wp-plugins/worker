@@ -9,14 +9,15 @@ final class Dropbox_Path
      * Return whether the given path is a valid Dropbox path.
      *
      * @param string $path
-     *    The path you want to check for validity.
+     *                     The path you want to check for validity.
      *
      * @return bool
-     *    Whether the path was valid or not.
+     *              Whether the path was valid or not.
      */
-    static function isValid($path)
+    public static function isValid($path)
     {
         $error = self::findError($path);
+
         return ($error === null);
     }
 
@@ -25,14 +26,15 @@ final class Dropbox_Path
      * This is the same as {@link isValid} except <code>"/"</code> is not allowed.
      *
      * @param string $path
-     *    The path you want to check for validity.
+     *                     The path you want to check for validity.
      *
      * @return bool
-     *    Whether the path was valid or not.
+     *              Whether the path was valid or not.
      */
-    static function isValidNonRoot($path)
+    public static function isValidNonRoot($path)
     {
         $error = self::findErrorNonRoot($path);
+
         return ($error === null);
     }
 
@@ -41,13 +43,13 @@ final class Dropbox_Path
      * otherwise return an English string error message describing what is wrong with the path.
      *
      * @param string $path
-     *    The path you want to check for validity.
+     *                     The path you want to check for validity.
      *
      * @return string|null
-     *    If the path was valid, return <code>null</code>.  Otherwise, returns
-     *    an English string describing the problem.
+     *                     If the path was valid, return <code>null</code>.  Otherwise, returns
+     *                     an English string describing the problem.
      */
-    static function findError($path)
+    public static function findError($path)
     {
         Dropbox_Checker::argString("path", $path);
 
@@ -63,11 +65,17 @@ final class Dropbox_Path
             return "must be valid UTF-8; BMP only, no surrogates, no U+FFFE or U+FFFF";
         }
 
-        if (substr_compare($path, "/", 0, 1) !== 0) return "must start with \"/\"";
+        if (substr_compare($path, "/", 0, 1) !== 0) {
+            return "must start with \"/\"";
+        }
         $l = strlen($path);
-        if ($l === 1) return null;  // Special case for "/"
+        if ($l === 1) {
+            return null;
+        }  // Special case for "/"
 
-        if ($path[$l-1] === "/") return "must not end with \"/\"";
+        if ($path[$l - 1] === "/") {
+            return "must not end with \"/\"";
+        }
 
         // TODO: More checks.
 
@@ -80,15 +88,18 @@ final class Dropbox_Path
      * This is the same as {@link findError} except <code>"/"</code> will yield an error message.
      *
      * @param string $path
-     *    The path you want to check for validity.
+     *                     The path you want to check for validity.
      *
      * @return string|null
-     *    If the path was valid, return <code>null</code>.  Otherwise, returns
-     *    an English string describing the problem.
+     *                     If the path was valid, return <code>null</code>.  Otherwise, returns
+     *                     an English string describing the problem.
      */
-    static function findErrorNonRoot($path)
+    public static function findErrorNonRoot($path)
     {
-        if ($path == "/") return "root path not allowed";
+        if ($path == "/") {
+            return "root path not allowed";
+        }
+
         return self::findError($path);
     }
 
@@ -102,13 +113,13 @@ final class Dropbox_Path
      * </code>
      *
      * @param string $path
-     *    The full path you want to get the last component of.
+     *                     The full path you want to get the last component of.
      *
      * @return null|string
-     *    The last component of <code>$path</code> or <code>null</code> if the given
-     *    <code>$path</code> was <code>"/"<code>.
+     *                     The last component of <code>$path</code> or <code>null</code> if the given
+     *                     <code>$path</code> was <code>"/"<code>.
      */
-    static function getName($path)
+    public static function getName($path)
     {
         Dropbox_Checker::argString("path", $path);
 
@@ -116,40 +127,53 @@ final class Dropbox_Path
             throw new InvalidArgumentException("'path' must start with \"/\"");
         }
         $l = strlen($path);
-        if ($l === 1) return null;
-        if ($path[$l-1] === "/") {
+        if ($l === 1) {
+            return null;
+        }
+        if ($path[$l - 1] === "/") {
             throw new InvalidArgumentException("'path' must not end with \"/\"");
         }
 
         $lastSlash = strrpos($path, "/");
-        return substr($path, $lastSlash+1);
+
+        return substr($path, $lastSlash + 1);
     }
 
     /**
      * @internal
      *
      * @param string $argName
-     * @param mixed $value
+     * @param mixed  $value
+     *
      * @throws InvalidArgumentException
      */
-    static function checkArg($argName, $value)
+    public static function checkArg($argName, $value)
     {
-        if ($value === null) throw new InvalidArgumentException("'$argName' must not be null");
-        if (!is_string($value)) throw new InvalidArgumentException("'$argName' must be a string");
+        if ($value === null) {
+            throw new InvalidArgumentException("'$argName' must not be null");
+        }
+        if (!is_string($value)) {
+            throw new InvalidArgumentException("'$argName' must be a string");
+        }
         $error = self::findError($value);
-        if ($error !== null) throw new InvalidArgumentException("'$argName'': bad path: $error: ".var_export($value, true));
+        if ($error !== null) {
+            throw new InvalidArgumentException("'$argName'': bad path: $error: ".var_export($value, true));
+        }
     }
 
     /**
      * @internal
      *
      * @param string $argName
-     * @param mixed $value
+     * @param mixed  $value
+     *
      * @throws InvalidArgumentException
      */
-    static function checkArgOrNull($argName, $value)
+    public static function checkArgOrNull($argName, $value)
     {
-        if ($value === null) return;
+        if ($value === null) {
+            return;
+        }
         self::checkArg($argName, $value);
     }
 
@@ -157,14 +181,21 @@ final class Dropbox_Path
      * @internal
      *
      * @param string $argName
-     * @param mixed $value
+     * @param mixed  $value
+     *
      * @throws InvalidArgumentException
      */
-    static function checkArgNonRoot($argName, $value)
+    public static function checkArgNonRoot($argName, $value)
     {
-        if ($value === null) throw new InvalidArgumentException("'$argName' must not be null");
-        if (!is_string($value)) throw new InvalidArgumentException("'$argName' must be a string");
+        if ($value === null) {
+            throw new InvalidArgumentException("'$argName' must not be null");
+        }
+        if (!is_string($value)) {
+            throw new InvalidArgumentException("'$argName' must be a string");
+        }
         $error = self::findErrorNonRoot($value);
-        if ($error !== null) throw new InvalidArgumentException("'$argName'': bad path: $error: ".var_export($value, true));
+        if ($error !== null) {
+            throw new InvalidArgumentException("'$argName'': bad path: $error: ".var_export($value, true));
+        }
     }
 }

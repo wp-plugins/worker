@@ -8,7 +8,7 @@ final class Dropbox_Exception_NetworkIO extends Dropbox_Exception
     /**
      * @internal
      */
-    function __construct($message, $cause = null)
+    public function __construct($message, $cause = null)
     {
         parent::__construct($message, $cause);
     }

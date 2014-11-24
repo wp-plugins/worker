@@ -337,14 +337,14 @@ class Symfony_Filesystem_Filesystem
     /**
      * Mirrors a directory to another.
      *
-     * @param string      $originDir   The origin directory
-     * @param string      $targetDir   The target directory
-     * @param Traversable $iterator    A Traversable instance
-     * @param array       $options     An array of boolean options
-     *                                 Valid options are:
-     *                                 - $options['override'] Whether to override an existing file on copy or not (see copy())
-     *                                 - $options['copy_on_windows'] Whether to copy files instead of links on Windows (see symlink())
-     *                                 - $options['delete'] Whether to delete files that are not in the source directory (defaults to false)
+     * @param string      $originDir The origin directory
+     * @param string      $targetDir The target directory
+     * @param Traversable $iterator  A Traversable instance
+     * @param array       $options   An array of boolean options
+     *                               Valid options are:
+     *                               - $options['override'] Whether to override an existing file on copy or not (see copy())
+     *                               - $options['copy_on_windows'] Whether to copy files instead of links on Windows (see symlink())
+     *                               - $options['delete'] Whether to delete files that are not in the source directory (defaults to false)
      *
      * @throws Symfony_Filesystem_Exception_IOException When file type is unknown
      */
@@ -414,11 +414,11 @@ class Symfony_Filesystem_Filesystem
     public function isAbsolutePath($file)
     {
         if (strspn($file, '/\\', 0, 1)
-          || (strlen($file) > 3 && ctype_alpha($file[0])
-            && substr($file, 1, 1) === ':'
-            && (strspn($file, '/\\', 2, 1))
-          )
-          || null !== parse_url($file, PHP_URL_SCHEME)
+            || (strlen($file) > 3 && ctype_alpha($file[0])
+                && substr($file, 1, 1) === ':'
+                && (strspn($file, '/\\', 2, 1))
+            )
+            || null !== parse_url($file, PHP_URL_SCHEME)
         ) {
             return true;
         }
@@ -433,7 +433,7 @@ class Symfony_Filesystem_Filesystem
      * @param string  $content  The data to write into the file.
      * @param integer $mode     The file mode (octal).
      *
-     * @throws Symfony_Filesystem_Exception_IOException       If the file cannot be written to.
+     * @throws Symfony_Filesystem_Exception_IOException If the file cannot be written to.
      */
     public function dumpFile($filename, $content, $mode = 0666)
     {

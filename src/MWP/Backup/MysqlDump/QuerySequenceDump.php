@@ -2,7 +2,6 @@
 
 class MWP_Backup_MysqlDump_QuerySequenceDump extends MWP_Backup_MysqlDump_MysqlDump
 {
-
     /** @var Resource File Pointer */
     protected $file;
 
@@ -33,8 +32,8 @@ class MWP_Backup_MysqlDump_QuerySequenceDump extends MWP_Backup_MysqlDump_MysqlD
         foreach ($tables as $tableName) {
             // Get the SHOW CREATE TABLE part
             $content = $this->getConnection()
-              ->query("SHOW CREATE TABLE `{$tableName}`;", PDO::FETCH_ASSOC)
-              ->fetchAll();
+                ->query("SHOW CREATE TABLE `{$tableName}`;", PDO::FETCH_ASSOC)
+                ->fetchAll();
             if (is_array($content)) {
                 foreach ($content as $entry) {
                     if ($this->getOptions('drop_tables')) {
@@ -52,15 +51,15 @@ class MWP_Backup_MysqlDump_QuerySequenceDump extends MWP_Backup_MysqlDump_MysqlD
                 }
 
                 $columns = $this->getConnection()
-                  ->query("SHOW COLUMNS IN `{$tableName}`;", PDO::FETCH_ASSOC)
-                  ->fetchAll();
+                    ->query("SHOW COLUMNS IN `{$tableName}`;", PDO::FETCH_ASSOC)
+                    ->fetchAll();
 
                 if (is_array($columns)) {
                     $columns = $this->repack($columns, 'Field');
                 }
 
                 $allData = $this->getConnection()
-                  ->query($this->selectAllDataQuery($tableName, $columns), PDO::FETCH_ASSOC);
+                    ->query($this->selectAllDataQuery($tableName, $columns), PDO::FETCH_ASSOC);
 
                 // Go through row by row
                 if (!$this->getOptions('skip_lock_tables')) {
@@ -76,7 +75,6 @@ class MWP_Backup_MysqlDump_QuerySequenceDump extends MWP_Backup_MysqlDump_MysqlD
                 if (!$this->getOptions('skip_lock_tables')) {
                     $writer->writeLine("UNLOCK TABLES;");
                 }
-
             }
         }
 
@@ -102,8 +100,8 @@ class MWP_Backup_MysqlDump_QuerySequenceDump extends MWP_Backup_MysqlDump_MysqlD
      * @return array
      */
     protected function repack(
-      array $array,
-      $column
+        array $array,
+        $column
     ) {
         $repacked = array();
         foreach ($array as $element) {
@@ -122,8 +120,8 @@ class MWP_Backup_MysqlDump_QuerySequenceDump extends MWP_Backup_MysqlDump_MysqlD
      * @return string
      */
     protected function selectAllDataQuery(
-      $tableName,
-      $columnData
+        $tableName,
+        $columnData
     ) {
         $columns = array();
         foreach ($columnData as $columnName => $metadata) {
@@ -150,9 +148,9 @@ class MWP_Backup_MysqlDump_QuerySequenceDump extends MWP_Backup_MysqlDump_MysqlD
      * @return string
      */
     protected function createRowInsertStatement(
-      $tableName,
-      array $row,
-      array $columns = array()
+        $tableName,
+        array $row,
+        array $columns = array()
     ) {
         $values = $this->createRowInsertValues($row, $columns);
         $joined = join(', ', $values);
@@ -171,10 +169,10 @@ class MWP_Backup_MysqlDump_QuerySequenceDump extends MWP_Backup_MysqlDump_MysqlD
             if ($value === null) {
                 $values[] = 'null';
             } elseif (strpos($type, 'int') !== false
-              || strpos($type, 'float') !== false
-              || strpos($type, 'double') !== false
-              || strpos($type, 'decimal') !== false
-              || strpos($type, 'bool') !== false
+                || strpos($type, 'float') !== false
+                || strpos($type, 'double') !== false
+                || strpos($type, 'decimal') !== false
+                || strpos($type, 'bool') !== false
             ) {
                 $values[] = $value;
             } elseif (strpos($type, 'blob') !== false) {

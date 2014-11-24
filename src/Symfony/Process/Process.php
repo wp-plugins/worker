@@ -307,7 +307,7 @@ class Symfony_Process_Process
         do {
             $this->checkTimeout();
             $running = Symfony_Process_ProcessUtils::isWindows() ? $this->isRunning() : $this->processPipes->hasOpenHandles();
-            $close   = !Symfony_Process_ProcessUtils::isWindows() || !$running;;
+            $close   = !Symfony_Process_ProcessUtils::isWindows() || !$running;
             $this->readPipes(true, $close);
         } while ($running);
 

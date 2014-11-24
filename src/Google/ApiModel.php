@@ -25,7 +25,7 @@
  */
 class Google_ApiModel implements ArrayAccess
 {
-    protected $data = array();
+    protected $data      = array();
     protected $processed = array();
 
     /**
@@ -56,16 +56,16 @@ class Google_ApiModel implements ArrayAccess
                 if (isset($this->$keyDataType) && 'map' == $this->$keyDataType) {
                     foreach ($val as $arrayKey => $arrayItem) {
                         $this->data[$key][$arrayKey] =
-                          $this->createObjectFromName($keyTypeName, $arrayItem);
+                            $this->createObjectFromName($keyTypeName, $arrayItem);
                     }
                 } else {
                     $this->data[$key] = $this->createObjectFromName($keyTypeName, $val);
                 }
-            } else if (is_array($val)) {
+            } elseif (is_array($val)) {
                 $arrayObject = array();
                 foreach ($val as $arrayIndex => $arrayItem) {
                     $arrayObject[$arrayIndex] =
-                      $this->createObjectFromName($keyTypeName, $arrayItem);
+                        $this->createObjectFromName($keyTypeName, $arrayItem);
                 }
                 $this->data[$key] = $arrayObject;
             }
@@ -79,14 +79,16 @@ class Google_ApiModel implements ArrayAccess
      * Initialize this object's properties from an array.
      *
      * @param array $array Used to seed this object's properties.
+     *
      * @return void
      */
     protected function mapTypes($array)
     {
         // Hard initilise simple types, lazy load more complex ones.
         foreach ($array as $key => $val) {
-            if ( !property_exists($this, $this->keyType($key)) &&
-              property_exists($this, $key)) {
+            if (!property_exists($this, $this->keyType($key)) &&
+                property_exists($this, $key)
+            ) {
                 $this->$key = $val;
                 unset($array[$key]);
             } elseif (property_exists($this, $camelKey = Google_ApiUtils::camelCase($key))) {
@@ -118,9 +120,9 @@ class Google_ApiModel implements ArrayAccess
 
         // Process all public properties.
         $reflect = new ReflectionObject($this);
-        $props = $reflect->getProperties(ReflectionProperty::IS_PUBLIC);
+        $props   = $reflect->getProperties(ReflectionProperty::IS_PUBLIC);
         foreach ($props as $member) {
-            $name = $member->getName();
+            $name   = $member->getName();
             $result = $this->getSimpleValue($this->$name);
             if ($result != null) {
                 $object->$name = $result;
@@ -138,7 +140,7 @@ class Google_ApiModel implements ArrayAccess
     {
         if ($value instanceof Google_ApiModel) {
             return $value->toSimpleObject();
-        } else if (is_array($value)) {
+        } elseif (is_array($value)) {
             $return = array();
             foreach ($value as $key => $a_value) {
                 $a_value = $this->getSimpleValue($a_value);
@@ -146,14 +148,18 @@ class Google_ApiModel implements ArrayAccess
                     $return[$key] = $a_value;
                 }
             }
+
             return $return;
         }
+
         return $value;
     }
 
     /**
      * Returns true only if the array is associative.
+     *
      * @param array $array
+     *
      * @return bool True if the array is associative.
      */
     protected function isAssociativeArray($array)
@@ -167,6 +173,7 @@ class Google_ApiModel implements ArrayAccess
                 return true;
             }
         }
+
         return false;
     }
 
@@ -175,25 +182,28 @@ class Google_ApiModel implements ArrayAccess
      *
      * @param $name
      * @param $item
+     *
      * @return object The object from the item.
      */
     private function createObjectFromName($name, $item)
     {
         $type = $this->$name;
+
         return new $type($item);
     }
 
     /**
      * Verify if $obj is an array.
      * @throws Google_ApiException Thrown if $obj isn't an array.
-     * @param array $obj Items that should be validated.
+     *
+     * @param array  $obj    Items that should be validated.
      * @param string $method Method expecting an array as an argument.
      */
     public function assertIsArray($obj, $method)
     {
         if ($obj && !is_array($obj)) {
             throw new Google_ApiException(
-              "Incorrect parameter type passed to $method(). Expected an array."
+                "Incorrect parameter type passed to $method(). Expected an array."
             );
         }
     }
@@ -206,8 +216,8 @@ class Google_ApiModel implements ArrayAccess
     public function offsetGet($offset)
     {
         return isset($this->$offset) ?
-          $this->$offset :
-          $this->__get($offset);
+            $this->$offset :
+            $this->__get($offset);
     }
 
     public function offsetSet($offset, $value)
@@ -215,7 +225,7 @@ class Google_ApiModel implements ArrayAccess
         if (property_exists($this, $offset)) {
             $this->$offset = $value;
         } else {
-            $this->data[$offset] = $value;
+            $this->data[$offset]      = $value;
             $this->processed[$offset] = true;
         }
     }
@@ -227,12 +237,12 @@ class Google_ApiModel implements ArrayAccess
 
     protected function keyType($key)
     {
-        return $key . "Type";
+        return $key."Type";
     }
 
     protected function dataType($key)
     {
-        return $key . "DataType";
+        return $key."DataType";
     }
 
     public function __isset($key)

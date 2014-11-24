@@ -10,7 +10,10 @@ class Dropbox_AuthBase
      *
      * @return Dropbox_AppInfo
      */
-    function getAppInfo() { return $this->appInfo; }
+    public function getAppInfo()
+    {
+        return $this->appInfo;
+    }
 
     /** @var Dropbox_AppInfo */
     protected $appInfo;
@@ -34,7 +37,10 @@ class Dropbox_AuthBase
      *
      * @return string
      */
-    function getClientIdentifier() { return $this->clientIdentifier; }
+    public function getClientIdentifier()
+    {
+        return $this->clientIdentifier;
+    }
 
     /** @var string */
     protected $clientIdentifier;
@@ -46,7 +52,10 @@ class Dropbox_AuthBase
      *
      * @return null|string
      */
-    function getUserLocale() { return $this->userLocale; }
+    public function getUserLocale()
+    {
+        return $this->userLocale;
+    }
 
     /** @var string */
     protected $userLocale;
@@ -55,20 +64,20 @@ class Dropbox_AuthBase
      * Constructor.
      *
      * @param Dropbox_AppInfo $appInfo
-     *     See {@link getAppInfo()}
-     * @param string $clientIdentifier
-     *     See {@link getClientIdentifier()}
-     * @param null|string $userLocale
-     *     See {@link getUserLocale()}
+     *                                          See {@link getAppInfo()}
+     * @param string          $clientIdentifier
+     *                                          See {@link getClientIdentifier()}
+     * @param null|string     $userLocale
+     *                                          See {@link getUserLocale()}
      */
-    function __construct($appInfo, $clientIdentifier, $userLocale = null)
+    public function __construct($appInfo, $clientIdentifier, $userLocale = null)
     {
         Dropbox_AppInfo::checkArg("appInfo", $appInfo);
         Dropbox_Client::checkClientIdentifierArg("clientIdentifier", $clientIdentifier);
         Dropbox_Checker::argStringNonEmptyOrNull("userLocale", $userLocale);
 
-        $this->appInfo = $appInfo;
+        $this->appInfo          = $appInfo;
         $this->clientIdentifier = $clientIdentifier;
-        $this->userLocale = $userLocale;
+        $this->userLocale       = $userLocale;
     }
 }

@@ -64,16 +64,16 @@ class MMB_Backup extends MMB_Core
         51 => 'The end of the ZIP archive was encountered prematurely.',
         80 => 'The user aborted unzip prematurely.',
         81 => 'Testing or extraction of one or more files failed due to unsupported compression methods or unsupported decryption.',
-        82 => 'No files were found due to bad decryption password(s)'
+        82 => 'No files were found due to bad decryption password(s)',
     );
 
     /**
      * Initializes site_name, statuses, and tasks attributes.
      */
-    function __construct()
+    public function __construct()
     {
         parent::__construct();
-        $this->site_name = str_replace(array("_", "/", "~", ":",), array("", "-", "-", "-",), rtrim($this->remove_http(get_bloginfo('url')), "/"));
+        $this->site_name = str_replace(array("_", "/", "~", ":"), array("", "-", "-", "-"), rtrim($this->remove_http(get_bloginfo('url')), "/"));
         $this->statuses  = array(
             'db_dump'      => 1,
             'db_zip'       => 2,
@@ -84,7 +84,7 @@ class MMB_Backup extends MMB_Core
             'email'        => 7,
             'google_drive' => 8,
             'sftp'         => 9,
-            'finished'     => 100
+            'finished'     => 100,
         );
 
         $this->w3tc_flush();
@@ -95,9 +95,9 @@ class MMB_Backup extends MMB_Core
     /**
      * Tries to increase memory limit to 384M and execution time to 600s.
      *
-     * @return    array    an array with two keys for execution time and memory limit (0 - if not changed, 1 - if succesfully)
+     * @return array an array with two keys for execution time and memory limit (0 - if not changed, 1 - if succesfully)
      */
-    function set_memory()
+    public function set_memory()
     {
         $changed = array('execution_time' => 0, 'memory_limit' => 0);
         ignore_user_abort(true);
@@ -130,9 +130,9 @@ class MMB_Backup extends MMB_Core
     /**
      * Returns backup settings from local database for all tasks
      *
-     * @return    mixed|boolean
+     * @return mixed|boolean
      */
-    function get_backup_settings()
+    public function get_backup_settings()
     {
         $backup_settings = get_option('mwp_backup_tasks');
 
@@ -146,15 +146,14 @@ class MMB_Backup extends MMB_Core
     /**
      * Sets backup task defined from master, if task name is "Backup Now" this function fires processing backup.
      *
-     * @param    mixed $params parameters sent from master
+     * @param mixed $params parameters sent from master
      *
-     * @return    mixed|boolean    $this->tasks variable if success, array with error message if error has ocurred, false if $params are empty
+     * @return mixed|boolean $this->tasks variable if success, array with error message if error has ocurred, false if $params are empty
      */
-    function set_backup_task($params)
+    public function set_backup_task($params)
     {
         //$params => [$task_name, $args, $error]
         if (!empty($params)) {
-
             //Make sure backup cron job is set
             /*if (!wp_next_scheduled('mwp_backup_tasks')) {
                 wp_schedule_event(time(), 'tenminutes', 'mwp_backup_tasks');
@@ -171,7 +170,7 @@ class MMB_Backup extends MMB_Core
             if (isset($args['remove'])) {
                 unset($before[$task_name]);
                 $return = array(
-                    'removed' => true
+                    'removed' => true,
                 );
             } else {
                 if (isset($params['account_info']) && is_array($params['account_info'])) { //only if sends from master first time(secure data)
@@ -228,7 +227,7 @@ class MMB_Backup extends MMB_Core
      * @deprecated deprecated since version 3.9.29
      * @return void
      */
-    function check_backup_tasks()
+    public function check_backup_tasks()
     {
         $this->check_cron_remove();
 
@@ -244,7 +243,7 @@ class MMB_Backup extends MMB_Core
                             'task_name'      => $task_name,
                             'task_id'        => $setting['task_args']['task_id'],
                             'site_key'       => $setting['task_args']['site_key'],
-                            'worker_version' => $GLOBALS['MMB_WORKER_VERSION']
+                            'worker_version' => $GLOBALS['MMB_WORKER_VERSION'],
                         );
 
                         if (isset($setting['task_args']['account_info']['mwp_google_drive']['google_drive_token'])) {
@@ -275,12 +274,11 @@ class MMB_Backup extends MMB_Core
                                 $setting['task_args']['account_info']['mwp_google_drive']['google_drive_token']                 = $potential_token;
                             }
                         }
-
                     }
 
                     $update = array(
                         'task_name' => $task_name,
-                        'args'      => $settings[$task_name]['task_args']
+                        'args'      => $settings[$task_name]['task_args'],
                     );
 
                     if ($check != 'paused') {
@@ -294,7 +292,6 @@ class MMB_Backup extends MMB_Core
                         continue;
                     }
 
-
                     $result = $this->backup($setting['task_args'], $task_name);
                     $error  = '';
 
@@ -304,7 +301,7 @@ class MMB_Backup extends MMB_Core
                             array(
                                 'task_name' => $task_name,
                                 'args'      => $settings[$task_name]['task_args'],
-                                'error'     => $error
+                                'error'     => $error,
                             ));
                     } else {
                         if (@count($setting['task_args']['account_info'])) {
@@ -316,18 +313,17 @@ class MMB_Backup extends MMB_Core
                 }
             }
         }
-
     }
 
     /**
      * Runs backup task invoked from ManageWP master.
      *
-     * @param string $task_name name of backup task
-     * @param string|bool[optional]    $google_drive_token    false if backup destination is not Google Drive, json of Google Drive token if it is remote destination (default: false)
+     * @param string                $task_name          name of backup task
+     * @param string|bool[optional] $google_drive_token false if backup destination is not Google Drive, json of Google Drive token if it is remote destination (default: false)
      *
-     * @return mixed                                        array with backup statistics if successful, array with error message if not
+     * @return mixed array with backup statistics if successful, array with error message if not
      */
-    function task_now($task_name, $google_drive_token = false)
+    public function task_now($task_name, $google_drive_token = false)
     {
         if ($google_drive_token) {
             $this->tasks[$task_name]['task_args']['account_info']['mwp_google_drive']['google_drive_token'] = $google_drive_token;
@@ -343,7 +339,7 @@ class MMB_Backup extends MMB_Core
         $this->set_backup_task(array(
             'task_name' => $task_name,
             'args'      => $settings[$task_name]['task_args'],
-            'time'      => time()
+            'time'      => time(),
         ));
 
         //Run backup
@@ -354,7 +350,7 @@ class MMB_Backup extends MMB_Core
             $this->set_backup_task(array(
                 'task_name' => $task_name,
                 'args'      => $settings[$task_name]['task_args'],
-                'error'     => $result['error']
+                'error'     => $result['error'],
             ));
 
             return $result;
@@ -367,17 +363,17 @@ class MMB_Backup extends MMB_Core
      * Backup a full wordpress instance, including a database dump, which is placed in mwp_db dir in root folder.
      * All backups are compressed by zip and placed in wp-content/managewp/backups folder.
      *
-     * @param    string $args arguments passed from master
-     *                        [type] -> db, full
-     *                        [what] -> daily, weekly, monthly
-     *                        [account_info] -> remote destinations ftp, amazons3, dropbox, google_drive, email with their parameters
-     *                        [include] -> array of folders from site root which are included to backup (wp-admin, wp-content, wp-includes are default)
-     *                        [exclude] -> array of files of folders to exclude, relative to site's root
-     * @param    bool|string[optional]    $task_name        the name of backup task, which backup is done (default: false)
+     * @param string                $args      arguments passed from master
+     *                                         [type] -> db, full
+     *                                         [what] -> daily, weekly, monthly
+     *                                         [account_info] -> remote destinations ftp, amazons3, dropbox, google_drive, email with their parameters
+     *                                         [include] -> array of folders from site root which are included to backup (wp-admin, wp-content, wp-includes are default)
+     *                                         [exclude] -> array of files of folders to exclude, relative to site's root
+     * @param bool|string[optional] $task_name the name of backup task, which backup is done (default: false)
      *
-     * @return    bool|array                                false if $args are missing, array with error if error has occured, ture if is successful
+     * @return bool|array false if $args are missing, array with error if error has occured, ture if is successful
      */
-    function backup($args, $task_name = false)
+    public function backup($args, $task_name = false)
     {
         if (!$args || empty($args)) {
             return false;
@@ -395,7 +391,7 @@ class MMB_Backup extends MMB_Core
                 $error_message = 'Remote destination is not supported, please update your client plugin.';
 
                 return array(
-                    'error' => $error_message
+                    'error' => $error_message,
                 );
             }
         }
@@ -416,7 +412,7 @@ class MMB_Backup extends MMB_Core
         if (!file_exists($new_file_path)) {
             if (!mkdir($new_file_path, 0755, true)) {
                 return array(
-                    'error' => 'Permission denied, make sure you have write permissions to the wp-content folder.'
+                    'error' => 'Permission denied, make sure you have write permissions to the wp-content folder.',
                 );
             }
         }
@@ -443,7 +439,7 @@ class MMB_Backup extends MMB_Core
                 $error_message = $db_backup['error'];
 
                 return array(
-                    'error' => $error_message
+                    'error' => $error_message,
                 );
             }
         } elseif (trim($what) == 'full') {
@@ -458,7 +454,7 @@ class MMB_Backup extends MMB_Core
                 $error_message = $content_backup['error'];
 
                 return array(
-                    'error' => $error_message
+                    'error' => $error_message,
                 );
             }
         }
@@ -484,12 +480,12 @@ class MMB_Backup extends MMB_Core
             if ($task_name != 'Backup Now') {
                 $paths['server'] = array(
                     'file_path' => $backup_file,
-                    'file_url'  => $backup_url
+                    'file_url'  => $backup_url,
                 );
             } else {
                 $paths['server'] = array(
                     'file_path' => $backup_file,
-                    'file_url'  => $backup_url
+                    'file_url'  => $backup_url,
                 );
             }
 
@@ -523,7 +519,6 @@ class MMB_Backup extends MMB_Core
             if ($task_name != 'Backup Now') {
                 $paths['status']        = $temp[count($temp) - 1]['status'];
                 $temp[count($temp) - 1] = $paths;
-
             } else {
                 $temp[count($temp)] = $paths;
             }
@@ -545,26 +540,26 @@ class MMB_Backup extends MMB_Core
      * Backup a full wordpress instance, including a database dump, which is placed in mwp_db dir in root folder.
      * All backups are compressed by zip and placed in wp-content/managewp/backups folder.
      *
-     * @param    string $task_name   the name of backup task, which backup is done
-     * @param    string $backup_file relative path to file which backup is stored
-     * @param           array        [optional]    $exclude        the list of files and folders, which are excluded from backup (default: array())
-     * @param           array        [optional]    $include        the list of folders in wordpress root which are included to backup, expect wp-admin, wp-content, wp-includes, which are default (default: array())
+     * @param string                  $task_name   the name of backup task, which backup is done
+     * @param string                  $backup_file relative path to file which backup is stored
+     * @param array        [optional] $exclude     the list of files and folders, which are excluded from backup (default: array())
+     * @param array        [optional] $include     the list of folders in wordpress root which are included to backup, expect wp-admin, wp-content, wp-includes, which are default (default: array())
      *
-     * @return    bool|array                        true if backup is successful, or an array with error message if is failed
+     * @return bool|array true if backup is successful, or an array with error message if is failed
      */
-    function backup_full($task_name, $backup_file, $exclude = array(), $include = array())
+    public function backup_full($task_name, $backup_file, $exclude = array(), $include = array())
     {
         $this->update_status($task_name, $this->statuses['db_dump']);
         $db_result = $this->backup_db();
 
         if ($db_result == false) {
             return array(
-                'error' => 'Failed to backup database.'
+                'error' => 'Failed to backup database.',
             );
         } else {
             if (is_array($db_result) && isset($db_result['error'])) {
                 return array(
-                    'error' => $db_result['error']
+                    'error' => $db_result['error'],
                 );
             }
         }
@@ -596,7 +591,7 @@ class MMB_Backup extends MMB_Core
                     }
 
                     return array(
-                        'error' => 'Failed to zip database. '.$archive->error_code.$archive->error_string
+                        'error' => 'Failed to zip database. '.$archive->error_code.$archive->error_string,
                     );
                 }
             }
@@ -607,7 +602,7 @@ class MMB_Backup extends MMB_Core
         @unlink($db_result);
         @rmdir(MWP_DB_DIR);
 
-        $remove  = array(
+        $remove = array(
             trim(basename(WP_CONTENT_DIR))."/managewp/backups",
             trim(basename(WP_CONTENT_DIR))."/infinitewp/backups",
             trim(basename(WP_CONTENT_DIR))."/".md5('mmb-worker')."/mwp_backups",
@@ -656,7 +651,7 @@ class MMB_Backup extends MMB_Core
                         @unlink($backup_file);
 
                         return array(
-                            'error' => 'Failed to zip files. pclZip error ('.$archive->error_code.'): .'.$archive->error_string
+                            'error' => 'Failed to zip files. pclZip error ('.$archive->error_code.'): .'.$archive->error_string,
                         );
                     }
                 }
@@ -681,7 +676,7 @@ class MMB_Backup extends MMB_Core
      * @todo report errors back to the user
      * @todo report error if DB dump is not found
      */
-    function zip_backup_db($taskName, $backupFile)
+    public function zip_backup_db($taskName, $backupFile)
     {
         $disableCompression = $this->tasks[$taskName]['task_args']['disable_comp'];
 
@@ -693,10 +688,10 @@ class MMB_Backup extends MMB_Core
             ->setWorkingDirectory(untrailingslashit(MWP_BACKUP_DIR))
             ->setTimeout(3600)
             ->setPrefix($zip)
-            ->add('-q') // quiet operation
-            ->add('-r') // recurse paths, include files in subdirs:  zip -r a path path ...
+            ->add('-q')// quiet operation
+            ->add('-r')// recurse paths, include files in subdirs:  zip -r a path path ...
             ->add($compressionLevel)
-            ->add($backupFile) // zipfile to write to
+            ->add($backupFile)// zipfile to write to
             ->add('mwp_db') // file/directory list
         ;
 
@@ -739,13 +734,13 @@ class MMB_Backup extends MMB_Core
     /**
      * Zipping database dump and index.php in folder mwp_db by ZipArchive class, requires php zip extension.
      *
-     * @param    string $task_name   the name of backup task
-     * @param    string $db_result   relative path to database dump file
-     * @param    string $backup_file absolute path to zip file
+     * @param string $task_name   the name of backup task
+     * @param string $db_result   relative path to database dump file
+     * @param string $backup_file absolute path to zip file
      *
-     * @return    bool                    is compress successful or not
+     * @return bool is compress successful or not
      */
-    function zip_archive_backup_db($task_name, $db_result, $backup_file)
+    public function zip_archive_backup_db($task_name, $db_result, $backup_file)
     {
         $disable_comp = $this->tasks[$task_name]['task_args']['disable_comp'];
         $zip          = new ZipArchive();
@@ -769,12 +764,12 @@ class MMB_Backup extends MMB_Core
     /**
      * Zipping database dump and index.php in folder mwp_db by PclZip library.
      *
-     * @param    string $task_name   the name of backup task
-     * @param    string $backup_file absolute path to zip file
+     * @param string $task_name   the name of backup task
+     * @param string $backup_file absolute path to zip file
      *
-     * @return    bool                    is compress successful or not
+     * @return bool is compress successful or not
      */
-    function pclzip_backup_db($task_name, $backup_file)
+    public function pclzip_backup_db($task_name, $backup_file)
     {
         $disable_comp = $this->tasks[$task_name]['task_args']['disable_comp'];
         define('PCLZIP_TEMPORARY_DIR', MWP_BACKUP_DIR.'/');
@@ -794,14 +789,14 @@ class MMB_Backup extends MMB_Core
      * Zipping whole site root folder and append to backup file with database dump
      * by system zip command, requires zip installed on OS.
      *
-     * @param    string $task_name  the name of backup task
-     * @param    string $backupFile absolute path to zip file
-     * @param    array  $exclude    array of files of folders to exclude, relative to site's root
-     * @param    array  $include    array of folders from site root which are included to backup (wp-admin, wp-content, wp-includes are default)
+     * @param string $task_name  the name of backup task
+     * @param string $backupFile absolute path to zip file
+     * @param array  $exclude    array of files of folders to exclude, relative to site's root
+     * @param array  $include    array of folders from site root which are included to backup (wp-admin, wp-content, wp-includes are default)
      *
-     * @return    array|bool                true if successful or an array with error message if not
+     * @return array|bool true if successful or an array with error message if not
      */
-    function zip_backup($task_name, $backupFile, $exclude, $include)
+    public function zip_backup($task_name, $backupFile, $exclude, $include)
     {
         $compressionLevel = $this->tasks[$task_name]['task_args']['disable_comp'] ? 0 : 1;
 
@@ -990,14 +985,14 @@ class MMB_Backup extends MMB_Core
      * Zipping whole site root folder and append to backup file with database dump
      * by ZipArchive class, requires php zip extension.
      *
-     * @param    string $task_name   the name of backup task
-     * @param    string $backup_file absolute path to zip file
-     * @param    array  $exclude     array of files of folders to exclude, relative to site's root
-     * @param    array  $include     array of folders from site root which are included to backup (wp-admin, wp-content, wp-includes are default)
+     * @param string $task_name   the name of backup task
+     * @param string $backup_file absolute path to zip file
+     * @param array  $exclude     array of files of folders to exclude, relative to site's root
+     * @param array  $include     array of folders from site root which are included to backup (wp-admin, wp-content, wp-includes are default)
      *
-     * @return    array|bool                true if successful or an array with error message if not
+     * @return array|bool true if successful or an array with error message if not
      */
-    function zip_archive_backup($task_name, $backup_file, $exclude, $include, $overwrite = false)
+    public function zip_archive_backup($task_name, $backup_file, $exclude, $include, $overwrite = false)
     {
         $filelist     = $this->get_backup_files($exclude, $include);
         $disable_comp = $this->tasks[$task_name]['task_args']['disable_comp'];
@@ -1033,14 +1028,14 @@ class MMB_Backup extends MMB_Core
      * Zipping whole site root folder and append to backup file with database dump
      * by PclZip library.
      *
-     * @param    string $task_name   the name of backup task
-     * @param    string $backup_file absolute path to zip file
-     * @param    array  $exclude     array of files of folders to exclude, relative to site's root
-     * @param    array  $include     array of folders from site root which are included to backup (wp-admin, wp-content, wp-includes are default)
+     * @param string $task_name   the name of backup task
+     * @param string $backup_file absolute path to zip file
+     * @param array  $exclude     array of files of folders to exclude, relative to site's root
+     * @param array  $include     array of folders from site root which are included to backup (wp-admin, wp-content, wp-includes are default)
      *
-     * @return    array|bool                true if successful or an array with error message if not
+     * @return array|bool true if successful or an array with error message if not
      */
-    function pclzip_backup($task_name, $backup_file, $exclude, $include)
+    public function pclzip_backup($task_name, $backup_file, $exclude, $include)
     {
         define('PCLZIP_TEMPORARY_DIR', MWP_BACKUP_DIR.'/');
         require_once ABSPATH.'/wp-admin/includes/class-pclzip.php';
@@ -1048,7 +1043,7 @@ class MMB_Backup extends MMB_Core
         $add = array(
             trim(WPINC),
             trim(basename(WP_CONTENT_DIR)),
-            'wp-admin'
+            'wp-admin',
         );
 
         if (!file_exists(ABSPATH.'wp-config.php')
@@ -1113,17 +1108,17 @@ class MMB_Backup extends MMB_Core
      * By default, there are all files from root folder, all files from folders wp-admin, wp-content, wp-includes recursively.
      * Parameter $include adds other folders from site root, and excludes any file or folder by relative path to site's root.
      *
-     * @param    array $exclude array of files of folders to exclude, relative to site's root
-     * @param    array $include array of folders from site root which are included to backup (wp-admin, wp-content, wp-includes are default)
+     * @param array $exclude array of files of folders to exclude, relative to site's root
+     * @param array $include array of folders from site root which are included to backup (wp-admin, wp-content, wp-includes are default)
      *
-     * @return    array                array with all files in site root dir
+     * @return array array with all files in site root dir
      */
-    function get_backup_files($exclude, $include)
+    public function get_backup_files($exclude, $include)
     {
         $add = array(
             trim(WPINC),
             trim(basename(WP_CONTENT_DIR)),
-            "wp-admin"
+            "wp-admin",
         );
 
         $include = array_merge($add, $include);
@@ -1168,24 +1163,24 @@ class MMB_Backup extends MMB_Core
      * Backup a database dump of WordPress site.
      * All backups are compressed by zip and placed in wp-content/managewp/backups folder.
      *
-     * @param    string $task_name   the name of backup task, which backup is done
-     * @param    string $backup_file relative path to file which backup is stored
+     * @param string $task_name   the name of backup task, which backup is done
+     * @param string $backup_file relative path to file which backup is stored
      *
-     * @return    bool|array                        true if backup is successful, or an array with error message if is failed
+     * @return bool|array true if backup is successful, or an array with error message if is failed
      */
-    function backup_db_compress($task_name, $backup_file)
+    public function backup_db_compress($task_name, $backup_file)
     {
         $this->update_status($task_name, $this->statuses['db_dump']);
         $db_result = $this->backup_db();
 
         if ($db_result == false) {
             return array(
-                'error' => 'Failed to backup database.'
+                'error' => 'Failed to backup database.',
             );
         } else {
             if (is_array($db_result) && isset($db_result['error'])) {
                 return array(
-                    'error' => $db_result['error']
+                    'error' => $db_result['error'],
                 );
             }
         }
@@ -1211,7 +1206,7 @@ class MMB_Backup extends MMB_Core
                     @rmdir(MWP_DB_DIR);
 
                     return array(
-                        'error' => 'Failed to zip database. pclZip error ('.$archive->error_code.'): .'.$archive->error_string
+                        'error' => 'Failed to zip database. pclZip error ('.$archive->error_code.'): .'.$archive->error_string,
                     );
                 }
             }
@@ -1230,15 +1225,15 @@ class MMB_Backup extends MMB_Core
      * Creates database dump and places it in mwp_db folder in site's root.
      * This function dispatches if OS mysql command does not work calls a php alternative.
      *
-     * @return    string|array    path to dump file if successful, or an array with error message if is failed
+     * @return string|array path to dump file if successful, or an array with error message if is failed
      */
-    function backup_db()
+    public function backup_db()
     {
         $db_folder = MWP_DB_DIR.'/';
         if (!file_exists($db_folder)) {
             if (!mkdir($db_folder, 0755, true)) {
                 return array(
-                    'error' => 'Error creating database backup folder ('.$db_folder.'). Make sure you have correct write permissions.'
+                    'error' => 'Error creating database backup folder ('.$db_folder.'). Make sure you have correct write permissions.',
                 );
             }
         }
@@ -1248,7 +1243,7 @@ class MMB_Backup extends MMB_Core
         return $result;
     }
 
-    function file_get_size($file)
+    public function file_get_size($file)
     {
         if (!extension_loaded('bcmath')) {
             return filesize($file);
@@ -1298,7 +1293,7 @@ class MMB_Backup extends MMB_Core
      *
      * @return string|array path to dump file if successful, or an array with error message if is failed
      */
-    function backup_db_dump($file)
+    public function backup_db_dump($file)
     {
         $mysqldump = mwp_container()->getExecutableFinder()->find('mysqldump', 'mysqldump');
 
@@ -1306,11 +1301,11 @@ class MMB_Backup extends MMB_Core
             ->setWorkingDirectory(untrailingslashit(ABSPATH))
             ->setTimeout(3600)
             ->setPrefix($mysqldump)
-            ->add('--force') // Continue even if we get an SQL error.
-            ->add('--user='.DB_USER) // User for login if not current user.
-            ->add('--password='.DB_PASSWORD) //  Password to use when connecting to server. If password is not given it's solicited on the tty.
-            ->add('--add-drop-table') // Add a DROP TABLE before each create.
-            ->add('--lock-tables=false') // Don't lock all tables for read.
+            ->add('--force')// Continue even if we get an SQL error.
+            ->add('--user='.DB_USER)// User for login if not current user.
+            ->add('--password='.DB_PASSWORD)//  Password to use when connecting to server. If password is not given it's solicited on the tty.
+            ->add('--add-drop-table')// Add a DROP TABLE before each create.
+            ->add('--lock-tables=false')// Don't lock all tables for read.
             ->add(DB_NAME)
             ->add('--result-file='.$file);
 
@@ -1331,7 +1326,7 @@ class MMB_Backup extends MMB_Core
             $processBuilder->add('--socket='.$host);
         } else {
             $processBuilder->add('--host='.$host);
-            if(!empty($port)){
+            if (!empty($port)) {
                 $processBuilder->add('--port='.$port);
             }
         }
@@ -1402,7 +1397,6 @@ class MMB_Backup extends MMB_Core
             }
         }
 
-
         if (filesize($file) === 0) {
             unlink($file);
             mwp_logger()->error('Database dumping process failed with unknown reason', array(
@@ -1424,11 +1418,11 @@ class MMB_Backup extends MMB_Core
     /**
      * Creates database dump by php functions.
      *
-     * @param    string $file absolute path to file in which dump should be placed
+     * @param string $file absolute path to file in which dump should be placed
      *
-     * @return    string|array    path to dump file if successful, or an array with error message if is failed
+     * @return string|array path to dump file if successful, or an array with error message if is failed
      */
-    function backup_db_php($file)
+    public function backup_db_php($file)
     {
         global $wpdb;
         $tables = $wpdb->get_results('SHOW TABLES', ARRAY_N);
@@ -1483,14 +1477,14 @@ class MMB_Backup extends MMB_Core
             @unlink($file);
 
             return array(
-                'error' => 'Database backup failed. Try to enable MySQL dump on your server.'
+                'error' => 'Database backup failed. Try to enable MySQL dump on your server.',
             );
         }
 
         return $file;
     }
 
-    function restore($params)
+    public function restore($params)
     {
         global $wpdb;
         if (empty($params)) {
@@ -1533,7 +1527,7 @@ class MMB_Backup extends MMB_Core
             $unzipFailed = true;
         }
 
-        if($unzipFailed &&  class_exists("ZipArchive")){
+        if ($unzipFailed && class_exists("ZipArchive")) {
             $unzipFailed = false;
             try {
                 $this->unzipWithZipArchive($backupFile);
@@ -1594,20 +1588,20 @@ class MMB_Backup extends MMB_Core
 
         // Try to fetch old home and site url, as well as new ones for usage later in database updates
         // Take fresh options
-        $homeOpt = $wpdb->get_row($wpdb->prepare("SELECT option_value FROM $wpdb->options WHERE option_name = %s LIMIT 1", 'home'));
+        $homeOpt    = $wpdb->get_row($wpdb->prepare("SELECT option_value FROM $wpdb->options WHERE option_name = %s LIMIT 1", 'home'));
         $siteUrlOpt = $wpdb->get_row($wpdb->prepare("SELECT option_value FROM $wpdb->options WHERE option_name = %s LIMIT 1", 'siteurl'));
         global $restoreParams;
-        $restoreParams = array (
-            'oldUrl'     => is_object($homeOpt) ? $homeOpt->option_value : null,
+        $restoreParams = array(
+            'oldUrl'      => is_object($homeOpt) ? $homeOpt->option_value : null,
             'oldSiteUrl'  => is_object($siteUrlOpt) ? $siteUrlOpt->option_value : null,
             'tablePrefix' => $this->get_table_prefix(),
-            'newUrl'      => ''
+            'newUrl'      => '',
         );
 
         /* Replace options and content urls */
         $this->replaceOptionsAndUrls($params['overwrite'], $params['new_user'], $params['new_password'], $params['old_user'], $params['clone_from_url'], $params['admin_email'], $params['mwp_clone'], $oldCredentialsAndOptions, $home, $params['current_tasks_tmp']);
 
-        $newUrl = $wpdb->get_row($wpdb->prepare("SELECT option_value FROM $wpdb->options WHERE option_name = %s LIMIT 1", 'home'));
+        $newUrl                  = $wpdb->get_row($wpdb->prepare("SELECT option_value FROM $wpdb->options WHERE option_name = %s LIMIT 1", 'home'));
         $restoreParams['newUrl'] = is_object($newUrl) ? $newUrl->option_value : null;
         restore_migrate_urls();
         restore_htaccess();
@@ -1615,7 +1609,7 @@ class MMB_Backup extends MMB_Core
         global $configDiff;
         $result = array(
             'status' => true,
-            'admins' => $this->getAdminUsers()
+            'admins' => $this->getAdminUsers(),
         );
         if (isset($configDiff)
             && is_array($configDiff)
@@ -1626,14 +1620,15 @@ class MMB_Backup extends MMB_Core
         return $result;
     }
 
-    private function getAdminUsers(){
+    private function getAdminUsers()
+    {
         global $wpdb;
         $users = get_users(array(
-                'role' => array('administrator'),
-                'fields' => array('user_login')
-            ));
-        return $users;
+            'role'   => array('administrator'),
+            'fields' => array('user_login'),
+        ));
 
+        return $users;
     }
 
     private function getBackup($taskName, $resultId, $backupUrl = null)
@@ -1736,7 +1731,6 @@ class MMB_Backup extends MMB_Core
             $oldOptions['clone_options']['upload_path']     = get_option('upload_path');
             $oldOptions['clone_options']['upload_url_path'] = get_option('upload_url_path');
 
-
             $oldOptions['clone_options']['mwp_backup_tasks']    = maybe_serialize(get_option('mwp_backup_tasks'));
             $oldOptions['clone_options']['mwp_notifications']   = maybe_serialize(get_option('mwp_notifications'));
             $oldOptions['clone_options']['mwp_pageview_alerts'] = maybe_serialize(get_option('mwp_pageview_alerts'));
@@ -1789,15 +1783,15 @@ class MMB_Backup extends MMB_Core
     private function unzipWithZipArchive($backupFile)
     {
         mwp_logger()->info('Falling back to ZipArchive Module');
-        $result = false;
+        $result     = false;
         $zipArchive = new ZipArchive();
-        $zipOpened = $zipArchive->open($backupFile);
-        if($zipOpened === true){
+        $zipOpened  = $zipArchive->open($backupFile);
+        if ($zipOpened === true) {
             $result = $zipArchive->extractTo(ABSPATH);
             $zipArchive->close();
         }
-        if($result === false){
-            throw new Exception('Failed to unzip files with ZipArchive. Message: '. $zipArchive->getStatusString());
+        if ($result === false) {
+            throw new Exception('Failed to unzip files with ZipArchive. Message: '.$zipArchive->getStatusString());
         }
     }
 
@@ -1830,9 +1824,9 @@ class MMB_Backup extends MMB_Core
             /* Get New Table prefix */
             $new_table_prefix = trim($this->get_table_prefix());
 
-            $configPath            = ABSPATH . 'wp-config.php';
-            $sourceConfigCopyPath  = ABSPATH . 'wp-config.source.php';
-            $destinationConfigPath = ABSPATH . 'mwp-temp-wp-config.php';
+            $configPath            = ABSPATH.'wp-config.php';
+            $sourceConfigCopyPath  = ABSPATH.'wp-config.source.php';
+            $destinationConfigPath = ABSPATH.'mwp-temp-wp-config.php';
 
             @rename($configPath, $sourceConfigCopyPath);
 
@@ -1850,7 +1844,7 @@ class MMB_Backup extends MMB_Core
                     global $configDiff;
                     $configDiff = array(
                         'additions'    => array_values(array_diff($sourceTokens, $destinationTokens)),
-                        'subtractions' => array_values(array_diff($destinationTokens, $sourceTokens))
+                        'subtractions' => array_values(array_diff($destinationTokens, $sourceTokens)),
                     );
                 }
             }
@@ -1911,7 +1905,6 @@ class MMB_Backup extends MMB_Core
                             $query = "UPDATE ".$new_table_prefix."users SET user_email=%s, user_login = %s, user_pass = %s WHERE user_login = %s";
                             $wpdb->query($wpdb->prepare($query, $adminEmail, $newUser, $newPassword, $temp_user->user_login));
                         }
-
                     }
                 }
             }
@@ -1951,7 +1944,7 @@ class MMB_Backup extends MMB_Core
         }
     }
 
-    function restore_db($fileName)
+    public function restore_db($fileName)
     {
         if (!$fileName) {
             throw new Exception('Cannot access database file.');
@@ -2014,15 +2007,14 @@ class MMB_Backup extends MMB_Core
 //        unlink($fileName);
     }
 
-
     /**
      * Restores database dump by php functions.
      *
-     * @param    string $file_name relative path to database dump, which should be restored
+     * @param string $file_name relative path to database dump, which should be restored
      *
-     * @return    bool                is successful or not
+     * @return bool is successful or not
      */
-    function restore_db_php($file_name)
+    public function restore_db_php($file_name)
     {
         global $wpdb;
 
@@ -2068,9 +2060,9 @@ class MMB_Backup extends MMB_Core
      * Retruns table_prefix for this WordPress installation.
      * It is used by restore.
      *
-     * @return    string    table prefix from wp-config.php file, (default: wp_)
+     * @return string table prefix from wp-config.php file, (default: wp_)
      */
-    function get_table_prefix()
+    public function get_table_prefix()
     {
         $lines = file(ABSPATH.'wp-config.php');
         foreach ($lines as $line) {
@@ -2090,9 +2082,9 @@ class MMB_Backup extends MMB_Core
     /**
      * Change all tables to InnoDB engine, and executes mysql OPTIMIZE TABLE for each table.
      *
-     * @return    bool    optimized successfully or not
+     * @return bool optimized successfully or not
      */
-    function optimize_tables()
+    public function optimize_tables()
     {
         global $wpdb;
         $query        = 'SHOW TABLE STATUS';
@@ -2105,7 +2097,6 @@ class MMB_Backup extends MMB_Core
         $optimize     = $wpdb->query("OPTIMIZE TABLE $table_string");
 
         return (bool) $optimize;
-
     }
 
     public function getServerInformationForStats()
@@ -2129,7 +2120,7 @@ class MMB_Backup extends MMB_Core
     /**
      * Check if proc_open exists
      *
-     * @return    string|bool    exec if exists, then system, then passthru, then false if no one exist
+     * @return string|bool exec if exists, then system, then passthru, then false if no one exist
      */
     private function procOpenExists()
     {
@@ -2227,9 +2218,9 @@ class MMB_Backup extends MMB_Core
     /**
      * Returns all important information of worker's system status to master.
      *
-     * @return    mixed    associative array with information of server OS, php version, is backup folder writable, execute function, zip and unzip command, execution time, memory limit and path to error log if exists
+     * @return mixed associative array with information of server OS, php version, is backup folder writable, execute function, zip and unzip command, execution time, memory limit and path to error log if exists
      */
-    function check_backup_compat()
+    public function check_backup_compat()
     {
         $reqs = array();
         if (strpos($_SERVER['DOCUMENT_ROOT'], '/') === 0) {
@@ -2370,42 +2361,42 @@ class MMB_Backup extends MMB_Core
      * Uploads backup file from server to email.
      * A lot of email service have limitation to 10mb.
      *
-     * @param    array $args arguments passed to the function
-     *                       [email] -> email address which backup should send to
-     *                       [task_name] -> name of backup task
-     *                       [file_path] -> absolute path of backup file on local server
+     * @param array $args arguments passed to the function
+     *                    [email] -> email address which backup should send to
+     *                    [task_name] -> name of backup task
+     *                    [file_path] -> absolute path of backup file on local server
      *
-     * @return    bool|array        true is successful, array with error message if not
+     * @return bool|array true is successful, array with error message if not
      */
-    function email_backup($args)
+    public function email_backup($args)
     {
         $email = $args['email'];
 
         if (!is_email($email)) {
             return array(
-                'error' => 'Your email ('.$email.') is not correct'
+                'error' => 'Your email ('.$email.') is not correct',
             );
         }
         $backup_file = $args['file_path'];
         $task_name   = isset($args['task_name']) ? $args['task_name'] : '';
         if (file_exists($backup_file)) {
             $attachments = array(
-                $backup_file
+                $backup_file,
             );
-            $headers     = 'From: ManageWP <no-reply@managewp.com>'."\r\n";
-            $subject     = "ManageWP - ".$task_name." - ".$this->site_name;
+            $headers = 'From: ManageWP <no-reply@managewp.com>'."\r\n";
+            $subject = "ManageWP - ".$task_name." - ".$this->site_name;
             ob_start();
             $result = wp_mail($email, $subject, $subject, $headers, $attachments);
             ob_end_clean();
         } else {
             return array(
-                'error' => 'The backup file ('.$backup_file.') does not exist.'
+                'error' => 'The backup file ('.$backup_file.') does not exist.',
             );
         }
 
         if (!$result) {
             return array(
-                'error' => 'Email not sent. Maybe your backup is too big for email or email server is not available on your website.'
+                'error' => 'Email not sent. Maybe your backup is too big for email or email server is not available on your website.',
             );
         }
 
@@ -2415,20 +2406,20 @@ class MMB_Backup extends MMB_Core
     /**
      * Uploads backup file from server to remote sftp server.
      *
-     * @param    array $args arguments passed to the function
-     *                       [sftp_username] -> sftp username on remote server
-     *                       [sftp_password] -> sftp password on remote server
-     *                       [sftp_hostname] -> sftp hostname of remote host
-     *                       [sftp_remote_folder] -> folder on remote site which backup file should be upload to
-     *                       [sftp_site_folder] -> subfolder with site name in ftp_remote_folder which backup file should be upload to
-     *                       [sftp_passive] -> passive mode or not
-     *                       [sftp_ssl] -> ssl or not
-     *                       [sftp_port] -> number of port for ssl protocol
-     *                       [backup_file] -> absolute path of backup file on local server
+     * @param array $args arguments passed to the function
+     *                    [sftp_username] -> sftp username on remote server
+     *                    [sftp_password] -> sftp password on remote server
+     *                    [sftp_hostname] -> sftp hostname of remote host
+     *                    [sftp_remote_folder] -> folder on remote site which backup file should be upload to
+     *                    [sftp_site_folder] -> subfolder with site name in ftp_remote_folder which backup file should be upload to
+     *                    [sftp_passive] -> passive mode or not
+     *                    [sftp_ssl] -> ssl or not
+     *                    [sftp_port] -> number of port for ssl protocol
+     *                    [backup_file] -> absolute path of backup file on local server
      *
-     * @return    bool|array        true is successful, array with error message if not
+     * @return bool|array true is successful, array with error message if not
      */
-    function sftp_backup($args)
+    public function sftp_backup($args)
     {
         $port               = $args['sftp_port'] ? (int) $args['sftp_port'] : 22; //default port is 22
         $sftp_hostname      = $args['sftp_hostname'];
@@ -2556,20 +2547,20 @@ class MMB_Backup extends MMB_Core
     /**
      * Uploads backup file from server to remote ftp server.
      *
-     * @param    array $args arguments passed to the function
-     *                       [ftp_username] -> ftp username on remote server
-     *                       [ftp_password] -> ftp password on remote server
-     *                       [ftp_hostname] -> ftp hostname of remote host
-     *                       [ftp_remote_folder] -> folder on remote site which backup file should be upload to
-     *                       [ftp_site_folder] -> subfolder with site name in ftp_remote_folder which backup file should be upload to
-     *                       [ftp_passive] -> passive mode or not
-     *                       [ftp_ssl] -> ssl or not
-     *                       [ftp_port] -> number of port for ssl protocol
-     *                       [backup_file] -> absolute path of backup file on local server
+     * @param array $args arguments passed to the function
+     *                    [ftp_username] -> ftp username on remote server
+     *                    [ftp_password] -> ftp password on remote server
+     *                    [ftp_hostname] -> ftp hostname of remote host
+     *                    [ftp_remote_folder] -> folder on remote site which backup file should be upload to
+     *                    [ftp_site_folder] -> subfolder with site name in ftp_remote_folder which backup file should be upload to
+     *                    [ftp_passive] -> passive mode or not
+     *                    [ftp_ssl] -> ssl or not
+     *                    [ftp_port] -> number of port for ssl protocol
+     *                    [backup_file] -> absolute path of backup file on local server
      *
-     * @return    bool|array        true is successful, array with error message if not
+     * @return bool|array true is successful, array with error message if not
      */
-    function ftp_backup($args)
+    public function ftp_backup($args)
     {
         $port              = $args['ftp_port'] ? $args['ftp_port'] : 21;
         $ftp_hostname      = $args['ftp_hostname'];
@@ -2671,17 +2662,17 @@ class MMB_Backup extends MMB_Core
     /**
      * Deletes backup file from remote ftp server.
      *
-     * @param    array $args arguments passed to the function
-     *                       [ftp_username] -> ftp username on remote server
-     *                       [ftp_password] -> ftp password on remote server
-     *                       [ftp_hostname] -> ftp hostname of remote host
-     *                       [ftp_remote_folder] -> folder on remote site which backup file should be deleted from
-     *                       [ftp_site_folder] -> subfolder with site name in ftp_remote_folder which backup file should be deleted from
-     *                       [backup_file] -> absolute path of backup file on local server
+     * @param array $args arguments passed to the function
+     *                    [ftp_username] -> ftp username on remote server
+     *                    [ftp_password] -> ftp password on remote server
+     *                    [ftp_hostname] -> ftp hostname of remote host
+     *                    [ftp_remote_folder] -> folder on remote site which backup file should be deleted from
+     *                    [ftp_site_folder] -> subfolder with site name in ftp_remote_folder which backup file should be deleted from
+     *                    [backup_file] -> absolute path of backup file on local server
      *
-     * @return    void
+     * @return void
      */
-    function remove_ftp_backup($args)
+    public function remove_ftp_backup($args)
     {
         $port              = $args['ftp_port'] ? (int) $args['ftp_port'] : 21;
         $ftp_remote_folder = untrailingslashit($args['ftp_remote_folder']);
@@ -2704,7 +2695,6 @@ class MMB_Backup extends MMB_Core
             return;
         }
 
-
         $errorCatcher->register('ftp_delete');
         $delete = ftp_delete($ftp, $ftp_remote_folder.'/'.$args['backup_file']);
         $errorCatcher->unRegister();
@@ -2722,17 +2712,17 @@ class MMB_Backup extends MMB_Core
     /**
      * Deletes backup file from remote sftp server.
      *
-     * @param    array $args arguments passed to the function
-     *                       [sftp_username] -> sftp username on remote server
-     *                       [sftp_password] -> sftp password on remote server
-     *                       [sftp_hostname] -> sftp hostname of remote host
-     *                       [sftp_remote_folder] -> folder on remote site which backup file should be deleted from
-     *                       [sftp_site_folder] -> subfolder with site name in ftp_remote_folder which backup file should be deleted from
-     *                       [backup_file] -> absolute path of backup file on local server
+     * @param array $args arguments passed to the function
+     *                    [sftp_username] -> sftp username on remote server
+     *                    [sftp_password] -> sftp password on remote server
+     *                    [sftp_hostname] -> sftp hostname of remote host
+     *                    [sftp_remote_folder] -> folder on remote site which backup file should be deleted from
+     *                    [sftp_site_folder] -> subfolder with site name in ftp_remote_folder which backup file should be deleted from
+     *                    [backup_file] -> absolute path of backup file on local server
      *
-     * @return    void
+     * @return void
      */
-    function remove_sftp_backup($args)
+    public function remove_sftp_backup($args)
     {
         $port          = $args['sftp_port'] ? (int) $args['sftp_port'] : 22; //default port is 22
         $sftp_hostname = $args['sftp_hostname'];
@@ -2757,21 +2747,20 @@ class MMB_Backup extends MMB_Core
         $sftp->disconnect();
     }
 
-
     /**
      * Downloads backup file from server from remote ftp server to root folder on local server.
      *
-     * @param    array $args arguments passed to the function
-     *                       [ftp_username] -> ftp username on remote server
-     *                       [ftp_password] -> ftp password on remote server
-     *                       [ftp_hostname] -> ftp hostname of remote host
-     *                       [ftp_remote_folder] -> folder on remote site which backup file should be downloaded from
-     *                       [ftp_site_folder] -> subfolder with site name in ftp_remote_folder which backup file should be downloaded from
-     *                       [backup_file] -> absolute path of backup file on local server
+     * @param array $args arguments passed to the function
+     *                    [ftp_username] -> ftp username on remote server
+     *                    [ftp_password] -> ftp password on remote server
+     *                    [ftp_hostname] -> ftp hostname of remote host
+     *                    [ftp_remote_folder] -> folder on remote site which backup file should be downloaded from
+     *                    [ftp_site_folder] -> subfolder with site name in ftp_remote_folder which backup file should be downloaded from
+     *                    [backup_file] -> absolute path of backup file on local server
      *
-     * @return    string|array    absolute path to downloaded file is successful, array with error message if not
+     * @return string|array absolute path to downloaded file is successful, array with error message if not
      */
-    function get_ftp_backup($args)
+    public function get_ftp_backup($args)
     {
         $port              = $args['ftp_port'] ? (int) $args['ftp_port'] : 21;
         $ftp_remote_folder = untrailingslashit($args['ftp_remote_folder']);
@@ -2820,21 +2809,20 @@ class MMB_Backup extends MMB_Core
         return $temp;
     }
 
-
     /**
      * Downloads backup file from server from remote ftp server to root folder on local server.
      *
-     * @param    array $args arguments passed to the function
-     *                       [sftp_username] -> ftp username on remote server
-     *                       [sftp_password] -> ftp password on remote server
-     *                       [sftp_hostname] -> ftp hostname of remote host
-     *                       [sftp_remote_folder] -> folder on remote site which backup file should be downloaded from
-     *                       [sftp_site_folder] -> subfolder with site name in ftp_remote_folder which backup file should be downloaded from
-     *                       [backup_file] -> absolute path of backup file on local server
+     * @param array $args arguments passed to the function
+     *                    [sftp_username] -> ftp username on remote server
+     *                    [sftp_password] -> ftp password on remote server
+     *                    [sftp_hostname] -> ftp hostname of remote host
+     *                    [sftp_remote_folder] -> folder on remote site which backup file should be downloaded from
+     *                    [sftp_site_folder] -> subfolder with site name in ftp_remote_folder which backup file should be downloaded from
+     *                    [backup_file] -> absolute path of backup file on local server
      *
-     * @return    string|array    absolute path to downloaded file is successful, array with error message if not
+     * @return string|array absolute path to downloaded file is successful, array with error message if not
      */
-    function get_sftp_backup($args)
+    public function get_sftp_backup($args)
     {
         $port          = $args['sftp_port'] ? (int) $args['sftp_port'] : 22;
         $sftp_hostname = $args['sftp_hostname'];
@@ -2945,18 +2933,18 @@ class MMB_Backup extends MMB_Core
     /**
      * Uploads backup file from server to Dropbox.
      *
-     * @param    array $args arguments passed to the function
-     *                       [consumer_key] -> consumer key of ManageWP Dropbox application
-     *                       [consumer_secret] -> consumer secret of ManageWP Dropbox application
-     *                       [oauth_token] -> oauth token of user on ManageWP Dropbox application
-     *                       [oauth_token_secret] -> oauth token secret of user on ManageWP Dropbox application
-     *                       [dropbox_destination] -> folder on user's Dropbox account which backup file should be upload to
-     *                       [dropbox_site_folder] -> subfolder with site name in dropbox_destination which backup file should be upload to
-     *                       [backup_file] -> absolute path of backup file on local server
+     * @param array $args arguments passed to the function
+     *                    [consumer_key] -> consumer key of ManageWP Dropbox application
+     *                    [consumer_secret] -> consumer secret of ManageWP Dropbox application
+     *                    [oauth_token] -> oauth token of user on ManageWP Dropbox application
+     *                    [oauth_token_secret] -> oauth token secret of user on ManageWP Dropbox application
+     *                    [dropbox_destination] -> folder on user's Dropbox account which backup file should be upload to
+     *                    [dropbox_site_folder] -> subfolder with site name in dropbox_destination which backup file should be upload to
+     *                    [backup_file] -> absolute path of backup file on local server
      *
-     * @return    bool|array        true is successful, array with error message if not
+     * @return bool|array true is successful, array with error message if not
      */
-    function dropbox_backup($args)
+    public function dropbox_backup($args)
     {
         mwp_logger()->info('Acquiring Dropbox token to start uploading the backup file');
         try {
@@ -2968,7 +2956,7 @@ class MMB_Backup extends MMB_Core
 
             return array(
                 'error'   => $e->getMessage(),
-                'partial' => 1
+                'partial' => 1,
             );
         }
 
@@ -3004,7 +2992,7 @@ class MMB_Backup extends MMB_Core
 
             return array(
                 'error'   => $e->getMessage(),
-                'partial' => 1
+                'partial' => 1,
             );
         }
 
@@ -3018,18 +3006,18 @@ class MMB_Backup extends MMB_Core
     /**
      * Deletes backup file from Dropbox to root folder on local server.
      *
-     * @param    array $args arguments passed to the function
-     *                       [consumer_key] -> consumer key of ManageWP Dropbox application
-     *                       [consumer_secret] -> consumer secret of ManageWP Dropbox application
-     *                       [oauth_token] -> oauth token of user on ManageWP Dropbox application
-     *                       [oauth_token_secret] -> oauth token secret of user on ManageWP Dropbox application
-     *                       [dropbox_destination] -> folder on user's Dropbox account which backup file should be downloaded from
-     *                       [dropbox_site_folder] -> subfolder with site name in dropbox_destination which backup file should be downloaded from
-     *                       [backup_file] -> absolute path of backup file on local server
+     * @param array $args arguments passed to the function
+     *                    [consumer_key] -> consumer key of ManageWP Dropbox application
+     *                    [consumer_secret] -> consumer secret of ManageWP Dropbox application
+     *                    [oauth_token] -> oauth token of user on ManageWP Dropbox application
+     *                    [oauth_token_secret] -> oauth token secret of user on ManageWP Dropbox application
+     *                    [dropbox_destination] -> folder on user's Dropbox account which backup file should be downloaded from
+     *                    [dropbox_site_folder] -> subfolder with site name in dropbox_destination which backup file should be downloaded from
+     *                    [backup_file] -> absolute path of backup file on local server
      *
-     * @return    void
+     * @return void
      */
-    function remove_dropbox_backup($args)
+    public function remove_dropbox_backup($args)
     {
         mwp_logger()->info('Acquiring Dropbox token to remove a backup file');
         try {
@@ -3063,18 +3051,18 @@ class MMB_Backup extends MMB_Core
     /**
      * Downloads backup file from Dropbox to root folder on local server.
      *
-     * @param    array $args arguments passed to the function
-     *                       [consumer_key] -> consumer key of ManageWP Dropbox application
-     *                       [consumer_secret] -> consumer secret of ManageWP Dropbox application
-     *                       [oauth_token] -> oauth token of user on ManageWP Dropbox application
-     *                       [oauth_token_secret] -> oauth token secret of user on ManageWP Dropbox application
-     *                       [dropbox_destination] -> folder on user's Dropbox account which backup file should be deleted from
-     *                       [dropbox_site_folder] -> subfolder with site name in dropbox_destination which backup file should be deleted from
-     *                       [backup_file] -> absolute path of backup file on local server
+     * @param array $args arguments passed to the function
+     *                    [consumer_key] -> consumer key of ManageWP Dropbox application
+     *                    [consumer_secret] -> consumer secret of ManageWP Dropbox application
+     *                    [oauth_token] -> oauth token of user on ManageWP Dropbox application
+     *                    [oauth_token_secret] -> oauth token secret of user on ManageWP Dropbox application
+     *                    [dropbox_destination] -> folder on user's Dropbox account which backup file should be deleted from
+     *                    [dropbox_site_folder] -> subfolder with site name in dropbox_destination which backup file should be deleted from
+     *                    [backup_file] -> absolute path of backup file on local server
      *
-     * @return    bool|array        absolute path to downloaded file is successful, array with error message if not
+     * @return bool|array absolute path to downloaded file is successful, array with error message if not
      */
-    function get_dropbox_backup($args)
+    public function get_dropbox_backup($args)
     {
         mwp_logger()->info('Acquiring Dropbox token to download the backup file');
         try {
@@ -3086,7 +3074,7 @@ class MMB_Backup extends MMB_Core
 
             return array(
                 'error'   => $e->getMessage(),
-                'partial' => 1
+                'partial' => 1,
             );
         }
 
@@ -3125,14 +3113,14 @@ class MMB_Backup extends MMB_Core
 
             return array(
                 'error'   => $e->getMessage(),
-                'partial' => 1
+                'partial' => 1,
             );
         }
 
         $fileSize = filesize($temp);
         mwp_logger()->info('Downloading backup file from Dropbox completed; file size is {backup_size}; average speed is {speed}', array(
             'backup_size' => mwp_format_bytes($fileSize),
-            'speed'       => mwp_format_bytes($fileSize / (microtime(true) - $start))
+            'speed'       => mwp_format_bytes($fileSize / (microtime(true) - $start)),
         ));
 
         return $temp;
@@ -3141,18 +3129,18 @@ class MMB_Backup extends MMB_Core
     /**
      * Uploads backup file from server to Amazon S3.
      *
-     * @param    array $args arguments passed to the function
-     *                       [as3_bucket_region] -> Amazon S3 bucket region
-     *                       [as3_bucket] -> Amazon S3 bucket
-     *                       [as3_access_key] -> Amazon S3 access key
-     *                       [as3_secure_key] -> Amazon S3 secure key
-     *                       [as3_directory] -> folder on user's Amazon S3 account which backup file should be upload to
-     *                       [as3_site_folder] -> subfolder with site name in as3_directory which backup file should be upload to
-     *                       [backup_file] -> absolute path of backup file on local server
+     * @param array $args arguments passed to the function
+     *                    [as3_bucket_region] -> Amazon S3 bucket region
+     *                    [as3_bucket] -> Amazon S3 bucket
+     *                    [as3_access_key] -> Amazon S3 access key
+     *                    [as3_secure_key] -> Amazon S3 secure key
+     *                    [as3_directory] -> folder on user's Amazon S3 account which backup file should be upload to
+     *                    [as3_site_folder] -> subfolder with site name in as3_directory which backup file should be upload to
+     *                    [backup_file] -> absolute path of backup file on local server
      *
-     * @return    bool|array        true is successful, array with error message if not
+     * @return bool|array true is successful, array with error message if not
      */
-    function amazons3_backup($args)
+    public function amazons3_backup($args)
     {
         if ($args['as3_site_folder'] == true) {
             $args['as3_directory'] .= '/'.$this->site_name;
@@ -3198,22 +3186,21 @@ class MMB_Backup extends MMB_Core
         return true;
     }
 
-
     /**
      * Deletes backup file from Amazon S3.
      *
-     * @param    array $args arguments passed to the function
-     *                       [as3_bucket_region] -> Amazon S3 bucket region
-     *                       [as3_bucket] -> Amazon S3 bucket
-     *                       [as3_access_key] -> Amazon S3 access key
-     *                       [as3_secure_key] -> Amazon S3 secure key
-     *                       [as3_directory] -> folder on user's Amazon S3 account which backup file should be deleted from
-     *                       [as3_site_folder] -> subfolder with site name in as3_directory which backup file should be deleted from
-     *                       [backup_file] -> absolute path of backup file on local server
+     * @param array $args arguments passed to the function
+     *                    [as3_bucket_region] -> Amazon S3 bucket region
+     *                    [as3_bucket] -> Amazon S3 bucket
+     *                    [as3_access_key] -> Amazon S3 access key
+     *                    [as3_secure_key] -> Amazon S3 secure key
+     *                    [as3_directory] -> folder on user's Amazon S3 account which backup file should be deleted from
+     *                    [as3_site_folder] -> subfolder with site name in as3_directory which backup file should be deleted from
+     *                    [backup_file] -> absolute path of backup file on local server
      *
-     * @return    void
+     * @return void
      */
-    function remove_amazons3_backup($args)
+    public function remove_amazons3_backup($args)
     {
         if ($args['as3_site_folder'] == true) {
             $args['as3_directory'] .= '/'.$this->site_name;
@@ -3239,18 +3226,18 @@ class MMB_Backup extends MMB_Core
     /**
      * Downloads backup file from Amazon S3 to root folder on local server.
      *
-     * @param    array $args arguments passed to the function
-     *                       [as3_bucket_region] -> Amazon S3 bucket region
-     *                       [as3_bucket] -> Amazon S3 bucket
-     *                       [as3_access_key] -> Amazon S3 access key
-     *                       [as3_secure_key] -> Amazon S3 secure key
-     *                       [as3_directory] -> folder on user's Amazon S3 account which backup file should be downloaded from
-     *                       [as3_site_folder] -> subfolder with site name in as3_directory which backup file should be downloaded from
-     *                       [backup_file] -> absolute path of backup file on local server
+     * @param array $args arguments passed to the function
+     *                    [as3_bucket_region] -> Amazon S3 bucket region
+     *                    [as3_bucket] -> Amazon S3 bucket
+     *                    [as3_access_key] -> Amazon S3 access key
+     *                    [as3_secure_key] -> Amazon S3 secure key
+     *                    [as3_directory] -> folder on user's Amazon S3 account which backup file should be downloaded from
+     *                    [as3_site_folder] -> subfolder with site name in as3_directory which backup file should be downloaded from
+     *                    [backup_file] -> absolute path of backup file on local server
      *
-     * @return    bool|array        absolute path to downloaded file is successful, array with error message if not
+     * @return bool|array absolute path to downloaded file is successful, array with error message if not
      */
-    function get_amazons3_backup($args)
+    public function get_amazons3_backup($args)
     {
         $endpoint = isset($args['as3_bucket_region']) ? $args['as3_bucket_region'] : 's3.amazonaws.com';
 
@@ -3288,7 +3275,7 @@ class MMB_Backup extends MMB_Core
         $fileSize = filesize($temp);
         mwp_logger()->info('Downloading backup file from Amazon S3 completed; file size is {backup_size}; average speed is {speed}', array(
             'backup_size' => mwp_format_bytes($fileSize),
-            'speed'       => mwp_format_bytes($fileSize / (microtime(true) - $start))
+            'speed'       => mwp_format_bytes($fileSize / (microtime(true) - $start)),
         ));
 
         return $temp;
@@ -3297,15 +3284,15 @@ class MMB_Backup extends MMB_Core
     /**
      * Uploads backup file from server to Google Drive.
      *
-     * @param    array $args arguments passed to the function
-     *                       [google_drive_token] -> user's Google drive token in json form
-     *                       [google_drive_directory] -> folder on user's Google Drive account which backup file should be upload to
-     *                       [google_drive_site_folder] -> subfolder with site name in google_drive_directory which backup file should be upload to
-     *                       [backup_file] -> absolute path of backup file on local server
+     * @param array $args arguments passed to the function
+     *                    [google_drive_token] -> user's Google drive token in json form
+     *                    [google_drive_directory] -> folder on user's Google Drive account which backup file should be upload to
+     *                    [google_drive_site_folder] -> subfolder with site name in google_drive_directory which backup file should be upload to
+     *                    [backup_file] -> absolute path of backup file on local server
      *
-     * @return    bool|array        true is successful, array with error message if not
+     * @return bool|array true is successful, array with error message if not
      */
-    function google_drive_backup($args)
+    public function google_drive_backup($args)
     {
         mwp_register_autoload_google();
         $googleClient = new Google_ApiClient();
@@ -3481,15 +3468,15 @@ class MMB_Backup extends MMB_Core
     /**
      * Deletes backup file from Google Drive.
      *
-     * @param    array $args arguments passed to the function
-     *                       [google_drive_token] -> user's Google drive token in json form
-     *                       [google_drive_directory] -> folder on user's Google Drive account which backup file should be deleted from
-     *                       [google_drive_site_folder] -> subfolder with site name in google_drive_directory which backup file should be deleted from
-     *                       [backup_file] -> absolute path of backup file on local server
+     * @param array $args arguments passed to the function
+     *                    [google_drive_token] -> user's Google drive token in json form
+     *                    [google_drive_directory] -> folder on user's Google Drive account which backup file should be deleted from
+     *                    [google_drive_site_folder] -> subfolder with site name in google_drive_directory which backup file should be deleted from
+     *                    [backup_file] -> absolute path of backup file on local server
      *
-     * @return    void
+     * @return void
      */
-    function remove_google_drive_backup($args)
+    public function remove_google_drive_backup($args)
     {
         mwp_register_autoload_google();
         mwp_logger()->info('Removing Google Drive backup file', array(
@@ -3564,7 +3551,7 @@ class MMB_Backup extends MMB_Core
             try {
                 $backup_folder_id = $backup_folder->getId();
                 $listFiles        = $driveService->files->listFiles(array("q" => "title='".addslashes($args['backup_file'])."' and '$backup_folder_id' in parents and trashed = false"));
-                $files            = $listFiles->getItems();;
+                $files            = $listFiles->getItems();
             } catch (Exception $e) {
                 $this->_log($e->getMessage());
                 /*return array(
@@ -3585,15 +3572,15 @@ class MMB_Backup extends MMB_Core
     /**
      * Downloads backup file from Google Drive to root folder on local server.
      *
-     * @param    array $args arguments passed to the function
-     *                       [google_drive_token] -> user's Google drive token in json form
-     *                       [google_drive_directory] -> folder on user's Google Drive account which backup file should be downloaded from
-     *                       [google_drive_site_folder] -> subfolder with site name in google_drive_directory which backup file should be downloaded from
-     *                       [backup_file] -> absolute path of backup file on local server
+     * @param array $args arguments passed to the function
+     *                    [google_drive_token] -> user's Google drive token in json form
+     *                    [google_drive_directory] -> folder on user's Google Drive account which backup file should be downloaded from
+     *                    [google_drive_site_folder] -> subfolder with site name in google_drive_directory which backup file should be downloaded from
+     *                    [backup_file] -> absolute path of backup file on local server
      *
-     * @return    bool|array        absolute path to downloaded file is successful, array with error message if not
+     * @return bool|array absolute path to downloaded file is successful, array with error message if not
      */
-    function get_google_drive_backup($args)
+    public function get_google_drive_backup($args)
     {
         mwp_register_autoload_google();
         $googleClient = new Google_ApiClient();
@@ -3742,12 +3729,12 @@ class MMB_Backup extends MMB_Core
     /**
      * Schedules the next execution of some backup task.
      *
-     * @param    string $type     daily, weekly or monthly
-     * @param    string $schedule format: task_time (if daily), task_time|task_day (if weekly), task_time|task_date (if monthly)
+     * @param string $type     daily, weekly or monthly
+     * @param string $schedule format: task_time (if daily), task_time|task_day (if weekly), task_time|task_date (if monthly)
      *
-     * @return    bool|int            timestamp if sucessful, false if not
+     * @return bool|int timestamp if sucessful, false if not
      */
-    function schedule_next($type, $schedule)
+    public function schedule_next($type, $schedule)
     {
         $schedule = explode("|", $schedule);
 
@@ -3837,9 +3824,9 @@ class MMB_Backup extends MMB_Core
     /**
      * Parse task arguments for info on master.
      *
-     * @return mixed    associative array with stats for every backup task or error if backup is manually deleted on server
+     * @return mixed associative array with stats for every backup task or error if backup is manually deleted on server
      */
-    function get_backup_stats()
+    public function get_backup_stats()
     {
         $stats = array();
         $tasks = $this->tasks;
@@ -3866,9 +3853,9 @@ class MMB_Backup extends MMB_Core
     /**
      * Returns all backup tasks with information when the next schedule will be.
      *
-     * @return    mixed    associative array with timestamp with next schedule for every backup task
+     * @return mixed associative array with timestamp with next schedule for every backup task
      */
-    function get_next_schedules()
+    public function get_next_schedules()
     {
         $stats = array();
         $tasks = $this->tasks;
@@ -3885,11 +3872,11 @@ class MMB_Backup extends MMB_Core
      * Deletes all old backups from local server.
      * It depends on configuration on master (Number of backups to keep).
      *
-     * @param    string $task_name name of backup task
+     * @param string $task_name name of backup task
      *
-     * @return    bool|void            true if there are backups for deletion, void if not
+     * @return bool|void true if there are backups for deletion, void if not
      */
-    function remove_old_backups($task_name)
+    public function remove_old_backups($task_name)
     {
         //Check for previous failed backups first
         $this->cleanup();
@@ -3966,14 +3953,14 @@ class MMB_Backup extends MMB_Core
     /**
      * Deletes specified backup.
      *
-     * @param    array $args arguments passed to function
-     *                       [task_name] -> name of backup task
-     *                       [result_id] -> id of baskup task result, which should be restored
-     *                       [google_drive_token] -> json of Google Drive token, if it is remote destination
+     * @param array $args arguments passed to function
+     *                    [task_name] -> name of backup task
+     *                    [result_id] -> id of baskup task result, which should be restored
+     *                    [google_drive_token] -> json of Google Drive token, if it is remote destination
      *
-     * @return    bool            true if successful, false if not
+     * @return bool true if successful, false if not
      */
-    function delete_backup($args)
+    public function delete_backup($args)
     {
         if (empty($args)) {
             return false;
@@ -4046,9 +4033,9 @@ class MMB_Backup extends MMB_Core
     /**
      * Deletes all unneeded files produced by backup process.
      *
-     * @return    array    array of deleted files
+     * @return array array of deleted files
      */
-    function cleanup()
+    public function cleanup()
     {
         $tasks             = $this->tasks;
         $backup_folder     = WP_CONTENT_DIR.'/'.md5('mmb-worker').'/mwp_backups/';
@@ -4116,12 +4103,12 @@ class MMB_Backup extends MMB_Core
     /**
      * Uploads to remote destination in the second step, invoked from master.
      *
-     * @param    array $args arguments passed to function
-     *                       [task_name] -> name of backup task
+     * @param array $args arguments passed to function
+     *                    [task_name] -> name of backup task
      *
-     * @return    array|void        void if success, array with error message if not
+     * @return array|void void if success, array with error message if not
      */
-    function remote_backup_now($args)
+    public function remote_backup_now($args)
     {
         /**
          * Remember if this is called as a forked http request, or a connection to the dasboard is persistent
@@ -4133,7 +4120,6 @@ class MMB_Backup extends MMB_Core
         if (!empty($args)) {
             extract($args);
         }
-
 
         $tasks     = $this->tasks;
         $task_name = stripslashes($task_name);
@@ -4233,7 +4219,7 @@ class MMB_Backup extends MMB_Core
             $this->update_tasks($tasks);
         } else {
             $return = array(
-                'error' => 'Backup file not found on your server. Please try again.'
+                'error' => 'Backup file not found on your server. Please try again.',
             );
         }
         $this->sendDataToMaster();
@@ -4244,20 +4230,20 @@ class MMB_Backup extends MMB_Core
     /**
      * Checks if scheduled backup tasks should be executed.
      *
-     * @param    array  $args arguments passed to function
-     *                        [task_name] -> name of backup task
-     *                        [task_id] -> id of backup task
-     *                        [$site_key] -> hash key of backup task
-     *                        [worker_version] -> version of worker
-     *                        [mwp_google_drive_refresh_token] ->    should be Google Drive token be refreshed, true if it is remote destination of task
-     * @param    string $url  url on master where worker validate task
+     * @param array  $args arguments passed to function
+     *                     [task_name] -> name of backup task
+     *                     [task_id] -> id of backup task
+     *                     [$site_key] -> hash key of backup task
+     *                     [worker_version] -> version of worker
+     *                     [mwp_google_drive_refresh_token] ->    should be Google Drive token be refreshed, true if it is remote destination of task
+     * @param string $url  url on master where worker validate task
      *
-     * @return    string|array|boolean
+     * @return string|array|boolean
      */
-    function validate_task($args, $url)
+    public function validate_task($args, $url)
     {
         if (!class_exists('WP_Http')) {
-            include_once(ABSPATH.WPINC.'/class-http.php');
+            include_once ABSPATH.WPINC.'/class-http.php';
         }
 
         $worker_upto_3_9_22 = ($GLOBALS['MMB_WORKER_VERSION'] <= '3.9.22'); // worker version is less or equals to 3.9.22
@@ -4304,25 +4290,25 @@ class MMB_Backup extends MMB_Core
      * Updates status of backup task.
      * Positive number if completed, negative if not.
      *
-     * @param    string $task_name name of backup task
-     * @param    int    $status    status which tasks should be updated to
-     *                             (
-     *                             0 - Backup started,
-     *                             1 - DB dump,
-     *                             2 - DB ZIP,
-     *                             3 - Files ZIP,
-     *                             4 - Amazon S3,
-     *                             5 - Dropbox,
-     *                             6 - FTP,
-     *                             7 - Email,
-     *                             8 - Google Drive,
-     *                             100 - Finished
-     *                             )
-     * @param    bool   $completed completed or not
+     * @param string $task_name name of backup task
+     * @param int    $status    status which tasks should be updated to
+     *                          (
+     *                          0 - Backup started,
+     *                          1 - DB dump,
+     *                          2 - DB ZIP,
+     *                          3 - Files ZIP,
+     *                          4 - Amazon S3,
+     *                          5 - Dropbox,
+     *                          6 - FTP,
+     *                          7 - Email,
+     *                          8 - Google Drive,
+     *                          100 - Finished
+     *                          )
+     * @param bool   $completed completed or not
      *
-     * @return    void
+     * @return void
      */
-    function update_status($task_name, $status, $completed = false)
+    public function update_status($task_name, $status, $completed = false)
     {
         if ($task_name != 'Backup Now') {
             $tasks = $this->tasks;
@@ -4345,11 +4331,11 @@ class MMB_Backup extends MMB_Core
     /**
      * Update $this->tasks attribute and save it to wp_options with key mwp_backup_tasks.
      *
-     * @param    mixed $tasks associative array with all tasks data
+     * @param mixed $tasks associative array with all tasks data
      *
-     * @return    void
+     * @return void
      */
-    function update_tasks($tasks)
+    public function update_tasks($tasks)
     {
         $this->tasks = $tasks;
         update_option('mwp_backup_tasks', $tasks);
@@ -4360,7 +4346,7 @@ class MMB_Backup extends MMB_Core
      *
      * @return void
      */
-    function wpdb_reconnect()
+    public function wpdb_reconnect()
     {
         global $wpdb;
 
@@ -4379,11 +4365,11 @@ class MMB_Backup extends MMB_Core
     /**
      * Replaces .htaccess file in process of restoring WordPress site.
      *
-     * @param    string $url url of current site
+     * @param string $url url of current site
      *
-     * @return    void
+     * @return void
      */
-    function replace_htaccess($url)
+    public function replace_htaccess($url)
     {
         $file = @file_get_contents(ABSPATH.'.htaccess');
         if ($file && strlen($file)) {
@@ -4399,9 +4385,9 @@ class MMB_Backup extends MMB_Core
     /**
      * Removes cron for checking scheduled tasks, if there are not any scheduled task.
      *
-     * @return    void
+     * @return void
      */
-    function check_cron_remove()
+    public function check_cron_remove()
     {
         if (empty($this->tasks) || (count($this->tasks) == 1 && isset($this->tasks['Backup Now']))) {
             wp_clear_scheduled_hook('mwp_backup_tasks');
@@ -4412,9 +4398,9 @@ class MMB_Backup extends MMB_Core
     /**
      * Re-add tasks on website re-add.
      *
-     * @param    array $params arguments passed to function
+     * @param array $params arguments passed to function
      *
-     * @return    array            $params without backups
+     * @return array $params without backups
      */
     public function readd_tasks($params = array())
     {
@@ -4467,7 +4453,6 @@ class MMB_Backup extends MMB_Core
                         $decrypted            = $cipher->decrypt($task['secure']);
                         $task['account_info'] = json_decode($decrypted, true);
                     }
-
                 }
                 if (isset($task['account_info']) && is_array($task['account_info'])) { //only if sends from master first time(secure data)
                     $task['args']['account_info'] = $task['account_info'];
@@ -4487,19 +4472,19 @@ class MMB_Backup extends MMB_Core
     /**
      * Start backup process. Invoked from remote ping
      *
-     * @param    array $args arguments passed to function
-     *                       [task_name] -> name of backup task
+     * @param array $args arguments passed to function
+     *                    [task_name] -> name of backup task
      *
-     * @return    array      array with error message or if success task results
+     * @return array array with error message or if success task results
      */
     public function ping_backup($args)
     {
         // Belows code follows logic from check_backup
-        $return    = "PONG";
-        $task_name = $args['task_name'];
+        $return           = "PONG";
+        $task_name        = $args['task_name'];
         $sendDataToMaster = false;
         if (is_array($this->tasks) && !empty($this->tasks) && !empty($this->tasks[$task_name])) {
-            $task = $this->tasks[$task_name];
+            $task             = $this->tasks[$task_name];
             $sendDataToMaster = isset($task['task_args']['account_info']) ? false : true;
             if ($task['task_args']['task_id'] && $task['task_args']['site_key']) {
                 $potential_token = !empty($args['google_drive_token']) ? $args['google_drive_token'] : false;
@@ -4511,9 +4496,9 @@ class MMB_Backup extends MMB_Core
                  * From this point I am simulating previous way of working. In order to fix this,
                  * I need to refactor greater part, and release is tomorrow morning
                  */
-                $update         = array(
+                $update = array(
                     'task_name' => $task_name,
-                    'args'      => $task['task_args']
+                    'args'      => $task['task_args'],
                 );
                 $update['time'] = time();
                 $this->set_backup_task($update);
@@ -4528,7 +4513,7 @@ class MMB_Backup extends MMB_Core
                         array(
                             'task_name' => $task_name,
                             'args'      => $task['task_args'],
-                            'error'     => $return
+                            'error'     => $return,
                         )
                     );
                 } else {
@@ -4537,8 +4522,6 @@ class MMB_Backup extends MMB_Core
                     }
                     $return = $this->tasks[$task_name]['task_results'];
                 }
-
-
             }
         } else {
             $return = array("error" => "Unknown task name");
@@ -4546,6 +4529,7 @@ class MMB_Backup extends MMB_Core
         if ($sendDataToMaster) {
             $this->sendDataToMaster();
         }
+
         return $return;
     }
 
@@ -4558,25 +4542,24 @@ class MMB_Backup extends MMB_Core
     {
         $backup_file   = $this->tasks[$task_name]['task_results'][count($this->tasks[$task_name]['task_results']) - 1]['server']['file_url'];
         $del_host_file = $this->tasks[$task_name]['task_args']['del_host_file'];
-        $args = array('task_name' => $task_name, 'backup_file' => $backup_file, 'del_host_file' => $del_host_file);
+        $args          = array('task_name' => $task_name, 'backup_file' => $backup_file, 'del_host_file' => $del_host_file);
 
         $this->notifyMyself('mmb_remote_upload', $args);
     }
-
 }
 
 /*if( function_exists('add_filter') ) {
-	add_filter( 'mwp_website_add', 'MMB_Backup::readd_tasks' );
+    add_filter( 'mwp_website_add', 'MMB_Backup::readd_tasks' );
 }*/
 
 if (!function_exists('get_all_files_from_dir')) {
     /**
      * Get all files in directory
      *
-     * @param    string $path    Relative or absolute path to folder
-     * @param    array  $exclude List of excluded files or folders, relative to $path
+     * @param string $path    Relative or absolute path to folder
+     * @param array  $exclude List of excluded files or folders, relative to $path
      *
-     * @return    array                List of all files in folder $path, exclude all files in $exclude array
+     * @return array List of all files in folder $path, exclude all files in $exclude array
      */
     function get_all_files_from_dir($path, $exclude = array())
     {
@@ -4605,9 +4588,9 @@ if (!function_exists('get_all_files_from_dir_recursive')) {
      * wrapped function which writes in global variable
      * and exclued files or folders are read from global variable
      *
-     * @param    string $path Relative or absolute path to folder
+     * @param string $path Relative or absolute path to folder
      *
-     * @return    void
+     * @return void
      */
     function get_all_files_from_dir_recursive($path)
     {
@@ -4652,7 +4635,7 @@ function recursiveUrlReplacement(&$value, $index, $data)
     if (is_string($value)) {
         if (is_string($data['regex'])) {
             $expressions = array($data['regex']);
-        } else if (is_array($data['regex'])) {
+        } elseif (is_array($data['regex'])) {
             $expressions = $data['regex'];
         } else {
             return;
@@ -4684,7 +4667,7 @@ function restore_migrate_urls()
     $tablePrefix = $restoreParams['tablePrefix'];
     $newUrl      = $restoreParams['newUrl'];
 
-    if(!isset($oldSiteUrl) || !isset($oldUrl)){
+    if (!isset($oldSiteUrl) || !isset($oldUrl)) {
         return false;
     }
 
@@ -4692,7 +4675,7 @@ function restore_migrate_urls()
     $parsedOldUrl          = parse_url(strpos($oldUrl, '://') === false ? "http://$oldUrl" : $oldUrl);
     $host                  = getKey('host', $parsedOldSiteUrl, '');
     $path                  = getKey('path', $parsedOldSiteUrl, '');
-    $oldSiteUrlNoWww       = preg_replace('#^www\.(.+\.)#i', '$1', $host) . $path;
+    $oldSiteUrlNoWww       = preg_replace('#^www\.(.+\.)#i', '$1', $host).$path;
     $parsedOldSiteUrlNoWww = parse_url(strpos($oldSiteUrlNoWww, '://') === false
             ? "http://$oldSiteUrlNoWww"
             : $oldSiteUrlNoWww
@@ -4703,8 +4686,8 @@ function restore_migrate_urls()
 
     // Modify the database for two variants of url, one with and one without WWW
     $oldUrls = array('oldSiteUrl' => $oldSiteUrl);
-    $tmp1 = @"{$parsedOldUrl['host']}/{$parsedOldUrl['path']}";
-    $tmp2 = @"{$parsedOldSiteUrlNoWww['host']}/{$parsedOldSiteUrlNoWww['path']}";
+    $tmp1    = @"{$parsedOldUrl['host']}/{$parsedOldUrl['path']}";
+    $tmp2    = @"{$parsedOldSiteUrlNoWww['host']}/{$parsedOldSiteUrlNoWww['path']}";
     if ($oldSiteUrlNoWww != $oldSiteUrl && $tmp1 != $tmp2) {
         $oldUrls['oldSiteUrlNoWww'] = $oldSiteUrlNoWww;
     }
@@ -4735,7 +4718,7 @@ function restore_migrate_urls()
                 if (is_array($unserialized)) {
                     array_walk_recursive($unserialized, 'recursiveUrlReplacement', array(
                             'newUrl' => $newUrl,
-                            'regex'  => $amazingRegex
+                            'regex'  => $amazingRegex,
                         )
                     );
                     $replaced = serialize($unserialized);
@@ -4763,7 +4746,7 @@ function restore_migrate_urls()
                 if (is_array($unserialized)) {
                     array_walk_recursive($unserialized, 'recursiveUrlReplacement', array(
                             'newUrl' => $newUrl,
-                            'regex'  => $amazingRegex
+                            'regex'  => $amazingRegex,
                         )
                     );
                 }
@@ -4778,7 +4761,6 @@ function restore_migrate_urls()
                 $query              = "UPDATE {$tablePrefix}postmeta SET meta_value = '{$escapedReplacement}' WHERE meta_id = '$id'";
                 $wpdb->query($query);
             }
-
         }
 
         // Do the same with posts
@@ -4787,7 +4769,6 @@ function restore_migrate_urls()
         foreach ($selection as &$row) {
             $postContent = preg_replace($amazingRegex, $newUrl, $row['post_content']);
             $guid        = preg_replace($amazingRegex, $newUrl, $row['guid']);
-
 
             if ($postContent != $row['post_content'] || $guid != $row['guid']) {
                 $postContent = $wpdb->_escape($postContent);
@@ -4802,11 +4783,11 @@ function restore_migrate_urls()
 
 function restore_htaccess()
 {
-    $htaccessRealpath = realpath(ABSPATH . '.htaccess');
+    $htaccessRealpath = realpath(ABSPATH.'.htaccess');
 
     if ($htaccessRealpath) {
         @rename($htaccessRealpath, "$htaccessRealpath.old");
     }
-    @include(ABSPATH . 'wp-admin/includes/admin.php');
+    @include ABSPATH.'wp-admin/includes/admin.php';
     @flush_rewrite_rules(true);
 }

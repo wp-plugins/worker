@@ -12,10 +12,10 @@ class Dropbox_WebAuthBase extends Dropbox_AuthBase
             $this->appInfo->getHost()->getWeb(),
             "1/oauth2/authorize",
             array(
-                "client_id" => $this->appInfo->getKey(),
+                "client_id"     => $this->appInfo->getKey(),
                 "response_type" => "code",
-                "redirect_uri" => $redirectUri,
-                "state" => $state,
+                "redirect_uri"  => $redirectUri,
+                "state"         => $state,
             ));
     }
 
@@ -23,19 +23,21 @@ class Dropbox_WebAuthBase extends Dropbox_AuthBase
     {
         // This endpoint requires "Basic" auth.
         $clientCredentials = $this->appInfo->getKey().":".$this->appInfo->getSecret();
-        $authHeaderValue = "Basic ".base64_encode($clientCredentials);
+        $authHeaderValue   = "Basic ".base64_encode($clientCredentials);
 
         $response = Dropbox_RequestUtil::doPostWithSpecificAuth(
             $this->clientIdentifier, $authHeaderValue, $this->userLocale,
             $this->appInfo->getHost()->getApi(),
             "1/oauth2/token",
             array(
-                "grant_type" => "authorization_code",
-                "code" => $code,
+                "grant_type"   => "authorization_code",
+                "code"         => $code,
                 "redirect_uri" => $originalRedirectUri,
             ));
 
-        if ($response->statusCode !== 200) throw Dropbox_RequestUtil::unexpectedStatus($response);
+        if ($response->statusCode !== 200) {
+            throw Dropbox_RequestUtil::unexpectedStatus($response);
+        }
 
         $parts = Dropbox_RequestUtil::parseResponseJson($response->body);
 
@@ -54,7 +56,7 @@ class Dropbox_WebAuthBase extends Dropbox_AuthBase
 
         if ($tokenType !== "Bearer" && $tokenType !== "bearer") {
             throw new Dropbox_Exception_BadResponse("Unknown \"token_type\"; expecting \"Bearer\", got  "
-                                            .Dropbox_Client::q($tokenType));
+                .Dropbox_Client::q($tokenType));
         }
 
         return array($accessToken, $userId);

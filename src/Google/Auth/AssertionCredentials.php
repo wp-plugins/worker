@@ -15,7 +15,6 @@
  * limitations under the License.
  */
 
-
 /**
  * Credentials object used for OAuth 2.0 Signed JWT assertion grants.
  *
@@ -40,23 +39,23 @@ class Google_Auth_AssertionCredentials
 
     /**
      * @param             $serviceAccountName
-     * @param             $scopes array List of scopes
+     * @param             $scopes             array List of scopes
      * @param             $privateKey
      * @param string      $privateKeyPassword
      * @param string      $assertionType
-     * @param bool|string $sub    The email address of the user for which the
-     *                            application is requesting delegated access.
+     * @param bool|string $sub                The email address of the user for which the
+     *                                        application is requesting delegated access.
      * @param             bool    useCache Whether to generate a cache key and allow
-     *                            automatic caching of the generated token.
+     *                                        automatic caching of the generated token.
      */
     public function __construct(
-      $serviceAccountName,
-      $scopes,
-      $privateKey,
-      $privateKeyPassword = 'notasecret',
-      $assertionType = 'http://oauth.net/grant_type/jwt/1.0/bearer',
-      $sub = false,
-      $useCache = true
+        $serviceAccountName,
+        $scopes,
+        $privateKey,
+        $privateKeyPassword = 'notasecret',
+        $assertionType = 'http://oauth.net/grant_type/jwt/1.0/bearer',
+        $sub = false,
+        $useCache = true
     ) {
         $this->serviceAccountName = $serviceAccountName;
         $this->scopes             = is_string($scopes) ? $scopes : implode(' ', $scopes);
@@ -92,11 +91,11 @@ class Google_Auth_AssertionCredentials
         $now = time();
 
         $jwtParams = array(
-          'aud'   => Google_Auth_OAuth2::OAUTH2_TOKEN_URI,
-          'scope' => $this->scopes,
-          'iat'   => $now,
-          'exp'   => $now + self::MAX_TOKEN_LIFETIME_SECS,
-          'iss'   => $this->serviceAccountName,
+            'aud'   => Google_Auth_OAuth2::OAUTH2_TOKEN_URI,
+            'scope' => $this->scopes,
+            'iat'   => $now,
+            'exp'   => $now + self::MAX_TOKEN_LIFETIME_SECS,
+            'iss'   => $this->serviceAccountName,
         );
 
         if ($this->sub !== false) {
@@ -122,8 +121,8 @@ class Google_Auth_AssertionCredentials
         $header = array('typ' => 'JWT', 'alg' => 'RS256');
 
         $segments = array(
-          Google_ApiUtils::urlSafeB64Encode(json_encode($header)),
-          Google_ApiUtils::urlSafeB64Encode(json_encode($payload))
+            Google_ApiUtils::urlSafeB64Encode(json_encode($header)),
+            Google_ApiUtils::urlSafeB64Encode(json_encode($payload)),
         );
 
         $signingInput = implode('.', $segments);

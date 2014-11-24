@@ -51,7 +51,7 @@ class MMB_Container
                 array(new MWP_Monolog_Processor_ExceptionProcessor(), 'callback'),
                 array(new MWP_Monolog_Processor_ProcessProcessor(), 'callback'),
             );
-            $handlers   = array();
+            $handlers = array();
 
             if (!empty($this->parameters['log_file'])) {
                 $fileHandler = new Monolog_Handler_StreamHandler(fopen(dirname(dirname(dirname(__FILE__))).'/'.$this->parameters['log_file'], 'a'));

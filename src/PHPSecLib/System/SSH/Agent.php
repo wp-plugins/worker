@@ -86,36 +86,37 @@ class System_SSH_Agent_Identity
      *
      * @var Crypt_RSA
      * @access private
-     * @see System_SSH_Agent_Identity::getPublicKey()
+     * @see    System_SSH_Agent_Identity::getPublicKey()
      */
-    var $key;
+    public $key;
 
     /**
      * Key Blob
      *
      * @var String
      * @access private
-     * @see System_SSH_Agent_Identity::sign()
+     * @see    System_SSH_Agent_Identity::sign()
      */
-    var $key_blob;
+    public $key_blob;
 
     /**
      * Socket Resource
      *
      * @var Resource
      * @access private
-     * @see System_SSH_Agent_Identity::sign()
+     * @see    System_SSH_Agent_Identity::sign()
      */
-    var $fsock;
+    public $fsock;
 
     /**
      * Default Constructor.
      *
      * @param Resource $fsock
+     *
      * @return System_SSH_Agent_Identity
      * @access private
      */
-    function System_SSH_Agent_Identity($fsock)
+    public function System_SSH_Agent_Identity($fsock)
     {
         $this->fsock = $fsock;
     }
@@ -126,9 +127,10 @@ class System_SSH_Agent_Identity
      * Called by System_SSH_Agent::requestIdentities()
      *
      * @param Crypt_RSA $key
+     *
      * @access private
      */
-    function setPublicKey($key)
+    public function setPublicKey($key)
     {
         $this->key = $key;
         $this->key->setPublicKey();
@@ -141,9 +143,10 @@ class System_SSH_Agent_Identity
      * but this saves a small amount of computation.
      *
      * @param String $key_blob
+     *
      * @access private
      */
-    function setPublicKeyBlob($key_blob)
+    public function setPublicKeyBlob($key_blob)
     {
         $this->key_blob = $key_blob;
     }
@@ -154,10 +157,11 @@ class System_SSH_Agent_Identity
      * Wrapper for $this->key->getPublicKey()
      *
      * @param Integer $format optional
+     *
      * @return Mixed
      * @access public
      */
-    function getPublicKey($format = null)
+    public function getPublicKey($format = null)
     {
         return !isset($format) ? $this->key->getPublicKey() : $this->key->getPublicKey($format);
     }
@@ -169,9 +173,10 @@ class System_SSH_Agent_Identity
      * ssh-agent's only supported mode is CRYPT_RSA_SIGNATURE_PKCS1
      *
      * @param Integer $mode
+     *
      * @access public
      */
-    function setSignatureMode($mode)
+    public function setSignatureMode($mode)
     {
     }
 
@@ -181,10 +186,11 @@ class System_SSH_Agent_Identity
      * See "2.6.2 Protocol 2 private key signature request"
      *
      * @param String $message
+     *
      * @return String
      * @access public
      */
-    function sign($message)
+    public function sign($message)
     {
         // the last parameter (currently 0) is for flags and ssh-agent only defines one flag (for ssh-dss): SSH_AGENT_OLD_SIGNATURE
         $packet = pack('CNa*Na*N', SYSTEM_SSH_AGENTC_SIGN_REQUEST, strlen($this->key_blob), $this->key_blob, strlen($message), $message, 0);
@@ -194,7 +200,7 @@ class System_SSH_Agent_Identity
         }
 
         $length = current(unpack('N', fread($this->fsock, 4)));
-        $type = ord(fread($this->fsock, 1));
+        $type   = ord(fread($this->fsock, 1));
         if ($type != SYSTEM_SSH_AGENT_SIGN_RESPONSE) {
             user_error('Unable to retreive signature');
         }
@@ -223,7 +229,7 @@ class System_SSH_Agent
      * @var Resource
      * @access private
      */
-    var $fsock;
+    public $fsock;
 
     /**
      * Default Constructor
@@ -231,7 +237,7 @@ class System_SSH_Agent
      * @return System_SSH_Agent
      * @access public
      */
-    function System_SSH_Agent()
+    public function System_SSH_Agent()
     {
         switch (true) {
             case isset($_SERVER['SSH_AUTH_SOCK']):
@@ -242,10 +248,11 @@ class System_SSH_Agent
                 break;
             default:
                 user_error('SSH_AUTH_SOCK not found');
+
                 return false;
         }
 
-        $this->fsock = fsockopen('unix://' . $address, 0, $errno, $errstr);
+        $this->fsock = fsockopen('unix://'.$address, 0, $errno, $errstr);
         if (!$this->fsock) {
             user_error("Unable to connect to ssh-agent (Error $errno: $errstr)");
         }
@@ -260,7 +267,7 @@ class System_SSH_Agent
      * @return Array
      * @access public
      */
-    function requestIdentities()
+    public function requestIdentities()
     {
         if (!$this->fsock) {
             return array();
@@ -272,27 +279,27 @@ class System_SSH_Agent
         }
 
         $length = current(unpack('N', fread($this->fsock, 4)));
-        $type = ord(fread($this->fsock, 1));
+        $type   = ord(fread($this->fsock, 1));
         if ($type != SYSTEM_SSH_AGENT_IDENTITIES_ANSWER) {
             user_error('Unable to request identities');
         }
 
         $identities = array();
-        $keyCount = current(unpack('N', fread($this->fsock, 4)));
+        $keyCount   = current(unpack('N', fread($this->fsock, 4)));
         for ($i = 0; $i < $keyCount; $i++) {
-            $length = current(unpack('N', fread($this->fsock, 4)));
-            $key_blob = fread($this->fsock, $length);
-            $length = current(unpack('N', fread($this->fsock, 4)));
+            $length      = current(unpack('N', fread($this->fsock, 4)));
+            $key_blob    = fread($this->fsock, $length);
+            $length      = current(unpack('N', fread($this->fsock, 4)));
             $key_comment = fread($this->fsock, $length);
-            $length = current(unpack('N', substr($key_blob, 0, 4)));
-            $key_type = substr($key_blob, 4, $length);
+            $length      = current(unpack('N', substr($key_blob, 0, 4)));
+            $key_type    = substr($key_blob, 4, $length);
             switch ($key_type) {
                 case 'ssh-rsa':
                     if (!class_exists('Crypt_RSA')) {
                         require_once dirname(__FILE__).'/../../Crypt/RSA.php';
                     }
                     $key = new Crypt_RSA();
-                    $key->loadKey('ssh-rsa ' . base64_encode($key_blob) . ' ' . $key_comment);
+                    $key->loadKey('ssh-rsa '.base64_encode($key_blob).' '.$key_comment);
                     break;
                 case 'ssh-dss':
                     // not currently supported

@@ -15,7 +15,6 @@
  * limitations under the License.
  */
 
-
 /**
  * Implements the actual methods/resources of the discovered Google API using magic function
  * calling overloading (__call()), which on call will see if the method name (plus.activities.list)
@@ -29,16 +28,16 @@ class Google_Service_Resource
 {
     // Valid query parameters that work, but don't appear in discovery.
     private $stackParameters = array(
-      'alt'         => array('type' => 'string', 'location' => 'query'),
-      'fields'      => array('type' => 'string', 'location' => 'query'),
-      'trace'       => array('type' => 'string', 'location' => 'query'),
-      'userIp'      => array('type' => 'string', 'location' => 'query'),
-      'userip'      => array('type' => 'string', 'location' => 'query'),
-      'quotaUser'   => array('type' => 'string', 'location' => 'query'),
-      'data'        => array('type' => 'string', 'location' => 'body'),
-      'mimeType'    => array('type' => 'string', 'location' => 'header'),
-      'uploadType'  => array('type' => 'string', 'location' => 'query'),
-      'mediaUpload' => array('type' => 'complex', 'location' => 'query'),
+        'alt'         => array('type' => 'string', 'location' => 'query'),
+        'fields'                      => array('type' => 'string', 'location' => 'query'),
+        'trace'                                       => array('type' => 'string', 'location' => 'query'),
+        'userIp'                                                      => array('type' => 'string', 'location' => 'query'),
+        'userip'                                                                      => array('type' => 'string', 'location' => 'query'),
+        'quotaUser'                                                                                   => array('type' => 'string', 'location' => 'query'),
+        'data'                                                                                                        => array('type' => 'string', 'location' => 'body'),
+        'mimeType'                                                                                                                    => array('type' => 'string', 'location' => 'header'),
+        'uploadType'                                                                                                                                  => array('type' => 'string', 'location' => 'query'),
+        'mediaUpload'                                                                                                                                                 => array('type' => 'complex', 'location' => 'query'),
     );
 
     /** @var Google_ApiService $service */
@@ -63,8 +62,8 @@ class Google_Service_Resource
         $this->serviceName  = $serviceName;
         $this->resourceName = $resourceName;
         $this->methods      = isset($resource['methods']) ?
-          $resource['methods'] :
-          array($resourceName => $resource);
+            $resource['methods'] :
+            array($resourceName => $resource);
     }
 
     /**
@@ -81,8 +80,8 @@ class Google_Service_Resource
     {
         if (!isset($this->methods[$name])) {
             throw new Google_ApiException(
-              "Unknown function: ".
-              "{$this->serviceName}->{$this->resourceName}->{$name}()"
+                "Unknown function: ".
+                "{$this->serviceName}->{$this->resourceName}->{$name}()"
             );
         }
         $method     = $this->methods[$name];
@@ -102,7 +101,7 @@ class Google_Service_Resource
                     // If the post body is another kind of object, we will try and
                     // wrangle it into a sensible format.
                     $parameters['postBody'] =
-                      $this->convertToArrayAndStripNulls($parameters['postBody']);
+                        $this->convertToArrayAndStripNulls($parameters['postBody']);
                 }
             }
             $postBody = json_encode($parameters['postBody']);
@@ -122,8 +121,8 @@ class Google_Service_Resource
         }
 
         $method['parameters'] = array_merge(
-          $method['parameters'],
-          $this->stackParameters
+            $method['parameters'],
+            $this->stackParameters
         );
         foreach ($parameters as $key => $val) {
             if ($key != 'postBody' && !isset($method['parameters'][$key])) {
@@ -133,8 +132,8 @@ class Google_Service_Resource
 
         foreach ($method['parameters'] as $paramName => $paramSpec) {
             if (isset($paramSpec['required']) &&
-              $paramSpec['required'] &&
-              !isset($parameters[$paramName])
+                $paramSpec['required'] &&
+                !isset($parameters[$paramName])
             ) {
                 throw new Google_ApiException("($name) missing required param: '$paramName'");
             }
@@ -151,16 +150,16 @@ class Google_Service_Resource
 
         $servicePath = $this->service->servicePath;
 
-        $url         = Google_Http_REST::createRequestUri(
-          $servicePath,
-          $method['path'],
-          $parameters
+        $url = Google_Http_REST::createRequestUri(
+            $servicePath,
+            $method['path'],
+            $parameters
         );
         $httpRequest = new Google_Http_Request(
-          $url,
-          $method['httpMethod'],
-          null,
-          $postBody
+            $url,
+            $method['httpMethod'],
+            null,
+            $postBody
         );
         $httpRequest->setBaseComponent($this->client->getBasePath());
 
@@ -175,14 +174,14 @@ class Google_Service_Resource
         $httpRequest->setExpectedClass($expected_class);
 
         if (isset($parameters['data']) &&
-          ($parameters['uploadType']['value'] == 'media' || $parameters['uploadType']['value'] == 'multipart')
+            ($parameters['uploadType']['value'] == 'media' || $parameters['uploadType']['value'] == 'multipart')
         ) {
             // If we are doing a simple media upload, trigger that as a convenience.
             $mfu = new Google_Http_MediaFileUpload(
-              $this->client,
-              $httpRequest,
-              isset($parameters['mimeType']) ? $parameters['mimeType']['value'] : 'application/octet-stream',
-              $parameters['data']['value']
+                $this->client,
+                $httpRequest,
+                isset($parameters['mimeType']) ? $parameters['mimeType']['value'] : 'application/octet-stream',
+                $parameters['data']['value']
             );
         }
 
