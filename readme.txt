@@ -1,23 +1,23 @@
 === ManageWP Worker ===
 Contributors: freediver
 Donate link: https://www.networkforgood.org/donation/MakeDonation.aspx?ORGID2=520781390
-Tags: administration, amazon, analytics, clone wordpress, dashboard, google analytics, manage, managewp, managewp worker, manage wordpress, migrate wordpress, multisite, page, post, s3, security, seo, wordpress backup, wordpress multisite, worker
+Tags: administration, amazon, analytics, backup, dashboard, dropbox, google analytics, google, manage, managewp, migrate, clone, duplicate, automate, database, api, mysql, multisite, page, post, s3, security, seo, google drive, integration, stats, plugin, events, automatic, speed, performance, debug
 Requires at least: 3.0
-Tested up to: 4.0
+Tested up to: 4.1
 Stable tag: trunk
 License: GPLv3 or later
 License URI: http://www.gnu.org/licenses/quick-guide-gplv3.html
 
-ManageWP Worker plugin allows you to remotely manage your WordPress sites from one dashboard.
+ManageWP is the ultimate WordPress productivity tool, allowing you to efficiently manage your websites.
 
 == Description ==
 
-[ManageWP](https://managewp.com/ "Manage Multiple Blogs") is a revolutionary service that automates the management of multiple WordPress websites. ManageWP Worker Plugin allows your site to communicate with the service, and is needed in order to enjoy all these features:
+[ManageWP](https://managewp.com/ "Manage WordPress Websites") is a revolutionary service that automates the management of multiple WordPress websites. ManageWP Worker Plugin allows your site to communicate with the service, and is needed in order to enjoy all these features:
 
 Main features:
 
 *   Manage multiple WordPress sites securely and fast
-*	Manage WordPress themes, plugins, users, pages and posts for all your websites from one dashboard
+*	  Manage WordPress themes, plugins, users, pages and posts for all your websites from one dashboard
 *   One click upgrades for WordPress, plugin and themes across all your sites
 *   Schedule automatic backups of your websites (Amazon S3, Google Drive, FTP/SFTP and Dropbox supported)
 *   Install WordPress, clone or migrate WordPress website to another domain
@@ -33,7 +33,7 @@ Check out the [ManageWP Tour video](http://www.youtube.com/watch?v=Cg_W9MQBWt4).
 
 http://www.youtube.com/watch?v=Cg_W9MQBWt4
 
-Check out [ManageWP.com](https://managewp.com/ "Manage Multiple Blogs").
+ManageWP is also the creator of [ManageWP.org](https://managewp.org/ "WordPress news site"), community project capturing the pulse of the WordPress community.
 
 == Changelog ==  
 
