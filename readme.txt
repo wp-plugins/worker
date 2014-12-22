@@ -361,15 +361,15 @@ Make sure you use the latest version of the Worker plugin on the site you are tr
 
 = How does ManageWP compare to services like InfiniteWP, MainWP, CMS Commander, IControlWP ? =
 
-We believe that our product is technologically more advanced and more mature. In some cases ManageWP has been the inspiration for these services, and we continue to innovate. For more information please refer to this comment by [Vladimir Prelovac](http://wpchat.com/t/security-and-centralized-wordpress-management-ie-managewp-jetpack-etc/505/6?u=vprelovac)
+We believe that our product is technologically more advanced and more mature. In some cases ManageWP has been the inspiration for these services, and we continue to innovate. For more information please refer to [this comment](http://wpchat.com/t/security-and-centralized-wordpress-management-ie-managewp-jetpack-etc/505/6?u=vprelovac)
 
-= How does ManageWP compare with backup plugins like BackupBuddy, Backwpup, UpdraftPlus, WP-DB-Backup ? =
+= How does ManageWP compare to backup plugins like BackupBuddy, Backwpup, UpdraftPlus, WP-DB-Backup ? =
 
 There is a limit to what a PHP based backup can do (as are all these plugins) but we believe that our backup system is one of if not the most robust solution on the market.
 
 = How does ManageWP compare with clone plugins like Duplicator, WP Migrate DB, XCloner ? =
 
-We are confident that our clone system is the omst reliable one on the market faturing highly sophisticated technology allowing the easiest and most efficient site clone/migration on the market.
+We are confident that our clone system is the most reliable one on the market featuring highly sophisticated technology allowing for the easiest and most efficient site clone/migration on the market.
 
 = Does ManageWP work with caching plugins like W3 Total Cache or WP Super Cache =
 
