@@ -339,6 +339,42 @@ You should have received a copy of the GNU General Public License along with Man
 
 == Frequently Asked Questions ==
 
+= Is ManageWP secure? =
+
+Yes. We invest heavilly in our security and in four years and serving over quarter a million websites we did not have a single security incident. Also we invest in a [white hat security program](https://managewp.com/white-hat-reward) with the purpose of preventing security issues.
+
+= Will ManageWP work with sites spread on different hosting accounts? =
+
+Yes. 
+
+= Does ManageWP work with WordPress.com sites? =
+
+No. ManageWP works only with self-hosted WordPress sites.
+
+= Can I try all features for free? =
+
+Absolutely. The first month is on us. 
+
 = I have problems adding my site =
 
 Make sure you use the latest version of the Worker plugin on the site you are trying to add. If you still have problems, check our dedicated [FAQ page](http://managewp.com/user-guide/faq/my-sites-fail-to-addload-to-managewp "Add site FAQ") or [contact us](http://managewp.com/contact "ManageWP Contact").
+
+= How does ManageWP compare to services like InfiniteWP, MainWP, CMS Commander, IControlWP ? =
+
+We believe that our product is technologically more advanced and more mature. In some cases ManageWP has been the inspiration for these services, and we continue to innovate. For more information please refer to this comment by [Vladimir Prelovac](http://wpchat.com/t/security-and-centralized-wordpress-management-ie-managewp-jetpack-etc/505/6?u=vprelovac)
+
+= How does ManageWP compare with backup plugins like BackupBuddy, Backwpup, UpdraftPlus, WP-DB-Backup ? =
+
+There is a limit to what a PHP based backup can do (as are all these plugins) but we believe that our backup system is one of if not the most robust solution on the market.
+
+= How does ManageWP compare with clone plugins like Duplicator, WP Migrate DB, XCloner ? =
+
+We are confident that our clone system is the omst reliable one on the market faturing highly sophisticated technology allowing the easiest and most efficient site clone/migration on the market.
+
+= Does ManageWP work with caching plugins like W3 Total Cache or WP Super Cache =
+
+Yes.
+
+= Does ManageWP work with all popular plugins like WordPress SEO by Yoast, WPTouch, Google XML Sitemaps, NextGEN Gallery, Contact Form 7, WooCommerce, iThemes Security, WordPres importer, Wordfence Security and others? =
+
+Yes. In most cases where there are conflicts we document them on our [known issues](https://managewp.com/user-guide/known-issues) page.
