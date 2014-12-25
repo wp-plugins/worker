@@ -1,7 +1,7 @@
 === ManageWP Worker ===
 Contributors: freediver
 Donate link: https://www.networkforgood.org/donation/MakeDonation.aspx?ORGID2=520781390
-Tags: administration, amazon, analytics, backup, dashboard, dropbox, google analytics, google, manage, managewp, migrate, clone, duplicate, automate, database, api, mysql, multisite, page, post, s3, security, seo, google drive, integration, stats, plugin, events, automatic, speed, performance, debug
+Tags: administration, admin,amazon, analytics, api, automate, automatic, backup, comments, clone, dashboard, database, debug, dropbox, duplicate, events, google analytics, google drive, google, integration, login, manage, managewp, migrate, multiple, multisite, mysql, page, performance, plugin, post, remote, s3, security, seo, spam, speed, stats
 Requires at least: 3.0
 Tested up to: 4.1
 Stable tag: trunk
@@ -294,7 +294,7 @@ ManageWP is also the creator of [ManageWP.org](https://managewp.org/ "WordPress 
 1. Upload the plugin folder to your `/wp-content/plugins/` folder
 2. Go to the Plugins page in your website's WP-admin area and activate ManageWP Worker
 3. Visit [ManageWP.com](https://managewp.com/ "ManageWP")
-4. Sign up for a free 14 day trial and add your website
+4. Sign up and add your website
 
 Alternatively
 
@@ -359,15 +359,11 @@ Absolutely. The first month is on us.
 
 Make sure you use the latest version of the Worker plugin on the site you are trying to add. If you still have problems, check our dedicated [FAQ page](http://managewp.com/user-guide/faq/my-sites-fail-to-addload-to-managewp "Add site FAQ") or [contact us](http://managewp.com/contact "ManageWP Contact").
 
-= How does ManageWP compare to services like InfiniteWP, MainWP, CMS Commander, IControlWP ? =
-
-We believe that our product is technologically more advanced and more mature. In some cases ManageWP has been the inspiration for these services, and we continue to innovate. For more information please refer to [this comment](http://wpchat.com/t/security-and-centralized-wordpress-management-ie-managewp-jetpack-etc/505/6?u=vprelovac)
-
 = How does ManageWP compare to backup plugins like BackupBuddy, Backwpup, UpdraftPlus, WP-DB-Backup ? =
 
 There is a limit to what a PHP based backup can do (as are all these plugins) but we believe that our backup system is one of if not the most robust solution on the market.
 
-= How does ManageWP compare with clone plugins like Duplicator, WP Migrate DB, XCloner ? =
+= How does ManageWP compare with clone plugins like Duplicator, WP Migrate DB, All-in-One WP Migration, XCloner ? =
 
 We are confident that our clone system is the most reliable one on the market featuring highly sophisticated technology allowing for the easiest and most efficient site clone/migration on the market.
 
@@ -378,3 +374,7 @@ Yes.
 = Does ManageWP work with all popular plugins like WordPress SEO by Yoast, WPTouch, Google XML Sitemaps, NextGEN Gallery, Contact Form 7, WooCommerce, iThemes Security, WordPres importer, Wordfence Security and others? =
 
 Yes. In most cases where there are conflicts we document them on our [known issues](https://managewp.com/user-guide/known-issues) page.
+
+= How does ManageWP compare to services like InfiniteWP, MainWP, CMS Commander, IControlWP ? =
+
+We believe that our product is technologically more advanced and more mature. In some cases ManageWP has been the inspiration for these services, and we continue to innovate. For more information please refer to [this comment](http://wpchat.com/t/security-and-centralized-wordpress-management-ie-managewp-jetpack-etc/505/6?u=vprelovac)
