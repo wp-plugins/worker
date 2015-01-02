@@ -213,9 +213,6 @@ if (!function_exists('mmb_authenticate')) {
     function mmb_authenticate()
     {
         global $_mwp_data, $_mwp_auth, $mmb_core, $HTTP_RAW_POST_DATA;
-        if (!isset($HTTP_RAW_POST_DATA)) {
-            $HTTP_RAW_POST_DATA = file_get_contents('php://input');
-        }
         $compat = false;
         $compatActive = false;
         $contentType = empty($_SERVER['CONTENT_TYPE']) ? false : $_SERVER['CONTENT_TYPE'];
@@ -227,6 +224,11 @@ if (!function_exists('mmb_authenticate')) {
         if (empty($_SERVER['HTTP_MWP_ACTION']) && !$compatActive) {
             return;
         }
+		
+		if (!isset($HTTP_RAW_POST_DATA)) {
+            $HTTP_RAW_POST_DATA = file_get_contents('php://input');
+        }
+		
         $_mwp_data = json_decode($HTTP_RAW_POST_DATA, true);
 
         if (!$_mwp_data) {
