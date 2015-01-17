@@ -10,7 +10,6 @@ class MMB_Post extends MMB_Core
 {
     public function create($args)
     {
-        //$this->_log($args);
         global $wpdb;
 
         /**

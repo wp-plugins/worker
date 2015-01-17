@@ -169,10 +169,8 @@ class Monolog_ErrorHandler
         if (!(error_reporting() & $code)) {
             return;
         }
-
         $level = isset($this->errorLevelMap[$code]) ? $this->errorLevelMap[$code] : Monolog_Psr_LogLevel::CRITICAL;
-        $this->logger->log($level, self::codeToString($code).': '.$message, array('file' => $file, 'line' => $line));
-
+        $this->logger->log($level, self::codeToString($code).': '.$message, array('code' => $code, 'message' => $message, 'file' => $file, 'line' => $line));
         if ($this->previousErrorHandler === true) {
             return false;
         } elseif ($this->previousErrorHandler) {
@@ -187,12 +185,12 @@ class Monolog_ErrorHandler
     {
         $this->reservedMemory = null;
 
-        $lastError = error_get_last();
+        $lastError            = error_get_last();
         if ($lastError && in_array($lastError['type'], self::$fatalErrors)) {
             $this->logger->log(
                 $this->fatalLevel === null ? Monolog_Psr_LogLevel::ALERT : $this->fatalLevel,
                 'Fatal Error ('.self::codeToString($lastError['type']).'): '.$lastError['message'],
-                array('file' => $lastError['file'], 'line' => $lastError['line'])
+                array('code' => $lastError['type'], 'message' => $lastError['message'], 'file' => $lastError['file'], 'line' => $lastError['line'])
             );
         }
     }

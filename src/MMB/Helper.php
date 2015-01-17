@@ -8,38 +8,8 @@
  **************************************************************/
 class MMB_Helper
 {
+
     public $mmb_multisite;
-
-    /**
-     * A helper function to log data
-     *
-     * @deprecated use mwp_logger() instead
-     *
-     * @param mixed $mixed
-     */
-    public function _log($mixed)
-    {
-        if ((defined('MWP_SHOW_LOG') && MWP_SHOW_LOG == true) || get_option('mwp_debug_enable')) {
-            if (is_array($mixed)) {
-                $mixed = print_r($mixed, 1);
-            } else {
-                if (is_object($mixed)) {
-                    ob_start();
-                    var_dump($mixed);
-                    $mixed = ob_get_clean();
-                }
-            }
-
-            $md5 = get_option('mwp_log_md5');
-            if ($md5 === false) {
-                $md5 = md5(date('jS F Y h:i:s A'));
-                update_option('mwp_log_md5', $md5);
-            }
-            $handle = fopen(dirname(__FILE__).'/log_'.$md5, 'a');
-            fwrite($handle, $mixed.PHP_EOL);
-            fclose($handle);
-        }
-    }
 
     /**
      * Initializes the file system
@@ -257,22 +227,6 @@ class MMB_Helper
         return false;
     }
 
-    public function get_worker_message_id()
-    {
-        return (int) get_option('_action_message_id');
-    }
-
-    public function set_master_public_key($public_key = false)
-    {
-        if ($public_key && !get_option('_worker_public_key')) {
-            add_option('_worker_public_key', base64_encode($public_key));
-
-            return true;
-        }
-
-        return false;
-    }
-
     public function get_master_public_key()
     {
         if (!get_option('_worker_public_key')) {
@@ -289,76 +243,6 @@ class MMB_Helper
         }
 
         return base64_decode(get_option('_worker_nossl_key'));
-    }
-
-    public function set_random_signature($random_key = false)
-    {
-        if ($random_key && !get_option('_worker_nossl_key')) {
-            add_option('_worker_nossl_key', base64_encode($random_key));
-
-            return true;
-        }
-
-        return false;
-    }
-
-    public function authenticate_message($data = false, $signature = false, $message_id = false)
-    {
-        if (!$data && !$signature) {
-            return array(
-                'error' => 'Authentication failed.',
-            );
-        }
-        $nonce = new MWP_Security_HashNonce();
-        $nonce->setValue($message_id);
-        if (!$nonce->verify()) {
-            return array(
-                'error' => 'Invalid nonce used. Please contact support',
-            );
-        }
-
-        $pl_key = $this->get_master_public_key();
-        if (!$pl_key) {
-            return array(
-                'error' => 'Authentication failed. Deactivate and activate the ManageWP Worker plugin on this site, then re-add it to your ManageWP account.',
-            );
-        }
-
-        if (function_exists('openssl_verify') && !$this->get_random_signature()) {
-            $verify = openssl_verify($data, $signature, $pl_key);
-            if ($verify == 1) {
-                //$this->set_worker_message_id($message_id);
-
-                return true;
-            } else {
-                if ($verify == 0) {
-                    return array(
-                        'error' => 'Invalid message signature. Deactivate and activate the ManageWP Worker plugin on this site, then re-add it to your ManageWP account.',
-                    );
-                } else {
-                    return array(
-                        'error' => 'Command not successful! Please try again.',
-                    );
-                }
-            }
-        } else {
-            if ($this->get_random_signature()) {
-                if (md5($data.$this->get_random_signature()) === $signature) {
-                    //$this->set_worker_message_id($message_id);
-
-                    return true;
-                }
-
-                return array(
-                    'error' => 'Invalid message signature. Deactivate and activate the ManageWP Worker plugin on this site, then re-add it to your ManageWP account.',
-                );
-            } // no rand key - deleted in get_stat maybe
-            else {
-                return array(
-                    'error' => 'Invalid message signature. Deactivate and activate the ManageWP Worker plugin on this site, then re-add it to your ManageWP account.',
-                );
-            }
-        }
     }
 
     public function get_secure_hash()
@@ -583,5 +467,20 @@ class MMB_Helper
         }
 
         return $users_authors;
+    }
+
+    private function verifySignature($data, $signature, $publicKey)
+    {
+        if (function_exists('openssl_verify')) {
+            return (openssl_verify($data, $signature, $publicKey) === 1);
+        }
+
+        require_once dirname(__FILE__).'/../PHPSecLib/Crypt/RSA.php';
+        $rsa = new Crypt_RSA();
+        $rsa->setSignatureMode(CRYPT_RSA_SIGNATURE_PKCS1);
+        $rsa->loadKey($publicKey);
+        $verify = $rsa->verify($data, $signature);
+
+        return $verify;
     }
 }

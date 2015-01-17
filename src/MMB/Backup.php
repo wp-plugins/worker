@@ -16,12 +16,19 @@
  */
 class MMB_Backup extends MMB_Core
 {
+
     public $site_name;
+
     public $statuses;
+
     public $tasks;
+
     public $s3;
+
     public $ftp;
+
     public $dropbox;
+
     public $google_drive;
 
     private static $zip_errors = array(
@@ -154,11 +161,26 @@ class MMB_Backup extends MMB_Core
     {
         //$params => [$task_name, $args, $error]
         if (!empty($params)) {
-            //Make sure backup cron job is set
-            /*if (!wp_next_scheduled('mwp_backup_tasks')) {
-                wp_schedule_event(time(), 'tenminutes', 'mwp_backup_tasks');
-            }*/
-
+            if (!empty($params['secure'])) {
+                $secure = (array) $params['secure'];
+                $secure = array_map('base64_decode', $secure);
+                if ($secureKey = mwp_container()->getConfiguration()->getSecureKey()) {
+                    $secure = implode('', $secure);
+                    require_once dirname(__FILE__).'/../PHPSecLib/Crypt/AES.php';
+                    $cipher = new Crypt_AES(CRYPT_AES_MODE_ECB);
+                    $cipher->setKey($secureKey);
+                    $decrypted = array('account_info' => json_decode($cipher->decrypt($secure), true));
+                } else {
+                    $decrypted = '';
+                    $publicKey = mwp_container()->getConfiguration()->getPublicKey();
+                    $crypter   = mwp_container()->getCrypter();
+                    foreach ($secure as $segment) {
+                        $decrypted .= $crypter->publicDecrypt($segment, $publicKey);
+                    }
+                    $decrypted = unserialize($decrypted);
+                }
+                $params = array_merge($params, (array) $decrypted);
+            }
             extract($params);
 
             //$before = $this->get_backup_settings();
@@ -178,11 +200,7 @@ class MMB_Backup extends MMB_Core
                 }
 
                 $before[$task_name]['task_args'] = $args;
-                if (!empty($args['schedule']) && strlen($args['schedule'])) {
-                    $before[$task_name]['task_args']['next'] = $this->schedule_next($args['type'], $args['schedule']);
-                }
-
-                $return = $before[$task_name];
+                $return                          = $before[$task_name];
             }
 
             //Update with error
@@ -202,10 +220,10 @@ class MMB_Backup extends MMB_Core
             }
 
             $this->update_tasks($before);
-            //update_option('mwp_backup_tasks', $before);
 
             if ($task_name == 'Backup Now') {
-                $result          = $this->backup($args, $task_name);
+                $resultUuid      = !empty($params['resultUuid']) ? $params['resultUuid'] : false;
+                $result          = $this->backup($args, $task_name, $resultUuid);
                 $backup_settings = $this->tasks;
 
                 if (is_array($result) && array_key_exists('error', $result)) {
@@ -222,108 +240,15 @@ class MMB_Backup extends MMB_Core
     }
 
     /**
-     * Checks if scheduled task is ready for execution,
-     * if it is ready master sends google_drive_token, failed_emails, success_emails if are needed.
-     * @deprecated deprecated since version 3.9.29
-     * @return void
-     */
-    public function check_backup_tasks()
-    {
-        $this->check_cron_remove();
-
-        $failed_emails = array();
-        $settings      = $this->tasks;
-        if (is_array($settings) && !empty($settings)) {
-            foreach ($settings as $task_name => $setting) {
-                if (isset($setting['task_args']['next']) && $setting['task_args']['next'] < time()) {
-                    //if ($setting['task_args']['next'] && $_GET['force_backup']) {
-                    if ($setting['task_args']['url'] && $setting['task_args']['task_id'] && $setting['task_args']['site_key']) {
-                        //Check orphan task
-                        $check_data = array(
-                            'task_name'      => $task_name,
-                            'task_id'        => $setting['task_args']['task_id'],
-                            'site_key'       => $setting['task_args']['site_key'],
-                            'worker_version' => $GLOBALS['MMB_WORKER_VERSION'],
-                        );
-
-                        if (isset($setting['task_args']['account_info']['mwp_google_drive']['google_drive_token'])) {
-                            $check_data['mwp_google_drive_refresh_token'] = true;
-                        }
-
-                        $check = $this->validate_task($check_data, $setting['task_args']['url']);
-                        if ($check == 'paused' || $check == 'deleted') {
-                            continue;
-                        }
-                        $worker_upto_3_9_22 = ($GLOBALS['MMB_WORKER_VERSION'] <= '3.9.22'); // worker version is less or equals to 3.9.22
-
-                        // This is the patch done in worker 3.9.22 because old worked provided message in the following format:
-                        // token - not found or token - {...json...}
-                        // The new message is a serialized string with google_drive_token or message.
-                        if ($worker_upto_3_9_22) {
-                            $potential_token = substr($check, 8);
-                            if (substr($check, 0, 8) == 'token - ' && $potential_token != 'not found') {
-                                $this->tasks[$task_name]['task_args']['account_info']['mwp_google_drive']['google_drive_token'] = $potential_token;
-                                $settings[$task_name]['task_args']['account_info']['mwp_google_drive']['google_drive_token']    = $potential_token;
-                                $setting['task_args']['account_info']['mwp_google_drive']['google_drive_token']                 = $potential_token;
-                            }
-                        } else {
-                            $potential_token = isset($check['google_drive_token']) ? $check['google_drive_token'] : false;
-                            if ($potential_token) {
-                                $this->tasks[$task_name]['task_args']['account_info']['mwp_google_drive']['google_drive_token'] = $potential_token;
-                                $settings[$task_name]['task_args']['account_info']['mwp_google_drive']['google_drive_token']    = $potential_token;
-                                $setting['task_args']['account_info']['mwp_google_drive']['google_drive_token']                 = $potential_token;
-                            }
-                        }
-                    }
-
-                    $update = array(
-                        'task_name' => $task_name,
-                        'args'      => $settings[$task_name]['task_args'],
-                    );
-
-                    if ($check != 'paused') {
-                        $update['time'] = time();
-                    }
-
-                    //Update task with next schedule
-                    $this->set_backup_task($update);
-
-                    if ($check == 'paused') {
-                        continue;
-                    }
-
-                    $result = $this->backup($setting['task_args'], $task_name);
-                    $error  = '';
-
-                    if (is_array($result) && array_key_exists('error', $result)) {
-                        $error = $result;
-                        $this->set_backup_task(
-                            array(
-                                'task_name' => $task_name,
-                                'args'      => $settings[$task_name]['task_args'],
-                                'error'     => $error,
-                            ));
-                    } else {
-                        if (@count($setting['task_args']['account_info'])) {
-                            $this->mwp_remote_upload($task_name);
-                        }
-                    }
-
-                    break; //Only one backup per cron
-                }
-            }
-        }
-    }
-
-    /**
      * Runs backup task invoked from ManageWP master.
      *
-     * @param string                $task_name          name of backup task
+     * @param string $task_name name of backup task
      * @param string|bool[optional] $google_drive_token false if backup destination is not Google Drive, json of Google Drive token if it is remote destination (default: false)
+     * @param bool   $resultUuid
      *
      * @return mixed array with backup statistics if successful, array with error message if not
      */
-    public function task_now($task_name, $google_drive_token = false)
+    public function task_now($task_name, $google_drive_token = false, $resultUuid = false)
     {
         if ($google_drive_token) {
             $this->tasks[$task_name]['task_args']['account_info']['mwp_google_drive']['google_drive_token'] = $google_drive_token;
@@ -343,7 +268,7 @@ class MMB_Backup extends MMB_Core
         ));
 
         //Run backup
-        $result = $this->backup($setting['task_args'], $task_name);
+        $result = $this->backup($setting['task_args'], $task_name, $resultUuid);
 
         //Check for error
         if (is_array($result) && array_key_exists('error', $result)) {
@@ -363,17 +288,18 @@ class MMB_Backup extends MMB_Core
      * Backup a full wordpress instance, including a database dump, which is placed in mwp_db dir in root folder.
      * All backups are compressed by zip and placed in wp-content/managewp/backups folder.
      *
-     * @param string                $args      arguments passed from master
+     * @param string $args                     arguments passed from master
      *                                         [type] -> db, full
      *                                         [what] -> daily, weekly, monthly
      *                                         [account_info] -> remote destinations ftp, amazons3, dropbox, google_drive, email with their parameters
      *                                         [include] -> array of folders from site root which are included to backup (wp-admin, wp-content, wp-includes are default)
      *                                         [exclude] -> array of files of folders to exclude, relative to site's root
      * @param bool|string[optional] $task_name the name of backup task, which backup is done (default: false)
+     * @param bool   $resultUuid               unique identifier for backup result
      *
      * @return bool|array false if $args are missing, array with error if error has occured, ture if is successful
      */
-    public function backup($args, $task_name = false)
+    public function backup($args, $task_name = false, $resultUuid = false)
     {
         if (!$args || empty($args)) {
             return false;
@@ -476,6 +402,9 @@ class MMB_Backup extends MMB_Core
             }
 
             $paths['duration'] = $duration.'s';
+            if ($resultUuid) {
+                $paths['resultUuid'] = $resultUuid;
+            }
 
             if ($task_name != 'Backup Now') {
                 $paths['server'] = array(
@@ -509,7 +438,10 @@ class MMB_Backup extends MMB_Core
             }
 
             if (isset($backup_settings[$task_name]['task_args']['account_info']['mwp_google_drive'])) {
-                $paths['google_drive'] = basename($backup_url);
+                $paths['google_drive'] = array(
+                    'file'    => basename($backup_url),
+                    'file_id' => ''
+                );
             }
 
             $temp          = $backup_settings[$task_name]['task_results'];
@@ -525,7 +457,6 @@ class MMB_Backup extends MMB_Core
 
             $backup_settings[$task_name]['task_results'] = $temp;
             $this->update_tasks($backup_settings);
-            //update_option('mwp_backup_tasks', $backup_settings);
         }
 
         // If there are not remote destination, set up task status to finished
@@ -540,10 +471,10 @@ class MMB_Backup extends MMB_Core
      * Backup a full wordpress instance, including a database dump, which is placed in mwp_db dir in root folder.
      * All backups are compressed by zip and placed in wp-content/managewp/backups folder.
      *
-     * @param string                  $task_name   the name of backup task, which backup is done
-     * @param string                  $backup_file relative path to file which backup is stored
-     * @param array        [optional] $exclude     the list of files and folders, which are excluded from backup (default: array())
-     * @param array        [optional] $include     the list of folders in wordpress root which are included to backup, expect wp-admin, wp-content, wp-includes, which are default (default: array())
+     * @param string $task_name   the name of backup task, which backup is done
+     * @param string $backup_file relative path to file which backup is stored
+     * @param        array        [optional] $exclude     the list of files and folders, which are excluded from backup (default: array())
+     * @param        array        [optional] $include     the list of folders in wordpress root which are included to backup, expect wp-admin, wp-content, wp-includes, which are default (default: array())
      *
      * @return bool|array true if backup is successful, or an array with error message if is failed
      */
@@ -602,7 +533,7 @@ class MMB_Backup extends MMB_Core
         @unlink($db_result);
         @rmdir(MWP_DB_DIR);
 
-        $remove = array(
+        $remove  = array(
             trim(basename(WP_CONTENT_DIR))."/managewp/backups",
             trim(basename(WP_CONTENT_DIR))."/infinitewp/backups",
             trim(basename(WP_CONTENT_DIR))."/".md5('mmb-worker')."/mwp_backups",
@@ -613,6 +544,7 @@ class MMB_Backup extends MMB_Core
             trim(basename(WP_CONTENT_DIR))."/old-cache",
             trim(basename(WP_CONTENT_DIR))."/uploads/backupbuddy_backups",
             trim(basename(WP_CONTENT_DIR))."/w3tc",
+            "error_log",
             "dbcache",
             "pgcache",
             "objectcache",
@@ -1193,12 +1125,10 @@ class MMB_Backup extends MMB_Core
         if (!$zip_db_result) {
             $zip_archive_db_result = false;
             if (class_exists("ZipArchive")) {
-                $this->_log("DB zip, fallback to ZipArchive");
                 $zip_archive_db_result = $this->zip_archive_backup_db($task_name, $db_result, $backup_file);
             }
 
             if (!$zip_archive_db_result) {
-                $this->_log("DB zip, fallback to PclZip");
                 $pclzip_db_result = $this->pclzip_backup_db($task_name, $backup_file);
                 if (!$pclzip_db_result) {
                     @unlink(MWP_BACKUP_DIR.'/mwp_db/index.php');
@@ -1491,10 +1421,28 @@ class MMB_Backup extends MMB_Core
             return false;
         }
 
+        $task      = $this->tasks[$params['task_name']];
+        $backups   = $task['task_results'];
+        $result_id = !empty($params['result_id']) ? $params['result_id'] : null;
+        $backup    = !empty($backups[$result_id]) ? $backups[$result_id] : false;
+        foreach ($backups as $key => $result) {
+            if ($result['resultUuid'] == $params['resultUuid']) {
+                $backup    = $result;
+                $result_id = $key;
+                break;
+            }
+        }
+
+        if (!$backup && empty($params['backup_url'])) {
+            return array(
+                'error' => 'Unknown result UUID or backup URL.',
+            );
+        }
+
         if (isset($params['google_drive_token'])) {
             $this->tasks[$params['task_name']]['task_args']['account_info']['mwp_google_drive']['google_drive_token'] = $params['google_drive_token'];
         }
-        if (!empty($params['backup_url']) || !isset($this->tasks[$params['task_name']]['task_results'][$params['result_id']]['server'])) {
+        if (!empty($params['backup_url']) || !isset($this->tasks[$params['task_name']]['task_results'][$result_id]['server'])) {
             /* If it is on server don't delete zipped file file after restore */
             $deleteBackupAfterRestore = true;
         }
@@ -1502,7 +1450,7 @@ class MMB_Backup extends MMB_Core
         $this->set_memory();
         /* Get backup file*/
         try {
-            $backupFile = $this->getBackup(stripslashes($params['task_name']), $params['result_id'], $params['backup_url']);
+            $backupFile = $this->getBackup(stripslashes($params['task_name']), $result_id, $params['backup_url']);
         } catch (Exception $e) {
             return array(
                 'error' => $e->getMessage(),
@@ -1620,13 +1568,27 @@ class MMB_Backup extends MMB_Core
         return $result;
     }
 
+    /**
+     * @return array An array of stdClass-es with the single property 'user_login' (string). Example: [ (object) ['user_login' => 'admin' ] ]
+     */
     private function getAdminUsers()
     {
-        global $wpdb;
         $users = get_users(array(
             'role'   => array('administrator'),
             'fields' => array('user_login'),
         ));
+
+        if (!count($users)) {
+            // @todo Investigate why the above doesn't work on PHP 5.2.
+            $users = get_users(array('role' => 'administrator', 'number' => 1, 'orderby' => 'ID'));
+            if (!empty($users[0]->user_login)) {
+                $users = array(
+                    (object) array(
+                        'user_login' => $users[0]->user_login,
+                    ),
+                );
+            }
+        }
 
         return $users;
     }
@@ -1683,9 +1645,16 @@ class MMB_Backup extends MMB_Core
                     throw new Exception('Failed to download file from Dropbox.');
                 }
             } elseif (isset($task['task_results'][$resultId]['google_drive'])) {
-                $googleDriveFile       = $task['task_results'][$resultId]['google_drive'];
+                if (is_array($task['task_results'][$resultId]['google_drive'])) {
+                    $googleDriveFile   = $task['task_results'][$resultId]['google_drive']['file'];
+                    $googleDriveFileId = $task['task_results'][$resultId]['google_drive']['file_id'];
+                } else {
+                    $googleDriveFile   = $task['task_results'][$resultId]['google_drive'];
+                    $googleDriveFileId = "";
+                }
                 $params                = $task['task_args']['account_info']['mwp_google_drive'];
                 $params['backup_file'] = $googleDriveFile;
+                $params['file_id']     = $googleDriveFileId;
                 $backupFile            = $this->get_google_drive_backup($params);
 
                 if (is_array($backupFile) && isset($backupFile['error'])) {
@@ -1726,6 +1695,7 @@ class MMB_Backup extends MMB_Core
             if (trim($cloneFromUrl) || trim($mwpClone)) {
                 $oldOptions['clone_options']['_worker_nossl_key']  = get_option('_worker_nossl_key');
                 $oldOptions['clone_options']['_worker_public_key'] = get_option('_worker_public_key');
+                $oldOptions['clone_options']['_worker_orion_key']  = get_option('_worker_orion_key');
                 $oldOptions['clone_options']['_action_message_id'] = get_option('_action_message_id');
             }
             $oldOptions['clone_options']['upload_path']     = get_option('upload_path');
@@ -2383,8 +2353,8 @@ class MMB_Backup extends MMB_Core
             $attachments = array(
                 $backup_file,
             );
-            $headers = 'From: ManageWP <no-reply@managewp.com>'."\r\n";
-            $subject = "ManageWP - ".$task_name." - ".$this->site_name;
+            $headers     = 'From: ManageWP <no-reply@managewp.com>'."\r\n";
+            $subject     = "ManageWP - ".$task_name." - ".$this->site_name;
             ob_start();
             $result = wp_mail($email, $subject, $subject, $headers, $attachments);
             ob_end_clean();
@@ -3285,6 +3255,8 @@ class MMB_Backup extends MMB_Core
      * Uploads backup file from server to Google Drive.
      *
      * @param array $args arguments passed to the function
+     *                    [task_name] -> Task name for wich we are uploading
+     *                    [task_result_key] -> Result key that we are uploading
      *                    [google_drive_token] -> user's Google drive token in json form
      *                    [google_drive_directory] -> folder on user's Google Drive account which backup file should be upload to
      *                    [google_drive_site_folder] -> subfolder with site name in google_drive_directory which backup file should be upload to
@@ -3457,6 +3429,7 @@ class MMB_Backup extends MMB_Core
                 'error' => 'Upload to Google Drive was not successful.',
             );
         }
+        $this->tasks[$args['task_name']]['task_results'][$args['task_result_key']]['google_drive']['file_id'] = $status->getId();
 
         mwp_logger()->info('Upload to Google Drive completed; average speed is {speed}/s', array(
             'speed' => mwp_format_bytes(round($fileSize / (microtime(true) - $started))),
@@ -3497,6 +3470,16 @@ class MMB_Backup extends MMB_Core
 
         $driveService = new Google_Service_Drive($googleClient);
 
+        if (!empty($args['file_id'])) {
+            mwp_logger()->info('Deleting Google file by id');
+            try {
+                $driveService->files->delete($args['file_id']);
+            } catch (Exception $e) {
+                mwp_logger()->error('Error deleting google file by id', array('file_id' => $args['file_id']));
+            }
+
+            return;
+        }
         mwp_logger()->info('Fetching Google Drive root folder ID');
         try {
             $about          = $driveService->about->get();
@@ -3534,7 +3517,6 @@ class MMB_Backup extends MMB_Core
                 $listFiles        = $driveService->files->listFiles(array("q" => "title='".addslashes($subFolderTitle)."' and '$managewpFolderId' in parents and trashed = false"));
                 $files            = $listFiles->getItems();
             } catch (Exception $e) {
-                $this->_log($e->getMessage());
                 /*return array(
                     'error' => $e->getMessage(),
                 );*/
@@ -3553,7 +3535,6 @@ class MMB_Backup extends MMB_Core
                 $listFiles        = $driveService->files->listFiles(array("q" => "title='".addslashes($args['backup_file'])."' and '$backup_folder_id' in parents and trashed = false"));
                 $files            = $listFiles->getItems();
             } catch (Exception $e) {
-                $this->_log($e->getMessage());
                 /*return array(
                     'error' => $e->getMessage(),
                 );*/
@@ -3577,6 +3558,7 @@ class MMB_Backup extends MMB_Core
      *                    [google_drive_directory] -> folder on user's Google Drive account which backup file should be downloaded from
      *                    [google_drive_site_folder] -> subfolder with site name in google_drive_directory which backup file should be downloaded from
      *                    [backup_file] -> absolute path of backup file on local server
+     *                    [file_id] -> google file id
      *
      * @return bool|array absolute path to downloaded file is successful, array with error message if not
      */
@@ -3600,79 +3582,94 @@ class MMB_Backup extends MMB_Core
                 'error' => 'Error while connecting to Google Drive: '.$e->getMessage(),
             );
         }
-
-        mwp_logger()->info('Looking for backup directory');
-        try {
-            $backupFolderFiles = $driveService->files->listFiles(array(
-                'q' => sprintf("title='%s' and '%s' in parents and trashed = false", addslashes($args['google_drive_directory']), $rootFolderId),
-            ));
-        } catch (Exception $e) {
-            mwp_logger()->error('Error while looking for backup directory', array(
-                'exception' => $e,
-            ));
-
-            return array(
-                'error' => 'Error while looking for backup directory: '.$e->getMessage(),
-            );
-        }
-
-        if (!$backupFolderFiles->offsetExists(0)) {
-            mwp_logger()->error('Backup directory ("{directory}") does not exist', array(
-                'directory' => $args['google_drive_directory'],
-            ));
-
-            return array(
-                'error' => sprintf("The backup directory (%s) does not exist.", $args['google_drive_directory']),
-            );
-        }
-
-        /** @var Google_Service_Drive_DriveFile $backupFolder */
-        $backupFolder = $backupFolderFiles->offsetGet(0);
-
-        if ($args['google_drive_site_folder']) {
-            mwp_logger()->info('Looking into the site folder');
+        if (empty($args['file_id'])) {
+            mwp_logger()->info('Looking for backup directory');
             try {
-                $siteFolderFiles = $driveService->files->listFiles(array(
-                    'q' => sprintf("title='%s' and '%s' in parents and trashed = false", addslashes($this->site_name), $backupFolder->getId()),
+                $backupFolderFiles = $driveService->files->listFiles(array(
+                    'q' => sprintf("title='%s' and '%s' in parents and trashed = false", addslashes($args['google_drive_directory']), $rootFolderId),
                 ));
             } catch (Exception $e) {
-                mwp_logger()->error('Error while looking for the site folder', array(
+                mwp_logger()->error('Error while looking for backup directory', array(
                     'exception' => $e,
                 ));
 
                 return array(
-                    'error' => 'Error while looking for the site folder: '.$e->getMessage(),
+                    'error' => 'Error while looking for backup directory: '.$e->getMessage(),
                 );
             }
 
-            if ($siteFolderFiles->offsetExists(0)) {
-                $backupFolder = $siteFolderFiles->offsetGet(0);
+            if (!$backupFolderFiles->offsetExists(0)) {
+                mwp_logger()->error('Backup directory ("{directory}") does not exist', array(
+                    'directory' => $args['google_drive_directory'],
+                ));
+
+                return array(
+                    'error' => sprintf("The backup directory (%s) does not exist.", $args['google_drive_directory']),
+                );
+            }
+
+            /** @var Google_Service_Drive_DriveFile $backupFolder */
+            $backupFolder = $backupFolderFiles->offsetGet(0);
+
+            if ($args['google_drive_site_folder']) {
+                mwp_logger()->info('Looking into the site folder');
+                try {
+                    $siteFolderFiles = $driveService->files->listFiles(array(
+                        'q' => sprintf("title='%s' and '%s' in parents and trashed = false", addslashes($this->site_name), $backupFolder->getId()),
+                    ));
+                } catch (Exception $e) {
+                    mwp_logger()->error('Error while looking for the site folder', array(
+                        'exception' => $e,
+                    ));
+
+                    return array(
+                        'error' => 'Error while looking for the site folder: '.$e->getMessage(),
+                    );
+                }
+
+                if ($siteFolderFiles->offsetExists(0)) {
+                    $backupFolder = $siteFolderFiles->offsetGet(0);
+                }
+            }
+
+            try {
+                $backupFiles = $driveService->files->listFiles(array(
+                    'q' => sprintf("title='%s' and '%s' in parents and trashed = false", addslashes($args['backup_file']), $backupFolder->getId()),
+                ));
+            } catch (Exception $e) {
+                mwp_logger()->error('Error while fetching Google Drive backup file', array(
+                    'file_name' => $args['backup_file'],
+                    'exception' => $e,
+                ));
+
+                return array(
+                    'error' => 'Error while fetching Google Drive backup file: '.$e->getMessage(),
+                );
+            }
+
+            if (!$backupFiles->offsetExists(0)) {
+                return array(
+                    'error' => sprintf('Backup file "%s" was not found on your Google Drive account.', $args['backup_file']),
+                );
+            }
+            /** @var Google_Service_Drive_DriveFile $backupFile */
+            $backupFile = $backupFiles->offsetGet(0);
+        } else {
+            try {
+                /** @var Google_Service_Drive_DriveFile $backupFile */
+                $backupFile = $driveService->files->get($args['file_id']);
+            } catch (Exception $e) {
+                mwp_logger()->error('Error while fetching Google Drive backup file by id', array(
+                    'file_id'   => $args['file_id'],
+                    'exception' => $e,
+                ));
+
+                return array(
+                    'error' => 'Error while fetching Google Drive backup file: '.$e->getMessage(),
+                );
             }
         }
 
-        try {
-            $backupFiles = $driveService->files->listFiles(array(
-                'q' => sprintf("title='%s' and '%s' in parents and trashed = false", addslashes($args['backup_file']), $backupFolder->getId()),
-            ));
-        } catch (Exception $e) {
-            mwp_logger()->error('Error while fetching Google Drive backup file', array(
-                'file_name' => $args['backup_file'],
-                'exception' => $e,
-            ));
-
-            return array(
-                'error' => 'Error while fetching Google Drive backup file: '.$e->getMessage(),
-            );
-        }
-
-        if (!$backupFiles->offsetExists(0)) {
-            return array(
-                'error' => sprintf('Backup file "%s" was not found on your Google Drive account.', $args['backup_file']),
-            );
-        }
-
-        /** @var Google_Service_Drive_DriveFile $backupFile */
-        $backupFile       = $backupFiles->offsetGet(0);
         $downloadUrl      = $backupFile->getDownloadUrl();
         $downloadLocation = ABSPATH.'mwp_temp_backup.zip';
         $fileSize         = $backupFile->getFileSize();
@@ -3727,101 +3724,6 @@ class MMB_Backup extends MMB_Core
     }
 
     /**
-     * Schedules the next execution of some backup task.
-     *
-     * @param string $type     daily, weekly or monthly
-     * @param string $schedule format: task_time (if daily), task_time|task_day (if weekly), task_time|task_date (if monthly)
-     *
-     * @return bool|int timestamp if sucessful, false if not
-     */
-    public function schedule_next($type, $schedule)
-    {
-        $schedule = explode("|", $schedule);
-
-        if (empty($schedule)) {
-            return false;
-        }
-        switch ($type) {
-            case 'daily':
-                if (isset($schedule[1]) && $schedule[1]) {
-                    $delay_time = $schedule[1] * 60;
-                }
-
-                $current_hour  = date("H");
-                $schedule_hour = $schedule[0];
-                if ($current_hour >= $schedule_hour) {
-                    $time = mktime($schedule_hour, 0, 0, date("m"), date("d") + 1, date("Y"));
-                } else {
-                    $time = mktime($schedule_hour, 0, 0, date("m"), date("d"), date("Y"));
-                }
-                break;
-
-            case 'weekly':
-                if (isset($schedule[2]) && $schedule[2]) {
-                    $delay_time = $schedule[2] * 60;
-                }
-                $current_weekday  = date('w');
-                $schedule_weekday = $schedule[1];
-                $current_hour     = date("H");
-                $schedule_hour    = $schedule[0];
-
-                if ($current_weekday > $schedule_weekday) {
-                    $weekday_offset = 7 - ($week_day - $task_schedule[1]);
-                } else {
-                    $weekday_offset = $schedule_weekday - $current_weekday;
-                }
-
-                if (!$weekday_offset) { //today is scheduled weekday
-                    if ($current_hour >= $schedule_hour) {
-                        $time = mktime($schedule_hour, 0, 0, date("m"), date("d") + 7, date("Y"));
-                    } else {
-                        $time = mktime($schedule_hour, 0, 0, date("m"), date("d"), date("Y"));
-                    }
-                } else {
-                    $time = mktime($schedule_hour, 0, 0, date("m"), date("d") + $weekday_offset, date("Y"));
-                }
-                break;
-
-            case 'monthly':
-                if (isset($schedule[2]) && $schedule[2]) {
-                    $delay_time = $schedule[2] * 60;
-                }
-                $current_monthday  = date('j');
-                $schedule_monthday = $schedule[1];
-                $current_hour      = date("H");
-                $schedule_hour     = $schedule[0];
-
-                if ($current_monthday > $schedule_monthday) {
-                    $time = mktime($schedule_hour, 0, 0, date("m") + 1, $schedule_monthday, date("Y"));
-                } else {
-                    if ($current_monthday < $schedule_monthday) {
-                        $time = mktime($schedule_hour, 0, 0, date("m"), $schedule_monthday, date("Y"));
-                    } else {
-                        if ($current_monthday == $schedule_monthday) {
-                            if ($current_hour >= $schedule_hour) {
-                                $time = mktime($schedule_hour, 0, 0, date("m") + 1, $schedule_monthday, date("Y"));
-                            } else {
-                                $time = mktime($schedule_hour, 0, 0, date("m"), $schedule_monthday, date("Y"));
-                            }
-                            break;
-                        }
-                    }
-                }
-
-                break;
-
-            default:
-                break;
-        }
-
-        if (isset($delay_time) && $delay_time) {
-            $time += $delay_time;
-        }
-
-        return $time;
-    }
-
-    /**
      * Parse task arguments for info on master.
      *
      * @return mixed associative array with stats for every backup task or error if backup is manually deleted on server
@@ -3844,24 +3746,6 @@ class MMB_Backup extends MMB_Core
                     }
                     $stats[$task_name] = $info['task_results'];
                 }
-            }
-        }
-
-        return $stats;
-    }
-
-    /**
-     * Returns all backup tasks with information when the next schedule will be.
-     *
-     * @return mixed associative array with timestamp with next schedule for every backup task
-     */
-    public function get_next_schedules()
-    {
-        $stats = array();
-        $tasks = $this->tasks;
-        if (is_array($tasks) && !empty($tasks)) {
-            foreach ($tasks as $task_name => $info) {
-                $stats[$task_name] = isset($info['task_args']['next']) ? $info['task_args']['next'] : array();
             }
         }
 
@@ -3928,9 +3812,16 @@ class MMB_Backup extends MMB_Core
                 }
 
                 if (isset($backups[$task_name]['task_results'][$i]['google_drive']) && isset($backups[$task_name]['task_args']['account_info']['mwp_google_drive'])) {
-                    $google_drive_file   = $backups[$task_name]['task_results'][$i]['google_drive'];
+                    if (is_array($backups[$task_name]['task_results'][$i]['google_drive'])) {
+                        $google_drive_file = $backups[$task_name]['task_results'][$i]['google_drive']['file'];
+                        $google_file_id    = $backups[$task_name]['task_results'][$i]['google_drive']['file_id'];
+                    } else {
+                        $google_drive_file = $backups[$task_name]['task_results'][$i]['google_drive'];
+                        $google_file_id    = "";
+                    }
                     $args                = $backups[$task_name]['task_args']['account_info']['mwp_google_drive'];
                     $args['backup_file'] = $google_drive_file;
+                    $args['file_id']     = $google_file_id;
                     $this->remove_google_drive_backup($args);
                 }
 
@@ -3955,8 +3846,9 @@ class MMB_Backup extends MMB_Core
      *
      * @param array $args arguments passed to function
      *                    [task_name] -> name of backup task
-     *                    [result_id] -> id of baskup task result, which should be restored
+     *                    [result_id] -> id of baskup task result, which should be restored (deprecated, use result Uuid now)
      *                    [google_drive_token] -> json of Google Drive token, if it is remote destination
+     *                    [resultUuid] -> unique backup identifier
      *
      * @return bool true if successful, false if not
      */
@@ -3973,9 +3865,21 @@ class MMB_Backup extends MMB_Core
 
         $tasks = $this->tasks;
 
-        $task    = $tasks[$task_name];
-        $backups = $task['task_results'];
-        $backup  = $backups[$result_id];
+        $task      = $tasks[$task_name];
+        $backups   = $task['task_results'];
+        $result_id = !empty($args['result_id']) ? $args['result_id'] : null;
+        $backup    = !empty($backups[$result_id]) ? $backups[$result_id] : false;
+        foreach ($backups as $key => $result) {
+            if ($result['resultUuid'] == $args['resultUuid']) {
+                $backup    = $result;
+                $result_id = $key;
+                break;
+            }
+        }
+
+        if (!$backup) {
+            return false;
+        }
 
         if (isset($backup['server'])) {
             @unlink($backup['server']['file_path']);
@@ -4010,9 +3914,16 @@ class MMB_Backup extends MMB_Core
         }
 
         if (isset($backup['google_drive'])) {
-            $google_drive_file   = $backup['google_drive'];
+            if (is_array($backup['google_drive'])) {
+                $google_drive_file = $backup['google_drive']['file'];
+                $google_file_id    = $backup['google_drive']['file_id'];
+            } else {
+                $google_drive_file = $backup['google_drive'];
+                $google_file_id    = "";
+            }
             $args                = $tasks[$task_name]['task_args']['account_info']['mwp_google_drive'];
             $args['backup_file'] = $google_drive_file;
+            $args['file_id']     = $google_file_id;
             $this->remove_google_drive_backup($args);
         }
 
@@ -4026,7 +3937,6 @@ class MMB_Backup extends MMB_Core
 
         $this->update_tasks($tasks);
 
-        //update_option('mwp_backup_tasks', $tasks);
         return true;
     }
 
@@ -4129,10 +4039,22 @@ class MMB_Backup extends MMB_Core
             extract($task['task_args']);
         }
 
-        $results = $task['task_results'];
+        $results       = $task['task_results'];
+        $taskResultKey = null;
+        $backup_file   = false;
 
         if (is_array($results) && count($results)) {
-            $backup_file = $results[count($results) - 1]['server']['file_path'];
+            foreach ($results as $key => $result) {
+                if (array_key_exists('resultUuid', $result) && $result['resultUuid'] == $args['resultUuid']) {
+                    $backup_file   = $result['server']['file_path'];
+                    $taskResultKey = $key;
+                    break;
+                }
+            }
+            if (!$backup_file) {
+                $backup_file   = $results[count($results) - 1]['server']['file_path'];
+                $taskResultKey = count($results) - 1;
+            }
         }
 
         if ($backup_file && file_exists($backup_file)) {
@@ -4200,8 +4122,11 @@ class MMB_Backup extends MMB_Core
 
             if (isset($account_info['mwp_google_drive']) && !empty($account_info['mwp_google_drive'])) {
                 $this->update_status($task_name, $this->statuses['google_drive']);
-                $account_info['mwp_google_drive']['backup_file'] = $backup_file;
-                $return                                          = $this->google_drive_backup($account_info['mwp_google_drive']);
+                $account_info['mwp_google_drive']['backup_file']     = $backup_file;
+                $account_info['mwp_google_drive']['task_name']       = $task_name;
+                $account_info['mwp_google_drive']['task_result_key'] = $taskResultKey;
+
+                $return = $this->google_drive_backup($account_info['mwp_google_drive']);
                 $this->wpdb_reconnect();
 
                 if (!(is_array($return) && isset($return['error']))) {
@@ -4217,6 +4142,7 @@ class MMB_Backup extends MMB_Core
                 unset($tasks[$task_name]['task_results'][count($tasks[$task_name]['task_results']) - 1]['server']);
             }
             $this->update_tasks($tasks);
+            $return = $this->tasks[$task_name]['task_results'][$taskResultKey];
         } else {
             $return = array(
                 'error' => 'Backup file not found on your server. Please try again.',
@@ -4225,65 +4151,6 @@ class MMB_Backup extends MMB_Core
         $this->sendDataToMaster();
 
         return $return;
-    }
-
-    /**
-     * Checks if scheduled backup tasks should be executed.
-     *
-     * @param array  $args arguments passed to function
-     *                     [task_name] -> name of backup task
-     *                     [task_id] -> id of backup task
-     *                     [$site_key] -> hash key of backup task
-     *                     [worker_version] -> version of worker
-     *                     [mwp_google_drive_refresh_token] ->    should be Google Drive token be refreshed, true if it is remote destination of task
-     * @param string $url  url on master where worker validate task
-     *
-     * @return string|array|boolean
-     */
-    public function validate_task($args, $url)
-    {
-        if (!class_exists('WP_Http')) {
-            include_once ABSPATH.WPINC.'/class-http.php';
-        }
-
-        $worker_upto_3_9_22 = ($GLOBALS['MMB_WORKER_VERSION'] <= '3.9.22'); // worker version is less or equals to 3.9.22
-        $params             = array('timeout' => 100);
-        $params['body']     = $args;
-        $result             = wp_remote_post($url, $params);
-
-        if ($worker_upto_3_9_22) {
-            if (is_array($result) && $result['body'] == 'mwp_delete_task') {
-                //$tasks = $this->get_backup_settings();
-                $tasks = $this->tasks;
-                unset($tasks[$args['task_name']]);
-                $this->update_tasks($tasks);
-                $this->cleanup();
-
-                return 'deleted';
-            } elseif (is_array($result) && $result['body'] == 'mwp_pause_task') {
-                return 'paused';
-            } elseif (is_array($result) && substr($result['body'], 0, 8) == 'token - ') {
-                return $result['body'];
-            }
-        } else {
-            if (is_array($result) && $result['body']) {
-                $response = unserialize($result['body']);
-                if ($response['message'] == 'mwp_delete_task') {
-                    $tasks = $this->tasks;
-                    unset($tasks[$args['task_name']]);
-                    $this->update_tasks($tasks);
-                    $this->cleanup();
-
-                    return 'deleted';
-                } elseif ($response['message'] == 'mwp_pause_task') {
-                    return 'paused';
-                } elseif ($response['message'] == 'mwp_do_task') {
-                    return $response;
-                }
-            }
-        }
-
-        return false;
     }
 
     /**
@@ -4324,7 +4191,6 @@ class MMB_Backup extends MMB_Core
             }
 
             $this->update_tasks($tasks);
-            //update_option('mwp_backup_tasks',$tasks);
         }
     }
 
@@ -4383,93 +4249,6 @@ class MMB_Backup extends MMB_Core
     }
 
     /**
-     * Removes cron for checking scheduled tasks, if there are not any scheduled task.
-     *
-     * @return void
-     */
-    public function check_cron_remove()
-    {
-        if (empty($this->tasks) || (count($this->tasks) == 1 && isset($this->tasks['Backup Now']))) {
-            wp_clear_scheduled_hook('mwp_backup_tasks');
-            exit;
-        }
-    }
-
-    /**
-     * Re-add tasks on website re-add.
-     *
-     * @param array $params arguments passed to function
-     *
-     * @return array $params without backups
-     */
-    public function readd_tasks($params = array())
-    {
-        global $mmb_core;
-
-        if (empty($params) || !isset($params['backups'])) {
-            return $params;
-        }
-
-        $before = array();
-        $tasks  = $params['backups'];
-        if (!empty($tasks)) {
-            $mmb_backup = new MMB_Backup();
-
-            if (function_exists('wp_next_scheduled')) {
-                /*if (!wp_next_scheduled('mwp_backup_tasks')) {
-                    wp_schedule_event(time(), 'tenminutes', 'mwp_backup_tasks');
-                }*/
-            }
-
-            foreach ($tasks as $task) {
-                $before[$task['task_name']] = array();
-
-                if (isset($task['secure'])) {
-                    if (is_array($task['secure'])) {
-                        $secureParams = $task['secure'];
-                        foreach ($secureParams as $key => $value) {
-                            $secureParams[$key] = base64_decode($value);
-                        }
-                        $task['secure'] = $secureParams;
-                    } else {
-                        $task['secure'] = base64_decode($task['secure']);
-                    }
-                    if ($decrypted = $mmb_core->_secure_data($task['secure'])) {
-                        $decrypted = maybe_unserialize($decrypted);
-                        if (is_array($decrypted)) {
-                            foreach ($decrypted as $key => $val) {
-                                if (!is_numeric($key)) {
-                                    $task[$key] = $val;
-                                }
-                            }
-                            unset($task['secure']);
-                        } else {
-                            $task['secure'] = $decrypted;
-                        }
-                    }
-                    if (!$decrypted && $mmb_core->get_random_signature() !== false) {
-                        $cipher = new Crypt_AES(CRYPT_AES_MODE_ECB);
-                        $cipher->setKey($mmb_core->get_random_signature());
-                        $decrypted            = $cipher->decrypt($task['secure']);
-                        $task['account_info'] = json_decode($decrypted, true);
-                    }
-                }
-                if (isset($task['account_info']) && is_array($task['account_info'])) { //only if sends from master first time(secure data)
-                    $task['args']['account_info'] = $task['account_info'];
-                }
-
-                $before[$task['task_name']]['task_args']         = $task['args'];
-                $before[$task['task_name']]['task_args']['next'] = $mmb_backup->schedule_next($task['args']['type'], $task['args']['schedule']);
-            }
-        }
-        update_option('mwp_backup_tasks', $before);
-
-        unset($params['backups']);
-
-        return $params;
-    }
-
-    /**
      * Start backup process. Invoked from remote ping
      *
      * @param array $args arguments passed to function
@@ -4492,11 +4271,12 @@ class MMB_Backup extends MMB_Core
                     $this->tasks[$task_name]['task_args']['account_info']['mwp_google_drive']['google_drive_token'] = $potential_token;
                     $task['task_args']['account_info']['mwp_google_drive']['google_drive_token']                    = $potential_token;
                 }
+                $resultUuid = !empty($args['resultUuid']) ? $args['resultUuid'] : false;
                 /**
                  * From this point I am simulating previous way of working. In order to fix this,
                  * I need to refactor greater part, and release is tomorrow morning
                  */
-                $update = array(
+                $update         = array(
                     'task_name' => $task_name,
                     'args'      => $task['task_args'],
                 );
@@ -4505,7 +4285,7 @@ class MMB_Backup extends MMB_Core
                 $this->tasks = get_option('mwp_backup_tasks');
                 $task        = $this->tasks[$task_name];
 
-                $result = $this->backup($task['task_args'], $task_name);
+                $result = $this->backup($task['task_args'], $task_name, $resultUuid);
 
                 if (is_array($result) && array_key_exists('error', $result)) {
                     $return = $result;
@@ -4547,10 +4327,6 @@ class MMB_Backup extends MMB_Core
         $this->notifyMyself('mmb_remote_upload', $args);
     }
 }
-
-/*if( function_exists('add_filter') ) {
-    add_filter( 'mwp_website_add', 'MMB_Backup::readd_tasks' );
-}*/
 
 if (!function_exists('get_all_files_from_dir')) {
     /**
@@ -4677,8 +4453,8 @@ function restore_migrate_urls()
     $path                  = getKey('path', $parsedOldSiteUrl, '');
     $oldSiteUrlNoWww       = preg_replace('#^www\.(.+\.)#i', '$1', $host).$path;
     $parsedOldSiteUrlNoWww = parse_url(strpos($oldSiteUrlNoWww, '://') === false
-            ? "http://$oldSiteUrlNoWww"
-            : $oldSiteUrlNoWww
+        ? "http://$oldSiteUrlNoWww"
+        : $oldSiteUrlNoWww
     );
     if (isset($parse['scheme'])) {
         $oldSiteUrlNoWww = "{$parse['scheme']}://$oldSiteUrlNoWww";
@@ -4788,6 +4564,12 @@ function restore_htaccess()
     if ($htaccessRealpath) {
         @rename($htaccessRealpath, "$htaccessRealpath.old");
     }
-    @include ABSPATH.'wp-admin/includes/admin.php';
-    @flush_rewrite_rules(true);
+
+    if (isset($GLOBALS['wp_rewrite'])) {
+        $wpRewrite = $GLOBALS['wp_rewrite'];
+    } else {
+        $wpRewrite = new WP_Rewrite();
+    }
+
+    $wpRewrite->flush_rules(true);
 }

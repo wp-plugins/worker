@@ -13,15 +13,56 @@ class MMB_Stats extends MMB_Core
      * (functions to be called after a remote call from Master)
      **************************************************************/
 
+    public function get_site_statistics($stats, $options = array())
+    {
+        /** @var wpdb $wpdb */
+        global $wpdb;
+        $siteStatistics = array();
+        $prefix         = $wpdb->prefix;
+
+        if (!empty($options['users'])) {
+            $siteStatistics['users'] = (int) $wpdb->get_var("SELECT COUNT(*) FROM {$prefix}users");
+        }
+
+        if (!empty($options['approvedComments'])) {
+            $siteStatistics['approvedComments'] = (int) $wpdb->get_var("SELECT COUNT(*) FROM {$prefix}comments WHERE comment_approved='1'");
+        }
+
+        if (!empty($options['activePlugins'])) {
+            $siteStatistics['activePlugins'] = count((array) array(get_option('active_plugins', array())));
+        }
+
+        if (!empty($options['publishedPosts'])) {
+            $siteStatistics['publishedPosts'] = (int) $wpdb->get_var("SELECT COUNT(*) FROM {$prefix}posts WHERE post_type='post' AND post_status='publish'");
+        }
+
+        if (!empty($options['draftPosts'])) {
+            $siteStatistics['draftPosts'] = (int) $wpdb->get_var("SELECT COUNT(*) FROM {$prefix}posts WHERE post_type='post' AND post_status='draft'");
+        }
+
+        if (!empty($options['publishedPages'])) {
+            $siteStatistics['publishedPages'] = (int) $wpdb->get_var("SELECT COUNT(*) FROM {$prefix}posts WHERE post_type='page' AND post_status='publish'");
+        }
+
+        if (!empty($options['draftPages'])) {
+            $siteStatistics['draftPages'] = (int) $wpdb->get_var("SELECT COUNT(*) FROM {$prefix}posts WHERE post_type='page' AND post_status='draft'");
+        }
+
+        $stats['site_statistics'] = $siteStatistics;
+
+        return $stats;
+    }
+
     public function get_core_update($stats, $options = array())
     {
-        global $wp_version, $wp_local_package;
+        global $wp_version;
         $current_transient = null;
         if (isset($options['core']) && $options['core']) {
-            $core = $this->mmb_get_transient('update_core');
+            $locale = get_locale();
+            $core   = $this->mmb_get_transient('update_core');
             if (isset($core->updates) && !empty($core->updates)) {
                 foreach ($core->updates as $update) {
-                    if ($update->locale == get_locale() && strtolower($update->response) == "upgrade") {
+                    if ($update->locale == $locale && strtolower($update->response) == "upgrade") {
                         $current_transient = $update;
                         break;
                     }
@@ -30,7 +71,7 @@ class MMB_Stats extends MMB_Core
                 if (!$current_transient) {
                     $current_transient = $core->updates[0];
                 }
-                if ($current_transient->response == "development" || version_compare($wp_version, $current_transient->current, '<') || get_locale() !== $current_transient->locale) {
+                if ($current_transient->response == "development" || version_compare($wp_version, $current_transient->current, '<') || $locale !== $current_transient->locale) {
                     $current_transient->current_version = $wp_version;
                     $stats['core_updates']              = $current_transient;
                 } else {
@@ -46,15 +87,6 @@ class MMB_Stats extends MMB_Core
 
     public function get_hit_counter($stats, $options = array())
     {
-        $mmb_user_hits = get_option('user_hit_count');
-        if (is_array($mmb_user_hits)) {
-            end($mmb_user_hits);
-            $last_key_date = key($mmb_user_hits);
-            $current_date  = date('Y-m-d');
-            if ($last_key_date != $current_date) {
-                $this->set_hit_count(true);
-            }
-        }
         $stats['hit_counter'] = get_option('user_hit_count');
 
         return $stats;
@@ -186,13 +218,7 @@ class MMB_Stats extends MMB_Core
                 }
             }
             if (!empty($recent_drafts)) {
-                usort(
-                    $recent_drafts,
-                    array(
-                        $this,
-                        'cmp_posts_worker',
-                    )
-                );
+                usort($recent_drafts, array($this, 'cmp_posts_worker',));
                 $stats['drafts'] = array_slice($recent_drafts, 0, $nposts);
             }
         }
@@ -202,46 +228,37 @@ class MMB_Stats extends MMB_Core
 
     public function get_scheduled($stats, $options = array())
     {
-        $nposts = isset($options['numberposts']) ? (int) $options['numberposts'] : 20;
+        $numberOfItems  = isset($options['numberposts']) ? (int) $options['numberposts'] : 20;
+        $scheduledItems = array();
 
-        if ($nposts) {
-            $scheduled       = get_posts('post_status=future&numberposts='.$nposts.'&orderby=post_date&order=desc');
-            $scheduled_posts = array();
-            if (!empty($scheduled)) {
-                foreach ($scheduled as $id => $scheduled) {
-                    $recent                 = new stdClass();
-                    $recent->post_permalink = get_permalink($scheduled->ID);
-                    $recent->ID             = $scheduled->ID;
-                    $recent->post_date      = $scheduled->post_date;
-                    $recent->post_type      = $scheduled->post_type;
-                    $recent->post_title     = $scheduled->post_title;
-                    $scheduled_posts[]      = $recent;
-                }
-            }
-            $scheduled           = get_pages('post_status=future&numberposts='.$nposts.'&orderby=post_date&order=desc');
-            $recent_pages_drafts = array();
-            if (!empty($scheduled)) {
-                foreach ((array) $scheduled as $id => $scheduled) {
-                    $recent                 = new stdClass();
-                    $recent->post_permalink = get_permalink($scheduled->ID);
-                    $recent->ID             = $scheduled->ID;
-                    $recent->post_type      = $scheduled->post_type;
-                    $recent->post_date      = $scheduled->post_date;
-                    $recent->post_title     = $scheduled->post_title;
+        if (!$numberOfItems) {
+            return $stats;
+        }
+        $scheduledPosts = get_posts('post_status=future&numberposts='.$numberOfItems.'&orderby=post_date&order=desc');
+        foreach ($scheduledPosts as $id => $scheduledPost) {
+            $recentPost                 = new stdClass();
+            $recentPost->post_permalink = get_permalink($scheduledPost->ID);
+            $recentPost->ID             = $scheduledPost->ID;
+            $recentPost->post_date      = $scheduledPost->post_date;
+            $recentPost->post_type      = $scheduledPost->post_type;
+            $recentPost->post_title     = $scheduledPost->post_title;
 
-                    $scheduled_posts[] = $recent;
-                }
-            }
-            if (!empty($scheduled_posts)) {
-                usort(
-                    $scheduled_posts,
-                    array(
-                        $this,
-                        'cmp_posts_worker',
-                    )
-                );
-                $stats['scheduled'] = array_slice($scheduled_posts, 0, $nposts);
-            }
+            $scheduledItems[] = $recentPost;
+        }
+        $scheduledPages = get_pages('post_status=future&numberposts='.$numberOfItems.'&orderby=post_date&order=desc');
+        foreach ((array) $scheduledPages as $id => $scheduledPage) {
+            $recentPage                 = new stdClass();
+            $recentPage->post_permalink = get_permalink($scheduledPage->ID);
+            $recentPage->ID             = $scheduledPage->ID;
+            $recentPage->post_type      = $scheduledPage->post_type;
+            $recentPage->post_date      = $scheduledPage->post_date;
+            $recentPage->post_title     = $scheduledPage->post_title;
+
+            $scheduledItems[] = $recentPage;
+        }
+        if (!empty($scheduledItems)) {
+            usort($scheduledItems, array($this, 'cmp_posts_worker'));
+            $stats['scheduled'] = array_slice($scheduledItems, 0, $numberOfItems);
         }
 
         return $stats;
@@ -249,25 +266,22 @@ class MMB_Stats extends MMB_Core
 
     public function get_backups($stats, $options = array())
     {
-        $stats['mwp_backups']      = $this->get_backup_instance()->get_backup_stats();
-        $stats['mwp_next_backups'] = $this->get_backup_instance()->get_next_schedules();
+        $stats['mwp_backups'] = $this->get_backup_instance()->get_backup_stats();
 
         return $stats;
     }
 
     public function get_backup_req($stats = array(), $options = array())
     {
-        $stats['mwp_backups']      = $this->get_backup_instance()->get_backup_stats();
-        $stats['mwp_next_backups'] = $this->get_backup_instance()->get_next_schedules();
-        $stats['mwp_backup_req']   = $this->get_backup_instance()->check_backup_compat();
+        $stats['mwp_backups']    = $this->get_backup_instance()->get_backup_stats();
+        $stats['mwp_backup_req'] = $this->get_backup_instance()->check_backup_compat();
 
         return $stats;
     }
 
     public function get_updates($stats, $options = array())
     {
-        $upgrades = false;
-        $premium  = array();
+        $premium = array();
         if (isset($options['premium']) && $options['premium']) {
             $premium_updates = array();
             $upgrades        = apply_filters('mwp_premium_update_notification', $premium_updates);
@@ -278,7 +292,6 @@ class MMB_Stats extends MMB_Core
                     }
                 }
                 $stats['premium_updates'] = $upgrades;
-                $upgrades                 = false;
             }
         }
         if (isset($options['themes']) && $options['themes']) {
@@ -286,7 +299,6 @@ class MMB_Stats extends MMB_Core
             $upgrades = $this->installer_instance->get_upgradable_themes($premium);
             if (!empty($upgrades)) {
                 $stats['upgradable_themes'] = $upgrades;
-                $upgrades                   = false;
             }
         }
 
@@ -295,7 +307,6 @@ class MMB_Stats extends MMB_Core
             $upgrades = $this->installer_instance->get_upgradable_plugins($premium);
             if (!empty($upgrades)) {
                 $stats['upgradable_plugins'] = $upgrades;
-                $upgrades                    = false;
             }
         }
 
@@ -360,7 +371,7 @@ class MMB_Stats extends MMB_Core
             'username'        => '',
             'username_filter' => '',
         );
-        $users = $this->get_user_instance()->get_users($filter);
+        $users  = $this->get_user_instance()->get_users($filter);
 
         if (empty($users['users']) || !is_array($users['users'])) {
             return array();
@@ -376,10 +387,8 @@ class MMB_Stats extends MMB_Core
 
     public function pre_init_stats($params)
     {
-        global $_mmb_item_filter;
-
         include_once ABSPATH.'wp-includes/update.php';
-        include_once ABSPATH.'/wp-admin/includes/update.php';
+        include_once ABSPATH.'wp-admin/includes/update.php';
 
         $stats = $this->mmb_parse_action_params('pre_init_stats', $params, $this);
         $num   = extract($params);
@@ -393,7 +402,7 @@ class MMB_Stats extends MMB_Core
             @wp_update_themes();
         }
 
-        if ($refresh == 'transient') {
+        if ($params['refresh'] == 'transient') {
             $current = $this->mmb_get_transient('update_core');
             if (isset($current->last_checked) || get_option('mmb_forcerefresh')) {
                 update_option('mmb_forcerefresh', false);
@@ -405,12 +414,13 @@ class MMB_Stats extends MMB_Core
             }
         }
 
-        global $wpdb, $mmb_wp_version, $mmb_plugin_dir, $wp_version, $wp_local_package;
+        /** @var $wpdb wpdb */
+        global $wpdb, $wp_version;
 
         $stats['worker_version']        = $GLOBALS['MMB_WORKER_VERSION'];
         $stats['worker_revision']       = $GLOBALS['MMB_WORKER_REVISION'];
         $stats['wordpress_version']     = $wp_version;
-        $stats['wordpress_locale_pckg'] = $wp_local_package;
+        $stats['wordpress_locale_pckg'] = get_locale();
         $stats['php_version']           = phpversion();
         $stats['mysql_version']         = $wpdb->db_version();
         $stats['server_functionality']  = $this->get_backup_instance()->getServerInformationForStats();
@@ -419,10 +429,16 @@ class MMB_Stats extends MMB_Core
         $stats['cookies']               = $this->get_stat_cookies();
         $stats['admin_usernames']       = $this->getUserList();
         $stats['site_title']            = get_bloginfo('name');
+        $stats['site_tagline']          = get_bloginfo('description');
+        $stats['blog_public']           = get_option('blog_public');
+        $stats['timezone']              = get_option('timezone_string');
+        $stats['timezone_offset']       = get_option('gmt_offset');
 
         if (!function_exists('get_filesystem_method')) {
             include_once ABSPATH.'wp-admin/includes/file.php';
         }
+        $stats['fs_method'] = get_filesystem_method();
+
         $mmode = get_option('mwp_maintenace_mode');
 
         if (!empty($mmode) && isset($mmode['active']) && $mmode['active'] == true) {
@@ -435,8 +451,6 @@ class MMB_Stats extends MMB_Core
 
     public function get($params)
     {
-        global $wpdb, $mmb_wp_version, $mmb_plugin_dir, $_mmb_item_filter;
-
         include_once ABSPATH.'wp-includes/update.php';
         include_once ABSPATH.'wp-admin/includes/update.php';
 
@@ -476,6 +490,7 @@ class MMB_Stats extends MMB_Core
 
     public function get_multisite($stats = array())
     {
+        /** @var $wpdb wpdb */
         global $current_user, $wpdb;
         $user_blogs    = get_blogs_of_user($current_user->ID);
         $network_blogs = $wpdb->get_results("select `blog_id`, `site_id` from `{$wpdb->blogs}`");
@@ -584,7 +599,7 @@ class MMB_Stats extends MMB_Core
 
     public function get_initial_stats()
     {
-        global $mmb_plugin_dir, $_mmb_item_filter, $current_user;
+        global $mmb_plugin_dir, $_mmb_item_filter;
 
         $stats = array(
             'email'           => get_option('admin_email'),
@@ -601,6 +616,8 @@ class MMB_Stats extends MMB_Core
             'wp_multisite'    => $this->mmb_multisite,
             'network_install' => $this->network_admin_install,
             'cookies'         => $this->get_stat_cookies(),
+            'timezone'        => get_option('timezone_string'),
+            'timezone_offset' => get_option('gmt_offset'),
         );
 
         if ($this->mmb_multisite) {
@@ -618,7 +635,7 @@ class MMB_Stats extends MMB_Core
 
         $stats['writable'] = $this->is_server_writable();
 
-        $_mmb_item_filter['pre_init_stats'] = array('core_update', 'hit_counter', 'comments', 'backups', 'posts', 'drafts', 'scheduled');
+        $_mmb_item_filter['pre_init_stats'] = array('core_update', 'hit_counter', 'comments', 'backups', 'posts', 'drafts', 'scheduled', 'site_statistics');
         $_mmb_item_filter['get']            = array('updates', 'errors');
 
         $filter = array(
@@ -633,11 +650,12 @@ class MMB_Stats extends MMB_Core
                     array('hit_counter'),
                     array('comments', array('numberposts' => 5)),
                     array('backups'),
+                    array('site_statistics', array('users' => true, 'approvedComments' => true, 'activePlugins' => true, 'publishedPosts' => true, 'draftPosts' => true, 'publishedPages' => true, 'draftPages' => true)),
                     'plugins' => array(
                         'cleanup' => array(
                             'overhead'  => array(),
                             'revisions' => array('num_to_keep' => 'r_5'),
-                            'spam'                             => array(),
+                            'spam'      => array(),
                         ),
                     ),
                 ),
@@ -663,169 +681,9 @@ class MMB_Stats extends MMB_Core
         return $active_db;
     }
 
-    public static function set_hit_count($fix_count = false)
-    {
-        global $mmb_core;
-        $uptime_robot = array(
-            "74.86.158.106",
-            "74.86.158.107",
-            "74.86.158.109",
-            "74.86.158.110",
-            "74.86.158.108",
-            "46.137.190.132",
-            "122.248.234.23",
-            "188.226.183.141",
-            "178.62.52.237",
-            "54.79.28.129",
-            "54.94.142.218",
-        ); //don't let uptime robot to affect visit count
-
-        if ($fix_count || (!is_admin() && !MMB_Stats::is_bot() && !isset($_GET['doing_wp_cron']) && !in_array($_SERVER['REMOTE_ADDR'], $uptime_robot))) {
-            $date           = date('Y-m-d');
-            $user_hit_count = (array) get_option('user_hit_count');
-            if (!$user_hit_count) {
-                $user_hit_count[$date] = 1;
-                update_option('user_hit_count', $user_hit_count);
-            } else {
-                $dated_keys      = array_keys($user_hit_count);
-                $last_visit_date = $dated_keys[count($dated_keys) - 1];
-
-                $days = intval((strtotime($date) - strtotime($last_visit_date)) / 60 / 60 / 24);
-
-                if ($days > 1) {
-                    $date_to_add = date('Y-m-d', strtotime($last_visit_date));
-
-                    for ($i = 1; $i < $days; $i++) {
-                        if (count($user_hit_count) > 14) {
-                            $shifted = @array_shift($user_hit_count);
-                        }
-
-                        $next_key = strtotime('+1 day', strtotime($date_to_add));
-                        if ($next_key == $date) {
-                            break;
-                        } else {
-                            $user_hit_count[$next_key] = 0;
-                        }
-                    }
-                }
-
-                if (!isset($user_hit_count[$date])) {
-                    $user_hit_count[$date] = 0;
-                }
-                if (!$fix_count) {
-                    $user_hit_count[$date] = ((int) $user_hit_count[$date]) + 1;
-                }
-
-                if (count($user_hit_count) > 14) {
-                    $shifted = @array_shift($user_hit_count);
-                }
-
-                update_option('user_hit_count', $user_hit_count);
-            }
-        }
-    }
-
     public function get_hit_count()
     {
-        // Check if there are no hits on last key date
-        $mmb_user_hits = get_option('user_hit_count');
-        if (is_array($mmb_user_hits)) {
-            end($mmb_user_hits);
-            $last_key_date = key($mmb_user_hits);
-            $current_date  = date('Y-m-d');
-            if ($last_key_date != $curent_date) {
-                $this->set_hit_count(true);
-            }
-        }
-
         return get_option('user_hit_count');
-    }
-
-    public static function is_bot()
-    {
-        $agent = isset($_SERVER['HTTP_USER_AGENT']) ? $_SERVER['HTTP_USER_AGENT'] : '';
-
-        if ($agent == '') {
-            return true;
-        }
-
-        $bot_list = array(
-            'bot',
-            'crawl',
-            'feed',
-            'java/',
-            'spider',
-            'curl',
-            'libwww',
-            'alexa',
-            'altavista',
-            'aolserver',
-            'appie',
-            'Ask Jeeves',
-            'baidu',
-            'Bing',
-            'borg',
-            'BrowserMob',
-            'ccooter',
-            'dataparksearch',
-            'Download Demon',
-            'echoping',
-            'FAST',
-            'findlinks',
-            'Firefly',
-            'froogle',
-            'GomezA',
-            'Google',
-            'grub-client',
-            'htdig',
-            'http%20client',
-            'HttpMonitor',
-            'ia_archiver',
-            'InfoSeek',
-            'inktomi',
-            'larbin',
-            'looksmart',
-            'Microsoft URL Control',
-            'Minimo',
-            'mogimogi',
-            'NationalDirectory',
-            'netcraftsurvey',
-            'nuhk',
-            'oegp',
-            'panopta',
-            'rabaz',
-            'Read%20Later',
-            'Scooter',
-            'scrubby',
-            'SearchExpress',
-            'searchsight',
-            'semanticdiscovery',
-            'Slurp',
-            'snappy',
-            'Spade',
-            'TechnoratiSnoop',
-            'TECNOSEEK',
-            'teoma',
-            'twiceler',
-            'URL2PNG',
-            'vortex',
-            'WebBug',
-            'www.galaxy.com',
-            'yahoo',
-            'yandex',
-            'zao',
-            'zeal',
-            'ZooShot',
-            'ZyBorg',
-        );
-
-        foreach ($bot_list as $bot) {
-            if (stripos($agent, $bot) !== false) {
-                return true;
-            }
-        }
-
-        return false;
     }
 
     public function set_notifications($params)
@@ -856,7 +714,7 @@ class MMB_Stats extends MMB_Core
     //Cron update check for notifications
     public function check_notifications()
     {
-        global $wpdb, $mmb_wp_version, $mmb_plugin_dir, $wp_version, $wp_local_package;
+        global $wp_version;
 
         $mwp_notifications = get_option('mwp_notifications', true);
 
@@ -960,19 +818,5 @@ class MMB_Stats extends MMB_Core
         }
 
         return $content;
-    }
-
-    public static function readd_alerts($params = array())
-    {
-        if (empty($params) || !isset($params['alerts'])) {
-            return $params;
-        }
-
-        if (!empty($params['alerts'])) {
-            update_option('mwp_pageview_alerts', $params['alerts']);
-            unset($params['alerts']);
-        }
-
-        return $params;
     }
 }

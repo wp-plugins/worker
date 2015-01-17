@@ -35,7 +35,12 @@ http://www.youtube.com/watch?v=Cg_W9MQBWt4
 
 ManageWP is also the creator of [ManageWP.org](https://managewp.org/ "WordPress news site"), community project capturing the pulse of the WordPress community.
 
-== Changelog ==  
+== Changelog ==
+
+= 4.0.0 =
+
+- New features for the [ManageWP Orion release](http://managewp.com/managewp-orion-official-announcement "ManageWP Orion Official Announcement")
+- Misc bug fixes and performance improvements
 
 = 3.9.30 =
 
@@ -62,9 +67,9 @@ ManageWP is also the creator of [ManageWP.org](https://managewp.org/ "WordPress 
 
 = 3.9.27 =
 - New: SFTP support for backups and clone!
-- Fix: Database dump for backup tasks with defined socket path or port number in wp-config.php 
+- Fix: Database dump for backup tasks with defined socket path or port number in wp-config.php
 - Fix: Optimize WordPress tables before backup
-- Fix: Compatibility with Better WP Security 
+- Fix: Compatibility with Better WP Security
 - Fix: Not adding jQuery on front page while using branding option
 
 = 3.9.26 =
@@ -77,7 +82,7 @@ ManageWP is also the creator of [ManageWP.org](https://managewp.org/ "WordPress 
 - Fix: Delete user action was not functioning properly
 
 = 3.9.25 =
-- New: Improved Worker branding feature 
+- New: Improved Worker branding feature
 - Fix: Traffic alerts feature was not functioning properly
 - Fix: Backup information was sometimes incorrectly displayed
 - Fix: DB Table overhead was not shown on the dashboard
@@ -86,27 +91,27 @@ ManageWP is also the creator of [ManageWP.org](https://managewp.org/ "WordPress 
 - New: Better support for large database dumps
 - Fix: PHP notice for WordPress 3.5
 - Fix: Support for automatic backup reports
-- Fix: Incorrect backup result message for S3 large files 
+- Fix: Incorrect backup result message for S3 large files
 
 = 3.9.23 =
 - New: SEO reports can be branded and viewed by sharing an URL
 - New: Set custom database prefix for new clone destination
 - New: Automatic change all URL paths for new clone destination
-- New: Success and fail email notifications for scheduled backup tasks 
-- Fix: Improved scheduled backups for limited server resources 
+- New: Success and fail email notifications for scheduled backup tasks
+- Fix: Improved scheduled backups for limited server resources
 - Fix: Improved backup to Dropbox (now supporting larger backup files)
 - Fix: Handling of external images with bulk posting
-- Fix: Display plugin versions on manage plugins 
-- Fix: Deprecated get_themes function 
+- Fix: Display plugin versions on manage plugins
+- Fix: Deprecated get_themes function
 - Fix: Special characters support for notes
- 
+
 = 3.9.22 =
 - New: Backup support for Google Drive
 - New: Keyword tracking limit increased from 5 to 20 times the website limit (ie. with 25 website account you can now track the ranking for 500 keywords!)
 - New: Support for Google Analytics API 3.0
 - New: Website preview screenshot
 - New: Ability to assign a newly added website to existing Backup tasks (under "advanced" in add website dialogue)
-- Fix: Clone tool now supports special characters and localized WP installs 
+- Fix: Clone tool now supports special characters and localized WP installs
 - Fix: Backup history preserved on website re-add
 
 = 3.9.21 =
@@ -193,7 +198,7 @@ ManageWP is also the creator of [ManageWP.org](https://managewp.org/ "WordPress 
 = 3.9.9 =
 * New widget on the dashboard - Backup status
 * New screen for managing plugins and themes (activate, deactivate, delete, add to favorites, install) across all sites
-* New screen for managing users (change role or password, delete user) across all sites 
+* New screen for managing users (change role or password, delete user) across all sites
 * Option to overwrite old plugins and themes during bulk installation
 * Your website admin now loads faster in ManageWP
 * Added API for premium theme and plugin updates
@@ -239,7 +244,7 @@ ManageWP is also the creator of [ManageWP.org](https://managewp.org/ "WordPress 
 
 = 3.9.0 =
 * New feature: Up to 50% faster dashboard loading
-* New feature: You can now ignore WordPress/plugin/theme updates         
+* New feature: You can now ignore WordPress/plugin/theme updates
 * New feature: Setting 'Show favicon' for websites in the dashboad
 * New feature: Full backups now include WordPress and other folders in the root of the site
 * Fixed: Bug with W3 TotalCache object cache causing weird behaviour in the dashboard
@@ -286,7 +291,7 @@ ManageWP is also the creator of [ManageWP.org](https://managewp.org/ "WordPress 
 * No passwords required
 * Improved clone/backup
 
-= 3.6.3 =  
+= 3.6.3 =
 * Initial public release
 
 == Installation ==
@@ -345,7 +350,7 @@ Yes. We invest heavilly in our security and in four years and serving over quart
 
 = Will ManageWP work with sites spread on different hosting accounts? =
 
-Yes. 
+Yes.
 
 = Does ManageWP work with WordPress.com sites? =
 
@@ -353,7 +358,7 @@ No. ManageWP works only with self-hosted WordPress sites.
 
 = Can I try all features for free? =
 
-Absolutely. The first month is on us. 
+Absolutely. The first month is on us.
 
 = I have problems adding my site =
 

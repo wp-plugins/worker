@@ -1,4 +1,12 @@
 <?php
+/*
+ * This file is part of the ManageWP Worker plugin.
+ *
+ * (c) ManageWP LLC <contact@managewp.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
 
 class MWP_Debug_ErrorCatcher
 {
@@ -8,7 +16,7 @@ class MWP_Debug_ErrorCatcher
 
     public function handleError($code, $message, $file = '', $line = 0, $context = array())
     {
-        if (is_string($this->registered) && !($message = preg_replace('{^'.$this->registered.'\(.*?\): }', '', $message))) {
+        if (is_string($this->registered) && !($message = preg_replace('{^'.$this->registered.'\(.*?\): }i', '', $message))) {
             return;
         }
 
@@ -20,14 +28,25 @@ class MWP_Debug_ErrorCatcher
         return $this->errorMessage;
     }
 
-    public function yieldErrorMessage()
+    public function yieldErrorMessage($unRegister = false)
     {
         $message            = $this->errorMessage;
         $this->errorMessage = null;
 
+        if ($unRegister) {
+            $this->unRegister();
+        }
+
         return $message;
     }
 
+    /**
+     * Set the $capture parameter to "true" to capture any error message; or to a function name
+     * to capture only error messages for that function. It will rely on PHP's standard error
+     * reporting which always starts with the name of the function that generated the error.
+     *
+     * @param bool|string $capture
+     */
     public function register($capture = true)
     {
         if ($this->registered) {

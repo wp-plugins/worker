@@ -156,7 +156,8 @@ class MMB_Installer extends MMB_Core
                 }
             }
         }
-        ob_clean();
+        // Can generate "E_NOTICE: ob_clean(): failed to delete buffer. No buffer to delete."
+        @ob_clean();
         $this->mmb_maintenance_mode(false);
 
         return $install_info;
@@ -254,7 +255,7 @@ class MMB_Installer extends MMB_Core
                 }
             }
         }
-        ob_clean();
+        @ob_clean();
         $this->mmb_maintenance_mode(false);
 
         return $upgrades;
@@ -321,7 +322,7 @@ class MMB_Installer extends MMB_Core
             );
         }
         if ($current_update != false) {
-            global $mmb_wp_version, $wp_filesystem, $wp_version;
+            global $wp_filesystem, $wp_version;
 
             if (version_compare($wp_version, '3.1.9', '>')) {
                 if (!class_exists('Core_Upgrader')) {
@@ -567,8 +568,6 @@ class MMB_Installer extends MMB_Core
 
     public function upgrade_premium($premium = false)
     {
-        global $mmb_plugin_url;
-
         if (!class_exists('WP_Upgrader')) {
             include_once ABSPATH.'wp-admin/includes/class-wp-upgrader.php';
         }

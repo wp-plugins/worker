@@ -502,6 +502,7 @@ class Google_Auth_OAuth2 extends Google_Auth_Abstract
         // Check signature
         $verified = false;
         foreach ($certs as $keyName => $pem) {
+            // @todo make a fallback using PHPSecLib, since it's completely trivial; this is the only part of the Worker plugin that requires openssl extension.
             $public_key = new Google_Verifier_Pem($pem);
             if ($public_key->verify($signed, $signature)) {
                 $verified = true;
