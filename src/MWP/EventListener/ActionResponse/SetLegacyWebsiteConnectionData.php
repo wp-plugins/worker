@@ -38,7 +38,7 @@ class MWP_EventListener_ActionResponse_SetLegacyWebsiteConnectionData implements
 
         $params = $event->getRequest()->getParams();
 
-        if (empty($params['notifications'])) {
+        if (!array_key_exists('notifications', $params)) {
             // This is not a legacy call.
             return;
         }
@@ -49,6 +49,7 @@ class MWP_EventListener_ActionResponse_SetLegacyWebsiteConnectionData implements
         $this->context->requireTheme();
 
         $stats = new MMB_Stats();
+        $this->context->optionSet('mwp_notifications', $params['notifications']);
         $event->setData($stats->get_initial_stats());
     }
 }
