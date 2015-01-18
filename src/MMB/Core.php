@@ -290,23 +290,6 @@ EOF;
         }
     }
 
-    public function unRegisterMustUse($loaderName)
-    {
-        $mustUsePluginDir = rtrim(WPMU_PLUGIN_DIR, '/');
-        $loaderPath       = $mustUsePluginDir.'/'.$loaderName;
-
-        if (!file_exists($loaderPath)) {
-            return;
-        }
-
-        $removed = @unlink($loaderPath);
-
-        if (!$removed) {
-            $error = error_get_last();
-            throw new Exception(sprintf('Unable to remove loader: %s', $error['message']));
-        }
-    }
-
     /**
      * Plugin install callback function
      * Check PHP version
@@ -380,22 +363,13 @@ EOF;
         update_option('wrksettings', $options);
     }
 
-    public function uninstall()
-    {
-        try {
-            $this->unRegisterMustUse('0-worker.php');
-        } catch (Exception $e) {
-            mwp_logger()->error('Unable to remove loader', array('exception' => $e));
-        }
-    }
-
     /**
      * Deletes options for communication with master
      */
     public function deactivate($deactivate = false)
     {
-        $this->uninstall();
         /** @var wpdb $wpdb */
+        mwp_uninstall();
         global $current_user, $wpdb, $_wp_using_ext_object_cache;
         $_wp_using_ext_object_cache = false;
 
