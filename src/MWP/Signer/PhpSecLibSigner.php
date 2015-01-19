@@ -23,8 +23,10 @@ class MWP_Signer_PhpSecLibSigner implements MWP_Signer_Interface
         $verify       = $rsa->verify($data, $signature);
         $errorMessage = $errorCatcher->yieldErrorMessage(true);
 
-        if ($errorMessage !== null && $errorMessage !== 'Signature representative out of range') {
-            throw new MWP_Worker_Exception(MWP_Worker_Exception::PHPSECLIB_VERIFY_ERROR);
+        if ($errorMessage !== null && $errorMessage !== 'Signature representative out of range' && $errorMessage !== 'Invalid signature') {
+            throw new MWP_Worker_Exception(MWP_Worker_Exception::PHPSECLIB_VERIFY_ERROR, null, array(
+                'error' => $errorMessage,
+            ));
         }
 
         return $verify;

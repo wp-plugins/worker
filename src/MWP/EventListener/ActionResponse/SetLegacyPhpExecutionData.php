@@ -44,8 +44,6 @@ class MWP_EventListener_ActionResponse_SetLegacyPhpExecutionData implements Symf
             throw new MWP_Worker_Exception(MWP_Worker_Exception::PHP_EVAL_ERROR, sprintf('Fatal error [%s]: %s in %s on line %d', self::$errorMap[$data['fatalError']['type']], $data['fatalError']['message'], $data['fatalError']['file'], $data['fatalError']['line']));
         }
 
-        if (isset($data['output'])) {
-            $event->setData($data['output']);
-        }
+        $event->setData(isset($data['output']) ? $data['output'] : '');
     }
 }

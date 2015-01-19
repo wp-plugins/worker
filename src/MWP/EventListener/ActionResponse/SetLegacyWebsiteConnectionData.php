@@ -36,12 +36,11 @@ class MWP_EventListener_ActionResponse_SetLegacyWebsiteConnectionData implements
             return;
         }
 
-        $params = $event->getRequest()->getParams();
-
-        if (!array_key_exists('notifications', $params)) {
-            // This is not a legacy call.
+        if ($event->getRequest()->getProtocol() >= 100) {
             return;
         }
+
+        $params = $event->getRequest()->getParams();
 
         $this->context->requireWpRewrite();
         $this->context->requireTaxonomies();
@@ -49,7 +48,11 @@ class MWP_EventListener_ActionResponse_SetLegacyWebsiteConnectionData implements
         $this->context->requireTheme();
 
         $stats = new MMB_Stats();
-        $this->context->optionSet('mwp_notifications', $params['notifications']);
+
+        if (!empty($params['notifications'])) {
+            $this->context->optionSet('mwp_notifications', $params['notifications']);
+        }
+
         $event->setData($stats->get_initial_stats());
     }
 }
