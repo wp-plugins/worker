@@ -219,7 +219,7 @@ if (!function_exists('mwp_init')):
         $GLOBALS['MMB_WORKER_REVISION'] = '2015-01-19 00:00:00';
         $GLOBALS['mmb_plugin_dir']      = WP_PLUGIN_DIR.'/'.basename(dirname(__FILE__));
         $GLOBALS['_mmb_item_filter']    = array();
-        $GLOBALS['mmb_core']            = $core = $mmb_core_backup = new MMB_Core();
+        $GLOBALS['mmb_core']            = $core = $GLOBALS['mmb_core_backup'] = new MMB_Core();
 
         $siteUrl = function_exists('get_site_option') ? get_site_option('siteurl') : get_option('siteurl');
         define('MMB_XFRAME_COOKIE', 'wordpress_'.md5($siteUrl).'_xframe');
