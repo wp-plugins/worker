@@ -460,7 +460,7 @@ class MWP_WordPress_Context
     /**
      * @param string $username
      *
-     * @return WP_User|null
+     * @return WP_User|stdClass|null
      */
     public function getUserByUsername($username)
     {
@@ -478,7 +478,7 @@ class MWP_WordPress_Context
     /**
      * @param $criteria
      *
-     * @return WP_User[]
+     * @return WP_User[]|stdClass[]
      *
      * @link http://codex.wordpress.org/Function_Reference/get_users
      *
@@ -512,7 +512,10 @@ class MWP_WordPress_Context
         return in_array($pluginBasename, $plugins);
     }
 
-    public function setCurrentUser(WP_User $user)
+    /**
+     * @param WP_User|stdClass $user
+     */
+    public function setCurrentUser($user)
     {
         $this->requirePluggable();
 
@@ -523,7 +526,12 @@ class MWP_WordPress_Context
         wp_set_current_user($user->ID);
     }
 
-    public function setAuthCookie(WP_User $user, $remember = false, $secure = '')
+    /**
+     * @param WP_User|stdClass $user
+     * @param bool             $remember
+     * @param string           $secure
+     */
+    public function setAuthCookie($user, $remember = false, $secure = '')
     {
         $this->requireCookieConstants();
 
