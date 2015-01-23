@@ -4129,7 +4129,7 @@ class MMB_Backup extends MMB_Core
                 $return = $this->google_drive_backup($account_info['mwp_google_drive']);
                 $this->wpdb_reconnect();
 
-                if (!(is_array($return) && isset($return['error']))) {
+                if (!isset($return['error'])) {
                     $this->update_status($task_name, $this->statuses['google_drive'], true);
                     $this->update_status($task_name, $this->statuses['finished'], true);
                 }
@@ -4137,12 +4137,14 @@ class MMB_Backup extends MMB_Core
 
             $tasks = $this->tasks;
             @file_put_contents(MWP_BACKUP_DIR.'/mwp_db/index.php', '');
-            if ($return == true && $del_host_file) {
+            if ($return === true && $del_host_file) {
                 @unlink($backup_file);
                 unset($tasks[$task_name]['task_results'][count($tasks[$task_name]['task_results']) - 1]['server']);
             }
             $this->update_tasks($tasks);
-            $return = $this->tasks[$task_name]['task_results'][$taskResultKey];
+            if (!isset($return['error'])) {
+                $return = $this->tasks[$task_name]['task_results'][$taskResultKey];
+            }
         } else {
             $return = array(
                 'error' => 'Backup file not found on your server. Please try again.',

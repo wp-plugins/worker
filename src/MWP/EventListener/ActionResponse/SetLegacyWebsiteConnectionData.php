@@ -46,6 +46,7 @@ class MWP_EventListener_ActionResponse_SetLegacyWebsiteConnectionData implements
         $this->context->requireTaxonomies();
         $this->context->requirePostTypes();
         $this->context->requireTheme();
+        $this->context->requireCookieConstants();
 
         $stats = new MMB_Stats();
 

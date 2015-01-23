@@ -222,6 +222,8 @@ class MWP_ServiceContainer_Production extends MWP_ServiceContainer_Abstract
                 array(new MWP_Monolog_Processor_ExceptionProcessor(), 'callback'),
                 array(new MWP_Monolog_Processor_ProcessProcessor(), 'callback'),
             );
+        } else {
+            $handlers[] = new Monolog_Handler_NullHandler();
         }
 
         $logger = new Monolog_Logger('worker', $handlers, $processors);

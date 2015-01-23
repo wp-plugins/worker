@@ -16,6 +16,10 @@ class MWP_Action_GetState extends MWP_Action_Abstract
 
     const COMMENTS = 'comments';
 
+    const SQL_RESULT = 'sqlResult';
+
+    const SINGLE_SQL_RESULT = 'singleSqlResult';
+
     const PLUGINS = 'plugins';
 
     const THEMES = 'themes';
@@ -41,11 +45,9 @@ class MWP_Action_GetState extends MWP_Action_Abstract
             $queryResult        = $this->getField($queryInfo['type'], $queryInfo['options']);
             $end                = sprintf("%.6f", microtime(true) - $start);
             $result[$fieldName] = array(
-                'type'        => $queryInfo['type'],
-                'options'     => $queryInfo['options'],
-                'benchmark'   => $end,
-                'result'      => $queryResult,
-                'resultCount' => count($queryResult),
+                'type'      => $queryInfo['type'],
+                'benchmark' => $end,
+                'result'    => $queryResult,
             );
         }
 
@@ -61,6 +63,10 @@ class MWP_Action_GetState extends MWP_Action_Abstract
                 return $this->getPosts($options);
             case self::COMMENTS:
                 return $this->getComments($options);
+            case self::SQL_RESULT:
+                return $this->getSqlResult($options);
+            case self::SINGLE_SQL_RESULT:
+                return $this->getSingleSqlResult($options);
             case self::PLUGINS:
                 return $this->getPlugins($options);
             case self::THEMES:
@@ -105,6 +111,24 @@ class MWP_Action_GetState extends MWP_Action_Abstract
         $comments     = $commentQuery->query($options);
 
         return $comments;
+    }
+
+    protected function getSingleSqlResult(array $options = array())
+    {
+        $options += array(
+            'query' => null,
+        );
+
+        return $this->container->getWordPressContext()->getDb()->get_var($options['query']);
+    }
+
+    protected function getSqlResult(array $options = array())
+    {
+        $options += array(
+            'query' => null,
+        );
+
+        return $this->container->getWordPressContext()->getDb()->get_results($options['query']);
     }
 
     protected function getPlugins(array $options = array())

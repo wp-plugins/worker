@@ -69,7 +69,7 @@ class Monolog_Formatter_LineFormatter extends Monolog_Formatter_NormalizerFormat
     protected function normalizeException(Exception $e)
     {
         $previousText = '';
-        if ($previous = $e->getPrevious()) {
+        if (is_callable(array($e, 'getPrevious')) && $previous = $e->getPrevious()) {
             do {
                 $previousText .= ', '.get_class($previous).': '.$previous->getMessage().' at '.$previous->getFile().':'.$previous->getLine();
             } while ($previous = $previous->getPrevious());

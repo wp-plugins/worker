@@ -59,8 +59,16 @@ class MWP_Http_Response implements MWP_Http_ResponseInterface
             return;
         }
 
+        $statusCode = 200;
+        $protocol   = 'HTTP/1.1';
+        if (isset($_SERVER['SERVER_PROTOCOL']) && $_SERVER['SERVER_PROTOCOL'] === 'HTTP/1.0') {
+            $protocol = 'HTTP/1.0';
+        }
+
+        header($protocol.' 200 OK', true, $statusCode);
+
         foreach ($this->headers as $headerName => $headerValue) {
-            header(sprintf('%s: %s', $headerName, $headerValue), true);
+            header(sprintf('%s: %s', $headerName, $headerValue), false, $statusCode);
         }
     }
 }
