@@ -433,6 +433,8 @@ class MMB_Stats extends MMB_Core
         $stats['blog_public']           = get_option('blog_public');
         $stats['timezone']              = get_option('timezone_string');
         $stats['timezone_offset']       = get_option('gmt_offset');
+        $stats['server_ip']             = isset($_SERVER['SERVER_ADDR']) ? $_SERVER['SERVER_ADDR'] : null;
+        $stats['hostname']              = php_uname('n');
 
         if (!function_exists('get_filesystem_method')) {
             include_once ABSPATH.'wp-admin/includes/file.php';

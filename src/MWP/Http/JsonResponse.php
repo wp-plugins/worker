@@ -10,10 +10,10 @@
 
 class MWP_Http_JsonResponse extends MWP_Http_Response
 {
-    public function __construct($content, $status = 200, array $headers = array())
+    public function __construct($content, $statusCode = 200, array $headers = array())
     {
         $headers['content-type'] = 'application/json';
-        parent::__construct($content, $status, $headers);
+        parent::__construct($content, $statusCode, $headers);
     }
 
     public function getContentAsString()

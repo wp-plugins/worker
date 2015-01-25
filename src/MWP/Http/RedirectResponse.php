@@ -10,10 +10,10 @@
 
 class MWP_Http_RedirectResponse extends MWP_Http_Response
 {
-    public function __construct($url, $code = 302, array $headers = array())
+    public function __construct($url, $statusCode = 302, array $headers = array())
     {
         $headers['location'] = $url;
-        parent::__construct($url, $code, $headers);
+        parent::__construct($url, $statusCode, $headers);
     }
 
     public function getContentAsString()
