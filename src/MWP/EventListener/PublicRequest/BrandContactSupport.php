@@ -182,7 +182,7 @@ class MWP_EventListener_PublicRequest_BrandContactSupport implements Symfony_Eve
             return;
         }
 
-        if ($this->context->isGranted($this->capability)) {
+        if (!$this->context->isGranted($this->capability)) {
             return;
         }
 

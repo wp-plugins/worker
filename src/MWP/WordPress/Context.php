@@ -397,6 +397,9 @@ class MWP_WordPress_Context
 
     public function isGranted($capability)
     {
+        $this->requirePluggable();
+        $this->requireCookieConstants();
+
         return current_user_can($capability);
     }
 
