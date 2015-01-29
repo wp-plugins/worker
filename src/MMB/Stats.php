@@ -29,7 +29,7 @@ class MMB_Stats extends MMB_Core
         }
 
         if (!empty($options['activePlugins'])) {
-            $siteStatistics['activePlugins'] = count((array) array(get_option('active_plugins', array())));
+            $siteStatistics['activePlugins'] = count((array) get_option('active_plugins', array()));
         }
 
         if (!empty($options['publishedPosts'])) {
