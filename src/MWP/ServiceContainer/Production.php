@@ -52,6 +52,8 @@ class MWP_ServiceContainer_Production extends MWP_ServiceContainer_Abstract
 
         $dispatcher->addSubscriber(new MWP_EventListener_MasterResponse_LogResponse($this->getLogger()));
 
+        $dispatcher->addSubscriber(new MWP_EventListener_FixCompatibility($this->getWordPressContext()));
+
         $dispatcher->addSubscriber(new MWP_EventListener_EncodeMasterResponse());
 
         return $dispatcher;
@@ -70,7 +72,7 @@ class MWP_ServiceContainer_Production extends MWP_ServiceContainer_Abstract
         $mapper = new MWP_Action_Registry();
 
         $mapper->addDefinition('do_upgrade', new MWP_Action_Definition('mmb_do_upgrade', array('hook_name' => 'setup_theme')));
-        $mapper->addDefinition('get_stats', new MWP_Action_Definition('mmb_stats_get', array('hook_name' => 'setup_theme')));
+        $mapper->addDefinition('get_stats', new MWP_Action_Definition('mmb_stats_get', array('hook_name' => 'init')));
         $mapper->addDefinition('remove_site', new MWP_Action_Definition('mmb_remove_site'));
         $mapper->addDefinition('backup_clone', new MWP_Action_Definition('mmb_backup_now'));
         $mapper->addDefinition('restore', new MWP_Action_Definition('mmb_restore_now'));
