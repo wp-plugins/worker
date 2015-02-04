@@ -15,6 +15,8 @@ class MWP_EventListener_PublicRequest_BrandContactSupport implements Symfony_Eve
 
     private $brand;
 
+    private $requestStack;
+
     /**
      * Required WordPress capability to access the page.
      *
@@ -22,10 +24,11 @@ class MWP_EventListener_PublicRequest_BrandContactSupport implements Symfony_Eve
      */
     private $capability = 'read';
 
-    public function __construct(MWP_WordPress_Context $context, MWP_Worker_Brand $brand)
+    public function __construct(MWP_WordPress_Context $context, MWP_Worker_Brand $brand, MWP_Worker_RequestStack $requestStack)
     {
-        $this->context = $context;
-        $this->brand   = $brand;
+        $this->context      = $context;
+        $this->brand        = $brand;
+        $this->requestStack = $requestStack;
     }
 
     public static function getSubscribedEvents()
@@ -35,7 +38,7 @@ class MWP_EventListener_PublicRequest_BrandContactSupport implements Symfony_Eve
         );
     }
 
-    public function enableContactSupport(MWP_Event_PublicRequest $event)
+    public function enableContactSupport()
     {
         if (!$this->brand->isActive()) {
             return;
@@ -51,7 +54,7 @@ class MWP_EventListener_PublicRequest_BrandContactSupport implements Symfony_Eve
         $this->context->addAction('admin_head', array($this, 'printSupportScript'));
         $this->context->addAction('admin_footer', array($this, 'printSupportDialog'));
 
-        $this->handleSupportForm($event);
+        $this->context->addAction('init', array($this, 'handleSupportForm'));
     }
 
     /**
@@ -90,9 +93,9 @@ class MWP_EventListener_PublicRequest_BrandContactSupport implements Symfony_Eve
         ?>
         <script type="text/javascript">
             jQuery(document).ready(function ($) {
-                var $dialog = $('#support_dialog');
-                var $form = $('#support_form');
-                var $messageContainer = $('#support_response_id');
+                var $dialog = $('#mwp_support_dialog');
+                var $form = $('#mwp_support_form');
+                var $messageContainer = $('#mwp_support_response_id');
                 $form.submit(function (e) {
                     e.preventDefault();
                     var data = $(this).serialize();
@@ -125,7 +128,7 @@ class MWP_EventListener_PublicRequest_BrandContactSupport implements Symfony_Eve
                         title: 'Contact Support',
                         dialogClass: 'mwp-support-dialog',
                         close: function () {
-                            $('#support_response_id').html('');
+                            $('#mwp_support_response_id').html('');
                             $(this).dialog("destroy");
                         }
                     });
@@ -148,7 +151,7 @@ class MWP_EventListener_PublicRequest_BrandContactSupport implements Symfony_Eve
 
         ob_start();
         ?>
-        <div id="support_dialog" style="display: none;">
+        <div id="mwp_support_dialog" style="display: none;">
             <?php if (!empty($contactText)): ?>
                 <div>
                     <p><?php echo $contactText ?></p>
@@ -156,11 +159,11 @@ class MWP_EventListener_PublicRequest_BrandContactSupport implements Symfony_Eve
             <?php endif ?>
             <?php if ($contactType == MWP_Worker_Brand::CONTACT_TYPE_TEXT_PLUS_FORM): ?>
                 <div style="margin: 19px 0 0;">
-                    <form method="post" id="support_form">
-                        <textarea name="support_mwp_message" id="support_message" style="width:500px;height:150px;display:block;margin-left:auto;margin-right:auto;"></textarea>
+                    <form method="post" id="mwp_support_form">
+                        <textarea name="support_mwp_message" id="mwp_support_message" style="width:500px;height:150px;display:block;margin-left:auto;margin-right:auto;"></textarea>
                         <button type="submit" class="button-primary" style="display:block;margin:20px auto 7px auto;border:1px solid #a1a1a1;padding:0 31px;border-radius: 4px;">Send</button>
                     </form>
-                    <div id="support_response_id" style="margin-top: 14px"></div>
+                    <div id="mwp_support_response_id" style="margin-top: 14px"></div>
                     <style scoped="scoped">
                         .mwp-support-dialog.ui-dialog {
                             z-index: 300002;
@@ -175,9 +178,9 @@ class MWP_EventListener_PublicRequest_BrandContactSupport implements Symfony_Eve
         $this->context->output($content);
     }
 
-    private function handleSupportForm(MWP_Event_PublicRequest $event)
+    public function handleSupportForm()
     {
-        $request = $event->getRequest();
+        $request = $this->requestStack->getMasterRequest();
         if (!isset($request->request['support_mwp_message']) || !is_scalar($request->request['support_mwp_message'])) {
             return;
         }
@@ -195,13 +198,12 @@ class MWP_EventListener_PublicRequest_BrandContactSupport implements Symfony_Eve
 
         if (empty($message)) {
             // Message is set, but it's empty.
-            $event->setResponse(new MWP_Http_JsonResponse(array(
+            $response = new MWP_Http_JsonResponse(array(
                 'success' => false,
                 'message' => "Please enter a message.",
-            )));
-            $event->stopPropagation();
-
-            return;
+            ));
+            $response->send();
+            exit;
         }
         $subject   = 'New ticket for site '.$this->context->getHomeUrl();
         $message   = <<<EOF
@@ -216,7 +218,8 @@ EOF;
             'message' => $emailSent ? "Message successfully sent." : "Unable to send email. Please try again.",
         );
 
-        $event->setResponse(new MWP_Http_JsonResponse($status));
-        $event->stopPropagation();
+        $response = new MWP_Http_JsonResponse($status);
+        $response->send();
+        exit;
     }
 }
