@@ -96,7 +96,7 @@ class MWP_Worker_Kernel
             }
 
             // Allow listeners to modify action parameters.
-            $actionRequestEvent = new MWP_Event_ActionRequest($request, $params);
+            $actionRequestEvent = new MWP_Event_ActionRequest($request, $params, $actionDefinition);
             $this->dispatcher->dispatch(MWP_Event_Events::ACTION_REQUEST, $actionRequestEvent);
             $params = $actionRequestEvent->getParams();
 

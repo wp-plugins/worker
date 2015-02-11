@@ -8,7 +8,7 @@
  * file that was distributed with this source code.
  */
 
-class MWP_EventListener_MasterRequest_SetCurrentUser implements Symfony_EventDispatcher_EventSubscriberInterface
+class MWP_EventListener_ActionRequest_SetCurrentUser implements Symfony_EventDispatcher_EventSubscriberInterface
 {
 
     private $context;
@@ -21,11 +21,11 @@ class MWP_EventListener_MasterRequest_SetCurrentUser implements Symfony_EventDis
     public static function getSubscribedEvents()
     {
         return array(
-            MWP_Event_Events::MASTER_REQUEST => array('onMasterRequest', -300),
+            MWP_Event_Events::ACTION_REQUEST => array('onActionRequest', -300),
         );
     }
 
-    public function onMasterRequest(MWP_Event_MasterRequest $event)
+    public function onActionRequest(MWP_Event_ActionRequest $event)
     {
         if (!$event->getRequest()->isAuthenticated()) {
             return;
@@ -47,18 +47,17 @@ class MWP_EventListener_MasterRequest_SetCurrentUser implements Symfony_EventDis
             $user = $users[0];
         }
 
+        $actionHook = $event->getActionDefinition()->getOption('hook_name');
+
+        if ($actionHook) {
+            // Set the user on the earliest hook after pluggable.php is loaded.
+            $hookProxy = new MWP_WordPress_HookProxy(array($this->context, 'setCurrentUser'), $user);
+            $this->context->addAction('plugins_loaded', $hookProxy->getCallable(), -9999);
+
+            return;
+        }
+
+        // We're inside the MU context, so set the user immediately.
         $this->context->setCurrentUser($user);
-
-        /*
-        if (isset($user)) {
-            wp_set_current_user($user->ID);
-            // Compatibility with All In One Security
-            update_user_meta($user->ID, 'last_login_time', current_time('mysql'));
-        }
-
-        if (defined('ALTERNATE_WP_CRON') && !defined('DOING_AJAX') && ALTERNATE_WP_CRON === true) {
-            define('DOING_AJAX', true);
-        }
-        */
     }
 }

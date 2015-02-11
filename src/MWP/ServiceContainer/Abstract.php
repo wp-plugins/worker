@@ -59,6 +59,8 @@ abstract class MWP_ServiceContainer_Abstract implements MWP_ServiceContainer_Int
 
     private $errorLogger;
 
+    private $systemEnvironment;
+
     public function __construct(array $parameters = array())
     {
         $this->parameters = $parameters;
@@ -487,4 +489,15 @@ abstract class MWP_ServiceContainer_Abstract implements MWP_ServiceContainer_Int
      * @return Monolog_Logger
      */
     protected abstract function createErrorLogger();
+
+    public function getSystemEnvironment()
+    {
+        if ($this->systemEnvironment === null) {
+            $this->systemEnvironment = $this->createSystemEnvironment();
+        }
+
+        return $this->systemEnvironment;
+    }
+
+    protected abstract function createSystemEnvironment();
 }

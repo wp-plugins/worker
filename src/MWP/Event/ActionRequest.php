@@ -21,10 +21,13 @@ class MWP_Event_ActionRequest extends Symfony_EventDispatcher_Event
      */
     private $params;
 
-    public function __construct(MWP_Worker_Request $request, array $params)
+    private $actionDefinition;
+
+    public function __construct(MWP_Worker_Request $request, array $params, MWP_Action_Definition $actionDefinition)
     {
         $this->request = $request;
         $this->params = $params;
+        $this->actionDefinition = $actionDefinition;
     }
 
     /**
@@ -49,5 +52,13 @@ class MWP_Event_ActionRequest extends Symfony_EventDispatcher_Event
     public function setParams(array $params)
     {
         $this->params = $params;
+    }
+
+    /**
+     * @return MWP_Action_Definition
+     */
+    public function getActionDefinition()
+    {
+        return $this->actionDefinition;
     }
 }

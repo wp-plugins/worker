@@ -12,26 +12,35 @@ ManageWP is the ultimate WordPress productivity tool, allowing you to efficientl
 
 == Description ==
 
-[ManageWP](https://managewp.com/ "Manage WordPress Websites") is a revolutionary service that automates the management of multiple WordPress websites. ManageWP Worker Plugin allows your site to communicate with the service, and is needed in order to enjoy all these features:
+[ManageWP](https://managewp.com/ "Manage Multiple WordPress Websites") is a revolutionary service designed to automate most of your daily tasks when managing multiple WordPress websites, allowing you to use your time on more important matters.
 
-Main features:
+= Everything in One Place =
+Just the hassle of logging into each of your websites is enough to ruin your day. With ManageWP the data from all of your sites is compiled and shown on a single easy to use dashboard, allowing you to check up on your websites in a single glance.
 
-*   Manage multiple WordPress sites securely and fast
-*	  Manage WordPress themes, plugins, users, pages and posts for all your websites from one dashboard
-*   One click upgrades for WordPress, plugin and themes across all your sites
-*   Schedule automatic backups of your websites (Amazon S3, Google Drive, FTP/SFTP and Dropbox supported)
-*   Install WordPress, clone or migrate WordPress website to another domain
-*   One click to access WP admin of any site
-*   Bulk install themes and plugins to multiple sites at once
-*   Bulk publish posts and pages to multiple sites at once
-*   Add sub-users (writers, staff..) to your account
-*   SEO Statistics, track your keyword rankings
-*   Uptime monitoring - receive an SMS notification if your site goes down
+= One-click Management =
+With all the data on a single dashboard, all it takes is one click to perform plugin and theme updates on multiple websites. Got comments? Everything is on one single list. Or maybe you want to clean spam comments, table overhead or post revisions from all of your websites? It takes a single click.
 
+= Backup & Restore =
+Never leave home without a backup. With the scheduled backup tasks to remote destinations such as Amazon S3, Dropbox and Google Drive you will always have an up-to-date backup which you can use to restore your website if something happened to it (yeah, we know it was YOU who messed up the CSS!)
 
-Check out the [ManageWP Tour video](http://www.youtube.com/watch?v=Cg_W9MQBWt4).
+= Quick and Easy Migration =
+Want to know how easy is to migrate a website with ManageWP? Pick a source website, pick a destination website, click Go. Yeah, it's that easy.
 
-http://www.youtube.com/watch?v=Cg_W9MQBWt4
+= Uptime Monitoring =
+Be the first to know when your website is down with both email and SMS notifications, and get your website back online before anyone else notices.
+
+= SEO & Keyword Ranking =
+Be on top of your website rankings and figure out which keywords work best for you.
+
+= Client Reports =
+Keep track of what you're doing for your clients and 
+
+= Is This All? =
+No way! We've got a bunch of other awesome features, both free and premium, you can check out on our [ManageWP Features & Pricing Page](https://managewp.com/plans-and-pricing "ManageWP Plans & Pricing")
+
+Check out the [ManageWP promo video](https://www.youtube.com/watch?v=7usvv4DsG5A).
+
+https://www.youtube.com/watch?v=7usvv4DsG5A
 
 ManageWP is also the creator of [ManageWP.org](https://managewp.org/ "WordPress news site"), community project capturing the pulse of the WordPress community.
 

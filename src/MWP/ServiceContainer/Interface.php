@@ -138,4 +138,9 @@ interface MWP_ServiceContainer_Interface
      * @return Monolog_Logger
      */
     public function getErrorLogger();
+
+    /**
+     * @return MWP_System_Environment
+     */
+    public function getSystemEnvironment();
 }
