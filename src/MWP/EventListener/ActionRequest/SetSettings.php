@@ -54,7 +54,9 @@ class MWP_EventListener_ActionRequest_SetSettings implements Symfony_EventDispat
             $wantedLimit = 40 * 1024 * 1024;
         }
 
-        if ($this->system->getMemoryLimit() < $wantedLimit) {
+        $memoryLimit = $this->system->getMemoryLimit();
+
+        if ($memoryLimit !== -1 && $memoryLimit < $wantedLimit) {
             ini_set('memory_limit', $wantedLimit);
         }
     }
