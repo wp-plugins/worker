@@ -68,6 +68,11 @@ class MWP_EventListener_PublicRequest_SetHitCounter implements Symfony_EventDisp
     {
         $request = $event->getRequest();
 
+        if (!$this->context->hasConstant('WP_USE_THEMES') || !$this->context->getConstant('WP_USE_THEMES')) {
+            // The file is not visited via "index.php".
+            return;
+        }
+
         if ($this->context->isInAdminPanel()) {
             return;
         }

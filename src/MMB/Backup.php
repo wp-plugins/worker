@@ -4561,6 +4561,9 @@ function restore_migrate_urls()
 
 function restore_htaccess()
 {
+    // This has to be done because it contains the function save_mod_rewrite_rules().
+    include_once ABSPATH.'wp-admin/includes/admin.php';
+
     $htaccessRealpath = realpath(ABSPATH.'.htaccess');
 
     if ($htaccessRealpath) {
@@ -4570,7 +4573,7 @@ function restore_htaccess()
     if (isset($GLOBALS['wp_rewrite'])) {
         $wpRewrite = $GLOBALS['wp_rewrite'];
     } else {
-        $wpRewrite = new WP_Rewrite();
+        $wpRewrite = $GLOBALS['wp_rewrite'] = new WP_Rewrite();
     }
 
     $wpRewrite->flush_rules(true);

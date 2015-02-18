@@ -33,7 +33,7 @@ Be the first to know when your website is down with both email and SMS notificat
 Be on top of your website rankings and figure out which keywords work best for you.
 
 = Client Reports =
-Keep track of what you're doing for your clients and 
+Keep track of what you're doing for your clients and dazzle them with a summary of your hard work.
 
 = Is This All? =
 No way! We've got a bunch of other awesome features, both free and premium, you can check out on our [ManageWP Features & Pricing Page](https://managewp.com/plans-and-pricing "ManageWP Plans & Pricing")

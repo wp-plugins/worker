@@ -216,7 +216,7 @@ if (!function_exists('mwp_init')):
         }
 
         $GLOBALS['MMB_WORKER_VERSION']  = '4.0.5';
-        $GLOBALS['MMB_WORKER_REVISION'] = '2015-02-11 00:00:00';
+        $GLOBALS['MMB_WORKER_REVISION'] = '2015-02-18 00:00:00';
         $GLOBALS['mmb_plugin_dir']      = WP_PLUGIN_DIR.'/'.basename(dirname(__FILE__));
         $GLOBALS['_mmb_item_filter']    = array();
         $GLOBALS['mmb_core']            = $core = $GLOBALS['mmb_core_backup'] = new MMB_Core();
