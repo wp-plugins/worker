@@ -143,4 +143,9 @@ interface MWP_ServiceContainer_Interface
      * @return MWP_System_Environment
      */
     public function getSystemEnvironment();
+
+    /**
+     * @return MWP_Updater_TraceableUpdaterSkin
+     */
+    public function getUpdaterSkin();
 }

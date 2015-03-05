@@ -329,7 +329,7 @@ class MMB_Installer extends MMB_Core
                     include_once ABSPATH.'wp-admin/includes/class-wp-upgrader.php';
                 }
 
-                $core   = new Core_Upgrader();
+                $core   = new Core_Upgrader(mwp_container()->getUpdaterSkin());
                 $result = $core->upgrade($current_update);
                 $this->mmb_maintenance_mode(false);
                 if (is_wp_error($result)) {
@@ -466,8 +466,8 @@ class MMB_Installer extends MMB_Core
             }
         }
         $return = array();
-        if (class_exists('Plugin_Upgrader') && class_exists('Bulk_Plugin_Upgrader_Skin')) {
-            $upgrader = new Plugin_Upgrader(new Bulk_Plugin_Upgrader_Skin(compact('nonce', 'url')));
+        if (class_exists('Plugin_Upgrader')) {
+            $upgrader = new Plugin_Upgrader(mwp_container()->getUpdaterSkin());
             $result   = $upgrader->bulk_upgrade(array_keys($plugins));
             if (!function_exists('wp_update_plugins')) {
                 include_once ABSPATH.'wp-includes/update.php';
@@ -524,8 +524,8 @@ class MMB_Installer extends MMB_Core
                 }
             }
         }
-        if (class_exists('Theme_Upgrader') && class_exists('Bulk_Theme_Upgrader_Skin')) {
-            $upgrader = new Theme_Upgrader(new Bulk_Theme_Upgrader_Skin(compact('title', 'nonce', 'url', 'theme')));
+        if (class_exists('Theme_Upgrader')) {
+            $upgrader = new Theme_Upgrader(mwp_container()->getUpdaterSkin());
             $result   = $upgrader->bulk_upgrade($themes);
 
             if (!function_exists('wp_update_themes')) {

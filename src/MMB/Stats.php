@@ -25,7 +25,7 @@ class MMB_Stats extends MMB_Core
         }
 
         if (!empty($options['approvedComments'])) {
-            $siteStatistics['approvedComments'] = (int) $wpdb->get_var("SELECT COUNT(*) FROM {$prefix}comments WHERE comment_approved='1'");
+            $siteStatistics['approvedComments'] = (int) $wpdb->get_var("SELECT COUNT(*) FROM {$prefix}comments c INNER JOIN {$prefix}posts p ON c.comment_post_ID = p.ID WHERE comment_approved = '1' AND p.post_status = 'publish'");
         }
 
         if (!empty($options['activePlugins'])) {

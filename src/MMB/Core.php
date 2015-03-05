@@ -49,8 +49,8 @@ class MMB_Core extends MMB_Helper
     {
         global $blog_id, $_mmb_item_filter, $_mmb_options;
 
-        $_mmb_options        = get_option('wrksettings');
-        $_mmb_options        = !empty($_mmb_options) ? $_mmb_options : array();
+        $_mmb_options = get_option('wrksettings');
+        $_mmb_options = !empty($_mmb_options) ? $_mmb_options : array();
 
         if (is_multisite()) {
             $this->mmb_multisite         = $blog_id;
@@ -457,7 +457,7 @@ EOF;
 
             ob_start();
             @unlink(dirname(__FILE__));
-            $upgrader = new Plugin_Upgrader();
+            $upgrader = new Plugin_Upgrader(mwp_container()->getUpdaterSkin());
             $result   = $upgrader->run(
                 array(
                     'package'           => $params['download_url'],

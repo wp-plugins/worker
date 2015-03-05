@@ -28,7 +28,7 @@ class MWP_ServiceContainer_Production extends MWP_ServiceContainer_Abstract
         $dispatcher->addSubscriber(new MWP_EventListener_PublicRequest_BrandContactSupport($this->getWordPressContext(), $this->getBrand(), $this->getRequestStack()));
         $dispatcher->addSubscriber(new MWP_EventListener_PublicRequest_DisableEditor($this->getWordPressContext(), $this->getBrand()));
         $dispatcher->addSubscriber(new MWP_EventListener_PublicRequest_SetPluginInfo($this->getWordPressContext(), $this->getBrand()));
-        $dispatcher->addSubscriber(new MWP_EventListener_PublicRequest_SetHitCounter($this->getWordPressContext(), $this->getHitCounter(), $this->getParameter('hit_counter_blacklisted_ips'), $this->getParameter('hit_counter_blacklisted_user_agents')));
+        $dispatcher->addSubscriber(new MWP_EventListener_PublicRequest_SetHitCounter($this->getWordPressContext(), $this->getHitCounter(), $this->getRequestStack(), $this->getParameter('hit_counter_blacklisted_ips'), $this->getParameter('hit_counter_blacklisted_user_agents')));
         $dispatcher->addSubscriber(new MWP_EventListener_PublicRequest_AutomaticLogin($this->getWordPressContext(), $this->getNonceManager(), $this->getSigner(), $this->getConfiguration()));
 
         $dispatcher->addSubscriber(new MWP_EventListener_MasterRequest_VerifyConnectionInfo($this->getWordPressContext(), $this->getSigner()));
@@ -48,6 +48,7 @@ class MWP_ServiceContainer_Production extends MWP_ServiceContainer_Abstract
         $dispatcher->addSubscriber(new MWP_EventListener_ActionResponse_SetActionData());
         $dispatcher->addSubscriber(new MWP_EventListener_ActionResponse_SetLegacyWebsiteConnectionData($this->getWordPressContext()));
         $dispatcher->addSubscriber(new MWP_EventListener_ActionResponse_ChainState($this));
+        $dispatcher->addSubscriber(new MWP_EventListener_ActionResponse_SetUpdaterLog($this->getUpdaterSkin()));
         $dispatcher->addSubscriber(new MWP_EventListener_ActionResponse_SetLegacyPhpExecutionData());
 
         $dispatcher->addSubscriber(new MWP_EventListener_MasterResponse_LogResponse($this->getLogger()));
@@ -304,5 +305,13 @@ class MWP_ServiceContainer_Production extends MWP_ServiceContainer_Abstract
     protected function createSystemEnvironment()
     {
         return new MWP_System_Environment();
+    }
+
+    /**
+     * @return MWP_Updater_TraceableUpdaterSkin
+     */
+    protected function createUpdaterSkin()
+    {
+        return new MWP_Updater_TraceableUpdaterSkin();
     }
 }

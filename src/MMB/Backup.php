@@ -1425,11 +1425,14 @@ class MMB_Backup extends MMB_Core
         $backups   = $task['task_results'];
         $result_id = !empty($params['result_id']) ? $params['result_id'] : null;
         $backup    = !empty($backups[$result_id]) ? $backups[$result_id] : false;
-        foreach ($backups as $key => $result) {
-            if ($result['resultUuid'] == $params['resultUuid']) {
-                $backup    = $result;
-                $result_id = $key;
-                break;
+
+        if (!empty($params['resultUuid'])) {
+            foreach ($backups as $key => $result) {
+                if ($result['resultUuid'] == $params['resultUuid']) {
+                    $backup    = $result;
+                    $result_id = $key;
+                    break;
+                }
             }
         }
 
@@ -1547,7 +1550,7 @@ class MMB_Backup extends MMB_Core
         );
 
         /* Replace options and content urls */
-        $this->replaceOptionsAndUrls($params['overwrite'], $params['new_user'], $params['new_password'], $params['old_user'], $params['clone_from_url'], $params['admin_email'], $params['mwp_clone'], $oldCredentialsAndOptions, $home, $params['current_tasks_tmp']);
+        $this->replaceOptionsAndUrls($params['overwrite'], $params['new_user'], $params['new_password'], $params['old_user'], $params['clone_from_url'], $params['admin_email'], $params['mwp_clone'], $oldCredentialsAndOptions, $home);
 
         $newUrl                  = $wpdb->get_row($wpdb->prepare("SELECT option_value FROM $wpdb->options WHERE option_name = %s LIMIT 1", 'home'));
         $restoreParams['newUrl'] = is_object($newUrl) ? $newUrl->option_value : null;
@@ -1785,7 +1788,7 @@ class MMB_Backup extends MMB_Core
         }
     }
 
-    private function replaceOptionsAndUrls($overwrite, $newUser, $newPassword, $oldUser, $cloneFromUrl, $adminEmail, $mwpClone, $oldCredentialsAndOptions, $home, $currentTasksTmp)
+    private function replaceOptionsAndUrls($overwrite, $newUser, $newPassword, $oldUser, $cloneFromUrl, $adminEmail, $mwpClone, $oldCredentialsAndOptions, $home)
     {
         global $wpdb;
         $this->wpdb_reconnect();
@@ -1898,9 +1901,6 @@ class MMB_Backup extends MMB_Core
             /* Remove hit count */
             $query = "DELETE FROM ".$new_table_prefix."options WHERE option_name = 'user_hit_count'";
             $wpdb->query($query);
-
-            /* Restore previous backups */
-            $wpdb->query("UPDATE ".$new_table_prefix."options SET option_value = '".serialize($currentTasksTmp)."' WHERE option_name = 'mwp_backup_tasks'");
 
             /* Check for .htaccess permalinks update */
             $this->replace_htaccess($home);

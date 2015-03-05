@@ -41,14 +41,16 @@ class MWP_EventListener_PublicRequest_SetHitCounter implements Symfony_EventDisp
     /**
      * @param MWP_WordPress_Context    $context
      * @param MWP_Extension_HitCounter $hitCounter
+     * @param MWP_Worker_RequestStack  $requestStack
      * @param string[]                 $blacklistedIps
      * @param string[]                 $userAgentList
      * @param bool                     $userAgentMatchingMethod
      */
-    public function __construct(MWP_WordPress_Context $context, MWP_Extension_HitCounter $hitCounter, array $blacklistedIps = array(), array $userAgentList = array(), $userAgentMatchingMethod = self::METHOD_BLACKLIST)
+    public function __construct(MWP_WordPress_Context $context, MWP_Extension_HitCounter $hitCounter, MWP_Worker_RequestStack $requestStack, array $blacklistedIps = array(), array $userAgentList = array(), $userAgentMatchingMethod = self::METHOD_BLACKLIST)
     {
         $this->context                 = $context;
         $this->hitCounter              = $hitCounter;
+        $this->requestStack            = $requestStack;
         $this->blacklistedIps          = $blacklistedIps;
         $this->userAgentList           = $userAgentList;
         $this->userAgentMatchingMethod = $userAgentMatchingMethod;
@@ -60,13 +62,18 @@ class MWP_EventListener_PublicRequest_SetHitCounter implements Symfony_EventDisp
     public static function getSubscribedEvents()
     {
         return array(
-            MWP_Event_Events::PUBLIC_REQUEST => array('onPublicRequest', -300),
+            MWP_Event_Events::PUBLIC_REQUEST => 'onPublicRequest',
         );
     }
 
     public function onPublicRequest(MWP_Event_PublicRequest $event)
     {
-        $request = $event->getRequest();
+        $this->context->addAction('wp', array($this, 'countHit'));
+    }
+
+    public function countHit()
+    {
+        $request = $this->requestStack->getMasterRequest();
 
         if (!$this->context->hasConstant('WP_USE_THEMES') || !$this->context->getConstant('WP_USE_THEMES')) {
             // The file is not visited via "index.php".

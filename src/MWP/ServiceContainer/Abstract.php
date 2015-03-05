@@ -61,6 +61,8 @@ abstract class MWP_ServiceContainer_Abstract implements MWP_ServiceContainer_Int
 
     private $systemEnvironment;
 
+    private $updaterSkin;
+
     public function __construct(array $parameters = array())
     {
         $this->parameters = $parameters;
@@ -500,4 +502,18 @@ abstract class MWP_ServiceContainer_Abstract implements MWP_ServiceContainer_Int
     }
 
     protected abstract function createSystemEnvironment();
+
+    public function getUpdaterSkin()
+    {
+        if ($this->updaterSkin === null) {
+            $this->updaterSkin = $this->createUpdaterSkin();
+        }
+
+        return $this->updaterSkin;
+    }
+
+    /**
+     * @return MWP_Updater_TraceableUpdaterSkin
+     */
+    protected abstract function createUpdaterSkin();
 }

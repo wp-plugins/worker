@@ -38,15 +38,19 @@ Keep track of what you're doing for your clients and dazzle them with a summary 
 = Is This All? =
 No way! We've got a bunch of other awesome features, both free and premium, you can check out on our [ManageWP Features & Pricing Page](https://managewp.com/plans-and-pricing "ManageWP Plans & Pricing")
 
-Check out the [ManageWP promo video](https://www.youtube.com/watch?v=7usvv4DsG5A).
+Check out the [ManageWP promo video](https://www.youtube.com/watch?v=C5nBQJQIfH4).
 
-https://www.youtube.com/watch?v=7usvv4DsG5A
+https://www.youtube.com/watch?v=C5nBQJQIfH4
 
 ManageWP is also the creator of [ManageWP.org](https://managewp.org/ "WordPress news site"), community project capturing the pulse of the WordPress community.
 
 == Changelog ==
 
-= 4.0.0 =
+= 4.0.5 =
+
+- Misc bug fixes and performance improvements
+
+= 4.0.1 =
 
 - New features for the [ManageWP Orion release](http://managewp.com/managewp-orion-official-announcement "ManageWP Orion Official Announcement")
 - Misc bug fixes and performance improvements
