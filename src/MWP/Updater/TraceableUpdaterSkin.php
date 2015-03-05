@@ -18,9 +18,11 @@ class MWP_Updater_TraceableUpdaterSkin
 
     public $upgrader;
 
-    public $messages = array();
-
     public $result;
+
+    public $done_header = false;
+
+    protected $messages = array();
 
     public function request_filesystem_credentials($error = false, $context = '', $allow_relaxed_file_ownership = false)
     {

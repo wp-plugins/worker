@@ -46,14 +46,21 @@ ManageWP is also the creator of [ManageWP.org](https://managewp.org/ "WordPress 
 
 == Changelog ==
 
+= 4.0.7 =
+
+- Fix: Fix issues related to cloning and backup restoration
+- Fix: Improve precision of the hit counter
+- Fix: Improve compatibility with other plugins
+- Fix: Numerous small improvements and fixes
+
 = 4.0.5 =
 
-- Misc bug fixes and performance improvements
+- Fix: Misc bug fixes and performance improvements
 
 = 4.0.1 =
 
-- New features for the [ManageWP Orion release](http://managewp.com/managewp-orion-official-announcement "ManageWP Orion Official Announcement")
-- Misc bug fixes and performance improvements
+- New: New features for the [ManageWP Orion release](http://managewp.com/managewp-orion-official-announcement "ManageWP Orion Official Announcement")
+- Fix: Misc bug fixes and performance improvements
 
 = 3.9.30 =
 
