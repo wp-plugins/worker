@@ -1423,7 +1423,7 @@ class MMB_Backup extends MMB_Core
 
         $task      = $this->tasks[$params['task_name']];
         $backups   = $task['task_results'];
-        $result_id = !empty($params['result_id']) ? $params['result_id'] : null;
+        $result_id = isset($params['result_id']) ? $params['result_id'] : null;
         $backup    = !empty($backups[$result_id]) ? $backups[$result_id] : false;
 
         if (!empty($params['resultUuid'])) {
