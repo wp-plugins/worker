@@ -46,6 +46,10 @@ ManageWP is also the creator of [ManageWP.org](https://managewp.org/ "WordPress 
 
 == Changelog ==
 
+= 4.0.8 =
+
+- Fix: Fix single-click restore functionality
+
 = 4.0.7 =
 
 - Fix: Fix issues related to cloning and backup restoration
