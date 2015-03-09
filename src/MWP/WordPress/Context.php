@@ -682,4 +682,14 @@ class MWP_WordPress_Context
     {
         remove_action($tag, $function, $priority);
     }
+
+    public function addSubMenuPage($parentSlug, $pageTitle, $menuTitle, $capability, $menuSlug, $function = '')
+    {
+        return add_submenu_page($parentSlug, $pageTitle, $menuTitle, $capability, $menuSlug, $function);
+    }
+
+    public function wpNonceUrl($url, $action = -1, $name = '_wpnonce')
+    {
+        return wp_nonce_url($url, $action , $name );
+    }
 }

@@ -40,6 +40,60 @@ class MWP_EventListener_ActionRequest_SetSettings implements Symfony_EventDispat
         $this->context->removeAction('init', 'wp_cron');
 
         $this->saveWorkerConfiguration($event->getRequest()->getData());
+
+        $this->resetVersions($event);
+    }
+
+    /**
+     * Reset WordPress core versions, because a certain "security" plugin can modify it
+     * and break other plugins. Only do this for master requests.
+     *
+     * @param MWP_Event_ActionRequest $event
+     */
+    private function resetVersions(MWP_Event_ActionRequest $event)
+    {
+        $actionHook = $event->getActionDefinition()->getOption('hook_name');
+
+        if ($actionHook) {
+            // Set the user on the earliest hook after pluggable.php is loaded.
+            $hookProxy = new MWP_WordPress_HookProxy(array($this, 'requireVersions'));
+            $this->context->addAction('init', $hookProxy->getCallable(), 11);
+
+            return;
+        }
+
+        $this->requireVersions();
+    }
+
+    /**
+     * Callback for version resetting, has to work with PHP 5.2.
+     *
+     * @internal
+     */
+    public function requireVersions()
+    {
+        $versionFile = $this->context->getConstant('ABSPATH').$this->context->getConstant('WPINC').'/version.php';
+        if (!file_exists($versionFile)) {
+            // For whatever reason.
+            return;
+        }
+
+        include $versionFile;
+
+        $varNames = array(
+            'wp_version',
+            'wp_db_version',
+            'tinymce_version',
+            'required_php_version',
+            'required_mysql_version',
+        );
+
+        foreach ($varNames as $varName) {
+            if (!isset($$varName)) {
+                continue;
+            }
+            $this->context->set($varName, $$varName);
+        }
     }
 
     /**
