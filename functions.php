@@ -512,12 +512,6 @@ function mmb_parse_request()
 
 function mmb_response($response = false, $success = true)
 {
-    mwp_logger()->debug('Master response: {action_response_status}', array(
-        'action_response_status' => $success ? 'success' : 'error',
-        'action_response'        => $response,
-        'headers_sent'           => headers_sent(),
-    ));
-
     if (!$success) {
         if (!is_scalar($response)) {
             $response = json_encode($response);

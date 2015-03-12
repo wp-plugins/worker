@@ -171,4 +171,9 @@ class Google_IO_Stream extends Google_IO_Abstract
 
         return self::UNKNOWN_CODE;
     }
+
+    protected function needsQuirk()
+    {
+        return false;
+    }
 }

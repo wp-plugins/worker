@@ -16,6 +16,13 @@
 class MWP_Updater_TraceableUpdaterSkin
 {
 
+    public $options = array(
+        'url'     => '',
+        'nonce'   => '',
+        'title'   => '',
+        'context' => false,
+    );
+
     public $upgrader;
 
     public $result;
@@ -26,6 +33,21 @@ class MWP_Updater_TraceableUpdaterSkin
 
     public function request_filesystem_credentials($error = false, $context = '', $allow_relaxed_file_ownership = false)
     {
+        if ($error instanceof WP_Error) {
+            throw new MWP_Worker_Exception(MWP_Worker_Exception::FILESYSTEM_CREDENTIALS_ERROR, $error->get_error_message());
+        }
+
+        if ($context) {
+            $this->options['context'] = $context;
+        }
+
+        require_once ABSPATH.'wp-admin/includes/file.php';
+        // This will output a credentials form in event of failure; we don't want that, so just hide with a buffer.
+        ob_start();
+        $result = request_filesystem_credentials('', '', $error, $context, null, $allow_relaxed_file_ownership);
+        ob_end_clean();
+
+        return $result;
     }
 
     public function get_upgrade_messages()

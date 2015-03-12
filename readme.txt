@@ -46,6 +46,11 @@ ManageWP is also the creator of [ManageWP.org](https://managewp.org/ "WordPress 
 
 == Changelog ==
 
+= 4.0.10 =
+
+- Fix: Fix update functionality on some installations that use FTP credentials
+- Fix: Fix Google Drive uploading on installations without cURL PHP extension
+
 = 4.0.9 =
 
 - New: Make the ManageWP Worker plugin upgradable through the dashboard widget
