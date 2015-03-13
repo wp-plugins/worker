@@ -107,21 +107,9 @@ class MMB_Helper
             return $this->mmb_get_sitemeta_transient($option_name);
         }
 
-        global $wp_version;
+        $transient = get_option('_site_transient_'.$option_name);
 
-        if (version_compare($wp_version, '2.7.9', '<=')) {
-            return get_option($option_name);
-        } else {
-            if (version_compare($wp_version, '2.9.9', '<=')) {
-                $transient = get_option('_transient_'.$option_name);
-
-                return apply_filters("transient_".$option_name, $transient);
-            } else {
-                $transient = get_option('_site_transient_'.$option_name);
-
-                return apply_filters("site_transient_".$option_name, $transient);
-            }
-        }
+        return apply_filters("site_transient_".$option_name, $transient);
     }
 
     public function mmb_delete_transient($option_name)
@@ -130,17 +118,7 @@ class MMB_Helper
             return;
         }
 
-        global $wp_version;
-
-        if (version_compare($wp_version, '2.7.9', '<=')) {
-            delete_option($option_name);
-        } else {
-            if (version_compare($wp_version, '2.9.9', '<=')) {
-                delete_option('_transient_'.$option_name);
-            } else {
-                delete_option('_site_transient_'.$option_name);
-            }
-        }
+        delete_option('_site_transient_'.$option_name);
     }
 
     public function mmb_get_sitemeta_transient($option_name)

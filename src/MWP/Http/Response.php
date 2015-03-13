@@ -127,6 +127,14 @@ class MWP_Http_Response implements MWP_Http_ResponseInterface
     public function send()
     {
         $this->sendHeaders();
+
+        // Some plugins leave open buffers and when it happens the returned output is blank
+        $bufferCount = count(ob_list_handlers());
+        while ($bufferCount) {
+            ob_end_clean();
+            --$bufferCount;
+        }
+
         print $this->getContentAsString();
     }
 

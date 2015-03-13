@@ -46,6 +46,11 @@ ManageWP is also the creator of [ManageWP.org](https://managewp.org/ "WordPress 
 
 == Changelog ==
 
+= 4.0.11 =
+
+- Fix: Better detect available updates
+- Fix: Improve compatibility with other plugins
+
 = 4.0.10 =
 
 - Fix: Fix update functionality on some installations that use FTP credentials

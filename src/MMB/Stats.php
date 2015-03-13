@@ -391,27 +391,18 @@ class MMB_Stats extends MMB_Core
         include_once ABSPATH.'wp-admin/includes/update.php';
 
         $stats = $this->mmb_parse_action_params('pre_init_stats', $params, $this);
-        $num   = extract($params);
-
-        if (function_exists('w3tc_pgcache_flush') || function_exists('wp_cache_clear_cache')) {
-            $this->mmb_delete_transient('update_core');
-            $this->mmb_delete_transient('update_plugins');
-            $this->mmb_delete_transient('update_themes');
-            @wp_version_check();
-            @wp_update_plugins();
-            @wp_update_themes();
-        }
+        extract($params);
 
         if ($params['refresh'] == 'transient') {
-            $current = $this->mmb_get_transient('update_core');
-            if (isset($current->last_checked) || get_option('mmb_forcerefresh')) {
-                update_option('mmb_forcerefresh', false);
-                if (time() - $current->last_checked > 7200) {
-                    @wp_version_check();
-                    @wp_update_plugins();
-                    @wp_update_themes();
-                }
+            if (function_exists('w3tc_pgcache_flush') || function_exists('wp_cache_clear_cache')) {
+                $this->mmb_delete_transient('update_core');
+                $this->mmb_delete_transient('update_plugins');
+                $this->mmb_delete_transient('update_themes');
             }
+
+            wp_version_check();
+            wp_update_plugins();
+            wp_update_themes();
         }
 
         /** @var $wpdb wpdb */

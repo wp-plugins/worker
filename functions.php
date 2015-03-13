@@ -565,7 +565,7 @@ function mmb_stats_get($params)
     mwp_context()->requirePostTypes();
     mwp_context()->requireTheme();
 
-    $data = array_merge($mmb_core->stats_instance->get($params), mmb_pre_init_stats($params));
+    $data = array_merge(mmb_pre_init_stats($params), $mmb_core->stats_instance->get($params));
     mmb_response($data, true);
 }
 

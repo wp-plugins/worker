@@ -3,7 +3,7 @@
 Plugin Name: ManageWP - Worker
 Plugin URI: https://managewp.com
 Description: ManageWP Worker plugin allows you to manage your WordPress sites from one dashboard. Visit <a href="https://managewp.com">ManageWP.com</a> for more information.
-Version: 4.0.10
+Version: 4.0.11
 Author: ManageWP
 Author URI: https://managewp.com
 License: GPL2
@@ -120,6 +120,8 @@ if (!class_exists('MwpWorkerResponder', false)):
 
         private $container;
 
+        private $responseSent = false;
+
         function __construct(MWP_ServiceContainer_Interface $container)
         {
             $this->container = $container;
@@ -133,7 +135,16 @@ if (!class_exists('MwpWorkerResponder', false)):
                 $lastResponse = $responseEvent->getResponse();
 
                 if ($lastResponse !== null) {
-                    $lastResponse->send();
+                    if (!$this->responseSent) {
+                        // This looks pretty ugly, but the "execute PHP" function handles fatal errors and wraps them
+                        // in a valid action response. That fatal error may also be handled by the global fatal error
+                        // handler, which also wraps the error in a response. We keep the state in this class, so we
+                        // don't send a worker response twice, first time as an action response, second time as a
+                        // global response.
+                        // If this is to be removed, simply remove fatal error handling from the "execute PHP" action.
+                        $lastResponse->send();
+                        $this->responseSent = true;
+                    }
                     exit;
                 }
             } elseif ($e !== null) {
@@ -215,8 +226,8 @@ if (!function_exists('mwp_init')):
             spl_autoload_register('mwp_autoload', true, true);
         }
 
-        $GLOBALS['MMB_WORKER_VERSION']  = '4.0.10';
-        $GLOBALS['MMB_WORKER_REVISION'] = '2015-03-12 00:00:00';
+        $GLOBALS['MMB_WORKER_VERSION']  = '4.0.11';
+        $GLOBALS['MMB_WORKER_REVISION'] = '2015-03-13 00:00:00';
         $GLOBALS['mmb_plugin_dir']      = WP_PLUGIN_DIR.'/'.basename(dirname(__FILE__));
         $GLOBALS['_mmb_item_filter']    = array();
         $GLOBALS['mmb_core']            = $core = $GLOBALS['mmb_core_backup'] = new MMB_Core();
