@@ -1950,7 +1950,7 @@ class MMB_Backup extends MMB_Core
             if (!mwp_is_shell_available()) {
                 throw new MMB_Exception("Shell is not available");
             }
-            $process = new Symfony_Process_Process($command, untrailingslashit(ABSPATH), null, null, 3600);
+            $process = new Symfony_Process_Process($command, untrailingslashit(ABSPATH), $this->getEnv(), null, 3600);
             mwp_logger()->info('Database import process started', array(
                 'executable_location' => $mysql,
                 'command_line'        => $process->getCommandLine(),
@@ -4216,7 +4216,14 @@ class MMB_Backup extends MMB_Core
      */
     public function wpdb_reconnect()
     {
+        /** @var wpdb $wpdb */
         global $wpdb;
+
+        if (is_callable(array($wpdb, 'check_connection'))) {
+            $wpdb->check_connection();
+
+            return;
+        }
 
         if (class_exists('wpdb') && function_exists('wp_set_wpdb_vars')) {
             @mysql_close($wpdb->dbh);
@@ -4327,6 +4334,31 @@ class MMB_Backup extends MMB_Core
         $args          = array('task_name' => $task_name, 'backup_file' => $backup_file, 'del_host_file' => $del_host_file);
 
         $this->notifyMyself('mmb_remote_upload', $args);
+    }
+
+    /**
+     * @return array|null
+     */
+    private function getEnv()
+    {
+        $lang = getenv('LANG');
+
+        if (preg_match('{^.*\.UTF-?8$}i', $lang)) {
+            // Allow the environment to be inherited.
+            return null;
+        }
+
+        if (!$lang) {
+            $lang = 'en_US';
+        }
+
+        $langParts = explode('.', $lang);
+
+        if (!isset($langParts[1]) || $langParts[1] !== 'UTF-8') {
+            $lang = $langParts[0].'.UTF-8';
+        }
+
+        return array('LANG' => $lang);
     }
 }
 

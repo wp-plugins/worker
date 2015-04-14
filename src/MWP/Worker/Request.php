@@ -180,7 +180,7 @@ class MWP_Worker_Request
             $this->attributes['data']    = $data;
             $this->attributes['params']  = $data['params'];
             $this->attributes['setting'] = array_key_exists('setting', $data) ? $data['setting'] : null;
-            $this->attributes['user']    = (array_key_exists('username', $data) && is_scalar($data['username'])) ? $data['username'] : null;
+            $this->attributes['user']    = (isset($data['params']['username']) && is_scalar($data['params']['username'])) ? $data['params']['username'] : null;
         }
     }
 

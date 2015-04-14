@@ -46,6 +46,12 @@ ManageWP is also the creator of [ManageWP.org](https://managewp.org/ "WordPress 
 
 == Changelog ==
 
+= 4.0.12 =
+
+- Fix: Improve white-labeling.
+- Fix: Better compatibility with development builds of WordPress.
+- Fix: Improve one-click restore functionality on non-English installations of WordPress.
+
 = 4.0.11 =
 
 - Fix: Better detect available updates

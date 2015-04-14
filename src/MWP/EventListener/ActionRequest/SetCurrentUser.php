@@ -31,8 +31,24 @@ class MWP_EventListener_ActionRequest_SetCurrentUser implements Symfony_EventDis
             return;
         }
 
-        $usernameUsed = $event->getRequest()->getUsername();
+        $actionHook = $event->getActionDefinition()->getOption('hook_name');
+
+        if ($actionHook) {
+            // Set the user on the earliest hook after pluggable.php is loaded.
+            $hookProxy = new MWP_WordPress_HookProxy(array($this, 'setCurrentUserFromEvent'), $event);
+            $this->context->addAction('plugins_loaded', $hookProxy->getCallable(), -9999);
+
+            return;
+        }
+
+        // We're inside the MU context, so set the user immediately.
+        $this->setCurrentUserFromEvent($event);
+    }
+
+    public function setCurrentUserFromEvent(MWP_Event_ActionRequest $event)
+    {
         $user         = null;
+        $usernameUsed = $event->getRequest()->getUsername();
 
         if ($usernameUsed) {
             $user = $this->context->getUserByUsername($usernameUsed);
@@ -47,17 +63,6 @@ class MWP_EventListener_ActionRequest_SetCurrentUser implements Symfony_EventDis
             $user = $users[0];
         }
 
-        $actionHook = $event->getActionDefinition()->getOption('hook_name');
-
-        if ($actionHook) {
-            // Set the user on the earliest hook after pluggable.php is loaded.
-            $hookProxy = new MWP_WordPress_HookProxy(array($this->context, 'setCurrentUser'), $user);
-            $this->context->addAction('plugins_loaded', $hookProxy->getCallable(), -9999);
-
-            return;
-        }
-
-        // We're inside the MU context, so set the user immediately.
         $this->context->setCurrentUser($user);
     }
 }

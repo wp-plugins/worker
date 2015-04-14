@@ -3,7 +3,7 @@
 Plugin Name: ManageWP - Worker
 Plugin URI: https://managewp.com
 Description: ManageWP Worker plugin allows you to manage your WordPress sites from one dashboard. Visit <a href="https://managewp.com">ManageWP.com</a> for more information.
-Version: 4.0.11
+Version: 4.0.12
 Author: ManageWP
 Author URI: https://managewp.com
 License: GPL2
@@ -185,30 +185,6 @@ if (!function_exists('mwp_container')):
     }
 endif;
 
-if (!function_exists('mwp_uninstall')) {
-    function mwp_uninstall()
-    {
-        $loaderName = '0-worker.php';
-        try {
-            $mustUsePluginDir = rtrim(WPMU_PLUGIN_DIR, '/');
-            $loaderPath       = $mustUsePluginDir.'/'.$loaderName;
-
-            if (!file_exists($loaderPath)) {
-                return;
-            }
-
-            $removed = @unlink($loaderPath);
-
-            if (!$removed) {
-                $error = error_get_last();
-                throw new Exception(sprintf('Unable to remove loader: %s', $error['message']));
-            }
-        } catch (Exception $e) {
-            mwp_logger()->error('Unable to remove loader', array('exception' => $e));
-        }
-    }
-}
-
 if (!function_exists('mwp_init')):
     function mwp_init()
     {
@@ -226,8 +202,8 @@ if (!function_exists('mwp_init')):
             spl_autoload_register('mwp_autoload', true, true);
         }
 
-        $GLOBALS['MMB_WORKER_VERSION']  = '4.0.11';
-        $GLOBALS['MMB_WORKER_REVISION'] = '2015-03-13 00:00:00';
+        $GLOBALS['MMB_WORKER_VERSION']  = '4.0.12';
+        $GLOBALS['MMB_WORKER_REVISION'] = '2015-04-14 00:00:00';
         $GLOBALS['mmb_plugin_dir']      = WP_PLUGIN_DIR.'/'.basename(dirname(__FILE__));
         $GLOBALS['_mmb_item_filter']    = array();
         $GLOBALS['mmb_core']            = $core = $GLOBALS['mmb_core_backup'] = new MMB_Core();
@@ -258,7 +234,7 @@ if (!function_exists('mwp_init')):
         // Plugin management hooks.
         register_activation_hook(__FILE__, array($core, 'install'));
         register_deactivation_hook(__FILE__, array($core, 'deactivate'));
-        register_uninstall_hook(__FILE__, 'mwp_uninstall');
+        register_uninstall_hook(dirname(__FILE__).'/functions.php', 'mwp_uninstall');
 
         // Don't send the "X-Frame-Options: SAMEORIGIN" header if we're logging in inside an iframe.
         if (isset($_COOKIE[MMB_XFRAME_COOKIE])) {

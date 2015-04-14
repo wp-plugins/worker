@@ -39,6 +39,20 @@ class MWP_EventListener_PublicRequest_SetPluginInfo implements Symfony_EventDisp
         // This is a horrible hack, but it will allow us to hide a MU plugin in rebranded installations.
         $this->context->addFilter('show_advanced_plugins', array($this, 'muPluginListFilter'), 10, 2);
         $this->context->addFilter('plugin_row_meta', array($this, 'hidePluginDetails'), 10, 2);
+        $this->context->addFilter('site_transient_update_plugins', array($this, 'parseUpdatePlugins'));
+    }
+
+    public function parseUpdatePlugins($updates)
+    {
+        if (!$this->brand->isActive()) {
+            return $updates;
+        }
+
+        if (isset($updates->response[$this->slug])) {
+            unset($updates->response[$this->slug]);
+        }
+
+        return $updates;
     }
 
     /**
@@ -94,7 +108,7 @@ class MWP_EventListener_PublicRequest_SetPluginInfo implements Symfony_EventDisp
      */
     public function muPluginListFilter($previousValue, $type)
     {
-        if (!$this->brand->isActive() || !$this->brand->isHide()) {
+        if (!$this->brand->isActive()) {
             return $previousValue;
         }
 
@@ -113,7 +127,17 @@ class MWP_EventListener_PublicRequest_SetPluginInfo implements Symfony_EventDisp
             return $previousValue;
         }
 
-        unset($plugins['mustuse'][$this->loaderName]);
+        if ($this->brand->isHide()) {
+            unset($plugins['mustuse'][$this->loaderName]);
+        } else {
+            $plugins['mustuse'][$this->loaderName]['Name']        = $this->brand->getName();
+            $plugins['mustuse'][$this->loaderName]['Title']       = $this->brand->getName();
+            $plugins['mustuse'][$this->loaderName]['Description'] = $this->brand->getDescription();
+            $plugins['mustuse'][$this->loaderName]['AuthorURI']   = $this->brand->getAuthorUrl();
+            $plugins['mustuse'][$this->loaderName]['Author']      = $this->brand->getAuthor();
+            $plugins['mustuse'][$this->loaderName]['AuthorName']  = $this->brand->getAuthor();
+            $plugins['mustuse'][$this->loaderName]['PluginURI']   = '';
+        }
 
         return $previousValue;
     }
