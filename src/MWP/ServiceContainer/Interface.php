@@ -148,4 +148,9 @@ interface MWP_ServiceContainer_Interface
      * @return MWP_Updater_TraceableUpdaterSkin
      */
     public function getUpdaterSkin();
+
+    /**
+     * @return MWP_WordPress_SessionStore
+     */
+    public function getSessionStore();
 }

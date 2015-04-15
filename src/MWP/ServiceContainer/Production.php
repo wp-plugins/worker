@@ -29,7 +29,7 @@ class MWP_ServiceContainer_Production extends MWP_ServiceContainer_Abstract
         $dispatcher->addSubscriber(new MWP_EventListener_PublicRequest_DisableEditor($this->getWordPressContext(), $this->getBrand()));
         $dispatcher->addSubscriber(new MWP_EventListener_PublicRequest_SetPluginInfo($this->getWordPressContext(), $this->getBrand()));
         $dispatcher->addSubscriber(new MWP_EventListener_PublicRequest_SetHitCounter($this->getWordPressContext(), $this->getHitCounter(), $this->getRequestStack(), $this->getParameter('hit_counter_blacklisted_ips'), $this->getParameter('hit_counter_blacklisted_user_agents')));
-        $dispatcher->addSubscriber(new MWP_EventListener_PublicRequest_AutomaticLogin($this->getWordPressContext(), $this->getNonceManager(), $this->getSigner(), $this->getConfiguration()));
+        $dispatcher->addSubscriber(new MWP_EventListener_PublicRequest_AutomaticLogin($this->getWordPressContext(), $this->getNonceManager(), $this->getSigner(), $this->getConfiguration(), $this->getSessionStore()));
         $dispatcher->addSubscriber(new MWP_EventListener_PublicRequest_AddStatusPage($this->getWordPressContext(), $this->getConfiguration()));
 
         $dispatcher->addSubscriber(new MWP_EventListener_MasterRequest_VerifyConnectionInfo($this->getWordPressContext(), $this->getSigner()));
@@ -39,6 +39,7 @@ class MWP_ServiceContainer_Production extends MWP_ServiceContainer_Abstract
         $dispatcher->addSubscriber(new MWP_EventListener_MasterRequest_AttachJsonMessageHandler($this->getLogger(), $this->getJsonMessageHandler()));
         $dispatcher->addSubscriber(new MWP_EventListener_MasterRequest_RemoveUsernameParam());
         $dispatcher->addSubscriber(new MWP_EventListener_MasterRequest_AuthenticateLegacyRequest($this->getConfiguration()));
+        $dispatcher->addSubscriber(new MWP_EventListener_MasterRequest_SetRequestSettings($this->getWordPressContext()));
 
         $dispatcher->addSubscriber(new MWP_EventListener_ActionRequest_SetCurrentUser($this->getWordPressContext()));
         $dispatcher->addSubscriber(new MWP_EventListener_ActionRequest_SetSettings($this->getWordPressContext(), $this->getSystemEnvironment()));
@@ -110,6 +111,7 @@ class MWP_ServiceContainer_Production extends MWP_ServiceContainer_Abstract
         $mapper->addDefinition('change_comment_status', new MWP_Action_Definition('mmb_change_comment_status', array('hook_name' => 'init', 'hook_priority' => 9999)));
         $mapper->addDefinition('get_state', new MWP_Action_Definition(array('MWP_Action_GetState', 'execute')));
         $mapper->addDefinition('add_site', new MWP_Action_Definition(array('MWP_Action_ConnectWebsite', 'execute')));
+        $mapper->addDefinition('destroy_sessions', new MWP_Action_Definition(array('MWP_Action_DestroySessions', 'execute')));
 
         return $mapper;
     }
@@ -270,7 +272,7 @@ class MWP_ServiceContainer_Production extends MWP_ServiceContainer_Abstract
      */
     protected function createHitCounter()
     {
-        $counter = new MWP_Extension_HitCounter($this->getWordPressContext(), 14);
+        $counter = new MWP_Extension_HitCounter($this->getWordPressContext(), 60);
 
         return $counter;
     }
@@ -314,5 +316,13 @@ class MWP_ServiceContainer_Production extends MWP_ServiceContainer_Abstract
     protected function createUpdaterSkin()
     {
         return new MWP_Updater_TraceableUpdaterSkin();
+    }
+
+    /**
+     * @return MWP_WordPress_SessionStore
+     */
+    protected function createSessionStore()
+    {
+        return new MWP_WordPress_SessionStore($this->getWordPressContext());
     }
 }

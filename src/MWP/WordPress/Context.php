@@ -690,6 +690,43 @@ class MWP_WordPress_Context
 
     public function wpNonceUrl($url, $action = -1, $name = '_wpnonce')
     {
-        return wp_nonce_url($url, $action , $name );
+        return wp_nonce_url($url, $action, $name);
+    }
+
+    /**
+     * @param int    $userId
+     * @param string $metaKey
+     *
+     * @return mixed
+     */
+    public function getUserMeta($userId, $metaKey)
+    {
+        return get_user_meta($userId, $metaKey, true);
+    }
+
+    /**
+     * @param int    $userId
+     * @param string $metaKey
+     * @param mixed  $metaValue
+     *
+     * @return int|bool Meta ID if the key didn't exist, true on successful update, false on failure.
+     */
+    public function setUserMeta($userId, $metaKey, $metaValue)
+    {
+        return update_user_meta($userId, $metaKey, $metaValue);
+    }
+
+    /**
+     * @param int $userId
+     *
+     * @return WP_Session_Tokens|null Returns null if the class does not exist, ie. before WordPress version 4.0.0.
+     */
+    public function getSessionTokens($userId)
+    {
+        if (!class_exists('WP_Session_Tokens', false)) {
+            return null;
+        }
+
+        return WP_Session_Tokens::get_instance($userId);
     }
 }

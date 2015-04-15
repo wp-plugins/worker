@@ -63,6 +63,8 @@ abstract class MWP_ServiceContainer_Abstract implements MWP_ServiceContainer_Int
 
     private $updaterSkin;
 
+    private $sessionStore;
+
     public function __construct(array $parameters = array())
     {
         $this->parameters = $parameters;
@@ -516,4 +518,18 @@ abstract class MWP_ServiceContainer_Abstract implements MWP_ServiceContainer_Int
      * @return MWP_Updater_TraceableUpdaterSkin
      */
     protected abstract function createUpdaterSkin();
+
+    public function getSessionStore()
+    {
+        if ($this->sessionStore === null) {
+            $this->sessionStore = $this->createSessionStore();
+        }
+
+        return $this->sessionStore;
+    }
+
+    /**
+     * @return MWP_WordPress_SessionStore
+     */
+    protected abstract function createSessionStore();
 }

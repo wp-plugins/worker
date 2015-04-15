@@ -19,12 +19,15 @@ class MWP_EventListener_PublicRequest_AutomaticLogin implements Symfony_EventDis
 
     private $configuration;
 
-    public function __construct(MWP_WordPress_Context $context, MWP_Security_NonceManager $nonceManager, MWP_Signer_Interface $signer, MWP_Worker_Configuration $configuration)
+    private $sessionStore;
+
+    public function __construct(MWP_WordPress_Context $context, MWP_Security_NonceManager $nonceManager, MWP_Signer_Interface $signer, MWP_Worker_Configuration $configuration, MWP_WordPress_SessionStore $sessionStore)
     {
         $this->context       = $context;
         $this->nonceManager  = $nonceManager;
         $this->signer        = $signer;
         $this->configuration = $configuration;
+        $this->sessionStore  = $sessionStore;
     }
 
     public static function getSubscribedEvents()
@@ -93,6 +96,7 @@ class MWP_EventListener_PublicRequest_AutomaticLogin implements Symfony_EventDis
         }
 
         $this->context->setCurrentUser($user);
+        $this->attachSessionTokenListener();
         $this->context->setAuthCookie($user);
 
         $currentUri  = empty($request->server['REQUEST_URI']) ? '/' : $request->server['REQUEST_URI'];
@@ -141,5 +145,32 @@ class MWP_EventListener_PublicRequest_AutomaticLogin implements Symfony_EventDis
 
         // Replace everything from "?" onwards with "?key=value" or an empty string.
         return substr($uri, 0, strpos($uri, '?')).(count($query) ? '?'.http_build_query($query) : '');
+    }
+
+    private function attachSessionTokenListener()
+    {
+        if (!$this->context->getSessionTokens($this->context->getCurrentUser()->ID)) {
+            return;
+        }
+
+        $this->context->addAction('set_auth_cookie', array($this, 'storeSessionToken'), 10, 1);
+    }
+
+    /**
+     * @param string $cookieValue
+     *
+     * @internal
+     */
+    public function storeSessionToken($cookieValue)
+    {
+        $cookieElements = explode('|', $cookieValue);
+
+        if (empty($cookieElements[2])) {
+            return;
+        }
+
+        $token = $cookieElements[2];
+
+        $this->sessionStore->add($this->context->getCurrentUser()->ID, $token);
     }
 }
