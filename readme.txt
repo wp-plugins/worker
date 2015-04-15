@@ -46,6 +46,11 @@ ManageWP is also the creator of [ManageWP.org](https://managewp.org/ "WordPress 
 
 == Changelog ==
 
+= 4.0.13 =
+
+- New: Destroy all admin sessions started from [ManageWP Orion](http://managewp.com/managewp-orion-official-announcement "ManageWP Orion Official Announcement") when a user logs out from the dashboard.
+- Fix: Improve update detection.
+
 = 4.0.12 =
 
 - Fix: Improve white-labeling.
