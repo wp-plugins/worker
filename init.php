@@ -3,18 +3,21 @@
 Plugin Name: ManageWP - Worker
 Plugin URI: https://managewp.com
 Description: ManageWP Worker plugin allows you to manage your WordPress sites from one dashboard. Visit <a href="https://managewp.com">ManageWP.com</a> for more information.
-Version: 4.0.13
+Version: 4.0.14
 Author: ManageWP
 Author URI: https://managewp.com
 License: GPL2
 */
 
-/*************************************************************
- * init.php
- * Initialize the communication with master
- * Copyright (c) 2011 Prelovac Media
- * www.prelovac.com
- **************************************************************/
+/*
+ * This file is part of the ManageWP Worker plugin.
+ *
+ * (c) ManageWP LLC <contact@managewp.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
 if (!defined('ABSPATH')) {
     exit;
 }
@@ -202,8 +205,8 @@ if (!function_exists('mwp_init')):
             spl_autoload_register('mwp_autoload', true, true);
         }
 
-        $GLOBALS['MMB_WORKER_VERSION']  = '4.0.13';
-        $GLOBALS['MMB_WORKER_REVISION'] = '2015-04-15 00:00:00';
+        $GLOBALS['MMB_WORKER_VERSION']  = '4.0.14';
+        $GLOBALS['MMB_WORKER_REVISION'] = '2015-04-20 00:00:00';
         $GLOBALS['mmb_plugin_dir']      = WP_PLUGIN_DIR.'/'.basename(dirname(__FILE__));
         $GLOBALS['_mmb_item_filter']    = array();
         $GLOBALS['mmb_core']            = $core = $GLOBALS['mmb_core_backup'] = new MMB_Core();

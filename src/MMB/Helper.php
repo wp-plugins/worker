@@ -11,24 +11,6 @@ class MMB_Helper
 
     public $mmb_multisite;
 
-    /**
-     * Initializes the file system
-     */
-    public function init_filesystem()
-    {
-        global $wp_filesystem;
-
-        if (!$wp_filesystem || !is_object($wp_filesystem)) {
-            WP_Filesystem();
-        }
-
-        if (!is_object($wp_filesystem)) {
-            return false;
-        }
-
-        return true;
-    }
-
     public function mmb_get_user_info($user_info = false, $info = 'login')
     {
         if ($user_info === false) {
@@ -301,46 +283,6 @@ class MMB_Helper
         return $crypted;
     }
 
-    public function check_if_user_exists($username = false)
-    {
-        global $wpdb;
-
-        if (empty($username)) {
-            return false;
-        }
-
-        if (!function_exists('username_exists')) {
-            require_once ABSPATH.WPINC.'/registration.php';
-        }
-
-        require_once ABSPATH.'wp-includes/pluggable.php';
-
-        if (username_exists($username) == null) {
-            return false;
-        }
-
-        $user = (array) $this->mmb_get_user_info($username);
-        if (
-            (isset($user[$wpdb->prefix.'user_level']) && $user[$wpdb->prefix.'user_level'] == 10)
-            || isset($user[$wpdb->prefix.'capabilities']['administrator'])
-            || (isset($user['caps']['administrator']) && $user['caps']['administrator'] == 1)
-        ) {
-            return true;
-        }
-
-        return false;
-    }
-
-    public function refresh_updates()
-    {
-        if (rand(1, 3) == '2') {
-            require_once ABSPATH.WPINC.'/update.php';
-            wp_update_plugins();
-            wp_update_themes();
-            wp_version_check();
-        }
-    }
-
     public function remove_http($url = '')
     {
         if ($url == 'http://' or $url == 'https://') {
@@ -377,23 +319,6 @@ class MMB_Helper
         } else {
             return true;
         }
-    }
-
-    public function return_bytes($val)
-    {
-        $val  = trim($val);
-        $last = strtolower($val[strlen($val) - 1]);
-        switch ($last) {
-            // The 'G' modifier is available since PHP 5.1.0
-            case 'g':
-                $val *= 1024;
-            case 'm':
-                $val *= 1024;
-            case 'k':
-                $val *= 1024;
-        }
-
-        return $val;
     }
 
     public function w3tc_flush($flushAll = false)
@@ -445,20 +370,5 @@ class MMB_Helper
         }
 
         return $users_authors;
-    }
-
-    private function verifySignature($data, $signature, $publicKey)
-    {
-        if (function_exists('openssl_verify')) {
-            return (openssl_verify($data, $signature, $publicKey) === 1);
-        }
-
-        require_once dirname(__FILE__).'/../PHPSecLib/Crypt/RSA.php';
-        $rsa = new Crypt_RSA();
-        $rsa->setSignatureMode(CRYPT_RSA_SIGNATURE_PKCS1);
-        $rsa->loadKey($publicKey);
-        $verify = $rsa->verify($data, $signature);
-
-        return $verify;
     }
 }

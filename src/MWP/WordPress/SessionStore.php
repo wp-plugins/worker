@@ -39,7 +39,7 @@ class MWP_WordPress_SessionStore
     {
         if (!$this->context->isVersionAtLeast('4.0.0')) {
             // Not supported before WordPress 4.0.0.
-            return 0;
+            return -1;
         }
 
         $removed = 0;
