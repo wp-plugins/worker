@@ -30,13 +30,48 @@ class MWP_EventListener_MasterRequest_SetRequestSettings implements Symfony_Even
         if (!$event->getRequest()->isAuthenticated()) {
             return;
         }
-
         $data = $event->getRequest()->getData();
 
+        $this->defineWpAdmin($data);
+        $this->defineWpAjax($data);
+        $this->setWpPage($data);
+
+        // Master should never get redirected by the worker, since it expects worker response.
+        $this->context->addFilter('wp_redirect', array($this, 'disableRedirect'));
+    }
+
+    private function defineWpAdmin(array $data)
+    {
         if (empty($data['wpAdmin'])) {
             return;
         }
 
         $this->context->setConstant('WP_ADMIN', true, false);
+    }
+
+    private function defineWpAjax(array $data)
+    {
+        if (empty($data['wpAjax'])) {
+            return;
+        }
+
+        $this->context->setConstant('DOING_AJAX', true, false);
+    }
+
+    private function setWpPage(array $data)
+    {
+        if (empty($data['wpPage'])) {
+            return;
+        }
+
+        $this->context->set('pagenow', $data['wpPage']);
+    }
+
+    /**
+     * @internal
+     */
+    public function disableRedirect()
+    {
+        return false;
     }
 }

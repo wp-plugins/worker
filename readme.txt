@@ -46,6 +46,10 @@ ManageWP is also the creator of [ManageWP.org](https://managewp.org/ "WordPress 
 
 == Changelog ==
 
+= 4.0.15 =
+
+- Fix: Improve compatibility with some plugin updates in [ManageWP Orion](http://managewp.com/managewp-orion-official-announcement "ManageWP Orion Official Announcement").
+
 = 4.0.14 =
 
 - Fix: Show custom message when the plugin can not destroy active [ManageWP Orion](http://managewp.com/managewp-orion-official-announcement "ManageWP Orion Official Announcement") sessions when logging out.
