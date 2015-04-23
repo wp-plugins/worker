@@ -379,6 +379,10 @@ function mwp_is_nio_shell_available()
 
 function mwp_is_shell_available()
 {
+    if (mwp_container()->getParameter('disable_shell')) {
+        return false;
+    }
+
     if (mwp_is_safe_mode()) {
         return false;
     }

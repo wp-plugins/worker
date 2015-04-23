@@ -135,7 +135,15 @@ class MWP_Http_Response implements MWP_Http_ResponseInterface
             --$bufferCount;
         }
 
-        print $this->getContentAsString();
+        if ($this instanceof MWP_Http_StreamingResponseInterface) {
+            $stream = $this->createResponseStream();
+
+            while (!$stream->eof()) {
+                print $stream->read(1048576);
+            }
+        } else {
+            print $this->getContentAsString();
+        }
     }
 
     protected function sendHeaders()

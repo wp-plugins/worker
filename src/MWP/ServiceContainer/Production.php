@@ -46,12 +46,14 @@ class MWP_ServiceContainer_Production extends MWP_ServiceContainer_Abstract
         $dispatcher->addSubscriber(new MWP_EventListener_ActionRequest_LogRequest($this->getLogger()));
 
         $dispatcher->addSubscriber(new MWP_EventListener_ActionException_SetExceptionData());
+        $dispatcher->addSubscriber(new MWP_EventListener_ActionException_MultipartException($this->getParameter('multipart_boundary')));
 
         $dispatcher->addSubscriber(new MWP_EventListener_ActionResponse_SetActionData());
         $dispatcher->addSubscriber(new MWP_EventListener_ActionResponse_SetLegacyWebsiteConnectionData($this->getWordPressContext()));
         $dispatcher->addSubscriber(new MWP_EventListener_ActionResponse_ChainState($this));
         $dispatcher->addSubscriber(new MWP_EventListener_ActionResponse_SetUpdaterLog($this->getUpdaterSkin()));
         $dispatcher->addSubscriber(new MWP_EventListener_ActionResponse_SetLegacyPhpExecutionData());
+        $dispatcher->addSubscriber(new MWP_EventListener_ActionResponse_FetchFiles($this->getParameter('multipart_boundary')));
 
         $dispatcher->addSubscriber(new MWP_EventListener_MasterResponse_LogResponse($this->getLogger()));
 
@@ -112,6 +114,17 @@ class MWP_ServiceContainer_Production extends MWP_ServiceContainer_Abstract
         $mapper->addDefinition('get_state', new MWP_Action_Definition(array('MWP_Action_GetState', 'execute')));
         $mapper->addDefinition('add_site', new MWP_Action_Definition(array('MWP_Action_ConnectWebsite', 'execute')));
         $mapper->addDefinition('destroy_sessions', new MWP_Action_Definition(array('MWP_Action_DestroySessions', 'execute')));
+
+        // Incremental backup actions
+        $mapper->addDefinition('list_files', new MWP_Action_Definition(array('MWP_Action_IncrementalBackup_ListFiles', 'queryFiles')));
+        $mapper->addDefinition('list_directories', new MWP_Action_Definition(array('MWP_Action_IncrementalBackup_ListFiles', 'listDirectories')));
+        $mapper->addDefinition('hash_files', new MWP_Action_Definition(array('MWP_Action_IncrementalBackup_HashFiles', 'execute')));
+        $mapper->addDefinition('fetch_files', new MWP_Action_Definition(array('MWP_Action_IncrementalBackup_FetchFiles', 'execute')));
+        $mapper->addDefinition('list_tables', new MWP_Action_Definition(array('MWP_Action_IncrementalBackup_ListTables', 'listTables')));
+        $mapper->addDefinition('checksum_tables', new MWP_Action_Definition(array('MWP_Action_IncrementalBackup_ChecksumTables', 'execute')));
+        $mapper->addDefinition('dump_tables', new MWP_Action_Definition(array('MWP_Action_IncrementalBackup_DumpTables', 'execute')));
+        $mapper->addDefinition('backup_stats', new MWP_Action_Definition(array('MWP_Action_IncrementalBackup_Stats', 'execute')));
+        $mapper->addDefinition('upload_cloner', new MWP_Action_Definition(array('MWP_Action_IncrementalBackup_UploadCloner', 'execute')));
 
         return $mapper;
     }
@@ -307,7 +320,7 @@ class MWP_ServiceContainer_Production extends MWP_ServiceContainer_Abstract
      */
     protected function createSystemEnvironment()
     {
-        return new MWP_System_Environment();
+        return new MWP_System_Environment($this);
     }
 
     /**

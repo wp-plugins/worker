@@ -14,4 +14,19 @@ class MWP_Backup_ArrayHelper
     {
         return is_array($array) && array_key_exists($key, $array) ? $array[$key] : $default;
     }
+
+    public static function arrayColumn($array, $columnIndex = 0)
+    {
+        $result = array();
+        foreach ($array as $arr) {
+            if (!is_array($arr)) {
+                continue;
+            }
+
+            $arr = array_values($arr);
+            $result[] = $arr[$columnIndex];
+        }
+
+        return $result;
+    }
 }

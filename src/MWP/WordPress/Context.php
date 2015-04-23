@@ -288,6 +288,21 @@ class MWP_WordPress_Context
         return get_themes();
     }
 
+    public function getCurrentTheme()
+    {
+        // When the plugin is MU-loaded, the WordPress theme directories are not set.
+        if ($this->isMustUse() && empty($this->context['wp_theme_directories'])) {
+            // Register the default theme directory root.
+            register_theme_directory(get_theme_root());
+        }
+
+        if ($this->isVersionAtLeast('3.4')) {
+            return wp_get_theme();
+        }
+
+        return get_current_theme();
+    }
+
     public function getStylesheetDirectory()
     {
         return get_stylesheet_directory();
