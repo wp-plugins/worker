@@ -25,6 +25,7 @@ class MWP_EventListener_ActionRequest_SetSettings implements Symfony_EventDispat
     {
         return array(
             MWP_Event_Events::ACTION_REQUEST => 'onActionRequest',
+            MWP_Event_Events::ACTION_RESPONSE => array('onActionResponse', 300),
         );
     }
 
@@ -42,6 +43,18 @@ class MWP_EventListener_ActionRequest_SetSettings implements Symfony_EventDispat
         $this->saveWorkerConfiguration($event->getRequest()->getData());
 
         $this->resetVersions($event);
+    }
+
+    public function onActionResponse(MWP_Event_ActionResponse $event)
+    {
+        if ($event->getRequest()->getAction() !== 'add_site') {
+            return;
+        }
+
+        set_time_limit(1800);
+        $this->context->set('_wp_using_ext_object_cache', false);
+        $this->setMemoryLimit();
+        $this->requireVersions();
     }
 
     /**
@@ -102,12 +115,7 @@ class MWP_EventListener_ActionRequest_SetSettings implements Symfony_EventDispat
      */
     private function setMemoryLimit()
     {
-        if ($this->context->isMultisite()) {
-            $wantedLimit = 60 * 1024 * 1024;
-        } else {
-            $wantedLimit = 40 * 1024 * 1024;
-        }
-
+        $wantedLimit = 64 * 1024 * 1024;
         $memoryLimit = $this->system->getMemoryLimit();
 
         if ($memoryLimit !== -1 && $memoryLimit < $wantedLimit) {

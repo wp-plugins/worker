@@ -46,6 +46,11 @@ ManageWP is also the creator of [ManageWP.org](https://managewp.org/ "WordPress 
 
 == Changelog ==
 
+= 4.1.1 =
+
+- Fix: Fix incremental backup issue when dealing with deep symlinks.
+- Fix: Slightly increase memory limit if needed, after successfully adding a website.
+
 = 4.1.0 =
 
 - New: Incremental backup capability for [ManageWP Orion](http://managewp.com/managewp-orion-official-announcement "ManageWP Orion Official Announcement").

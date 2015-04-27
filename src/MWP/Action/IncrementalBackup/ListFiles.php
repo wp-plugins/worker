@@ -19,6 +19,15 @@
 
 class MWP_Action_IncrementalBackup_ListFiles extends MWP_Action_IncrementalBackup_Abstract
 {
+
+    /** @var Symfony_Filesystem_Filesystem */
+    protected $fileSystem;
+
+    public function __construct()
+    {
+        $this->fileSystem = new Symfony_Filesystem_Filesystem();
+    }
+
     /**
      * Return a list of all files
      *
@@ -145,22 +154,9 @@ class MWP_Action_IncrementalBackup_ListFiles extends MWP_Action_IncrementalBacku
      */
     private function getRelativePath($realPath, $rootPath)
     {
-        if ($realPath === untrailingslashit($rootPath)) {
-            return '.';
-        } else {
-            $relative = str_replace(untrailingslashit($rootPath).'/', '', $realPath);
-            if ($relative == $realPath) {
-                $up = '';
-                while (($pos = strpos($realPath, $rootPath)) === false) {
-                    $rootPath = dirname($rootPath);
-                    $up .= '../';
-                }
+        $path = $this->fileSystem->makePathRelative($realPath, $rootPath);
 
-                return $up.substr($realPath, $pos + strlen($rootPath) + 1);
-            } else {
-                return $relative;
-            }
-        }
+        return rtrim($path, '/\\');
     }
 
     /**
@@ -172,15 +168,23 @@ class MWP_Action_IncrementalBackup_ListFiles extends MWP_Action_IncrementalBacku
     {
         $fileResult = array(
             'path'        => $this->getRelativePath($file->getRealPath(), ABSPATH),
-            'size'        => $file->getSize(),
-            'isDirectory' => $file->isDir(),
-            'isLink'      => $file->isLink(),
-            'owner'       => $file->getOwner(),
-            'group'       => $file->getGroup(),
-            'permissions' => $file->getPerms(),
-            'exists'      => true,
+            'isLink'      => false,
+            'exists'      => false,
+            'isDirectory' => false,
+            'owner'       => 0,
+            'group'       => 0,
+            'permissions' => 0,
         );
-
+        try {
+            $fileResult['link']        = $file->isLink(); // need to be first
+            $fileResult['size']        = $file->getSize();
+            $fileResult['isDirectory'] = $file->isDir();
+            $fileResult['owner']       = $file->getOwner();
+            $fileResult['group']       = $file->getGroup();
+            $fileResult['permissions'] = $file->getPerms();
+            $fileResult['exists']      = true;
+        } catch (RuntimeException $e) {
+        }
         if ($file->isLink()) {
             $fileResult['linkTarget'] = $file->getLinkTarget();
         };
