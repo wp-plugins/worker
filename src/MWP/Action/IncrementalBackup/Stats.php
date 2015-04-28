@@ -11,7 +11,7 @@
 class MWP_Action_IncrementalBackup_Stats extends MWP_Action_IncrementalBackup_Abstract
 {
 
-    public function execute(array $params = array(), MWP_Worker_Request $request)
+    public function execute(array $params = array())
     {
 
         $wpdb     = $this->container->getWordPressContext()->getDb();
@@ -21,14 +21,20 @@ class MWP_Action_IncrementalBackup_Stats extends MWP_Action_IncrementalBackup_Ab
         $themes                          = $getState->execute(array($themesKey => array('type' => $themesKey, 'options' => array())));
         $pluginsKey                      = MWP_Action_GetState::PLUGINS;
         $plugins                         = $getState->execute(array($pluginsKey => array('type' => $pluginsKey, 'options' => array())));
+        $activePlugins                   = array_filter($plugins[$pluginsKey]['result'], array($this, 'activePluginFilter'));
         $statistics                      = array();
         $statistics['themes']            = count($themes[$themesKey]['result']);
+        $statistics['themes_list']       = $themes[$themesKey]['result'];
         $statistics['plugins']           = count($plugins[$pluginsKey]['result']);
+        $statistics['plugins_list']      = $plugins[$pluginsKey]['result'];
+        $statistics['active_plugins']    = count($activePlugins);
         $statistics['posts']             = (int) $wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->posts} WHERE post_type='post'");
         $statistics['pages']             = (int) $wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->posts} WHERE post_type='page'");
         $statistics['uploads']           = (int) $wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->posts} WHERE post_type='attachment'");
         $statistics['comments']          = (int) $wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->comments}");
-        $statistics['latest_post_title'] = $wpdb->get_var("SELECT post_title FROM {$wpdb->posts} WHERE post_type='post' AND post_status='publish' ORDER BY ID DESC LIMIT 1");
+        $latestPost                      = $wpdb->get_row("SELECT * FROM {$wpdb->posts} WHERE post_type='post' AND post_status='publish' ORDER BY ID DESC LIMIT 1");
+        $statistics['latest_post_title'] = isset($latestPost->post_title) ? $latestPost->post_title : '';
+        $statistics['latest_post_url']   = get_permalink($latestPost->ID);
         $statistics['wp_version']        = $this->container->getWordPressContext()->getVersion();
         $currentTheme                    = $this->container->getWordPressContext()->getCurrentTheme();
         $statistics['active_theme']      = $currentTheme['Name'].' v'.$currentTheme['Version'];
@@ -38,12 +44,17 @@ class MWP_Action_IncrementalBackup_Stats extends MWP_Action_IncrementalBackup_Ab
             $paths    = !empty($params['file_paths']) ? $params['file_paths'] : array(ABSPATH);
             $pathSize = array();
             foreach ($paths as $path) {
-                $pathSize[$path] = $this->getFileCount($path);
+                $pathSize[$this->replaceWindowsPath($path)] = $this->getFileCount($path);
             }
             $statistics['file_count'] = $pathSize;
         }
 
         return $this->createResult(array('statistic' => $statistics));
+    }
+
+    public function activePluginFilter($plugin)
+    {
+        return $plugin['status'] == 'active';
     }
 
     /**

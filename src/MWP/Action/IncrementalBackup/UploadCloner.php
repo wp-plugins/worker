@@ -23,7 +23,7 @@ class MWP_Action_IncrementalBackup_UploadCloner extends MWP_Action_Abstract
                 if ($file['dir'] === true) {
                     $filesystem->mkdir($realpath);
                 } else {
-                    $filesystem->dumpFile($realpath, $file['contents']);
+                    $filesystem->dumpFile($realpath, $file['contents'], 0644);
                 }
             }
         } catch (Symfony_Filesystem_Exception_IOException $e) {
