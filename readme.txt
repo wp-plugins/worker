@@ -46,12 +46,16 @@ ManageWP is also the creator of [ManageWP.org](https://managewp.org/ "WordPress 
 
 == Changelog ==
 
+= 4.1.3 =
+
+- Fix: Fix database backup functionality on servers without mysqldump.
+- Fix: Fix incremental backups on PHP 5.2.
+
 = 4.1.2 =
 
 - The following changelog is for [ManageWP Orion](http://managewp.com/managewp-orion-official-announcement "ManageWP Orion Official Announcement") only.
 - Fix: Fix PHP database dumper fallback in incremental backups.
 - Fix: Fix restore functionality on some server setups.
-- Fix: Fix incremental backups on PHP 5.2.
 
 = 4.1.1 =
 

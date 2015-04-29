@@ -10,7 +10,6 @@
 
 class MWP_Backup_MysqlDump_QuerySequenceDump extends MWP_Backup_MysqlDump_MysqlDump
 {
-
     /** @var Resource File Pointer */
     protected $file;
 
@@ -20,7 +19,7 @@ class MWP_Backup_MysqlDump_QuerySequenceDump extends MWP_Backup_MysqlDump_MysqlD
     public function dumpToFile()
     {
         $writer    = $this->getWriter();
-        $allTables = MWP_Backup_ArrayHelper::arrayColumn($this->getConnection()->query('SHOW TABLES')->fetchAll());
+        $allTables = $this->getConnection()->query('SHOW TABLES')->fetchAll(PDO::FETCH_COLUMN);
         $tables    = array_intersect($allTables, $this->getOptions('tables', $allTables));
 
         $writer->open();
@@ -41,7 +40,7 @@ class MWP_Backup_MysqlDump_QuerySequenceDump extends MWP_Backup_MysqlDump_MysqlD
         foreach ($tables as $tableName) {
             // Get the SHOW CREATE TABLE part
             $content = $this->getConnection()
-                ->query("SHOW CREATE TABLE `{$tableName}`;")
+                ->query("SHOW CREATE TABLE `{$tableName}`;", PDO::FETCH_ASSOC)
                 ->fetchAll();
             if (is_array($content)) {
                 foreach ($content as $entry) {
@@ -60,7 +59,7 @@ class MWP_Backup_MysqlDump_QuerySequenceDump extends MWP_Backup_MysqlDump_MysqlD
                 }
 
                 $columns = $this->getConnection()
-                    ->query("SHOW COLUMNS IN `{$tableName}`;")
+                    ->query("SHOW COLUMNS IN `{$tableName}`;", PDO::FETCH_ASSOC)
                     ->fetchAll();
 
                 if (is_array($columns)) {
@@ -68,7 +67,7 @@ class MWP_Backup_MysqlDump_QuerySequenceDump extends MWP_Backup_MysqlDump_MysqlD
                 }
 
                 $allData = $this->getConnection()
-                    ->query($this->selectAllDataQuery($tableName, $columns));
+                    ->query($this->selectAllDataQuery($tableName, $columns), PDO::FETCH_ASSOC);
 
                 // Go through row by row
                 if (!$this->getOptions('skip_lock_tables')) {
