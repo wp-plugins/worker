@@ -20,7 +20,7 @@ interface MWP_IncrementalBackup_Database_ConnectionInterface
     /**
      * @param mixed $value any primitive value
      *
-     * @return string
+     * @return string Quoted string e.g. 'hello' with opening and closing quotes
      */
     public function quote($value);
 }

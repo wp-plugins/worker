@@ -65,6 +65,6 @@ class MWP_IncrementalBackup_Database_MysqliConnection implements MWP_Incremental
      */
     public function quote($value)
     {
-        return $this->connection->real_escape_string($value);
+        return "'".$this->connection->real_escape_string($value)."'";
     }
 }

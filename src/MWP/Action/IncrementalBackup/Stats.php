@@ -36,6 +36,7 @@ class MWP_Action_IncrementalBackup_Stats extends MWP_Action_IncrementalBackup_Ab
         $statistics['latest_post_title'] = isset($latestPost->post_title) ? $latestPost->post_title : '';
         $statistics['latest_post_url']   = get_permalink($latestPost->ID);
         $statistics['wp_version']        = $this->container->getWordPressContext()->getVersion();
+        $statistics['worker_version']    = $this->container->getParameter('worker_version');
         $currentTheme                    = $this->container->getWordPressContext()->getCurrentTheme();
         $statistics['active_theme']      = $currentTheme['Name'].' v'.$currentTheme['Version'];
         $statistics['platform']          = strtoupper(substr(PHP_OS, 0, 3));

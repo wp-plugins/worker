@@ -240,7 +240,7 @@ class MWP_IncrementalBackup_Database_StreamableQuerySequenceDump
             } elseif (strpos($type, 'blob') !== false) {
                 $values[] = strlen($value) ? ('0x'.$value) : "''";
             } else {
-                $values[] = "'".$this->getConnection()->quote($value)."'";
+                $values[] = $this->getConnection()->quote($value);
             }
         }
 

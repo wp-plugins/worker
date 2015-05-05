@@ -46,6 +46,10 @@ ManageWP is also the creator of [ManageWP.org](https://managewp.org/ "WordPress 
 
 == Changelog ==
 
+= 4.1.4 =
+
+- Fix: Improve [incremental backup](https://managewp.com/managewp-orion-developer-diary-3-bulletproof-backup-solution) success rate.
+
 = 4.1.3 =
 
 - Fix: Fix database backup functionality on servers without mysqldump.

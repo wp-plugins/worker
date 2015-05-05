@@ -72,6 +72,6 @@ class MWP_IncrementalBackup_Database_MysqlConnection implements MWP_IncrementalB
      */
     public function quote($value)
     {
-        return mysql_real_escape_string($value, $this->connection);
+        return "'".mysql_real_escape_string($value, $this->connection)."'";
     }
 }
