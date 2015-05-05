@@ -15,5 +15,5 @@ interface MWP_IncrementalBackup_Database_DumperInterface
      *
      * @return MWP_Stream_Interface
      */
-    function dump(array $tables);
+    function dump(array $tables = array());
 }

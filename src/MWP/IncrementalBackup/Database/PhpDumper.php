@@ -41,7 +41,7 @@ class MWP_IncrementalBackup_Database_PhpDumper implements MWP_IncrementalBackup_
     /**
      * {@inheritdoc}
      */
-    public function dump(array $tables)
+    public function dump(array $tables = array())
     {
         if ($this->environment->isPdoEnabled()) {
             $connection = new MWP_IncrementalBackup_Database_PdoConnection($this->configuration);
