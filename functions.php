@@ -1367,7 +1367,7 @@ function mmb_plugin_actions()
         $mmode = get_option('mwp_maintenace_mode');
         if (!empty($mmode)) {
             if (isset($mmode['active']) && $mmode['active'] == true) {
-                if (isset($current_user->data) && !empty($current_user->data) && isset($mmode['hidecaps']) && !empty($mmode['hidecaps'])) {
+                if (!empty($current_user->ID) && !empty($mmode['hidecaps'])) {
                     $usercaps = array();
                     if (isset($current_user->caps) && !empty($current_user->caps)) {
                         $usercaps = $current_user->caps;
@@ -1481,6 +1481,7 @@ function mmb_change_comment_status($params)
 
 function mwp_uninstall()
 {
+    delete_option('mwp_recovering');
     $loaderName = '0-worker.php';
     try {
         $mustUsePluginDir = rtrim(WPMU_PLUGIN_DIR, '/');

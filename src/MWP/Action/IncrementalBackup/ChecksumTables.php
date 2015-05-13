@@ -13,7 +13,8 @@ class MWP_Action_IncrementalBackup_ChecksumTables extends MWP_Action_Incremental
 
     public function execute(array $params = array(), MWP_Worker_Request $request)
     {
-        $query = implode(',', $params['query']);
+        $tables = array_map(array($this, 'escapeName'), $params['query']);
+        $query  = implode(',', $tables);
 
         $wpdb     = $this->container->getWordPressContext()->getDb();
         $results  = $wpdb->get_results('CHECKSUM TABLE '.$query, ARRAY_A);
@@ -24,5 +25,10 @@ class MWP_Action_IncrementalBackup_ChecksumTables extends MWP_Action_Incremental
         }
 
         return $this->createResult(array('checksum' => $checksum, 'db' => $this->container->getWordPressContext()->getConstant('DB_NAME')));
+    }
+
+    public function escapeName($tableName)
+    {
+        return "`{$tableName}`";
     }
 }

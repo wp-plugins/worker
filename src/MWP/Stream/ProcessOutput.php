@@ -36,7 +36,10 @@ class MWP_Stream_ProcessOutput extends MWP_Stream_Callable
             } catch (Symfony_Process_Exception_ExceptionInterface $e) {
                 throw new Symfony_Process_Exception_ProcessFailedException($this->process);
             }
-            usleep(100);
+        }
+
+        if (!$this->process->isRunning() && !$this->process->isSuccessful()) {
+            throw new Symfony_Process_Exception_ProcessFailedException($this->process);
         }
 
         $output = $this->process->getIncrementalOutput();

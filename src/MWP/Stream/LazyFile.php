@@ -49,7 +49,9 @@ class MWP_Stream_LazyFile implements MWP_Stream_Interface
      */
     public function tell()
     {
-        $this->initialize();
+        if (!$this->initialized) {
+            return 0;
+        }
 
         return $this->stream !== null ? $this->stream->tell() : false;
     }

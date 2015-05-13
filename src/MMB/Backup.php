@@ -3869,11 +3869,13 @@ class MMB_Backup extends MMB_Core
         $backups   = $task['task_results'];
         $result_id = !empty($args['result_id']) ? $args['result_id'] : null;
         $backup    = !empty($backups[$result_id]) ? $backups[$result_id] : false;
-        foreach ($backups as $key => $result) {
-            if ($result['resultUuid'] == $args['resultUuid']) {
-                $backup    = $result;
-                $result_id = $key;
-                break;
+        if (!empty($args['resultUuid'])) {
+            foreach ($backups as $key => $result) {
+                if ($result['resultUuid'] == $args['resultUuid']) {
+                    $backup    = $result;
+                    $result_id = $key;
+                    break;
+                }
             }
         }
 

@@ -46,6 +46,13 @@ ManageWP is also the creator of [ManageWP.org](https://managewp.org/ "WordPress 
 
 == Changelog ==
 
+= 4.1.5 =
+
+- New: Add automatic recovery process when the ManageWP Worker plugin update gets interrupted on some server setups.
+- Fix: Fix maintenance mode on some WordPress setups.
+- Fix: Fix issue when a wrong backup file was being deleted.
+- Fix: Fix issues when sites got disconnected from [ManageWP Orion](http://managewp.com/managewp-orion-official-announcement "ManageWP Orion Official Announcement").
+
 = 4.1.4 =
 
 - Fix: Improve [incremental backup](https://managewp.com/managewp-orion-developer-diary-3-bulletproof-backup-solution) success rate.

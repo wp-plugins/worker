@@ -34,7 +34,7 @@ class MWP_Action_IncrementalBackup_FetchFiles extends MWP_Action_IncrementalBack
 
             $file = new MWP_IncrementalBackup_Model_File();
             $file->setPathname($requestedFile['relativePath']);
-            $file->setStream(new MWP_Stream_Limit(new MWP_Stream_LazyFile($realPath), $offset, $limit));
+            $file->setStream(new MWP_Stream_FileLimit(new MWP_Stream_LazyFile($realPath), $offset, $limit));
             $result->addFile($file);
         }
 

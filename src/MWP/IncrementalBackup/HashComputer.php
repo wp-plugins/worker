@@ -61,8 +61,8 @@ class MWP_IncrementalBackup_HashComputer
             $limit = filesize($realPath) - $offset;
         }
 
-        $fh = fopen($realPath, "rb");
-        if ($fh === null) {
+        $fh = @fopen($realPath, "rb");
+        if ($fh === false) {
             // Failed opening file, cleanup hash context
             hash_final($ctx);
 

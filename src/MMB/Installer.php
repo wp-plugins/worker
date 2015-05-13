@@ -720,7 +720,7 @@ class MMB_Installer extends MMB_Core
                 include_once ABSPATH.'wp-admin/includes/plugin.php';
             }
             foreach ($current->response as $plugin_path => $plugin_data) {
-                $data = get_plugin_data(WP_PLUGIN_DIR.'/'.$plugin_path);
+                $data = get_plugin_data(WP_PLUGIN_DIR.'/'.$plugin_path, false, false);
                 if (isset($data['Name']) && in_array($data['Name'], $filter)) {
                     continue;
                 }

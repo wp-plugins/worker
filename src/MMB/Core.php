@@ -165,7 +165,7 @@ class MMB_Core extends MMB_Helper
     }
 
     /**
-     * Gets an instance of the Comment class
+     * @return MMB_Comment
      */
     public function get_comment_instance()
     {
@@ -177,7 +177,7 @@ class MMB_Core extends MMB_Helper
     }
 
     /**
-     * Gets an instance of MMB_Post class
+     * @return MMB_Post
      */
     public function get_post_instance()
     {
@@ -189,7 +189,7 @@ class MMB_Core extends MMB_Helper
     }
 
     /**
-     * Gets an instance of User
+     * @return MMB_User
      */
     public function get_user_instance()
     {
@@ -201,7 +201,7 @@ class MMB_Core extends MMB_Helper
     }
 
     /**
-     * Gets an instance of stats class
+     * @return MMB_Stats
      */
     public function get_stats_instance()
     {
@@ -213,7 +213,7 @@ class MMB_Core extends MMB_Helper
     }
 
     /**
-     * Gets an instance of stats class
+     * @return MMB_Backup
      */
     public function get_backup_instance()
     {
@@ -224,6 +224,9 @@ class MMB_Core extends MMB_Helper
         return $this->backup_instance;
     }
 
+    /**
+     * @return MMB_Installer
+     */
     public function get_installer_instance()
     {
         if (!isset($this->installer_instance)) {
@@ -296,6 +299,7 @@ EOF;
      */
     public function install()
     {
+        delete_option('mwp_recovering');
         try {
             $this->registerMustUse('0-worker.php', $this->buildLoaderContent('worker/init.php'));
         } catch (Exception $e) {
