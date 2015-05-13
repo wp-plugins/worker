@@ -197,6 +197,7 @@ if (!class_exists('MwpRecoveryKit', false)):
                 return;
             }
 
+            /** @noinspection PhpIncludeInspection */
             $filesAndChecksums = require $dirName.'/checksum.php';
 
             require_once ABSPATH.'wp-admin/includes/file.php';
@@ -273,7 +274,7 @@ if (!class_exists('MwpRecoveryKit', false)):
 
             delete_option('mwp_recovering');
             update_option('active_plugins', $activePlugins);
-            mail('dev@managewp.com', sprintf("ManageWP Worker recovery aborted on %s", get_option('siteurl'), $GLOBALS['MMB_WORKER_VERSION']), sprintf('ManageWP Worker v%s. Reason: %s', $GLOBALS['MMB_WORKER_VERSION'], $reason));
+            mail('dev@managewp.com', sprintf("ManageWP Worker recovery aborted on %s", get_option('siteurl')), sprintf('ManageWP Worker v%s. Reason: %s', $GLOBALS['MMB_WORKER_VERSION'], $reason));
         }
     }
 endif;
