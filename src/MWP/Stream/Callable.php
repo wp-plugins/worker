@@ -52,7 +52,15 @@ class MWP_Stream_Callable implements MWP_Stream_Interface
 
     public function eof()
     {
-        return !$this->source;
+        if ($this->source !== null) {
+            return false;
+        }
+
+        if ($this->source === null && $this->buffer !== null) {
+            return $this->buffer->eof();
+        }
+
+        return true;
     }
 
     public function isSeekable()

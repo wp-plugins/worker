@@ -3,7 +3,7 @@
 Plugin Name: ManageWP - Worker
 Plugin URI: https://managewp.com
 Description: ManageWP Worker plugin allows you to manage your WordPress sites from one dashboard. Visit <a href="https://managewp.com">ManageWP.com</a> for more information.
-Version: 4.1.5
+Version: 4.1.6
 Author: ManageWP
 Author URI: https://managewp.com
 License: GPL2
@@ -189,22 +189,47 @@ if (!class_exists('MwpRecoveryKit', false)):
     {
         public function recover()
         {
+            ignore_user_abort(true);
             $dirName = realpath(dirname(__FILE__));
-            if (!file_exists($dirName.'/checksum.php')) {
-                // No chance of recovery; deactivate the plugin.
-                $this->selfDeactivate("Missing checksum.php file.");
+            $checksumResponse = wp_remote_get(sprintf('http://s3-us-west-2.amazonaws.com/mwp-orion-public/worker/raw/%s/checksum.json', $GLOBALS['MMB_WORKER_VERSION']));
+            if ($checksumResponse instanceof WP_Error){
+                $this->selfDeactivate('Unable to download checksum.json: '.$checksumResponse->get_error_message());
+
+                return;
+            }
+            if ($checksumResponse['response']['code'] !== 200) {
+                $this->selfDeactivate('Unable to download checksum.json: invalid status code ('.$checksumResponse['response']['code'].')');
 
                 return;
             }
 
-            /** @noinspection PhpIncludeInspection */
-            $filesAndChecksums = require $dirName.'/checksum.php';
+            $filesAndChecksums = json_decode($checksumResponse['body'], true);
+
+            if (json_last_error() !== JSON_ERROR_NONE) {
+                $this->selfDeactivate(sprintf('Error while parsing checksum.json [%s]: %s', json_last_error(), json_last_error_msg()));
+
+                return;
+            }
 
             require_once ABSPATH.'wp-admin/includes/file.php';
 
+            $options = array();
+
+            $fsMethod = get_filesystem_method();
+            if ($fsMethod !== 'direct') {
+                ob_start();
+                $options = request_filesystem_credentials('');
+                ob_end_clean();
+            }
+
             /** @var WP_Filesystem_Base $fs */
-            WP_Filesystem();
+            WP_Filesystem($options);
             $fs = $GLOBALS['wp_filesystem'];
+            $connected = $fs->connect();
+
+            if (!$connected) {
+                $this->selfDeactivate('Unable to connect to the file system', error_get_last());
+            }
 
             // First create directories and remove them from the array.
             // Must be done before shuffling because of nesting.
@@ -221,31 +246,38 @@ if (!class_exists('MwpRecoveryKit', false)):
             }
 
             // Check and recreate files. Shuffle them so multiple running instances have a smaller collision.
-            $count = 0;
+            $recoveredFiles = array();
             foreach ($this->shuffleAssoc($filesAndChecksums) as $relativePath => $checksum) {
                 $absolutePath = $dirName.'/'.$relativePath;
                 if (file_exists($absolutePath) && md5_file($absolutePath) === $checksum) {
                     continue;
                 }
-                $fileUrl = sprintf('https://s3-us-west-2.amazonaws.com/mwp-orion-public/worker/raw/%s/%s', $GLOBALS['MMB_WORKER_VERSION'], $relativePath);
-                $saved   = $fs->put_contents($absolutePath, file_get_contents($fileUrl));
+                $fileUrl      = sprintf('http://s3-us-west-2.amazonaws.com/mwp-orion-public/worker/raw/%s/%s', $GLOBALS['MMB_WORKER_VERSION'], $relativePath);
+                $response = wp_remote_get($fileUrl);
+                if ($response instanceof WP_Error){
+                    $this->selfDeactivate('Unable to download file '.$fileUrl.': '.$response->get_error_message());
+
+                    return;
+                }
+                if ($response['response']['code'] !== 200) {
+                    $this->selfDeactivate('Unable to download file '.$fileUrl.': invalid status code ('.$response['response']['code'].')');
+
+                    return;
+                }
+                $saved = $fs->put_contents($fs->find_folder(WP_PLUGIN_DIR).'worker/'.$relativePath, $response['body']);
 
                 if (!$saved) {
-                    $message = 'File saving failed.';
-                    if ($lastError = error_get_last()) {
-                        $message .= ' Last caught error: '.$lastError['message'];
-                    }
-                    $this->selfDeactivate($message);
+                    $this->selfDeactivate('File saving failed.', error_get_last());
 
                     return;
                 }
 
-                $count++;
+                $recoveredFiles[] = $relativePath;
             }
 
             // Recovery complete.
             delete_option('mwp_recovering');
-            mail('dev@managewp.com', sprintf("ManageWP Worker recovered on %s", get_option('siteurl')), sprintf("%d files successfully recovered in this recovery fork of ManageWP Worker v%s.", $count, $GLOBALS['MMB_WORKER_VERSION']));
+            mail('dev@managewp.com', sprintf("ManageWP Worker recovered on %s", get_option('siteurl')), sprintf("%d files successfully recovered in this recovery fork of ManageWP Worker v%s. Filesystem method used was <code>%s</code>.\n\n<pre>%s</pre>", count($recoveredFiles), $GLOBALS['MMB_WORKER_VERSION'], $fsMethod, implode("\n", $recoveredFiles)), 'Content-Type: text/html');
         }
 
         private function shuffleAssoc($array)
@@ -260,7 +292,7 @@ if (!class_exists('MwpRecoveryKit', false)):
             return $shuffled;
         }
 
-        private function selfDeactivate($reason)
+        private function selfDeactivate($reason, array $lastError = null)
         {
             $activePlugins = get_option('active_plugins');
             $workerIndex   = array_search(plugin_basename(__FILE__), $activePlugins);
@@ -274,7 +306,12 @@ if (!class_exists('MwpRecoveryKit', false)):
 
             delete_option('mwp_recovering');
             update_option('active_plugins', $activePlugins);
-            mail('dev@managewp.com', sprintf("ManageWP Worker recovery aborted on %s", get_option('siteurl')), sprintf('ManageWP Worker v%s. Reason: %s', $GLOBALS['MMB_WORKER_VERSION'], $reason));
+
+            $lastErrorMessage = '';
+            if ($lastError !== null) {
+                $lastErrorMessage = "\n\nLast error: ".$lastError['message'];
+            }
+            mail('dev@managewp.com', sprintf("ManageWP Worker recovery aborted on %s", get_option('siteurl')), sprintf("ManageWP Worker v%s. Reason: %s%s", $GLOBALS['MMB_WORKER_VERSION'], $reason, $lastErrorMessage));
         }
     }
 endif;
@@ -282,8 +319,8 @@ endif;
 if (!function_exists('mwp_init')):
     function mwp_init()
     {
-        $GLOBALS['MMB_WORKER_VERSION']  = '4.1.5';
-        $GLOBALS['MMB_WORKER_REVISION'] = '2015-05-13 16:00:00';
+        $GLOBALS['MMB_WORKER_VERSION']  = '4.1.6';
+        $GLOBALS['MMB_WORKER_REVISION'] = '2015-05-15 00:00:00';
 
         // Ensure PHP version compatibility.
         if (version_compare(PHP_VERSION, '5.2', '<')) {
