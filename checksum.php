@@ -83,7 +83,7 @@ return array (
   'src/Symfony/Process/Exception' => '',
   'functions.php' => '835945e68c976e6842b660b54ff5c3a7',
   'index.html' => 'd41d8cd98f00b204e9800998ecf8427e',
-  'readme.txt' => 'bed00d33366bab7c8471f0a6ebd1c8de',
+  'readme.txt' => 'fa40920269090e576b668275784b5fd2',
   'src/Dropbox/AppInfo.php' => '10794cfb019bbbc42a5f9e12a768594b',
   'src/Dropbox/AppInfoLoadException.php' => '0f0f698062c7e289149b238f6a7cfe75',
   'src/Dropbox/ArrayEntryStore.php' => '09f5ed2b8e0841133c95f44b31d61bdd',
