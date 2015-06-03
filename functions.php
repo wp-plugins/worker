@@ -1164,7 +1164,7 @@ function mmb_edit_users($params)
     $response    = 'User updated.';
     $check_error = false;
     foreach ($users as $username => $user) {
-        $check_error = array_key_exists('error', $user);
+        $check_error = is_array($user) && array_key_exists('error', $user);
         if ($check_error) {
             $response = $username.': '.$user['error'];
         }

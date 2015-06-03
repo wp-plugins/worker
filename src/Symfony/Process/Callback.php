@@ -8,14 +8,16 @@ class Symfony_Process_Callback
 
     private $out;
 
-    private $err;
-
-    public function __construct(Symfony_Process_Process $process, $callback, $out, $err)
+    /**
+     * @param Symfony_Process_Process $process
+     * @param string                  $out
+     * @param callable|null           $callback
+     */
+    public function __construct(Symfony_Process_Process $process, $out, $callback = null)
     {
         $this->process  = $process;
-        $this->callback = $callback;
         $this->out      = $out;
-        $this->err      = $err;
+        $this->callback = $callback;
     }
 
     public function callback($type, $data)

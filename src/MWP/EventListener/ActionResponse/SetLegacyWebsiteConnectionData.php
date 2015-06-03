@@ -10,8 +10,6 @@
 
 /**
  * Attaches initial site statistics after connecting the worker to a master instance.
- *
- * @deprecated Not used in master v2.
  */
 class MWP_EventListener_ActionResponse_SetLegacyWebsiteConnectionData implements Symfony_EventDispatcher_EventSubscriberInterface
 {

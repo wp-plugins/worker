@@ -36,4 +36,12 @@ class MWP_IncrementalBackup_Database_PdoStatement implements MWP_IncrementalBack
     {
         return $this->statement->fetchAll();
     }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function close()
+    {
+        return $this->statement->closeCursor();
+    }
 }

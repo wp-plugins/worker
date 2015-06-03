@@ -27,6 +27,16 @@ class MWP_Stream_ProcessOutput extends MWP_Stream_Callable
         $this->process = $process;
     }
 
+    /**
+     * Returns incremental process output (even if empty string) or false if the process has finished
+     * successfully and all output was already returned.
+     *
+     * @throws Symfony_Process_Exception_ProcessFailedException If the process did not exit successfully.
+     *
+     * @internal
+     *
+     * @return string|false
+     */
     public function getIncrementalOutput()
     {
         if (!$this->ran) {
@@ -38,15 +48,28 @@ class MWP_Stream_ProcessOutput extends MWP_Stream_Callable
             }
         }
 
-        if (!$this->process->isRunning() && !$this->process->isSuccessful()) {
-            throw new Symfony_Process_Exception_ProcessFailedException($this->process);
-        }
+        if ($this->process->isRunning()) {
+            $output = $this->process->getIncrementalOutput();
+            $this->process->clearOutput();
 
-        $output = $this->process->getIncrementalOutput();
-        if (!$this->process->isRunning() && empty($output)) {
-            return false;
-        }
+            if (strlen($output) < Symfony_Process_Pipes_PipesInterface::CHUNK_SIZE) {
+                // Don't hog the processor while waiting for incremental process output.
+                usleep(100000);
+            }
 
-        return empty($output) ? '' : $output;
+            // The stream will be read again because we're returning a string.
+            return (string) $output;
+        } else {
+            if (!$this->process->isSuccessful()) {
+                throw new Symfony_Process_Exception_ProcessFailedException($this->process);
+            }
+
+            $output = $this->process->getIncrementalOutput();
+            $this->process->clearOutput();
+
+            // The process has finished and is successful. This part will probably get run twice,
+            // first time we'll return final output, second time we'll return 'false' and break the loop.
+            return empty($output) ? false : $output;
+        }
     }
 }

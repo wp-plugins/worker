@@ -592,7 +592,7 @@ class MMB_Stats extends MMB_Core
 
     public function get_initial_stats()
     {
-        global $mmb_plugin_dir, $_mmb_item_filter;
+        global $mmb_plugin_dir, $_mmb_item_filter, $wpdb;
 
         $stats = array(
             'email'           => get_option('admin_email'),
@@ -611,6 +611,7 @@ class MMB_Stats extends MMB_Core
             'cookies'         => $this->get_stat_cookies(),
             'timezone'        => get_option('timezone_string'),
             'timezone_offset' => get_option('gmt_offset'),
+            'db_prefix'       => $wpdb->prefix,
         );
 
         if ($this->mmb_multisite) {

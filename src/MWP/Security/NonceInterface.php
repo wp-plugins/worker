@@ -8,10 +8,6 @@
  * file that was distributed with this source code.
  */
 
-/**
- * Created by miljenko.rebernisak@prelovac.com
- * Date: 2/12/14
- */
 interface MWP_Security_NonceInterface
 {
     /**

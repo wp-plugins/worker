@@ -47,4 +47,12 @@ class MWP_IncrementalBackup_Database_MysqlStatement implements MWP_IncrementalBa
 
         return $rows;
     }
+
+    /**
+     * @return bool
+     */
+    public function close()
+    {
+        return @mysql_free_result($this->result);
+    }
 }

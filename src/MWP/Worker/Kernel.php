@@ -95,19 +95,19 @@ class MWP_Worker_Kernel
                 $callbackObject->setContainer($container);
             }
 
-            // Allow listeners to modify action parameters.
-            $actionRequestEvent = new MWP_Event_ActionRequest($request, $params, $actionDefinition);
-            $this->dispatcher->dispatch(MWP_Event_Events::ACTION_REQUEST, $actionRequestEvent);
-            $params = $actionRequestEvent->getParams();
-
             // Check if the action call should be deferred.
             $hookName = $actionDefinition->getOption('hook_name');
             if ($hookName !== null && $deferredCallback !== null) {
-                $proxy = new MWP_WordPress_HookProxy(array($this, 'hookResponse'), $request, $callback, $params, $deferredCallback);
+                $proxy = new MWP_WordPress_HookProxy(array($this, 'hookResponse'), $request, $callback, $params, $actionDefinition, $deferredCallback);
                 $context->addAction($hookName, $proxy->getCallable(), $actionDefinition->getOption('hook_priority'));
 
                 return;
             }
+
+            // Allow listeners to modify action parameters.
+            $actionRequestEvent = new MWP_Event_ActionRequest($request, $params, $actionDefinition);
+            $this->dispatcher->dispatch(MWP_Event_Events::ACTION_REQUEST, $actionRequestEvent);
+            $params = $actionRequestEvent->getParams();
 
             try {
                 $data = call_user_func($callback, $params, $request);
@@ -164,14 +164,20 @@ class MWP_Worker_Kernel
     /**
      * Callback for deferred actions. Used when the action is not executed immediately, but after a WordPress action hook.
      *
-     * @param MWP_Worker_Request $request
-     * @param callable           $callback
-     * @param array              $params
-     * @param callable           $deferredCallback
+     * @param MWP_Worker_Request    $request
+     * @param callable              $callback
+     * @param array                 $params
+     * @param MWP_Action_Definition $actionDefinition
+     * @param callable              $deferredCallback
      */
-    public function hookResponse(MWP_Worker_Request $request, $callback, array $params, $deferredCallback)
+    public function hookResponse(MWP_Worker_Request $request, $callback, array $params, MWP_Action_Definition $actionDefinition, $deferredCallback)
     {
         try {
+            // Allow listeners to modify action parameters.
+            $actionRequestEvent = new MWP_Event_ActionRequest($request, $params, $actionDefinition);
+            $this->dispatcher->dispatch(MWP_Event_Events::ACTION_REQUEST, $actionRequestEvent);
+            $params = $actionRequestEvent->getParams();
+
             try {
                 $data = call_user_func($callback, $params, $request);
             } catch (MWP_Worker_ActionResponse $actionResponse) {
@@ -182,8 +188,6 @@ class MWP_Worker_Kernel
         } catch (Exception $e) {
             $response = $this->handleException($request, $e);
             call_user_func($deferredCallback, $e, $response);
-
-            return;
         }
     }
 

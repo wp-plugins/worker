@@ -38,6 +38,10 @@ class MWP_EventListener_MasterRequest_SetRequestSettings implements Symfony_Even
 
         // Master should never get redirected by the worker, since it expects worker response.
         $this->context->addFilter('wp_redirect', array($this, 'disableRedirect'));
+
+        // Alternate WP cron can run on 'init' hook.
+        $this->context->removeAction('init', 'wp_cron');
+        $this->context->set('_wp_using_ext_object_cache', false);
     }
 
     private function defineWpAdmin(array $data)

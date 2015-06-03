@@ -29,12 +29,14 @@ class MWP_Action_IncrementalBackup_Stats extends MWP_Action_IncrementalBackup_Ab
         $statistics['plugins_list']      = $plugins[$pluginsKey]['result'];
         $statistics['active_plugins']    = count($activePlugins);
         $statistics['posts']             = (int) $wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->posts} WHERE post_type='post'");
+        $statistics['published_posts']   = (int) $wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->posts} WHERE post_type='post' AND post_status='publish'");
         $statistics['pages']             = (int) $wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->posts} WHERE post_type='page'");
+        $statistics['published_pages']   = (int) $wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->posts} WHERE post_type='page' AND post_status='publish'");
         $statistics['uploads']           = (int) $wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->posts} WHERE post_type='attachment'");
         $statistics['comments']          = (int) $wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->comments}");
         $latestPost                      = $wpdb->get_row("SELECT * FROM {$wpdb->posts} WHERE post_type='post' AND post_status='publish' ORDER BY ID DESC LIMIT 1");
         $statistics['latest_post_title'] = isset($latestPost->post_title) ? $latestPost->post_title : '';
-        $statistics['latest_post_url']   = get_permalink($latestPost->ID);
+        $statistics['latest_post_url']   = sprintf("%s?p=%d", get_site_url(), $latestPost->ID);
         $statistics['wp_version']        = $this->container->getWordPressContext()->getVersion();
         $statistics['worker_version']    = $this->container->getParameter('worker_version');
         $currentTheme                    = $this->container->getWordPressContext()->getCurrentTheme();

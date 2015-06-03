@@ -104,15 +104,10 @@ class MMB_Core extends MMB_Helper
      */
     public function network_admin_notice()
     {
-        global $status, $page, $s;
-        $context              = $status;
-        $plugin               = 'worker/init.php';
-        $nonce                = wp_create_nonce('deactivate-plugin_'.$plugin);
-        $actions              = 'plugins.php?action=deactivate&amp;plugin='.urlencode($plugin).'&amp;plugin_status='.$context.'&amp;paged='.$page.'&amp;s='.$s.'&amp;_wpnonce='.$nonce;
         $configurationService = new MWP_Configuration_Service();
         $configuration        = $configurationService->getConfiguration();
         $notice               = $configuration->getNetworkNotice();
-        $notice               = str_replace("{deactivate_url}", $actions, $notice);
+
         echo $notice;
     }
 
@@ -121,21 +116,9 @@ class MMB_Core extends MMB_Helper
      */
     public function admin_notice()
     {
-        global $status, $page, $s;
-        $context              = $status;
-        $plugin               = 'worker/init.php';
-        $nonce                = wp_create_nonce('deactivate-plugin_'.$plugin);
-        $actions              = 'plugins.php?action=deactivate&amp;plugin='.urlencode($plugin).'&amp;plugin_status='.$context.'&amp;paged='.$page.'&amp;s='.$s.'&amp;_wpnonce='.$nonce;
         $configurationService = new MWP_Configuration_Service();
         $configuration        = $configurationService->getConfiguration();
         $notice               = $configuration->getNotice();
-        $deactivateText       = $configuration->getDeactivateText();
-        if ($this->mmb_multisite && $this->network_admin_install != '1') {
-            $deactivateTextLink = ''.$deactivateText;
-        } else {
-            $deactivateTextLink = '<a href="'.$actions.'" class="mwp_text_notice">'.$deactivateText.'</a>';
-        }
-        $notice = str_replace("{deactivate_text}", $deactivateTextLink, $notice);
 
         echo $notice;
     }

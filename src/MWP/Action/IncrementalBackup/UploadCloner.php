@@ -23,7 +23,10 @@ class MWP_Action_IncrementalBackup_UploadCloner extends MWP_Action_Abstract
                 if ($file['dir'] === true) {
                     $filesystem->mkdir($realpath);
                 } else {
-                    $filesystem->dumpFile($realpath, $file['contents'], 0644);
+                    // Files contents are sent as base64 encoded strings
+                    // mod_security scans request payload for PHP code and blocks the request
+                    // base64 is just a workaround which passes the mod_security check
+                    $filesystem->dumpFile($realpath, base64_decode($file['contents']), 0644);
                 }
             }
         } catch (Symfony_Filesystem_Exception_IOException $e) {

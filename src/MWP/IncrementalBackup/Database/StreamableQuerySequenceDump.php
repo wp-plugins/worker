@@ -126,8 +126,8 @@ class MWP_IncrementalBackup_Database_StreamableQuerySequenceDump
             $columns = $this->repack($columns, 'Field');
         }
 
-        $statement = $this->getConnection()
-            ->query($this->selectAllDataQuery($tableName, $columns));
+        $query     = $this->selectAllDataQuery($tableName, $columns);
+        $statement = $this->getConnection()->query($query, true);
 
         // Go through row by row
         if (!$this->options->isSkipLockTables()) {
@@ -154,6 +154,9 @@ class MWP_IncrementalBackup_Database_StreamableQuerySequenceDump
     {
         $row = $statement->fetch();
         if (!$row) {
+            // This statement is using unbuffered queries and MUST be closed explicitly.
+            $statement->close();
+
             return false;
         }
 

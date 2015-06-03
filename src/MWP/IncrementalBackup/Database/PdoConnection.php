@@ -40,9 +40,23 @@ class MWP_IncrementalBackup_Database_PdoConnection implements MWP_IncrementalBac
     /**
      * {@inheritdoc}
      */
-    public function query($query)
+    public function query($query, $useResult = false)
     {
-        return new MWP_IncrementalBackup_Database_PdoStatement($this->connection->query($query));
+        $previousAttr = $this->connection->getAttribute(PDO::MYSQL_ATTR_USE_BUFFERED_QUERY);
+
+        if ($useResult) {
+            // Temporarily switch to unbuffered queries
+            $this->connection->setAttribute(PDO::MYSQL_ATTR_USE_BUFFERED_QUERY, false);
+        }
+
+        $statement = new MWP_IncrementalBackup_Database_PdoStatement($this->connection->query($query));
+
+        if ($useResult) {
+            // Restore configuration
+            $this->connection->setAttribute(PDO::MYSQL_ATTR_USE_BUFFERED_QUERY, $previousAttr);
+        }
+
+        return $statement;
     }
 
     /**

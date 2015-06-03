@@ -48,15 +48,15 @@ class MWP_IncrementalBackup_Database_MysqlConnection implements MWP_IncrementalB
     }
 
     /**
-     * @param string $query
-     *
-     * @throws MWP_IncrementalBackup_Database_Exception_ConnectionException
-     *
-     * @return MWP_IncrementalBackup_Database_StatementInterface
+     * {@inheritdoc}
      */
-    public function query($query)
+    public function query($query, $useResult = false)
     {
-        $result = mysql_query($query, $this->connection);
+        if ($useResult) {
+            $result = mysql_unbuffered_query($query, $this->connection);
+        } else {
+            $result = mysql_query($query, $this->connection);
+        }
 
         if ($result === false) {
             throw new MWP_IncrementalBackup_Database_Exception_ConnectionException(mysql_error($this->connection), mysql_errno($this->connection));

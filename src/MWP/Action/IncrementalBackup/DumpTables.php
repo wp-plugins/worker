@@ -13,7 +13,7 @@ class MWP_Action_IncrementalBackup_DumpTables extends MWP_Action_IncrementalBack
     const METHOD_MYSQLDUMP = 'mysqldump';
     const METHOD_PHPDUMPER = 'phpdumper';
 
-    public function execute(array $params = array(), MWP_Worker_Request $request)
+    public function execute(array $params = array())
     {
         $method = $params['method'];
         $tables = $params['tables'];

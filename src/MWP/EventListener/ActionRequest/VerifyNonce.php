@@ -8,7 +8,7 @@
  * file that was distributed with this source code.
  */
 
-class MWP_EventListener_MasterRequest_VerifyNonce implements Symfony_EventDispatcher_EventSubscriberInterface
+class MWP_EventListener_ActionRequest_VerifyNonce implements Symfony_EventDispatcher_EventSubscriberInterface
 {
 
     private $nonceManager;
@@ -21,11 +21,11 @@ class MWP_EventListener_MasterRequest_VerifyNonce implements Symfony_EventDispat
     public static function getSubscribedEvents()
     {
         return array(
-            MWP_Event_Events::MASTER_REQUEST => array('onMasterRequest', 400),
+            MWP_Event_Events::ACTION_REQUEST => array('onActionRequest', 400),
         );
     }
 
-    public function onMasterRequest(MWP_Event_MasterRequest $event)
+    public function onActionRequest(MWP_Event_ActionRequest $event)
     {
         $nonce = $event->getRequest()->getNonce();
 

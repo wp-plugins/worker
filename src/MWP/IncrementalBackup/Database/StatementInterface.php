@@ -19,4 +19,9 @@ interface MWP_IncrementalBackup_Database_StatementInterface
      * @return array|null
      */
     public function fetchAll();
+
+    /**
+     * @return bool
+     */
+    public function close();
 }

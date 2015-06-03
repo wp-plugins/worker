@@ -25,6 +25,14 @@ interface MWP_ServiceContainer_Interface
     public function getParameter($name);
 
     /**
+     * Set a parameter at runtime. Does not get saved permanently, instead it's only available on a per-request basis.
+     *
+     * @param string $name
+     * @param mixed  $value
+     */
+    public function setParameter($name, $value);
+
+    /**
      * @return MWP_WordPress_Context
      */
     public function getWordPressContext();

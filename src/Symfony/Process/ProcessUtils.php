@@ -19,7 +19,7 @@
 class Symfony_Process_ProcessUtils
 {
     /**
-     * This class should not be instantiated
+     * This class should not be instantiated.
      */
     private function __construct()
     {
@@ -38,20 +38,30 @@ class Symfony_Process_ProcessUtils
         //Fix for PHP bug #49446 escapeshellarg doesn't work on Windows
         //@see https://bugs.php.net/bug.php?id=43784
         //@see https://bugs.php.net/bug.php?id=49446
-        if (Symfony_Process_ProcessUtils::isWindows()) {
+        if (self::isWindows()) {
             if ('' === $argument) {
                 return escapeshellarg($argument);
             }
 
             $escapedArgument = '';
-            foreach (preg_split('/([%"])/i', $argument, -1, PREG_SPLIT_NO_EMPTY | PREG_SPLIT_DELIM_CAPTURE) as $part) {
+            $quote = false;
+            foreach (preg_split('/(")/i', $argument, -1, PREG_SPLIT_NO_EMPTY | PREG_SPLIT_DELIM_CAPTURE) as $part) {
                 if ('"' === $part) {
                     $escapedArgument .= '\\"';
-                } elseif ('%' === $part) {
-                    $escapedArgument .= '^%';
+                } elseif (self::isSurroundedBy($part, '%')) {
+                    // Avoid environment variable expansion
+                    $escapedArgument .= '^%"'.substr($part, 1, -1).'"^%';
                 } else {
-                    $escapedArgument .= escapeshellarg($part);
+                    // escape trailing backslash
+                    if ('\\' === substr($part, -1)) {
+                        $part .= '\\';
+                    }
+                    $quote = true;
+                    $escapedArgument .= $part;
                 }
+            }
+            if ($quote) {
+                $escapedArgument = '"'.$escapedArgument.'"';
             }
 
             return $escapedArgument;
@@ -60,9 +70,43 @@ class Symfony_Process_ProcessUtils
         return escapeshellarg($argument);
     }
 
+    /**
+     * Validates and normalizes a Process input.
+     *
+     * @param string $caller The name of method call that validates the input
+     * @param mixed  $input  The input to validate
+     *
+     * @return string The validated input
+     *
+     * @throws InvalidArgumentException In case the input is not valid
+     */
+    public static function validateInput($caller, $input)
+    {
+        if (null !== $input) {
+            if (is_resource($input)) {
+                return $input;
+            }
+            if (is_scalar($input)) {
+                return (string) $input;
+            }
+
+            throw new Symfony_Process_Exception_InvalidArgumentException(sprintf('%s only accepts strings or stream resources.', $caller));
+        }
+
+        return $input;
+    }
+
+    private static function isSurroundedBy($arg, $char)
+    {
+        return 2 < strlen($arg) && $char === $arg[0] && $char === $arg[strlen($arg) - 1];
+    }
+
+    /**
+     * @return bool
+     */
     public static function isWindows()
     {
-        return strtoupper(substr(PHP_OS, 0, 3)) === 'WIN';
+        return '\\' === DIRECTORY_SEPARATOR;
     }
 
     /**

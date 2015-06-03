@@ -195,6 +195,11 @@ abstract class MWP_ServiceContainer_Abstract implements MWP_ServiceContainer_Int
         return $this->parameters[$name];
     }
 
+    public function setParameter($name, $value)
+    {
+        $this->parameters[$name] = $value;
+    }
+
     public function getWordPressContext()
     {
         if ($this->wordPressContext === null) {

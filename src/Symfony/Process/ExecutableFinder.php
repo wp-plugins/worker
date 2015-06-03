@@ -19,8 +19,6 @@ class Symfony_Process_ExecutableFinder
 {
     private $suffixes = array('.exe', '.bat', '.cmd', '.com');
 
-    private $extraDirs = array();
-
     /**
      * Replaces default suffixes of executable.
      *
@@ -42,26 +40,6 @@ class Symfony_Process_ExecutableFinder
     }
 
     /**
-     * Sets extra directories to check for executable.
-     *
-     * @param array $extraDirs
-     */
-    public function setExtraDirs(array $extraDirs)
-    {
-        $this->extraDirs = $extraDirs;
-    }
-
-    /**
-     * Adds extra directory to check for executable.
-     *
-     * @param string $dir
-     */
-    public function addExtraDir($dir)
-    {
-        $this->extraDirs[] = $dir;
-    }
-
-    /**
      * Finds an executable by name.
      *
      * @param string $name      The executable name (without the extension)
@@ -73,14 +51,13 @@ class Symfony_Process_ExecutableFinder
     public function find($name, $default = null, array $extraDirs = array())
     {
         if (ini_get('open_basedir')) {
-            $searchPath = explode(PATH_SEPARATOR, getenv('open_basedir'));
-            $dirs       = array();
+            $searchPath = explode(PATH_SEPARATOR, ini_get('open_basedir'));
+            $dirs = array();
             foreach ($searchPath as $path) {
                 if (is_dir($path)) {
                     $dirs[] = $path;
                 } else {
-                    $file = str_replace(dirname($path), '', $path);
-                    if ($file == $name && is_executable($path)) {
+                    if (basename($path) == $name && is_executable($path)) {
                         return $path;
                     }
                 }
@@ -94,7 +71,7 @@ class Symfony_Process_ExecutableFinder
 
         $suffixes = array('');
         if (Symfony_Process_ProcessUtils::isWindows()) {
-            $pathExt  = getenv('PATHEXT');
+            $pathExt = getenv('PATHEXT');
             $suffixes = $pathExt ? explode(PATH_SEPARATOR, $pathExt) : $this->suffixes;
         }
         foreach ($suffixes as $suffix) {

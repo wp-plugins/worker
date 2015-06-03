@@ -41,15 +41,11 @@ class MWP_IncrementalBackup_Database_MysqliConnection implements MWP_Incremental
     }
 
     /**
-     * @param string $query
-     *
-     * @throws MWP_IncrementalBackup_Database_Exception_ConnectionException
-     *
-     * @return MWP_IncrementalBackup_Database_StatementInterface
+     * {@inheritdoc}
      */
-    public function query($query)
+    public function query($query, $useResult = false)
     {
-        $result = $this->connection->query($query);
+        $result = $this->connection->query($query, $useResult ? MYSQLI_USE_RESULT : MYSQLI_STORE_RESULT);
 
         if ($result === false) {
             throw new MWP_IncrementalBackup_Database_Exception_ConnectionException($this->connection->error, $this->connection->errno);
@@ -59,9 +55,7 @@ class MWP_IncrementalBackup_Database_MysqliConnection implements MWP_Incremental
     }
 
     /**
-     * @param mixed $value any primitive value
-     *
-     * @return string
+     * {@inheritdoc}
      */
     public function quote($value)
     {

@@ -11,14 +11,16 @@
 class MWP_System_Utils
 {
     /**
-     * Converts output of 'memory_limit' php.ini directive to bytes.
+     * Converts value of 'memory_limit' php.ini directive to bytes.
      *
-     * @param $memoryLimit
+     * @param int|string $memoryLimit
      *
-     * @return int|string
+     * @return int Limit in bytes or -1 if it's unlimited.
      */
     public static function convertToBytes($memoryLimit)
     {
+        $memoryLimit = (string) $memoryLimit;
+
         if ('-1' === $memoryLimit) {
             return -1;
         }
@@ -34,10 +36,13 @@ class MWP_System_Utils
         }
 
         switch (substr($memoryLimit, -1)) {
+            /** @noinspection PhpMissingBreakStatementInspection */
             case 't':
                 $max *= 1024;
+            /** @noinspection PhpMissingBreakStatementInspection */
             case 'g':
                 $max *= 1024;
+            /** @noinspection PhpMissingBreakStatementInspection */
             case 'm':
                 $max *= 1024;
             case 'k':

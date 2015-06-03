@@ -33,13 +33,13 @@ class MWP_ServiceContainer_Production extends MWP_ServiceContainer_Abstract
         $dispatcher->addSubscriber(new MWP_EventListener_PublicRequest_AddStatusPage($this->getWordPressContext(), $this->getConfiguration()));
 
         $dispatcher->addSubscriber(new MWP_EventListener_MasterRequest_VerifyConnectionInfo($this->getWordPressContext(), $this->getSigner()));
-        $dispatcher->addSubscriber(new MWP_EventListener_MasterRequest_VerifyNonce($this->getNonceManager()));
         $dispatcher->addSubscriber(new MWP_EventListener_MasterRequest_AuthenticateRequest($this->getConfiguration(), $this->getSigner()));
         $dispatcher->addSubscriber(new MWP_EventListener_MasterRequest_SetErrorHandler($this->getErrorLogger(), $this->getErrorHandler(), $this->getRequestStack(), $this->getResponseCallback(), $this, $this->getParameter('log_errors'), $this->getParameter('fatal_error_reserved_memory_size')));
         $dispatcher->addSubscriber(new MWP_EventListener_MasterRequest_AttachJsonMessageHandler($this->getLogger(), $this->getJsonMessageHandler()));
         $dispatcher->addSubscriber(new MWP_EventListener_MasterRequest_RemoveUsernameParam());
         $dispatcher->addSubscriber(new MWP_EventListener_MasterRequest_AuthenticateLegacyRequest($this->getConfiguration()));
         $dispatcher->addSubscriber(new MWP_EventListener_MasterRequest_SetRequestSettings($this->getWordPressContext()));
+        $dispatcher->addSubscriber(new MWP_EventListener_ActionRequest_VerifyNonce($this->getNonceManager()));
 
         $dispatcher->addSubscriber(new MWP_EventListener_ActionRequest_SetCurrentUser($this->getWordPressContext()));
         $dispatcher->addSubscriber(new MWP_EventListener_ActionRequest_SetSettings($this->getWordPressContext(), $this->getSystemEnvironment()));
@@ -265,7 +265,7 @@ class MWP_ServiceContainer_Production extends MWP_ServiceContainer_Abstract
      */
     protected function createExecutableFinder()
     {
-        $finder = new Symfony_Process_ExecutableFinder();
+        $finder = new MWP_Process_ExecutableFinder();
 
         $db = $this->getWordPressContext()->getDb();
 

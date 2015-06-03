@@ -1,21 +1,48 @@
 <?php
 
+/*
+ * This file is part of the Symfony package.
+ *
+ * (c) Fabien Potencier <fabien@symfony.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
+/**
+ * Process builder.
+ *
+ * @author Kris Wallsmith <kris@symfony.com>
+ */
 class Symfony_Process_ProcessBuilder
 {
     private $arguments;
     private $cwd;
     private $env = array();
-    private $stdin;
-    private $timeout    = 60;
-    private $options    = array();
+    private $input;
+    private $timeout = 60;
+    private $options = array();
     private $inheritEnv = true;
-    private $prefix     = array();
+    private $prefix = array();
+    private $outputDisabled = false;
 
+    /**
+     * Constructor.
+     *
+     * @param string[] $arguments An array of arguments
+     */
     public function __construct(array $arguments = array())
     {
         $this->arguments = $arguments;
     }
 
+    /**
+     * Creates a process builder instance.
+     *
+     * @param string[] $arguments An array of arguments
+     *
+     * @return Symfony_Process_ProcessBuilder
+     */
     public static function create(array $arguments = array())
     {
         return new self($arguments);
@@ -36,7 +63,7 @@ class Symfony_Process_ProcessBuilder
     }
 
     /**
-     * Adds an unescaped prefix to the command string.
+     * Adds a prefix to the command string.
      *
      * The prefix is preserved when resetting arguments.
      *
@@ -52,7 +79,12 @@ class Symfony_Process_ProcessBuilder
     }
 
     /**
-     * @param array $arguments
+     * Sets the arguments of the process.
+     *
+     * Arguments must not be escaped.
+     * Previous arguments are removed.
+     *
+     * @param string[] $arguments
      *
      * @return Symfony_Process_ProcessBuilder
      */
@@ -63,6 +95,13 @@ class Symfony_Process_ProcessBuilder
         return $this;
     }
 
+    /**
+     * Sets the working directory.
+     *
+     * @param null|string $cwd The working directory
+     *
+     * @return Symfony_Process_ProcessBuilder
+     */
     public function setWorkingDirectory($cwd)
     {
         $this->cwd = $cwd;
@@ -70,6 +109,13 @@ class Symfony_Process_ProcessBuilder
         return $this;
     }
 
+    /**
+     * Sets whether environment variables will be inherited or not.
+     *
+     * @param bool $inheritEnv
+     *
+     * @return Symfony_Process_ProcessBuilder
+     */
     public function inheritEnvironmentVariables($inheritEnv = true)
     {
         $this->inheritEnv = $inheritEnv;
@@ -77,6 +123,17 @@ class Symfony_Process_ProcessBuilder
         return $this;
     }
 
+    /**
+     * Sets an environment variable.
+     *
+     * Setting a variable overrides its previous value. Use `null` to unset a
+     * defined environment variable.
+     *
+     * @param string      $name  The variable name
+     * @param null|string $value The variable value
+     *
+     * @return Symfony_Process_ProcessBuilder
+     */
     public function setEnv($name, $value)
     {
         $this->env[$name] = $value;
@@ -84,6 +141,17 @@ class Symfony_Process_ProcessBuilder
         return $this;
     }
 
+    /**
+     * Adds a set of environment variables.
+     *
+     * Already existing environment variables with the same name will be
+     * overridden by the new values passed to this method. Pass `null` to unset
+     * a variable.
+     *
+     * @param array $variables The variables
+     *
+     * @return Symfony_Process_ProcessBuilder
+     */
     public function addEnvironmentVariables(array $variables)
     {
         $this->env = Symfony_Process_ProcessUtils::arrayReplace($this->env, $variables);
@@ -91,9 +159,18 @@ class Symfony_Process_ProcessBuilder
         return $this;
     }
 
-    public function setInput($stdin)
+    /**
+     * Sets the input of the process.
+     *
+     * @param mixed $input The input as a string
+     *
+     * @return Symfony_Process_ProcessBuilder
+     *
+     * @throws InvalidArgumentException In case the argument is invalid
+     */
+    public function setInput($input)
     {
-        $this->stdin = $stdin;
+        $this->input = Symfony_Process_ProcessUtils::validateInput(sprintf('%s::%s', __CLASS__, __FUNCTION__), $input);
 
         return $this;
     }
@@ -103,11 +180,11 @@ class Symfony_Process_ProcessBuilder
      *
      * To disable the timeout, set this value to null.
      *
-     * @param float|null
+     * @param float|null $timeout
      *
      * @return Symfony_Process_ProcessBuilder
      *
-     * @throws Symfony_Process_Exception_InvalidArgumentException
+     * @throws InvalidArgumentException
      */
     public function setTimeout($timeout)
     {
@@ -128,6 +205,14 @@ class Symfony_Process_ProcessBuilder
         return $this;
     }
 
+    /**
+     * Adds a proc_open option.
+     *
+     * @param string $name  The option name
+     * @param string $value The option value
+     *
+     * @return Symfony_Process_ProcessBuilder
+     */
     public function setOption($name, $value)
     {
         $this->options[$name] = $value;
@@ -135,6 +220,37 @@ class Symfony_Process_ProcessBuilder
         return $this;
     }
 
+    /**
+     * Disables fetching output and error output from the underlying process.
+     *
+     * @return Symfony_Process_ProcessBuilder
+     */
+    public function disableOutput()
+    {
+        $this->outputDisabled = true;
+
+        return $this;
+    }
+
+    /**
+     * Enables fetching output and error output from the underlying process.
+     *
+     * @return Symfony_Process_ProcessBuilder
+     */
+    public function enableOutput()
+    {
+        $this->outputDisabled = false;
+
+        return $this;
+    }
+
+    /**
+     * Creates a Process instance and returns it.
+     *
+     * @return Symfony_Process_Process
+     *
+     * @throws LogicException In case no arguments have been provided
+     */
     public function getProcess()
     {
         if (0 === count($this->prefix) && 0 === count($this->arguments)) {
@@ -144,7 +260,7 @@ class Symfony_Process_ProcessBuilder
         $options = $this->options;
 
         $arguments = array_merge($this->prefix, $this->arguments);
-        $script    = implode(' ', array_map(array('Symfony_Process_ProcessUtils', 'escapeArgument'), $arguments));
+        $script = implode(' ', array_map(array('Symfony_Process_ProcessUtils', 'escapeArgument'), $arguments));
 
         if ($this->inheritEnv) {
             // include $_ENV for BC purposes
@@ -153,41 +269,12 @@ class Symfony_Process_ProcessBuilder
             $env = $this->env;
         }
 
-        return new Symfony_Process_Process($script, $this->cwd, $env, $this->stdin, $this->timeout, $options);
-    }
+        $process = new Symfony_Process_Process($script, $this->cwd, $env, $this->input, $this->timeout, $options);
 
-    /**
-     * Escapes a string to be used as a shell argument.
-     *
-     * @param string $argument The argument that will be escaped
-     *
-     * @return string The escaped argument
-     */
-    public static function escapeArgument($argument)
-    {
-        //Fix for PHP bug #43784 escapeshellarg removes % from given string
-        //Fix for PHP bug #49446 escapeshellarg dosn`t work on windows
-        //@see https://bugs.php.net/bug.php?id=43784
-        //@see https://bugs.php.net/bug.php?id=49446
-        if (Symfony_Process_ProcessUtils::isWindows()) {
-            if ('' === $argument) {
-                return escapeshellarg($argument);
-            }
-
-            $escapedArgument = '';
-            foreach (preg_split('/([%"])/i', $argument, -1, PREG_SPLIT_NO_EMPTY | PREG_SPLIT_DELIM_CAPTURE) as $part) {
-                if ('"' === $part) {
-                    $escapedArgument .= '\\"';
-                } elseif ('%' === $part) {
-                    $escapedArgument .= '^%';
-                } else {
-                    $escapedArgument .= escapeshellarg($part);
-                }
-            }
-
-            return $escapedArgument;
+        if ($this->outputDisabled) {
+            $process->disableOutput();
         }
 
-        return escapeshellarg($argument);
+        return $process;
     }
 }

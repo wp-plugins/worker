@@ -22,24 +22,25 @@
  */
 class Symfony_Process_PhpProcess extends Symfony_Process_Process
 {
-    private $executableFinder;
-
     /**
      * Constructor.
      *
-     * @param string  $script  The PHP script to run (as a string)
-     * @param string  $cwd     The working directory
-     * @param array   $env     The environment variables
-     * @param integer $timeout The timeout in seconds
-     * @param array   $options An array of options for proc_open
+     * @param string $script  The PHP script to run (as a string)
+     * @param string $cwd     The working directory
+     * @param array  $env     The environment variables
+     * @param int    $timeout The timeout in seconds
+     * @param array  $options An array of options for proc_open
      *
      * @api
      */
     public function __construct($script, $cwd = null, array $env = array(), $timeout = 60, array $options = array())
     {
-        parent::__construct(null, $cwd, $env, $script, $timeout, $options);
+        $executableFinder = new Symfony_Process_PhpExecutableFinder();
+        if (false === $php = $executableFinder->find()) {
+            $php = null;
+        }
 
-        $this->executableFinder = new Symfony_Process_PhpExecutableFinder();
+        parent::__construct($php, $cwd, $env, $script, $timeout, $options);
     }
 
     /**
@@ -58,10 +59,7 @@ class Symfony_Process_PhpProcess extends Symfony_Process_Process
     public function start($callback = null)
     {
         if (null === $this->getCommandLine()) {
-            if (false === $php = $this->executableFinder->find()) {
-                throw new Symfony_Process_Exception_RuntimeException('Unable to find the PHP executable.');
-            }
-            $this->setCommandLine($php);
+            throw new Symfony_Process_Exception_RuntimeException('Unable to find the PHP executable.');
         }
 
         parent::start($callback);

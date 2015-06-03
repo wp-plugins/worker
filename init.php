@@ -3,7 +3,7 @@
 Plugin Name: ManageWP - Worker
 Plugin URI: https://managewp.com
 Description: ManageWP Worker plugin allows you to manage your WordPress sites from one dashboard. Visit <a href="https://managewp.com">ManageWP.com</a> for more information.
-Version: 4.1.6
+Version: 4.1.7
 Author: ManageWP
 Author URI: https://managewp.com
 License: GPL2
@@ -190,9 +190,9 @@ if (!class_exists('MwpRecoveryKit', false)):
         public function recover()
         {
             ignore_user_abort(true);
-            $dirName = realpath(dirname(__FILE__));
+            $dirName          = realpath(dirname(__FILE__));
             $checksumResponse = wp_remote_get(sprintf('http://s3-us-west-2.amazonaws.com/mwp-orion-public/worker/raw/%s/checksum.json', $GLOBALS['MMB_WORKER_VERSION']));
-            if ($checksumResponse instanceof WP_Error){
+            if ($checksumResponse instanceof WP_Error) {
                 $this->selfDeactivate('Unable to download checksum.json: '.$checksumResponse->get_error_message());
 
                 return;
@@ -225,10 +225,11 @@ if (!class_exists('MwpRecoveryKit', false)):
             /** @var WP_Filesystem_Base $fs */
             WP_Filesystem($options);
             $fs = $GLOBALS['wp_filesystem'];
-            $connected = $fs->connect();
 
-            if (!$connected) {
+            if (!$fs->connect()) {
                 $this->selfDeactivate('Unable to connect to the file system', error_get_last());
+
+                return;
             }
 
             // First create directories and remove them from the array.
@@ -252,9 +253,9 @@ if (!class_exists('MwpRecoveryKit', false)):
                 if (file_exists($absolutePath) && md5_file($absolutePath) === $checksum) {
                     continue;
                 }
-                $fileUrl      = sprintf('http://s3-us-west-2.amazonaws.com/mwp-orion-public/worker/raw/%s/%s', $GLOBALS['MMB_WORKER_VERSION'], $relativePath);
+                $fileUrl  = sprintf('http://s3-us-west-2.amazonaws.com/mwp-orion-public/worker/raw/%s/%s', $GLOBALS['MMB_WORKER_VERSION'], $relativePath);
                 $response = wp_remote_get($fileUrl);
-                if ($response instanceof WP_Error){
+                if ($response instanceof WP_Error) {
                     $this->selfDeactivate('Unable to download file '.$fileUrl.': '.$response->get_error_message());
 
                     return;
@@ -316,11 +317,35 @@ if (!class_exists('MwpRecoveryKit', false)):
     }
 endif;
 
+if (!function_exists('mwp_activation_hook')) {
+    function mwp_activation_hook()
+    {
+        if (get_option('mwp_recovering')) {
+            delete_option('mwp_recovering');
+            // Run the checksum one last time.
+            $recoveryKit = new MwpRecoveryKit();
+            $recoveryKit->recover();
+        }
+
+        if (!empty($GLOBALS['mmb_core'])) {
+            /** @var MMB_Core $core */
+            $core = $GLOBALS['mmb_core'];
+            $core->install();
+        }
+    }
+}
+
 if (!function_exists('mwp_init')):
     function mwp_init()
     {
-        $GLOBALS['MMB_WORKER_VERSION']  = '4.1.6';
-        $GLOBALS['MMB_WORKER_REVISION'] = '2015-05-15 00:00:00';
+        // When the plugin deactivates due to a corrupt installation, (de)activation hooks
+        // will never get executed, so the 'mwp_recovering' option will never be deleted,
+        // making the plugin always force the recovery mode , which may always fail for any
+        // reason (eg. the site can't ping itself). Handle that case early.
+        register_activation_hook(__FILE__, 'mwp_activation_hook');
+
+        $GLOBALS['MMB_WORKER_VERSION']  = '4.1.7';
+        $GLOBALS['MMB_WORKER_REVISION'] = '2015-06-03 00:00:00';
 
         // Ensure PHP version compatibility.
         if (version_compare(PHP_VERSION, '5.2', '<')) {
@@ -365,7 +390,7 @@ if (!function_exists('mwp_init')):
 
         $GLOBALS['mmb_plugin_dir']   = WP_PLUGIN_DIR.'/'.basename(dirname(__FILE__));
         $GLOBALS['_mmb_item_filter'] = array();
-        $GLOBALS['mmb_core']         = $core = $mmb_core_backup = new MMB_Core();
+        $GLOBALS['mmb_core']         = $core = $GLOBALS['mmb_core_backup'] = new MMB_Core();
 
         $siteUrl = function_exists('get_site_option') ? get_site_option('siteurl') : get_option('siteurl');
         define('MMB_XFRAME_COOKIE', 'wordpress_'.md5($siteUrl).'_xframe');
@@ -390,8 +415,6 @@ if (!function_exists('mwp_init')):
         // Register updater hooks.
         MMB_Updater::register();
 
-        // Plugin management hooks.
-        register_activation_hook(__FILE__, array($core, 'install'));
         register_deactivation_hook(__FILE__, array($core, 'deactivate'));
         register_uninstall_hook(dirname(__FILE__).'/functions.php', 'mwp_uninstall');
 

@@ -12,10 +12,12 @@ interface MWP_IncrementalBackup_Database_ConnectionInterface
 {
     /**
      * @param string $query
+     * @param bool   $useResult When true, the returned statement HAS TO BE CLOSED MANUALLY before issuing another query.
+     *                          Use this for selecting large amounts of data
      *
      * @return MWP_IncrementalBackup_Database_StatementInterface
      */
-    public function query($query);
+    public function query($query, $useResult = false);
 
     /**
      * @param mixed $value any primitive value

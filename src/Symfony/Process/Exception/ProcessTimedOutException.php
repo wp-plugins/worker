@@ -14,17 +14,17 @@
  *
  * @author Johannes M. Schmitt <schmittjoh@gmail.com>
  */
-class Symfony_Process_Exception_ProcessTimedOutException extends Exception implements Symfony_Process_Exception_ExceptionInterface
+class Symfony_Process_Exception_ProcessTimedOutException extends Symfony_Process_Exception_RuntimeException
 {
     const TYPE_GENERAL = 1;
-    const TYPE_IDLE    = 2;
+    const TYPE_IDLE = 2;
 
     private $process;
     private $timeoutType;
 
     public function __construct(Symfony_Process_Process $process, $timeoutType)
     {
-        $this->process     = $process;
+        $this->process = $process;
         $this->timeoutType = $timeoutType;
 
         parent::__construct(sprintf(
