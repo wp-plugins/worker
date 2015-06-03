@@ -205,8 +205,8 @@ if (!class_exists('MwpRecoveryKit', false)):
 
             $filesAndChecksums = json_decode($checksumResponse['body'], true);
 
-            if (json_last_error() !== JSON_ERROR_NONE) {
-                $this->selfDeactivate(sprintf('Error while parsing checksum.json [%s]: %s', json_last_error(), json_last_error_msg()));
+            if ($filesAndChecksums === null) {
+                $this->selfDeactivate(sprintf('Error while parsing checksum.json.'));
 
                 return;
             }

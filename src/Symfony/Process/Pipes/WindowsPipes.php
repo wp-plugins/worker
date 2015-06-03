@@ -199,7 +199,7 @@ class Symfony_Process_Pipes_WindowsPipes extends Symfony_Process_Pipes_AbstractP
         $e = null;
 
         // let's have a look if something changed in streams
-        if (false === $n = @stream_select($r, $w, $e, 0, $blocking ? Process::TIMEOUT_PRECISION * 1E6 : 0)) {
+        if (false === $n = @stream_select($r, $w, $e, 0, $blocking ? Symfony_Process_Process::TIMEOUT_PRECISION * 1E6 : 0)) {
             // if a system call has been interrupted, forget about it, let's try again
             // otherwise, an error occurred, let's reset pipes
             if (!$this->hasSystemCallBeenInterrupted()) {
