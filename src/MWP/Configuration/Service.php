@@ -30,11 +30,13 @@ class MWP_Configuration_Service
     public function getConfiguration()
     {
         if (!self::$configuration) {
+            /** @handled function fix */
             $configuration = get_option("mwp_worker_configuration");
             $path          = realpath(dirname(__FILE__)."/../../../worker.json");
             if (empty($configuration) && file_exists($path)) {
                 $json          = file_get_contents($path);
                 $configuration = json_decode($json, true);
+                /** @handled function fix */
                 update_option("mwp_worker_configuration", $configuration);
             }
 
@@ -51,6 +53,7 @@ class MWP_Configuration_Service
      */
     public function reloadConfiguration()
     {
+        /** @handled function fix */
         self::$configuration = new MWP_Configuration_Conf(get_option("mwp_worker_configuration"));
 
         return self::$configuration;
@@ -66,6 +69,7 @@ class MWP_Configuration_Service
         self::$configuration = $configuration;
         $data                = $configuration->toArray();
         if (array_key_exists("master_cron_url", $data) && !empty($data['master_cron_url'])) {
+            /** @handled function fix */
             update_option("mwp_worker_configuration", $data);
         }
     }

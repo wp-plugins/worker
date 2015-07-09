@@ -11,7 +11,7 @@
 class MWP_Action_IncrementalBackup_FetchFiles extends MWP_Action_IncrementalBackup_Abstract
 {
 
-    public function execute(array $params = array(), MWP_Worker_Request $request)
+    public function execute(array $params = array())
     {
         /**
          * Each file is structured like:
@@ -35,6 +35,9 @@ class MWP_Action_IncrementalBackup_FetchFiles extends MWP_Action_IncrementalBack
             $file = new MWP_IncrementalBackup_Model_File();
             $file->setPathname($requestedFile['relativePath']);
             $file->setStream(new MWP_Stream_FileLimit(new MWP_Stream_LazyFile($realPath), $offset, $limit));
+            if (isset($requestedFile['encoding'])) {
+                $file->setEncoding($requestedFile['encoding']);
+            }
             $result->addFile($file);
         }
 

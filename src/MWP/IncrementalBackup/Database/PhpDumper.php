@@ -11,6 +11,8 @@
 class MWP_IncrementalBackup_Database_PhpDumper implements MWP_IncrementalBackup_Database_DumperInterface
 {
 
+    private $transferSize = 102400; // 100kb
+
     /**
      * @var MWP_IncrementalBackup_Database_Configuration
      */
@@ -41,7 +43,27 @@ class MWP_IncrementalBackup_Database_PhpDumper implements MWP_IncrementalBackup_
     /**
      * {@inheritdoc}
      */
-    public function dump(array $tables = array())
+    public function dump($table, $realpath)
+    {
+        $stream = $this->createStream(array($table));
+        $handle = @fopen($realpath, 'w');
+        if ($handle === false) {
+            $error   = error_get_last();
+            $message = isset($error['message']) ? $error['message'] : sprintf('Unable to open file %s for writing.', $realpath);
+            throw new MWP_Worker_Exception(MWP_Worker_Exception::IO_EXCEPTION, $message, $error);
+        }
+
+        while (!$stream->eof()) {
+            fwrite($handle, $stream->read($this->transferSize));
+        }
+
+        fclose($handle);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function createStream(array $tables = array())
     {
         if ($this->environment->isPdoEnabled()) {
             $connection = new MWP_IncrementalBackup_Database_PdoConnection($this->configuration);

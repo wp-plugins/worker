@@ -15,10 +15,13 @@ class MWP_EventListener_ActionRequest_SetSettings implements Symfony_EventDispat
 
     private $system;
 
-    public function __construct(MWP_WordPress_Context $context, MWP_System_Environment $system)
+    private $migration;
+
+    public function __construct(MWP_WordPress_Context $context, MWP_System_Environment $system, MWP_Migration_Migration $migration)
     {
-        $this->context = $context;
-        $this->system  = $system;
+        $this->context   = $context;
+        $this->system    = $system;
+        $this->migration = $migration;
     }
 
     public static function getSubscribedEvents()
@@ -31,9 +34,11 @@ class MWP_EventListener_ActionRequest_SetSettings implements Symfony_EventDispat
     public function onActionRequest(MWP_Event_ActionRequest $event)
     {
         $this->saveWorkerConfiguration($event->getRequest()->getData());
-        set_time_limit(1800);
+        // Prevent PHP Warning: set_time_limit() has been disabled for security reasons in __FILE__
+        @set_time_limit(1800);
         $this->setMemoryLimit();
         $this->resetVersions();
+        $this->migration->migrate();
     }
 
     /**

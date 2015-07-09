@@ -22,6 +22,7 @@ class MWP_Backup_Writer_GzipWriter implements MWP_Backup_Writer_WriterInterface
 
     public function open()
     {
+        /** @handled function */
         $this->file = gzopen($this->getFilename(), $this->getMode());
         if ($this->file === false) {
             throw new MWP_Backup_Exception("Could not open file: $this->getFilename()");
@@ -68,6 +69,7 @@ class MWP_Backup_Writer_GzipWriter implements MWP_Backup_Writer_WriterInterface
 
     public function write($content = '')
     {
+        /** @handled function */
         gzwrite($this->getFile(), $content);
     }
 
@@ -91,11 +93,13 @@ class MWP_Backup_Writer_GzipWriter implements MWP_Backup_Writer_WriterInterface
 
     public function writeLine($content = '')
     {
+        /** @handled function */
         gzwrite($this->getFile(), $content."\n");
     }
 
     public function close()
     {
+        /** @handled function */
         @gzclose($this->getFile());
 
         return $this;

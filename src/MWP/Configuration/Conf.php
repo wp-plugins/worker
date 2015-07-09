@@ -282,11 +282,6 @@ class MWP_Configuration_Conf
         return <<<HTML
 <div class="updated" style="padding: 0; margin: 0; border: none; background: none;">
     <style scoped type="text/css">
-        body {
-            font-family: Arial, helvetica, sans-serif;
-            background: #f1f1f1;
-        }
-
         .mwp-notice-container {
             box-shadow: 1px 1px 1px #d9d9d9;
             max-width: 100%;

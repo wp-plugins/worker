@@ -29,7 +29,8 @@ class MWP_EventListener_ActionResponse_FetchFiles implements Symfony_EventDispat
      */
     public function onActionResponse(MWP_Event_ActionResponse $event)
     {
-        if ($event->getRequest()->getAction() !== 'fetch_files' && $event->getRequest()->getAction() !== 'dump_tables') {
+        $action = $event->getRequest()->getAction();
+        if ($action !== 'fetch_files' && $action !== 'dump_tables') {
             return;
         }
 
@@ -52,7 +53,8 @@ class MWP_EventListener_ActionResponse_FetchFiles implements Symfony_EventDispat
                     'content-type'     => 'application/octet-stream',
                     'content-location' => $file->getPathname(),
                 ),
-                $file->getStream()
+                $file->getStream(),
+                $file->getEncoding()
             );
         }
 

@@ -2029,7 +2029,7 @@ class Crypt_Base
      * @access private
      * @return &Array
      */
-    public function &_getLambdaFunctions()
+    public static function &_getLambdaFunctions()
     {
         static $functions = array();
 

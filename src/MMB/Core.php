@@ -268,6 +268,10 @@ EOF;
             }
         }
 
+        if (!is_writable($mustUsePluginDir)) {
+            throw new Exception('MU-plugin directory is not writable.');
+        }
+
         $loaderWritten = @file_put_contents($loaderPath, $loaderContent);
 
         if (!$loaderWritten) {
@@ -283,6 +287,7 @@ EOF;
     public function install()
     {
         delete_option('mwp_recovering');
+        mwp_container()->getMigration()->migrate();
         try {
             $this->registerMustUse('0-worker.php', $this->buildLoaderContent('worker/init.php'));
         } catch (Exception $e) {
@@ -444,6 +449,7 @@ EOF;
 
             ob_start();
             @unlink(dirname(__FILE__));
+            /** @handled class */
             $upgrader = new Plugin_Upgrader(mwp_container()->getUpdaterSkin());
             $result   = $upgrader->run(
                 array(

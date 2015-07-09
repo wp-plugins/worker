@@ -31,6 +31,7 @@ class MWP_IncrementalBackup_Database_MysqliConnection implements MWP_Incremental
 
         // Silence possible warnings thrown by mysqli
         // e.g. Warning: mysqli::mysqli(): Headers and client library minor version mismatch. Headers:50540 Library:50623
+        /** @handled class */
         $this->connection = @new mysqli($configuration->getHost(), $configuration->getUsername(), $configuration->getPassword(), $configuration->getDatabase(), $configuration->getPort());
 
         if ($this->connection === null || !$this->connection->ping()) {

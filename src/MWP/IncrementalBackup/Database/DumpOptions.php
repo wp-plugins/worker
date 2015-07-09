@@ -24,6 +24,11 @@ class MWP_IncrementalBackup_Database_DumpOptions
     /**
      * @var bool
      */
+    private $skipExtendedInsert = true;
+
+    /**
+     * @var bool
+     */
     private $dropTables = true;
 
     /**
@@ -61,6 +66,22 @@ class MWP_IncrementalBackup_Database_DumpOptions
     /**
      * @return boolean
      */
+    public function isSkipExtendedInsert()
+    {
+        return $this->skipExtendedInsert;
+    }
+
+    /**
+     * @param boolean $skipExtendedInsert
+     */
+    public function setSkipExtendedInsert($skipExtendedInsert)
+    {
+        $this->skipExtendedInsert = $skipExtendedInsert;
+    }
+
+    /**
+     * @return boolean
+     */
     public function isDropTables()
     {
         return $this->dropTables;
@@ -80,6 +101,10 @@ class MWP_IncrementalBackup_Database_DumpOptions
 
         if (isset($options['skip_lock_tables'])) {
             $dumpOptions->setSkipLockTables($options['skip_lock_tables']);
+        }
+
+        if (isset($options['skip_extended_insert'])) {
+            $dumpOptions->setSkipExtendedInsert($options['skip_extended_insert']);
         }
 
         return $dumpOptions;

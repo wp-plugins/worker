@@ -19,9 +19,9 @@ abstract class MWP_Backup_MysqlDump_MysqlDump
      *  <li>password : string</li>
      *  <li>port : int|string</li>
      * </ul>
-
      */
     protected $config = array();
+
     /** @var array Additional options
      * <ul>
      *  <li>tables : array List of tables that should be dumped</li>
@@ -37,10 +37,13 @@ abstract class MWP_Backup_MysqlDump_MysqlDump
         'compression_method' => null,
         'skip_lock_tables'   => true,
     );
+
     /** @var  PDO Connection instance */
     protected $connection;
+
     /** @var  MWP_Backup_MysqlDump_MysqlDump Database dumping strategy object */
     protected $strategy;
+
     /** @var  MWP_Backup_Writer_WriterInterface */
     protected $writer;
 
@@ -127,6 +130,7 @@ abstract class MWP_Backup_MysqlDump_MysqlDump
             $connectionString = "mysql:dbname={$this->getConfig('database')};{$host}";
             // Create a PDO instance
             $this->connection = new PDO($connectionString, $this->getConfig('username'), $this->getConfig('password'), array(
+                /** @handled constant */
                 PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES utf8",
                 PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
             ));

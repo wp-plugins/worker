@@ -54,7 +54,7 @@ class MWP_Progress_Upload extends MWP_Progress_Abstract
 
         global $forkedRequest;
         if (!$forkedRequest) {
-            echo ".";
+            echo " ";
             flush();
         }
 

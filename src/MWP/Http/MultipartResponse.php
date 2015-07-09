@@ -113,8 +113,24 @@ class MWP_Http_MultipartResponse extends MWP_Http_Response implements MWP_Http_S
             $stream->addStream(MWP_Stream_Stream::factory(sprintf("%s: %s\r\n", strtolower($header), $value)));
         }
 
+        $body = $part->getBody();
+
+        // Manually output content-transfer-encoding header
+        $stream->addStream(MWP_Stream_Stream::factory(sprintf("content-transfer-encoding: %s\r\n", $part->getEncoding())));
+
+        switch ($part->getEncoding()) {
+            case 'binary':
+                // No action required
+                break;
+            case 'base64':
+                $body = new MWP_Stream_Base64EncodedStream($body);
+                break;
+            default:
+                throw new MWP_Worker_Exception(MWP_Worker_Exception::GENERAL_ERROR, 'Encoding %s not supported.');
+        }
+
         $stream->addStream(MWP_Stream_Stream::factory("\r\n"));
-        $stream->addStream($part->getBody());
+        $stream->addStream($body);
 
         return $stream;
     }

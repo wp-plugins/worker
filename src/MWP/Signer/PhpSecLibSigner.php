@@ -10,7 +10,6 @@
 
 class MWP_Signer_PhpSecLibSigner implements MWP_Signer_Interface
 {
-
     public function verify($data, $signature, $publicKey)
     {
         $this->requireLibrary();

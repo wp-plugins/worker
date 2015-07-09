@@ -30,7 +30,8 @@ class MWP_EventListener_ActionException_MultipartException extends MWP_EventList
 
     public function onActionException(MWP_Event_ActionException $event)
     {
-        if ($event->getRequest()->getAction() !== 'fetch_files' && $event->getRequest()->getAction() !== 'dump_tables') {
+        $action = $event->getRequest()->getAction();
+        if ($action !== 'fetch_files' && $action !== 'dump_tables') {
             return;
         }
 

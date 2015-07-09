@@ -36,6 +36,7 @@ class Dropbox_OAuth1Upgrader extends Dropbox_AuthBase
     {
         Dropbox_OAuth1AccessToken::checkArg("oauth1AccessToken", $oauth1AccessToken);
 
+        /** @handled static fix */
         $response = self::doPost($oauth1AccessToken, "1/oauth2/token_from_oauth1");
 
         if ($response->statusCode !== 200) {
@@ -74,6 +75,7 @@ class Dropbox_OAuth1Upgrader extends Dropbox_AuthBase
     {
         Dropbox_OAuth1AccessToken::checkArg("oauth1AccessToken", $oauth1AccessToken);
 
+        /** @handled static fix */
         $response = self::doPost($oauth1AccessToken, "1/disable_access_token");
 
         if ($response->statusCode !== 200) {

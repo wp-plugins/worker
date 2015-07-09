@@ -22,6 +22,11 @@ class MWP_IncrementalBackup_Model_File
     private $stream;
 
     /**
+     * @var string
+     */
+    private $encoding = 'binary';
+
+    /**
      * @return string
      */
     public function getPathname()
@@ -51,5 +56,21 @@ class MWP_IncrementalBackup_Model_File
     public function setStream($stream)
     {
         $this->stream = $stream;
+    }
+
+    /**
+     * @return string
+     */
+    public function getEncoding()
+    {
+        return $this->encoding;
+    }
+
+    /**
+     * @param string $encoding
+     */
+    public function setEncoding($encoding)
+    {
+        $this->encoding = $encoding;
     }
 }

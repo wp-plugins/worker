@@ -52,4 +52,10 @@ class MWP_System_Environment
 
         return extension_loaded('mysql');
     }
+
+    public function isCurlEnabled()
+    {
+        // Some hosting providers disable only curl_exec().
+        return (function_exists('curl_init') && function_exists('curl_exec'));
+    }
 }

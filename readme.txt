@@ -46,6 +46,14 @@ ManageWP is also the creator of [ManageWP.org](https://managewp.org/ "WordPress 
 
 == Changelog ==
 
+= 4.1.8 =
+
+- Improvement: Security improvement.
+- Fix: Optimize spam comment cleanup time.
+- Fix: Numerous improvements for [incremental backup system](https://managewp.com/managewp-orion-developer-diary-3-bulletproof-backup-solution).
+- Fix: Improve compatibility with other plugins.
+- Fix: Improve available update detection.
+
 = 4.1.7 =
 
 - Fix: Optimize memory usage with incremental backups.

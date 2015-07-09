@@ -22,6 +22,7 @@ class MWP_EventListener_FixCompatibility implements Symfony_EventDispatcher_Even
     {
         return array(
             MWP_Event_Events::ACTION_RESPONSE => 'fixWpSuperCache',
+            MWP_Event_Events::MASTER_REQUEST  => array('fixAllInOneSecurity', -10000),
         );
     }
 
@@ -30,5 +31,28 @@ class MWP_EventListener_FixCompatibility implements Symfony_EventDispatcher_Even
         if ($this->context->hasConstant('ADVANCEDCACHEPROBLEM') && $this->context->getConstant('ADVANCEDCACHEPROBLEM')) {
             $this->context->set('wp_cache_config_file', null);
         }
+    }
+
+    public function fixAllInOneSecurity()
+    {
+        if (!$this->context->isPluginEnabled('all-in-one-wp-security-and-firewall/wp-security.php')) {
+            return;
+        }
+
+        $this->context->addAction('init', array($this, '_fixAllInOneSecurity'), -1);
+    }
+
+    /**
+     * @internal
+     */
+    public function _fixAllInOneSecurity()
+    {
+        $user = $this->context->getCurrentUser();
+
+        if (empty($user->ID)) {
+            return;
+        }
+
+        $this->context->updateUserMeta($user->ID, 'last_login_time', $this->context->getCurrentTime()->format('Y-m-d H:i:s'));
     }
 }

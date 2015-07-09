@@ -337,11 +337,28 @@ function mmb_delete_spam_comments()
     $spam  = 1;
     $total = 0;
     while (!empty($spam)) {
-        $getCommentIds = "SELECT comment_ID FROM $wpdb->comments WHERE comment_approved = 'spam' LIMIT 200";
-        $spam          = $wpdb->get_results($getCommentIds);
-        foreach ($spam as $comment) {
-            wp_delete_comment($comment->comment_ID, true);
+        $getCommentsQuery = "SELECT * FROM $wpdb->comments WHERE comment_approved = 'spam' LIMIT 200";
+        $spam             = $wpdb->get_results($getCommentsQuery);
+
+        if (empty($spam)) {
+            break;
         }
+
+        $commentIds = array();
+        foreach ($spam as $comment) {
+            $commentIds[] = $comment->comment_ID;
+
+            // Avoid queries to comments by caching the comment.
+            // Plugins which hook to 'delete_comment' might call get_comment($id), which in turn returns the cached version.
+            wp_cache_add($comment->comment_ID, $comment, 'comment');
+            do_action('delete_comment', $comment->comment_ID);
+            wp_cache_delete($comment->comment_ID, 'comment');
+        }
+
+        $commentIdsList = implode(', ', array_map('intval', $commentIds));
+        $wpdb->query("DELETE FROM {$wpdb->comments} WHERE comment_ID IN ($commentIdsList)");
+        $wpdb->query("DELETE FROM {$wpdb->commentmeta} WHERE comment_id IN ($commentIdsList)");
+
         $total += count($spam);
         if (!empty($spam)) {
             usleep(100000);
@@ -1068,7 +1085,13 @@ function mmb_run_forked_action()
 function mmb_update_worker_plugin($params)
 {
     global $mmb_core;
-    mmb_response($mmb_core->update_worker_plugin($params), true);
+    if (mwp_container()->getRequestStack()->getMasterRequest()->getProtocol() && !empty($params['version'])) {
+        $recoveryKit = new MwpRecoveryKit();
+        $files       = $recoveryKit->recover($params['version']);
+        mmb_response(array('files' => $files, 'success' => 'ManageWP Worker plugin successfully updated'), true);
+    } else {
+        mmb_response($mmb_core->update_worker_plugin($params), true);
+    }
 }
 
 function mmb_install_addon($params)

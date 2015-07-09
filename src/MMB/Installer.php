@@ -84,6 +84,7 @@ class MMB_Installer extends MMB_Core
             include_once ABSPATH.'wp-admin/includes/class-wp-upgrader.php';
         }
 
+        /** @handled class */
         $upgrader = new WP_Upgrader(mwp_container()->getUpdaterSkin());
         $upgrader->init();
         $destination       = $type == 'themes' ? WP_CONTENT_DIR.'/themes' : WP_PLUGIN_DIR;
@@ -339,6 +340,7 @@ class MMB_Installer extends MMB_Core
                     include_once ABSPATH.'wp-admin/includes/class-wp-upgrader.php';
                 }
 
+                /** @handled class */
                 $core   = new Core_Upgrader(mwp_container()->getUpdaterSkin());
                 $result = $core->upgrade($current_update);
                 $this->mmb_maintenance_mode(false);
@@ -369,9 +371,11 @@ class MMB_Installer extends MMB_Core
                 }
 
                 if (class_exists('WP_Upgrader')) {
+                    /** @handled class */
                     $upgrader_skin              = new WP_Upgrader_Skin();
                     $upgrader_skin->done_header = true;
 
+                    /** @handled class */
                     $upgrader = new WP_Upgrader($upgrader_skin);
 
                     // Is an update available?
@@ -465,20 +469,21 @@ class MMB_Installer extends MMB_Core
 
         $current  = $this->mmb_get_transient('update_plugins');
         $versions = array();
+        $return = array();
+
         if (!empty($current)) {
             foreach ($plugins as $plugin => $data) {
                 if (isset($current->checked[$plugin])) {
                     $versions[$current->checked[$plugin]] = $plugin;
                 }
-                if (!isset($current->response[$plugin])) {
-                    unset($plugins[$plugin]);
-                }
             }
         }
-        $return = array();
+
         if (class_exists('Plugin_Upgrader')) {
+            /** @handled class */
             $upgrader = new Plugin_Upgrader(mwp_container()->getUpdaterSkin());
             $result   = $upgrader->bulk_upgrade(array_keys($plugins));
+
             if (!function_exists('wp_update_plugins')) {
                 include_once ABSPATH.'wp-includes/update.php';
             }
@@ -497,7 +502,6 @@ class MMB_Installer extends MMB_Core
                         }
                     }
                 }
-                ob_end_clean();
 
                 return array(
                     'upgraded' => $return,
@@ -508,8 +512,6 @@ class MMB_Installer extends MMB_Core
                 );
             }
         } else {
-            ob_end_clean();
-
             return array(
                 'error' => 'WordPress update required first.',
             );
@@ -534,6 +536,7 @@ class MMB_Installer extends MMB_Core
             }
         }
         if (class_exists('Theme_Upgrader')) {
+            /** @handled class */
             $upgrader = new Theme_Upgrader(mwp_container()->getUpdaterSkin());
             $result   = $upgrader->bulk_upgrade($themes);
 
@@ -566,8 +569,6 @@ class MMB_Installer extends MMB_Core
                 );
             }
         } else {
-            ob_end_clean();
-
             return array(
                 'error' => 'WordPress update required first',
             );
@@ -637,23 +638,6 @@ class MMB_Installer extends MMB_Core
                 }
             }
 
-//			if(!empty($themes)){
-//				$updatethemes = $this->upgrade_themes(array_keys($themes));
-//				if(!empty($updatethemes) && isset($updatethemes['upgraded'])){
-//					foreach ($premium_update as $key => $update) {
-//						$update = array_change_key_case($update, CASE_LOWER);
-//						foreach($updatethemes['upgraded'] as $template => $upgrade){
-//							if( isset($update['template']) && $update['template'] == $template) {
-//								if( $upgrade == 1 )
-//									unset($premium_update[$key]);
-//
-//								$pr_update['themes']['upgraded'][md5($update['name'])] = $upgrade;
-//							}
-//						}
-//					}
-//				}
-//			}
-
             //try direct install with overwrite
             if (!empty($premium_update)) {
                 foreach ($premium_update as $update) {
@@ -664,8 +648,10 @@ class MMB_Installer extends MMB_Core
                             $pr_update[$update['type'].'s']['upgraded'][md5($update['name'])] = 'Site under maintanace.';
                         }
 
+                        /** @handled class */
                         $upgrader_skin              = new WP_Upgrader_Skin();
                         $upgrader_skin->done_header = true;
+                        /** @handled class */
                         $upgrader                   = new WP_Upgrader();
                         @$update_result = $upgrader->run(
                             array(

@@ -44,6 +44,7 @@ class MWP_Updater_TraceableUpdaterSkin
         require_once ABSPATH.'wp-admin/includes/file.php';
         // This will output a credentials form in event of failure; we don't want that, so just hide with a buffer.
         ob_start();
+        /** @handled function */
         $result = request_filesystem_credentials('', '', $error, $context, null, $allow_relaxed_file_ownership);
         ob_end_clean();
 
@@ -84,6 +85,7 @@ class MWP_Updater_TraceableUpdaterSkin
 
         $string = trim($string);
 
+        /** @handled function */
         // Only allow basic HTML in the messages, as it'll be used in emails/logs rather than direct browser output.
         $string = wp_kses($string, array(
             'a'      => array(

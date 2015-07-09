@@ -42,7 +42,7 @@ class MWP_ServiceContainer_Production extends MWP_ServiceContainer_Abstract
         $dispatcher->addSubscriber(new MWP_EventListener_ActionRequest_VerifyNonce($this->getNonceManager()));
 
         $dispatcher->addSubscriber(new MWP_EventListener_ActionRequest_SetCurrentUser($this->getWordPressContext()));
-        $dispatcher->addSubscriber(new MWP_EventListener_ActionRequest_SetSettings($this->getWordPressContext(), $this->getSystemEnvironment()));
+        $dispatcher->addSubscriber(new MWP_EventListener_ActionRequest_SetSettings($this->getWordPressContext(), $this->getSystemEnvironment(), $this->getMigration()));
         $dispatcher->addSubscriber(new MWP_EventListener_ActionRequest_LogRequest($this->getLogger()));
 
         $dispatcher->addSubscriber(new MWP_EventListener_ActionException_SetExceptionData());
@@ -122,9 +122,15 @@ class MWP_ServiceContainer_Production extends MWP_ServiceContainer_Abstract
         $mapper->addDefinition('fetch_files', new MWP_Action_Definition(array('MWP_Action_IncrementalBackup_FetchFiles', 'execute')));
         $mapper->addDefinition('list_tables', new MWP_Action_Definition(array('MWP_Action_IncrementalBackup_ListTables', 'listTables')));
         $mapper->addDefinition('checksum_tables', new MWP_Action_Definition(array('MWP_Action_IncrementalBackup_ChecksumTables', 'execute')));
-        $mapper->addDefinition('dump_tables', new MWP_Action_Definition(array('MWP_Action_IncrementalBackup_DumpTables', 'execute')));
+
+        // dump_tables is used before 4.1.8 for streaming
+        // Note that dump_tables is used for the ActionResponse_FetchFiles listener
+        $mapper->addDefinition('dump_tables', new MWP_Action_Definition(array('MWP_Action_IncrementalBackup_StreamTables', 'execute')));
+
+        $mapper->addDefinition('dump_tables_into_files', new MWP_Action_Definition(array('MWP_Action_IncrementalBackup_DumpTables', 'execute')));
         $mapper->addDefinition('backup_stats', new MWP_Action_Definition(array('MWP_Action_IncrementalBackup_Stats', 'execute')));
         $mapper->addDefinition('upload_cloner', new MWP_Action_Definition(array('MWP_Action_IncrementalBackup_UploadCloner', 'execute')));
+        $mapper->addDefinition('delete_dump_files', new MWP_Action_Definition(array('MWP_Action_IncrementalBackup_DeleteDumpFiles', 'execute')));
 
         return $mapper;
     }
@@ -212,12 +218,29 @@ class MWP_ServiceContainer_Production extends MWP_ServiceContainer_Abstract
         return new MWP_Worker_Configuration($this->getWordPressContext());
     }
 
+    private function createLogStream($file)
+    {
+        $filePath = dirname(__FILE__).'/../../../'.$file;
+
+        if (!is_writable(dirname($filePath))) {
+            return false;
+        }
+
+        $logFile = @fopen($filePath, 'a');
+
+        if ($logFile === false) {
+            return false;
+        }
+
+        return $logFile;
+    }
+
     protected function createLogger()
     {
         $handlers = array();
 
-        if ($this->getParameter('log_file')) {
-            $fileHandler = new Monolog_Handler_StreamHandler(fopen(dirname(__FILE__).'/../../../'.$this->getParameter('log_file'), 'a'));
+        if ($this->getParameter('log_file') && ($logFile = $this->createLogStream($this->getParameter('log_file')))) {
+            $fileHandler = new Monolog_Handler_StreamHandler($logFile);
             $fileHandler->setFormatter(new Monolog_Formatter_HtmlFormatter());
             $handlers[] = $fileHandler;
         }
@@ -337,5 +360,13 @@ class MWP_ServiceContainer_Production extends MWP_ServiceContainer_Abstract
     protected function createSessionStore()
     {
         return new MWP_WordPress_SessionStore($this->getWordPressContext());
+    }
+
+    /**
+     * @return MWP_Migration_Migration
+     */
+    protected function createMigration()
+    {
+        return new MWP_Migration_Migration($this->getWordPressContext());
     }
 }

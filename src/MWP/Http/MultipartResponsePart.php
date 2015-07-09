@@ -14,13 +14,17 @@ class MWP_Http_MultipartResponsePart
     /** @var array */
     private $headers = array();
 
+    /** @var string Must conform RFC 1314 (@see https://en.wikipedia.org/wiki/MIME#Content-Transfer-Encoding) */
+    private $encoding = 'binary';
+
     /** @var MWP_Stream_Interface */
     private $body;
 
-    function __construct($headers, $body = null)
+    public function __construct($headers, $body = null, $encoding = 'binary')
     {
         $this->headers = array_change_key_case($headers, CASE_LOWER);
         $this->setBody($body);
+        $this->setEncoding($encoding);
     }
 
     /**
@@ -82,5 +86,21 @@ class MWP_Http_MultipartResponsePart
         }
 
         $this->body = $body;
+    }
+
+    /**
+     * @return string
+     */
+    public function getEncoding()
+    {
+        return $this->encoding;
+    }
+
+    /**
+     * @param string $encoding
+     */
+    public function setEncoding($encoding)
+    {
+        $this->encoding = $encoding;
     }
 }

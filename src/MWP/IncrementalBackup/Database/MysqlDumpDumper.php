@@ -34,14 +34,64 @@ class MWP_IncrementalBackup_Database_MysqlDumpDumper implements MWP_IncrementalB
     /**
      * {@inheritdoc}
      */
-    function dump(array $tables = array())
+    public function dump($table, $realpath)
     {
         if (!mwp_is_shell_available()) {
             throw new MWP_Worker_Exception(MWP_Worker_Exception::SHELL_NOT_AVAILABLE, 'Shell not available.');
         }
 
-        $mysqldump = mwp_container()->getExecutableFinder()->find('mysqldump', 'mysqldump');
+        $mysqldump      = mwp_container()->getExecutableFinder()->find('mysqldump', 'mysqldump');
+        $processBuilder = $this->createProcessBuilder(array($table), $mysqldump);
+        $processBuilder->add('--result-file='.$realpath);
 
+        $process = $processBuilder->getProcess();
+
+        mwp_logger()->info('Database dumping process starting', array(
+            'executable_location' => $mysqldump,
+            'command_line'        => $process->getCommandLine(),
+            'table'               => $table,
+            'destination'         => $realpath,
+        ));
+
+        $process->mustRun();
+
+        mwp_logger()->info('Database dump complete', array(
+            'table'       => $table,
+            'destination' => $realpath,
+            'size'        => @filesize($realpath),
+        ));
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function createStream(array $tables = array())
+    {
+        if (!mwp_is_shell_available()) {
+            throw new MWP_Worker_Exception(MWP_Worker_Exception::SHELL_NOT_AVAILABLE, 'Shell not available.');
+        }
+
+        $mysqldump      = mwp_container()->getExecutableFinder()->find('mysqldump', 'mysqldump');
+        $processBuilder = $this->createProcessBuilder($tables, $mysqldump);
+
+        $process = $processBuilder->getProcess();
+
+        mwp_logger()->info('Database dumping process starting', array(
+            'executable_location' => $mysqldump,
+            'command_line'        => $process->getCommandLine(),
+        ));
+
+        return new MWP_Stream_ProcessOutput($process);
+    }
+
+    /**
+     * @param array $tables
+     * @param       $mysqldump
+     *
+     * @return Symfony_Process_ProcessBuilder
+     */
+    protected function createProcessBuilder(array $tables, $mysqldump)
+    {
         $processBuilder = Symfony_Process_ProcessBuilder::create()
             ->setWorkingDirectory(untrailingslashit(ABSPATH))
             ->setTimeout(3600)
@@ -60,6 +110,10 @@ class MWP_IncrementalBackup_Database_MysqlDumpDumper implements MWP_IncrementalB
             $processBuilder->add('--lock-tables=false');
         }
 
+        if ($this->options->isSkipExtendedInsert()) {
+            $processBuilder->add('--extended-insert=false');
+        }
+
         $processBuilder->add($this->configuration->getDatabase());
 
         // Dump only specific tables
@@ -76,13 +130,6 @@ class MWP_IncrementalBackup_Database_MysqlDumpDumper implements MWP_IncrementalB
             }
         }
 
-        $process = $processBuilder->getProcess();
-
-        mwp_logger()->info('Database dumping process starting', array(
-            'executable_location' => $mysqldump,
-            'command_line'        => $process->getCommandLine(),
-        ));
-
-        return new MWP_Stream_ProcessOutput($process);
+        return $processBuilder;
     }
 }

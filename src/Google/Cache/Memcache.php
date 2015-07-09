@@ -39,6 +39,7 @@ class Google_Cache_Memcache extends Google_Cache_Abstract
         }
         if ($client->isAppEngine()) {
             // No credentials needed for GAE.
+            /** @handled class */
             $this->mc         = new Memcached();
             $this->connection = true;
         } else {
@@ -125,6 +126,7 @@ class Google_Cache_Memcache extends Google_Cache_Abstract
         }
 
         if (class_exists("Memcached")) {
+            /** @handled class */
             $this->mc = new Memcached();
             $this->mc->addServer($this->host, $this->port);
             $this->connection = true;

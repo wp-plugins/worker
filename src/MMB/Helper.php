@@ -340,6 +340,11 @@ class MMB_Helper
 
     protected function notifyMyself($functionName, $args = array())
     {
+        if (mwp_container()->getParameter('disable_ping_back')) {
+            do_action($functionName, $args);
+            return;
+        }
+
         global $current_user;
         $nonce      = wp_create_nonce("mmb-fork-nonce");
         $cron_url   = site_url('index.php');

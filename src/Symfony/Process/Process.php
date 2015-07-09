@@ -155,7 +155,7 @@ class Symfony_Process_Process
      */
     public function __construct($commandline, $cwd = null, array $env = null, $input = null, $timeout = 60, array $options = array())
     {
-        if (!function_exists('proc_open')) {
+        if (!function_exists('proc_open') || !function_exists('proc_close')) {
             throw new Symfony_Process_Exception_RuntimeException('The Process class relies on proc_open, which is not available on your PHP installation.');
         }
 

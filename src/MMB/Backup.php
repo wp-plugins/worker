@@ -345,8 +345,8 @@ class MMB_Backup extends MMB_Core
 
         @file_put_contents($new_file_path.'/index.php', ''); //safe
 
-        //Prepare .zip file name
-        $hash        = md5(time());
+        // Prepare .zip filename.
+        $hash        = str_shuffle(md5(mt_rand().mwp_container()->getConfiguration()->getPublicKey()));
         $label       = !empty($type) ? $type : 'manual';
         $backup_file = $new_file_path.'/'.$this->site_name.'_'.$label.'_'.$what.'_'.date('Y-m-d').'_'.$hash.'.zip';
         $backup_url  = WP_CONTENT_URL.'/managewp/backups/'.$this->site_name.'_'.$label.'_'.$what.'_'.date('Y-m-d').'_'.$hash.'.zip';
@@ -639,7 +639,7 @@ class MMB_Backup extends MMB_Core
             $process->start();
             while ($process->isRunning()) {
                 sleep(1);
-                echo ".";
+                echo " ";
                 flush();
                 mwp_logger()->debug('Compressing...');
             }
@@ -675,8 +675,10 @@ class MMB_Backup extends MMB_Core
     public function zip_archive_backup_db($task_name, $db_result, $backup_file)
     {
         $disable_comp = $this->tasks[$task_name]['task_args']['disable_comp'];
-        $zip          = new ZipArchive();
-        $result       = $zip->open($backup_file, ZIPARCHIVE::OVERWRITE); // Tries to open $backup_file for acrhiving
+        /** @handled class */
+        $zip = new ZipArchive();
+        /** @handled constant */
+        $result = $zip->open($backup_file, ZipArchive::OVERWRITE); // Tries to open $backup_file for acrhiving
         if ($result === true) {
             $result = $result && $zip->addFile(MWP_BACKUP_DIR.'/mwp_db/index.php', "mwp_db/index.php"); // Tries to add mwp_db/index.php to $backup_file
             $result = $result && $zip->addFile($db_result, "mwp_db/".basename($db_result)); // Tries to add db dump form mwp_db dir to $backup_file
@@ -706,6 +708,7 @@ class MMB_Backup extends MMB_Core
         $disable_comp = $this->tasks[$task_name]['task_args']['disable_comp'];
         define('PCLZIP_TEMPORARY_DIR', MWP_BACKUP_DIR.'/');
         require_once ABSPATH.'/wp-admin/includes/class-pclzip.php';
+        /** @handled class */
         $zip = new PclZip($backup_file);
 
         if ($disable_comp) {
@@ -787,7 +790,7 @@ class MMB_Backup extends MMB_Core
             $process->start();
             while ($process->isRunning()) {
                 sleep(1);
-                echo ".";
+                echo " ";
                 flush();
                 mwp_logger()->debug('Compressing...');
             }
@@ -886,7 +889,7 @@ class MMB_Backup extends MMB_Core
             $process->start();
             while ($process->isRunning()) {
                 sleep(1);
-                echo ".";
+                echo " ";
                 flush();
                 mwp_logger()->debug('Compressing...');
             }
@@ -932,8 +935,10 @@ class MMB_Backup extends MMB_Core
             mwp_logger()->warning('Compression is not supported by ZipArchive');
         }
 
+        /** @handled class */
         $zip = new ZipArchive();
         if ($overwrite) {
+            /** @handled constant */
             $result = $zip->open($backup_file, ZipArchive::OVERWRITE); // Tries to open $backup_file for archiving
         } else {
             $result = $zip->open($backup_file); // Tries to open $backup_file for archiving
@@ -971,6 +976,7 @@ class MMB_Backup extends MMB_Core
     {
         define('PCLZIP_TEMPORARY_DIR', MWP_BACKUP_DIR.'/');
         require_once ABSPATH.'/wp-admin/includes/class-pclzip.php';
+        /** @handled class */
         $zip = new PclZip($backup_file);
         $add = array(
             trim(WPINC),
@@ -1756,7 +1762,8 @@ class MMB_Backup extends MMB_Core
     private function unzipWithZipArchive($backupFile)
     {
         mwp_logger()->info('Falling back to ZipArchive Module');
-        $result     = false;
+        $result = false;
+        /** @handled class */
         $zipArchive = new ZipArchive();
         $zipOpened  = $zipArchive->open($backupFile);
         if ($zipOpened === true) {
@@ -1773,6 +1780,7 @@ class MMB_Backup extends MMB_Core
         mwp_logger()->info('Falling back to PclZip Module');
         define('PCLZIP_TEMPORARY_DIR', MWP_BACKUP_DIR.'/');
         require_once ABSPATH.'/wp-admin/includes/class-pclzip.php';
+        /** @handled class */
         $archive = new PclZip($backupFile);
         $result  = $archive->extract(PCLZIP_OPT_PATH, ABSPATH, PCLZIP_OPT_REPLACE_NEWER);
 
@@ -3112,6 +3120,9 @@ class MMB_Backup extends MMB_Core
      */
     public function amazons3_backup($args)
     {
+        if (!mwp_container()->getSystemEnvironment()->isCurlEnabled()) {
+            throw new MWP_Worker_Exception(MWP_Worker_Exception::PHP_EXTENSION_REQUIRED_CURL, 'The cURL PHP extension is required for Amazon S3 backup functionality to work. Please, enquire your hosting provider on how to enable that extension.');
+        }
         if ($args['as3_site_folder'] == true) {
             $args['as3_directory'] .= '/'.$this->site_name;
         }
@@ -3172,6 +3183,9 @@ class MMB_Backup extends MMB_Core
      */
     public function remove_amazons3_backup($args)
     {
+        if (!mwp_container()->getSystemEnvironment()->isCurlEnabled()) {
+            throw new MWP_Worker_Exception(MWP_Worker_Exception::PHP_EXTENSION_REQUIRED_CURL, 'The cURL PHP extension is required for Amazon S3 backup functionality to work. Please, enquire your hosting provider on how to enable that extension.');
+        }
         if ($args['as3_site_folder'] == true) {
             $args['as3_directory'] .= '/'.$this->site_name;
         }
@@ -3209,6 +3223,9 @@ class MMB_Backup extends MMB_Core
      */
     public function get_amazons3_backup($args)
     {
+        if (!mwp_container()->getSystemEnvironment()->isCurlEnabled()) {
+            throw new MWP_Worker_Exception(MWP_Worker_Exception::PHP_EXTENSION_REQUIRED_CURL, 'The cURL PHP extension is required for Amazon S3 backup functionality to work. Please, enquire your hosting provider on how to enable that extension.');
+        }
         $endpoint = isset($args['as3_bucket_region']) ? $args['as3_bucket_region'] : 's3.amazonaws.com';
 
         mwp_logger()->info('Downloading the backup file from Amazon S3', array(
@@ -3412,7 +3429,7 @@ class MMB_Backup extends MMB_Core
                     'speed'    => mwp_format_bytes(($uploaded - $lastProgress) / $elapsed),
                 ));
                 $lastProgress = $uploaded;
-                echo ".";
+                echo " ";
                 flush();
             }
             $uploaded += $newChunkSize;
@@ -3867,7 +3884,7 @@ class MMB_Backup extends MMB_Core
 
         $task      = $tasks[$task_name];
         $backups   = $task['task_results'];
-        $result_id = !empty($args['result_id']) ? $args['result_id'] : null;
+        $result_id = isset($args['result_id']) ? $args['result_id'] : null;
         $backup    = !empty($backups[$result_id]) ? $backups[$result_id] : false;
         if (!empty($args['resultUuid'])) {
             foreach ($backups as $key => $result) {
@@ -4229,6 +4246,7 @@ class MMB_Backup extends MMB_Core
 
         if (class_exists('wpdb') && function_exists('wp_set_wpdb_vars')) {
             @mysql_close($wpdb->dbh);
+            /** @handled class */
             $wpdb = new wpdb(DB_USER, DB_PASSWORD, DB_NAME, DB_HOST);
             wp_set_wpdb_vars();
             if (function_exists('is_multisite')) {
@@ -4607,6 +4625,7 @@ function restore_htaccess()
     if (isset($GLOBALS['wp_rewrite'])) {
         $wpRewrite = $GLOBALS['wp_rewrite'];
     } else {
+        /** @handled class */
         $wpRewrite = $GLOBALS['wp_rewrite'] = new WP_Rewrite();
     }
 

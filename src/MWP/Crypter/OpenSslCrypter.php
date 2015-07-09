@@ -14,12 +14,14 @@ class MWP_Crypter_OpenSslCrypter implements MWP_Crypter_Interface
     {
         $errorCatcher = new MWP_Debug_ErrorCatcher();
         $errorCatcher->register('openssl_public_encrypt');
+        /** @handled function */
         $success   = @openssl_public_encrypt($data, $crypted, $publicKey);
         $lastError = $errorCatcher->yieldErrorMessage(true);
 
         if ($success === false) {
             $error = $errorRow = '';
 
+            /** @handled function */
             while (($errorRow = openssl_error_string()) !== false) {
                 $error = $errorRow."\n".$error;
             }
@@ -37,12 +39,14 @@ class MWP_Crypter_OpenSslCrypter implements MWP_Crypter_Interface
     {
         $errorCatcher = new MWP_Debug_ErrorCatcher();
         $errorCatcher->register('openssl_public_decrypt');
+        /** @handled function */
         $success   = @openssl_public_decrypt($data, $decrypted, $publicKey);
         $lastError = $errorCatcher->yieldErrorMessage(true);
 
         if ($success === false && $lastError !== null) {
             $error = $errorRow = '';
 
+            /** @handled function */
             while (($errorRow = openssl_error_string()) !== false) {
                 $error = $errorRow."\n".$error;
             }

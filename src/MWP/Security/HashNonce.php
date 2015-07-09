@@ -49,11 +49,13 @@ class MWP_Security_HashNonce implements MWP_Security_NonceInterface
         if ($this->issueAt + self::NONCE_LIFETIME < time()) {
             return false;
         }
+        /** @handled function */
         $nonceUsed = get_transient('n_'.$this->nonce);
 
         if ($nonceUsed !== false) {
             return false;
         }
+        /** @handled function */
         set_transient('n_'.$this->nonce, $this->issueAt, self::NONCE_BLACKLIST_TIME); //need shorter name, because of 64 char limit
 
         return true;

@@ -11,9 +11,15 @@
 interface MWP_IncrementalBackup_Database_DumperInterface
 {
     /**
+     * @param string $table
+     * @param string $realpath
+     */
+    function dump($table, $realpath);
+
+    /**
      * @param array $tables Table names
      *
      * @return MWP_Stream_Interface
      */
-    function dump(array $tables = array());
+    function createStream(array $tables = array());
 }

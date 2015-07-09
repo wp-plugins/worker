@@ -1586,7 +1586,7 @@ class Dropbox_Client
      */
     public static function parseDateTime($apiDateTimeString)
     {
-        $dt = DateTime::createFromFormat(self::$dateTimeFormat, $apiDateTimeString);
+        $dt = new DateTime($apiDateTimeString);
         if ($dt === false) {
             throw new Dropbox_Exception_BadResponse(
             "Bad date/time from server: ".self::q($apiDateTimeString));
@@ -1594,8 +1594,6 @@ class Dropbox_Client
 
         return $dt;
     }
-
-    private static $dateTimeFormat = "D, d M Y H:i:s T";
 
     /**
      * @internal

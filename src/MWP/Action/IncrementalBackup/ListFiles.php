@@ -201,6 +201,7 @@ class MWP_Action_IncrementalBackup_ListFiles extends MWP_Action_IncrementalBacku
             if ($php52) {
                 $directory = new RecursiveDirectoryIterator($path);
             } else {
+                /** @handled constant */
                 $directory = new RecursiveDirectoryIterator($path, RecursiveDirectoryIterator::SKIP_DOTS);
             }
 

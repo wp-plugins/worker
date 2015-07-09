@@ -52,6 +52,7 @@ abstract class MWP_Progress_Abstract implements MWP_Progress_CurlCallbackInterfa
 
     protected function calculateOffset($curl)
     {
+        /** @handled function */
         $info = curl_getinfo($curl);
 
         $url = parse_url($info['url']);

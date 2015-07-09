@@ -161,4 +161,9 @@ interface MWP_ServiceContainer_Interface
      * @return MWP_WordPress_SessionStore
      */
     public function getSessionStore();
+
+    /**
+     * @return MWP_Migration_Migration
+     */
+    public function getMigration();
 }

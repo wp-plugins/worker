@@ -207,9 +207,11 @@ class MMB_Updater
         $return = array();
         $search = empty($args['search']) ? null : $args['search'];
         if (in_array('plugins', $items)) {
+            /** @handled static fix */
             $return['plugins'] = self::getPluginSettings($search);
         }
         if (in_array('themes', $items)) {
+            /** @handled static fix */
             $return['themes'] = self::getThemeSettings($search);
         }
 

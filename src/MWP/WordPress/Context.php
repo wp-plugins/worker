@@ -537,10 +537,6 @@ class MWP_WordPress_Context
     {
         $this->requirePluggable();
 
-        if ($this->isPluginEnabled('all-in-one-wp-security-and-firewall/wp-security.php')) {
-            update_user_meta($user->ID, 'last_login_time', gmdate('Y-m-d H:i:s'));
-        }
-
         wp_set_current_user($user->ID);
     }
 
@@ -579,6 +575,7 @@ class MWP_WordPress_Context
             return;
         }
 
+        /** @handled class */
         $this->context['wp_rewrite'] = new WP_Rewrite();
     }
 
@@ -742,6 +739,25 @@ class MWP_WordPress_Context
             return null;
         }
 
+        /** @handled static */
+
         return WP_Session_Tokens::get_instance($userId);
+    }
+
+    public function getCurrentTime()
+    {
+        return new DateTime('@'.current_time('timestamp'));
+    }
+
+    /**
+     * @param int    $userId
+     * @param string $key
+     * @param mixed  $value
+     *
+     * @return bool|int
+     */
+    public function updateUserMeta($userId, $key, $value)
+    {
+        return update_user_meta($userId, $key, $value);
     }
 }

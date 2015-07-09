@@ -65,6 +65,8 @@ abstract class MWP_ServiceContainer_Abstract implements MWP_ServiceContainer_Int
 
     private $sessionStore;
 
+    private $migration;
+
     public function __construct(array $parameters = array())
     {
         $this->parameters = $parameters;
@@ -84,6 +86,8 @@ abstract class MWP_ServiceContainer_Abstract implements MWP_ServiceContainer_Int
             'disable_mysqli'                      => false,
             // Emulate disabled mysql
             'disable_mysql'                       => false,
+            // Do not do self request on the website
+            'disable_ping_back'                   => false,
             // Log file to use for all worker logs.
             'log_file'                            => null,
             // GrayLog2 server to use for all worker logs.
@@ -548,4 +552,18 @@ abstract class MWP_ServiceContainer_Abstract implements MWP_ServiceContainer_Int
      * @return MWP_WordPress_SessionStore
      */
     protected abstract function createSessionStore();
+
+    public function getMigration()
+    {
+        if ($this->migration === null) {
+            $this->migration = $this->createMigration();
+        }
+
+        return $this->migration;
+    }
+
+    /**
+     * @return MWP_Migration_Migration
+     */
+    protected abstract function createMigration();
 }

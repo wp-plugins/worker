@@ -88,6 +88,10 @@ class MWP_EventListener_PublicRequest_SetHitCounter implements Symfony_EventDisp
             return;
         }
 
+        if (!$this->shouldTrack($request)) {
+            return;
+        }
+
         $this->hitCounter->increment();
     }
 
@@ -114,5 +118,17 @@ class MWP_EventListener_PublicRequest_SetHitCounter implements Symfony_EventDisp
         }
 
         return $this->userAgentMatchingMethod;
+    }
+
+    /**
+     * Check if request should be tracked by looking at the Do Not Track (DNT) header.
+     *
+     * @param MWP_Worker_Request $request
+     *
+     * @return bool
+     */
+    protected function shouldTrack(MWP_Worker_Request $request)
+    {
+        return $request->getHeader('DNT') !== "1";
     }
 }

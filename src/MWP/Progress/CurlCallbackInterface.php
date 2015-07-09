@@ -10,7 +10,18 @@
 
 interface MWP_Progress_CurlCallbackInterface
 {
-    public function callback(&$curl, $downloadSize, $downloadedSize, $uploadSize, $uploadedSize);
+    /**
+     * NOTE: The reason the fifth argument is optional is because some curl builds don't pass the curl handle as
+     * the first argument; instead they pass 4 arguments. The implementation (ideally an abstract one) should
+     * handle that case.
+     *
+     * @param resource $curl
+     * @param int      $downloadSize
+     * @param int      $downloadedSize
+     * @param int      $uploadSize
+     * @param int      $uploadedSize
+     */
+    public function callback(&$curl, $downloadSize, $downloadedSize, $uploadSize, $uploadedSize = 0);
 
     public function getCallback();
 }

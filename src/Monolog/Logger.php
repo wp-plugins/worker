@@ -248,6 +248,7 @@ class Monolog_Logger implements Monolog_Psr_LoggerInterface
         }
 
         if (is_callable(array('DateTime', 'createFromFormat'))) {
+            /** @handled static */
             return DateTime::createFromFormat('U.u', sprintf('%.6F', microtime(true)), self::$timezone)->setTimezone(self::$timezone);
         }
 
