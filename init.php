@@ -215,7 +215,7 @@ if (!class_exists('MwpRecoveryKit', false)):
             $lockTime = get_option('mwp_incremental_recover_lock');
 
             if ($lockTime && $lockTime - time() < 1200) { // lock for 20 minutes
-                throw new Exception('Recovery already in progress');
+                return array();
             }
 
             ignore_user_abort(true);
