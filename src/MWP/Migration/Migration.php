@@ -44,7 +44,7 @@ class MWP_Migration_Migration
     {
         $wpdb             = $this->context->getDb();
         $lockRow          = $wpdb->get_row("SELECT option_value FROM {$wpdb->prefix}options WHERE option_name = '$lockName'");
-        $currentTimestamp = $this->context->getCurrentTime()->getTimestamp();
+        $currentTimestamp = $this->context->getCurrentTime()->format('U');
 
         if ($lockRow) {
             /** @noinspection PhpUndefinedFieldInspection */
