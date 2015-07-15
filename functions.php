@@ -1085,7 +1085,7 @@ function mmb_run_forked_action()
 function mmb_update_worker_plugin($params)
 {
     global $mmb_core;
-    if (mwp_container()->getRequestStack()->getMasterRequest()->getProtocol() && !empty($params['version'])) {
+    if (!empty($params['version'])) {
         $recoveryKit = new MwpRecoveryKit();
         $files       = $recoveryKit->recover($params['version']);
         mmb_response(array('files' => $files, 'success' => 'ManageWP Worker plugin successfully updated'), true);

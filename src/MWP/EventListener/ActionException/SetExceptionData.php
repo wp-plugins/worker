@@ -21,21 +21,23 @@ class MWP_EventListener_ActionException_SetExceptionData implements Symfony_Even
     {
         $exception = $event->getException();
 
-        if ($exception instanceof MWP_Worker_Exception) {
-            $exceptionData = $this->getDataForWorkerException($exception);
-        } else {
-            $exceptionData = $this->getDataForGenericException($exception);
-        }
-
         $data = array(
-            'error'     => $exception->getMessage(),
-            'exception' => $exceptionData,
+            'error' => $exception->getMessage(),
         );
+
+        if ($event->getRequest()->isAuthenticated()) {
+            if ($exception instanceof MWP_Worker_Exception) {
+                $exceptionData = $this->getDataForWorkerException($exception);
+            } else {
+                $exceptionData = $this->getDataForGenericException($exception);
+            }
+            $data['exception'] = $exceptionData;
+        }
 
         $event->setData($data);
     }
 
-    public function getDataForWorkerException(MWP_Worker_Exception $exception)
+    private function getDataForWorkerException(MWP_Worker_Exception $exception)
     {
         return array(
             'context' => $exception->getContext(),
@@ -43,7 +45,7 @@ class MWP_EventListener_ActionException_SetExceptionData implements Symfony_Even
         ) + $this->getDataForGenericException($exception);
     }
 
-    public function getDataForGenericException(Exception $exception)
+    private function getDataForGenericException(Exception $exception)
     {
         return array(
             'class'       => get_class($exception),

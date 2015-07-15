@@ -3,7 +3,7 @@
 Plugin Name: ManageWP - Worker
 Plugin URI: https://managewp.com
 Description: ManageWP Worker plugin allows you to manage your WordPress sites from one dashboard. Visit <a href="https://managewp.com">ManageWP.com</a> for more information.
-Version: 4.1.8
+Version: 4.1.9
 Author: ManageWP
 Author URI: https://managewp.com
 License: GPL2
@@ -227,7 +227,7 @@ if (!class_exists('MwpRecoveryKit', false)):
             update_option('mwp_incremental_recover_lock', time());
 
             try {
-                $files = $this->recoverFiles($dirName, $filesAndChecksums);
+                $files = $this->recoverFiles($dirName, $filesAndChecksums, $version);
             } catch (Exception $e) {
                 $this->releaseLock();
                 throw $e;
@@ -260,7 +260,7 @@ if (!class_exists('MwpRecoveryKit', false)):
                 if (version_compare($response['version'], $GLOBALS['MMB_WORKER_VERSION'], '<')) {
                     return false;
                 }
-                self::recoverFiles(dirname(__FILE__), $response['checksum']);
+                self::recoverFiles(dirname(__FILE__), $response['checksum'], $response['version']);
             } catch (Exception $e) {
                 mwp_logger()->error("Self-update failed.", array('exception' => $e));
 
@@ -270,7 +270,7 @@ if (!class_exists('MwpRecoveryKit', false)):
             return true;
         }
 
-        public static function recoverFiles($dirName, array $filesAndChecksums)
+        public static function recoverFiles($dirName, array $filesAndChecksums, $version)
         {
             require_once ABSPATH.'wp-admin/includes/file.php';
 
@@ -321,7 +321,7 @@ if (!class_exists('MwpRecoveryKit', false)):
                     next($filesAndChecksums);
                     continue;
                 }
-                $fileUrl  = sprintf('http://s3-us-west-2.amazonaws.com/mwp-orion-public/worker/raw/%s/%s', $GLOBALS['MMB_WORKER_VERSION'], $relativePath);
+                $fileUrl  = sprintf('http://s3-us-west-2.amazonaws.com/mwp-orion-public/worker/raw/%s/%s', $version, $relativePath);
                 $response = wp_remote_get($fileUrl);
                 if ($response instanceof WP_Error) {
                     $lastError = 'Unable to download file '.$fileUrl.': '.$response->get_error_message();
@@ -422,8 +422,8 @@ if (!function_exists('mwp_init')):
         // reason (eg. the site can't ping itself). Handle that case early.
         register_activation_hook(__FILE__, 'mwp_activation_hook');
 
-        $GLOBALS['MMB_WORKER_VERSION']  = '4.1.8';
-        $GLOBALS['MMB_WORKER_REVISION'] = '2015-07-09 00:00:00';
+        $GLOBALS['MMB_WORKER_VERSION']  = '4.1.9';
+        $GLOBALS['MMB_WORKER_REVISION'] = '2015-07-10 00:00:00';
 
         // Ensure PHP version compatibility.
         if (version_compare(PHP_VERSION, '5.2', '<')) {

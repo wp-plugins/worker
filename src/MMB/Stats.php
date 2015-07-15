@@ -395,6 +395,8 @@ class MMB_Stats extends MMB_Core
 
         if ($params['refresh'] == 'transient') {
             global $wp_current_filter;
+            // Some plugins that hook to transient setting rely on get_plugin_data() function.
+            include_once ABSPATH.'wp-admin/includes/plugin.php';
             $wp_current_filter[] = 'load-update-core.php';
 
             wp_version_check();
@@ -407,11 +409,7 @@ class MMB_Stats extends MMB_Core
 
             array_pop($wp_current_filter);
 
-            $wp_current_filter[] = 'load-plugins.php';
-
-            wp_update_plugins();
-
-            array_pop($wp_current_filter);
+            do_action('load-plugins.php');
         }
 
         /** @var $wpdb wpdb */

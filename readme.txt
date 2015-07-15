@@ -46,6 +46,11 @@ ManageWP is also the creator of [ManageWP.org](https://managewp.org/ "WordPress 
 
 == Changelog ==
 
+= 4.1.9 =
+
+- Fix: Improve available update detection.
+- Fix: Improve the incremental ManageWP Worker plugin updating system.
+
 = 4.1.8 =
 
 - Fix: Potential security issue patched.
