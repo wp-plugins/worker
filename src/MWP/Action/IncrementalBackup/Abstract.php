@@ -43,33 +43,4 @@ class MWP_Action_IncrementalBackup_Abstract extends MWP_Action_Abstract
         return MWP_IncrementalBackup_Model_ServerStatistics::factory();
     }
 
-    /**
-     * @param $files
-     *
-     * @return array
-     */
-    protected function replaceWindowsPaths($files)
-    {
-        if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
-            foreach ($files as $key => $file) {
-                $files[$key]['path'] = str_replace('\\', '/', $file['path']);
-            }
-        }
-
-        return $files;
-    }
-
-    /**
-     * @param $path
-     *
-     * @return string
-     */
-    protected function replaceWindowsPath($path)
-    {
-        if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
-            $path = str_replace('\\', '/', $path);
-        }
-
-        return $path;
-    }
-} 
+}

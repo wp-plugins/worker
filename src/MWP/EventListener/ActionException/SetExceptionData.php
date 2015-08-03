@@ -21,39 +21,46 @@ class MWP_EventListener_ActionException_SetExceptionData implements Symfony_Even
     {
         $exception = $event->getException();
 
-        $data = array(
-            'error' => $exception->getMessage(),
-        );
+        $verbose = $event->getRequest()->isAuthenticated();
 
-        if ($event->getRequest()->isAuthenticated()) {
-            if ($exception instanceof MWP_Worker_Exception) {
-                $exceptionData = $this->getDataForWorkerException($exception);
-            } else {
-                $exceptionData = $this->getDataForGenericException($exception);
-            }
-            $data['exception'] = $exceptionData;
+        if ($exception instanceof MWP_Worker_Exception) {
+            $exceptionData = $this->getDataForWorkerException($exception, $verbose);
+        } else {
+            $exceptionData = $this->getDataForGenericException($exception, $verbose);
         }
+
+        $data = array(
+            'error'     => $exception->getMessage(),
+            'exception' => $exceptionData,
+        );
 
         $event->setData($data);
     }
 
-    private function getDataForWorkerException(MWP_Worker_Exception $exception)
+    private function getDataForWorkerException(MWP_Worker_Exception $exception, $verbose)
     {
         return array(
             'context' => $exception->getContext(),
             'type'    => $exception->getErrorName(),
-        ) + $this->getDataForGenericException($exception);
+        ) + $this->getDataForGenericException($exception, $verbose);
     }
 
-    private function getDataForGenericException(Exception $exception)
+    private function getDataForGenericException(Exception $exception, $verbose)
     {
-        return array(
-            'class'       => get_class($exception),
-            'message'     => $exception->getMessage(),
-            'line'        => $exception->getLine(),
-            'file'        => $exception->getFile(),
-            'code'        => $exception->getCode(),
-            'traceString' => $exception->getTraceAsString(),
+        $data = array(
+            'class'   => get_class($exception),
+            'message' => $exception->getMessage(),
+            'code'    => $exception->getCode(),
         );
+
+        if ($verbose) {
+            $data += array(
+                'line'        => $exception->getLine(),
+                'file'        => $exception->getFile(),
+                'traceString' => $exception->getTraceAsString(),
+            );
+        }
+
+        return $data;
     }
 }

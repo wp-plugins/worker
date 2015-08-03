@@ -8,7 +8,7 @@
  * file that was distributed with this source code.
  */
 
-class MWP_Action_IncrementalBackup_HashFiles extends MWP_Action_IncrementalBackup_Abstract
+class MWP_Action_IncrementalBackup_HashFiles extends MWP_Action_IncrementalBackup_AbstractFiles
 {
     // 100MB
     const UNIX_HASH_THRESHOLD = 104857600;
@@ -24,6 +24,7 @@ class MWP_Action_IncrementalBackup_HashFiles extends MWP_Action_IncrementalBacku
          * Each file is structured like:
          * [
          *  "relativePath"          => file path relative to ABSPATH,
+         *  "pathEncoded"           => is path url encoded?,
          *  "size"                  => file size sent for reference,
          *  "offset"                => number of bytes to offset hash start (integer, optional, default 0),
          *  "limit"                 => number of bytes to hash (integer, optional, default 0),
@@ -40,12 +41,13 @@ class MWP_Action_IncrementalBackup_HashFiles extends MWP_Action_IncrementalBacku
         $unixHashThreshold = isset($params['unixMd5Threshold']) ? $params['unixMd5Threshold'] : self::UNIX_HASH_THRESHOLD;
 
         foreach ($files as $file) {
-            $relativePath = $file['path'];
-            $size         = $file['size'];
-            $offset       = isset($file['offset']) ? $file['offset'] : 0;
-            $limit        = isset($file['limit']) ? $file['limit'] : 0;
-            $forcePartial = isset($file['forcePartialHashing']) ? $file['forcePartialHashing'] : false;
-            $realPath     = $this->getRealPath($relativePath);
+            $relativePath        = $file['path'];
+            $size                = $file['size'];
+            $offset              = isset($file['offset']) ? $file['offset'] : 0;
+            $limit               = isset($file['limit']) ? $file['limit'] : 0;
+            $forcePartial        = isset($file['forcePartialHashing']) ? $file['forcePartialHashing'] : false;
+            $decodedRelativePath = $file['pathEncoded'] ? $this->pathDecode($relativePath) : $relativePath;
+            $realPath            = $this->getRealPath($decodedRelativePath);
 
             // Run a unix command to generate md5 hash if file size exceeds threshold
             // Ignore partial requests for big files because of speed problems

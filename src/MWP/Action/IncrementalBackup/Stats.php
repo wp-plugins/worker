@@ -8,7 +8,7 @@
  * file that was distributed with this source code.
  */
 
-class MWP_Action_IncrementalBackup_Stats extends MWP_Action_IncrementalBackup_Abstract
+class MWP_Action_IncrementalBackup_Stats extends MWP_Action_IncrementalBackup_AbstractFiles
 {
 
     public function execute(array $params = array())

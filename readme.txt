@@ -1,7 +1,7 @@
 === ManageWP Worker ===
-Contributors: freediver
+Contributors: managewp,freediver
 Donate link: https://www.networkforgood.org/donation/MakeDonation.aspx?ORGID2=520781390
-Tags: administration, admin,amazon, analytics, api, automate, automatic, backup, comments, clone, dashboard, database, debug, dropbox, duplicate, events, google analytics, google drive, google, integration, login, manage, managewp, migrate, multiple, multisite, mysql, page, performance, plugin, post, remote, s3, security, seo, spam, speed, stats
+Tags: administration, admin, amazon, analytics, api, automate, automatic, backup, comments, clone, dashboard, database, debug, dropbox, duplicate, events, google analytics, google drive, google, integration, login, manage, managewp, migrate, multiple, multisite, mysql, page, performance, plugin, post, remote, s3, security, seo, spam, speed, stats
 Requires at least: 3.1
 Tested up to: 4.2.2
 Stable tag: trunk
@@ -45,6 +45,19 @@ https://www.youtube.com/watch?v=C5nBQJQIfH4
 ManageWP is also the creator of [ManageWP.org](https://managewp.org/ "WordPress news site"), community project capturing the pulse of the WordPress community.
 
 == Changelog ==
+
+= 4.1.12 =
+
+- Fix: Improve support for non UTF8 encoded file names for [incremental backups](https://managewp.com/managewp-orion-developer-diary-3-bulletproof-backup-solution)
+- Fix: Fix an issue where valid keys were rejected on some specific configurations.
+
+= 4.1.11 =
+
+- Fix: Fix issue where the plugin did not return error codes when the remote call is not authenticated, which resulted in techie-talk error messages.
+
+= 4.1.10 =
+
+- Fix: Improve available update detection when working with plugins that hook onto WordPress update API.
 
 = 4.1.9 =
 

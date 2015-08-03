@@ -51,6 +51,7 @@ class MWP_EventListener_MasterRequest_SetRequestSettings implements Symfony_Even
         }
 
         $this->context->setConstant('WP_ADMIN', true, false);
+        require_once $this->context->getConstant('ABSPATH').'wp-admin/includes/admin.php';
     }
 
     private function defineWpAjax(array $data)

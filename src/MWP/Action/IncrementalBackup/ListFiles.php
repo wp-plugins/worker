@@ -8,7 +8,7 @@
  * file that was distributed with this source code.
  */
 
-class MWP_Action_IncrementalBackup_ListFiles extends MWP_Action_IncrementalBackup_Abstract
+class MWP_Action_IncrementalBackup_ListFiles extends MWP_Action_IncrementalBackup_AbstractFiles
 {
 
     /** @var Symfony_Filesystem_Filesystem */
@@ -16,6 +16,7 @@ class MWP_Action_IncrementalBackup_ListFiles extends MWP_Action_IncrementalBacku
 
     public function __construct()
     {
+        parent::__construct();
         $this->fileSystem = new Symfony_Filesystem_Filesystem();
     }
 
@@ -35,8 +36,6 @@ class MWP_Action_IncrementalBackup_ListFiles extends MWP_Action_IncrementalBacku
             $files = $this->listFiles(ABSPATH, true);
         }
 
-        $files = $this->replaceWindowsPaths($files);
-
         return $this->createResult(array('files' => $files));
     }
 
@@ -53,20 +52,20 @@ class MWP_Action_IncrementalBackup_ListFiles extends MWP_Action_IncrementalBacku
         $result = array();
 
         foreach ($directories as $directory) {
-            $path      = $directory['path'];
-            $recursive = isset($directory['recursive']) ? $directory['recursive'] : false;
-            $offset    = isset($directory['offset']) ? $directory['offset'] : 0;
-            $limit     = isset($directory['limit']) ? $directory['limit'] : 0;
+            $relativePath = $directory['path'];
+            $decodedPath  = $directory['pathEncoded'] ? $this->pathDecode($relativePath) : $relativePath;
+            $recursive    = isset($directory['recursive']) ? $directory['recursive'] : false;
+            $offset       = isset($directory['offset']) ? $directory['offset'] : 0;
+            $limit        = isset($directory['limit']) ? $directory['limit'] : 0;
 
-            $realPath = $this->getRealPath($path);
+            $realPath = $this->getRealPath($decodedPath);
             if (!file_exists($realPath)) {
-                $result[$path] = false;
+                $result[$relativePath] = false;
                 continue;
             }
 
-            $filesInDirectory                         = $this->listFiles($realPath, $recursive, $offset, $limit);
-            $filesInDirectory                         = $this->replaceWindowsPaths($filesInDirectory);
-            $result[$this->replaceWindowsPath($path)] = $filesInDirectory;
+            $filesInDirectory      = $this->listFiles($realPath, $recursive, $offset, $limit);
+            $result[$relativePath] = $filesInDirectory;
         }
 
         return $this->createResult(array('directories' => $result));
@@ -119,12 +118,14 @@ class MWP_Action_IncrementalBackup_ListFiles extends MWP_Action_IncrementalBacku
     {
         $result = array();
 
-        foreach ($files as $path) {
-            $realPath = $this->getRealPath($path);
+        foreach ($files as $file) {
+            $relativePath = $file['path'];
+            $decodedPath  = $file['pathEncoded'] ? $this->pathDecode($relativePath) : $relativePath;
+            $realPath     = $this->getRealPath($decodedPath);
 
             if (!file_exists($realPath)) {
                 $result[] = array(
-                    'path'   => $path,
+                    'path'   => $relativePath,
                     'exists' => false,
                 );
                 continue;
@@ -158,7 +159,8 @@ class MWP_Action_IncrementalBackup_ListFiles extends MWP_Action_IncrementalBacku
     private function createFileResult(SplFileInfo $file)
     {
         $fileResult = array(
-            'path'        => $this->getRelativePath($file->getRealPath(), ABSPATH),
+            'path'        => $this->replaceWindowsPath($this->getRelativePath($file->getRealPath(), ABSPATH)),
+            'pathEncoded' => false,
             'isLink'      => false,
             'exists'      => false,
             'isDirectory' => false,
@@ -166,6 +168,10 @@ class MWP_Action_IncrementalBackup_ListFiles extends MWP_Action_IncrementalBacku
             'group'       => 0,
             'permissions' => 0,
         );
+        if (!seems_utf8($fileResult['path'])) {
+            $fileResult['path']        = $this->pathEncode($fileResult['path']);
+            $fileResult['pathEncoded'] = true;
+        }
         try {
             $fileResult['link']        = $file->isLink(); // need to be first
             $fileResult['size']        = $file->getSize();

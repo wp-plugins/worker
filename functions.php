@@ -337,7 +337,7 @@ function mmb_delete_spam_comments()
     $spam  = 1;
     $total = 0;
     while (!empty($spam)) {
-        $getCommentsQuery = "SELECT * FROM $wpdb->comments WHERE comment_approved = 'spam' LIMIT 200";
+        $getCommentsQuery = "SELECT * FROM $wpdb->comments WHERE comment_approved = 'spam' LIMIT 1000";
         $spam             = $wpdb->get_results($getCommentsQuery);
 
         if (empty($spam)) {
@@ -361,7 +361,7 @@ function mmb_delete_spam_comments()
 
         $total += count($spam);
         if (!empty($spam)) {
-            usleep(100000);
+            usleep(10000);
         }
     }
 
